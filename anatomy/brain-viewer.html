@@ -35,9 +35,10 @@
             --slider-track-bg: #c5d9e8; /* Light blue for slider track */
             --slider-thumb-bg: #1e88e5; /* Blue for slider thumb */
             --annotation-text-color: #1a237e; /* Darker blue for annotation text */
-            --annotation-bg-color: rgba(255, 255, 255, 0.85); /* Semi-transparent white background */
+            --annotation-bg-color: rgba(255, 255, 255, 0.9); /* More opaque white background */
             --annotation-border-color: #64b5f6; /* Light blue border */
-            --annotation-line-color: #42a5f5; /* Medium blue for lines (if implemented) */
+            --annotation-line-color: #42a5f5; /* Medium blue for lines */
+            --annotation-point-color: #f44336; /* Red dot for point */
         }
 
         /* Dark Theme Variables */
@@ -54,9 +55,10 @@
             --slider-track-bg: #032b36; /* Darker track for dark theme */
             --slider-thumb-bg: #00bcd4; /* Brighter thumb for dark theme */
             --annotation-text-color: #e0f2f1; /* Light text for annotations */
-            --annotation-bg-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black background */
+            --annotation-bg-color: rgba(0, 0, 0, 0.8); /* Semi-transparent black background */
             --annotation-border-color: #00bcd4; /* Accent color border */
-            --annotation-line-color: #00bcd4; /* Accent color for lines (if implemented) */
+            --annotation-line-color: #00bcd4; /* Accent color for lines */
+            --annotation-point-color: #f44336; /* Red dot for point */
         }
 
         .viewer-container {
@@ -102,6 +104,37 @@
             -webkit-user-drag: none;
         }
 
+        /* SVG Overlay for Lines */
+        .annotation-svg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9; /* Below labels, above image */
+            pointer-events: none; /* Crucial: allows clicks to pass through to image/labels */
+            overflow: visible; /* Allows SVG elements to go slightly outside if needed */
+        }
+        .annotation-svg-overlay line {
+            stroke: var(--annotation-line-color);
+            stroke-width: 2;
+            transition: opacity 0.3s ease;
+            opacity: 0; /* Hidden by default */
+            stroke-linecap: round;
+        }
+        .annotation-svg-overlay line.show {
+            opacity: 0.7;
+        }
+        .annotation-svg-overlay circle {
+            fill: var(--annotation-point-color);
+            transition: opacity 0.3s ease;
+            opacity: 0; /* Hidden by default */
+        }
+        .annotation-svg-overlay circle.show {
+            opacity: 1;
+        }
+
+
         /* Annotation Label Styling */
         .annotation-label {
             position: absolute;
@@ -112,34 +145,32 @@
             font-size: 0.9rem;
             font-weight: 500;
             white-space: nowrap; /* Keep text on one line */
-            transform: translate(-50%, -50%); /* Center the label text on its x,y point */
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             transition: opacity 0.3s ease; /* Smooth fade in/out */
             opacity: 0; /* Hidden by default */
-            pointer-events: auto;
+            pointer-events: auto; /* Allows interaction with label if needed (e.g. hover) */
             border: 1px solid var(--annotation-border-color);
-            z-index: 10; /* Ensure labels are above the image */
+            z-index: 10; /* Ensure labels are above the SVG lines */
             cursor: default;
         }
 
         .annotation-label.show {
             opacity: 1; /* Show when 'show' class is added */
         }
+        /* Label alignment adjustments - to position the label relative to the line end */
+        .annotation-label.align-left {
+            transform: translate(calc(-100% - 5px), -50%); /* 5px gap from line */
+        }
+        .annotation-label.align-right {
+            transform: translate(5px, -50%); /* 5px gap from line */
+        }
+        .annotation-label.align-top {
+            transform: translate(-50%, calc(-100% - 5px)); /* 5px gap from line */
+        }
+        .annotation-label.align-bottom {
+            transform: translate(-50%, 5px); /* 5px gap from line */
+        }
 
-        /* Annotation Line Styling - Placeholder for future complex implementation */
-        /* Currently not actively used by JS, requires more advanced SVG/Canvas for dynamic drawing */
-        .annotation-line {
-            position: absolute;
-            height: 1px; /* Very thin line, just for visual cue */
-            background-color: var(--annotation-line-color);
-            transform-origin: 0 50%;
-            z-index: 5;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .annotation-line.show {
-            opacity: 0.7;
-        }
 
         .controls {
             width: 100%;
@@ -237,6 +268,7 @@
 
         <div class="image-wrapper">
             <img id="brainSliceImage" src="" alt="Brain Slice">
+            <svg class="annotation-svg-overlay" id="annotationSvgOverlay"></svg>
             <div id="annotationOverlay"></div>
         </div>
 
@@ -258,6 +290,7 @@
         const sliceSlider = document.getElementById('sliceSlider');
         const sliceNumberDisplay = document.getElementById('sliceNumberDisplay');
         const annotationOverlay = document.getElementById('annotationOverlay');
+        const annotationSvgOverlay = document.getElementById('annotationSvgOverlay');
 
         // --- THEME LOGIC ---
         function setTheme(theme) {
@@ -282,18 +315,23 @@
         // --- END THEME LOGIC ---
 
         // --- ANNOTATION DATA ---
+        // key:
+        // - slice: The image number (e.g., 1 for brain_01.jpg)
+        // - text: The label text
+        // - pointX, pointY: The (percentage) coordinates of the anatomical point on the image.
+        // - labelX, labelY: The (percentage) coordinates for the center of the label box.
+        // - labelAlign: 'left', 'right', 'top', 'bottom' - controls how the label positions itself relative to labelX/Y to allow space for the line.
         const annotations = [
             // --- Annotations for brain_01.jpg (Slice 1) ---
-            { slice: 1, text: "Falx", x: 50.17, y: 22.11 },
+            { slice: 1, text: "Falx", pointX: 50.66, pointY: 21.45, labelX: 12.38, labelY: 16.83, labelAlign: 'right' },
 
             // --- Annotations for brain_02.jpg (Slice 2) ---
-            { slice: 2, text: "Falx", x: 50.17, y: 22.11 },
+            { slice: 2, text: "Falx", pointX: 50.66, pointY: 21.45, labelX: 12.38, labelY: 16.83, labelAlign: 'right' },
 
             // --- Annotations for brain_03.jpg (Slice 3) ---
-            { slice: 3, text: "Lateral Ventricle", x: 43.40, y: 52.31 },
-
+            { slice: 3, text: "Lateral Ventricle", pointX: 41.75, pointY: 56.93, labelX: 11.72, labelY: 24.26, labelAlign: 'right' },
             // Add more annotations here as you identify structures on your images:
-            // { slice: X, text: "Your Label", x: XX.XX, y: YY.YY },
+            // { slice: X, text: "Your Label", pointX: XX.XX, pointY: YY.YY, labelX: XX.XX, labelY: YY.YY, labelAlign: 'right' },
         ];
         // --- END ANNOTATION DATA ---
 
@@ -310,22 +348,92 @@
             brainSliceImage.src = imageUrl;
             sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
 
-            // Clear previous annotations
+            // Clear previous annotations and SVG lines/circles
             annotationOverlay.innerHTML = '';
+            annotationSvgOverlay.innerHTML = ''; // Clear SVG contents
+
+            // Get the current dimensions of the image wrapper to correctly position labels and lines
+            // It's important to do this *after* the image is potentially loaded/resized
+            const wrapperRect = brainSliceImage.parentElement.getBoundingClientRect();
+            const imageWidth = wrapperRect.width;
+            const imageHeight = wrapperRect.height;
+
 
             // Add annotations for the current slice
             annotations.forEach(annotation => {
                 if (annotation.slice === currentSlice) {
+                    // Create Label
                     const labelDiv = document.createElement('div');
                     labelDiv.classList.add('annotation-label');
                     labelDiv.textContent = annotation.text;
-                    labelDiv.style.left = `${annotation.x}%`;
-                    labelDiv.style.top = `${annotation.y}%`;
+                    labelDiv.style.left = `${annotation.labelX}%`;
+                    labelDiv.style.top = `${annotation.labelY}%`;
+
+                    // Apply alignment class
+                    if (annotation.labelAlign) {
+                        labelDiv.classList.add(`align-${annotation.labelAlign}`);
+                    }
                     
-                    // Add 'show' class after a small delay to trigger CSS transition
-                    // This creates a subtle fade-in effect
-                    setTimeout(() => labelDiv.classList.add('show'), 10);
+                    // Append to DOM first to get its rendered dimensions for line calculation
                     annotationOverlay.appendChild(labelDiv);
+
+                    // Create Line (SVG) and Point (SVG Circle)
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+
+                    // Calculate line start/end points in pixels based on percentages
+                    const pX = (annotation.pointX / 100) * imageWidth;
+                    const pY = (annotation.pointY / 100) * imageHeight;
+
+                    let lX = (annotation.labelX / 100) * imageWidth;
+                    let lY = (annotation.labelY / 100) * imageHeight;
+
+                    // Adjust line end point to connect to the *edge* of the label box
+                    // This uses the actual rendered size of the labelDiv
+                    const renderedLabelRect = labelDiv.getBoundingClientRect();
+                    // These dimensions are relative to the viewport, need to scale them
+                    // back to be relative to the imageWrapper's size for accurate line drawing
+                    const labelRenderedWidth = renderedLabelRect.width;
+                    const labelRenderedHeight = renderedLabelRect.height;
+
+                    let lineEndX = lX;
+                    let lineEndY = lY;
+
+                    switch(annotation.labelAlign) {
+                        case 'left':
+                            lineEndX = lX + labelRenderedWidth / 2; // Line ends at left edge of label
+                            break;
+                        case 'right':
+                            lineEndX = lX - labelRenderedWidth / 2; // Line ends at right edge of label
+                            break;
+                        case 'top':
+                            lineEndY = lY + labelRenderedHeight / 2; // Line ends at top edge of label
+                            break;
+                        case 'bottom':
+                            lineEndY = lY - labelRenderedHeight / 2; // Line ends at bottom edge of label
+                            break;
+                        default:
+                            // No specific adjustment, line goes to the center of the label
+                            break;
+                    }
+
+
+                    line.setAttribute('x1', pX);
+                    line.setAttribute('y1', pY);
+                    line.setAttribute('x2', lineEndX);
+                    line.setAttribute('y2', lineEndY);
+                    line.classList.add('show');
+
+                    circle.setAttribute('cx', pX);
+                    circle.setAttribute('cy', pY);
+                    circle.setAttribute('r', 4); // Radius of the dot
+                    circle.classList.add('show');
+
+                    annotationSvgOverlay.appendChild(line);
+                    annotationSvgOverlay.appendChild(circle);
+
+                    // Add 'show' class after a small delay to trigger CSS transition for label
+                    setTimeout(() => labelDiv.classList.add('show'), 10);
                 }
             });
         }
@@ -334,9 +442,21 @@
         sliceSlider.addEventListener('input', updateSlice);
 
         // Load the first image and annotations when the page loads
-        document.addEventListener('DOMContentLoaded', updateSlice);
+        // It's crucial to call updateSlice when the image has actually loaded
+        // so that imageWrapper dimensions are correct for line calculation.
+        brainSliceImage.addEventListener('load', updateSlice);
+        
+        // Also call updateSlice on DOMContentLoaded as a fallback, for cached images
+        // or if image 'load' event doesn't fire as expected.
+        document.addEventListener('DOMContentLoaded', () => {
+            // Only call updateSlice if the image isn't already loaded (e.g., from browser cache)
+            if (brainSliceImage.complete) {
+                updateSlice();
+            }
+        });
 
-        // Preload all images for smoother scrolling (already present, good!)
+
+        // Preload all images for smoother scrolling
         const preloadedImages = [];
         for (let i = 1; i <= imageCount; i++) {
             const img = new Image();
