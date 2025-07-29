@@ -18,6 +18,7 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             flex-direction: column; /* Arrange items vertically */
+            overflow: hidden; /* Prevent body scroll if content overflows slightly */
         }
 
         /* Light Theme Variables */
@@ -33,6 +34,10 @@
             --back-button-hover-bg: #1565c0; /* Darker blue button on hover */
             --slider-track-bg: #c5d9e8; /* Light blue for slider track */
             --slider-thumb-bg: #1e88e5; /* Blue for slider thumb */
+            --annotation-text-color: #1a237e; /* Darker blue for annotation text */
+            --annotation-bg-color: rgba(255, 255, 255, 0.85); /* Semi-transparent white background */
+            --annotation-border-color: #64b5f6; /* Light blue border */
+            --annotation-line-color: #42a5f5; /* Medium blue for lines (if implemented) */
         }
 
         /* Dark Theme Variables */
@@ -48,6 +53,10 @@
             --back-button-hover-bg: #0097a7;
             --slider-track-bg: #032b36; /* Darker track for dark theme */
             --slider-thumb-bg: #00bcd4; /* Brighter thumb for dark theme */
+            --annotation-text-color: #e0f2f1; /* Light text for annotations */
+            --annotation-bg-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black background */
+            --annotation-border-color: #00bcd4; /* Accent color border */
+            --annotation-line-color: #00bcd4; /* Accent color for lines (if implemented) */
         }
 
         .viewer-container {
@@ -56,7 +65,7 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             padding: 20px;
             margin: 20px auto;
-            max-width: 700px; /* Max width for the viewer content */
+            max-width: 800px; /* Slightly wider to accommodate labels */
             width: 90%; /* Responsive width */
             box-sizing: border-box;
             display: flex;
@@ -74,11 +83,11 @@
         .image-wrapper {
             position: relative;
             width: 100%;
-            padding-bottom: 100%; /* Creates a square aspect ratio for the image area */
+            padding-bottom: 100%; /* Creates a square aspect ratio for the image area (if images are square) */
             background-color: #000; /* Black background for imaging studies */
             border-radius: 8px;
-            overflow: hidden; /* Hide anything outside the wrapper */
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.5); /* Inner shadow for depth */
+            overflow: hidden;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
         }
 
         .image-wrapper img {
@@ -89,6 +98,47 @@
             height: 100%;
             object-fit: contain; /* Ensures the image fits within the wrapper without cropping */
             display: block;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        /* Annotation Label Styling */
+        .annotation-label {
+            position: absolute;
+            background-color: var(--annotation-bg-color);
+            color: var(--annotation-text-color);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            white-space: nowrap; /* Keep text on one line */
+            transform: translate(-50%, -50%); /* Center the label text on its x,y point */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: opacity 0.3s ease; /* Smooth fade in/out */
+            opacity: 0; /* Hidden by default */
+            pointer-events: auto;
+            border: 1px solid var(--annotation-border-color);
+            z-index: 10; /* Ensure labels are above the image */
+            cursor: default;
+        }
+
+        .annotation-label.show {
+            opacity: 1; /* Show when 'show' class is added */
+        }
+
+        /* Annotation Line Styling - Placeholder for future complex implementation */
+        /* Currently not actively used by JS, requires more advanced SVG/Canvas for dynamic drawing */
+        .annotation-line {
+            position: absolute;
+            height: 1px; /* Very thin line, just for visual cue */
+            background-color: var(--annotation-line-color);
+            transform-origin: 0 50%;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .annotation-line.show {
+            opacity: 0.7;
         }
 
         .controls {
@@ -102,7 +152,7 @@
 
         #sliceSlider {
             width: 90%;
-            -webkit-appearance: none; /* Override default slider styles */
+            -webkit-appearance: none;
             appearance: none;
             height: 8px;
             background: var(--slider-track-bg);
@@ -199,17 +249,17 @@
     </div>
 
     <script>
-        const imageCount = 5; // IMPORTANT: This should match the number of images you have (brain_01.jpg to brain_05.jpg)
-        const imageBaseName = 'brain_'; // The common part of your image names
-        const imageExtension = '.jpg'; // <<-- CHANGED TO .jpg
-        const imageFolderPath = './test/'; // The path to your images folder relative to this HTML file
+        const imageCount = 5;
+        const imageBaseName = 'brain_';
+        const imageExtension = '.jpg';
+        const imageFolderPath = './test/';
 
         const brainSliceImage = document.getElementById('brainSliceImage');
         const sliceSlider = document.getElementById('sliceSlider');
         const sliceNumberDisplay = document.getElementById('sliceNumberDisplay');
-        const annotationOverlay = document.getElementById('annotationOverlay'); // We'll use this later
+        const annotationOverlay = document.getElementById('annotationOverlay');
 
-        // --- Theme Logic (Copied from your main index.html for consistency) ---
+        // --- THEME LOGIC ---
         function setTheme(theme) {
             if (theme === 'light') {
                 document.body.classList.add('light-theme');
@@ -225,40 +275,68 @@
             if (savedTheme === 'light') {
                 document.body.classList.add('light-theme');
             } else {
-                // Default to dark theme
                 document.body.classList.remove('light-theme');
             }
         }
-        // Apply theme when the page loads
         setInitialTheme();
-        // --- End Theme Logic ---
+        // --- END THEME LOGIC ---
+
+        // --- ANNOTATION DATA ---
+        const annotations = [
+            // --- Annotations for brain_01.jpg (Slice 1) ---
+            { slice: 1, text: "Falx", x: 50.17, y: 22.11 },
+
+            // --- Annotations for brain_02.jpg (Slice 2) ---
+            { slice: 2, text: "Falx", x: 50.17, y: 22.11 },
+
+            // --- Annotations for brain_03.jpg (Slice 3) ---
+            { slice: 3, text: "Lateral Ventricle", x: 43.40, y: 52.31 },
+
+            // Add more annotations here as you identify structures on your images:
+            // { slice: X, text: "Your Label", x: XX.XX, y: YY.YY },
+        ];
+        // --- END ANNOTATION DATA ---
 
 
         // Initialize the slider's max value and display
         sliceSlider.max = imageCount;
         sliceNumberDisplay.textContent = `Slice: 1 / ${imageCount}`;
 
-        // Function to update the displayed image and slice number
+        // Function to update the displayed image and slice number, and annotations
         function updateSlice() {
-            const currentSlice = sliceSlider.value;
-            // Pad the slice number with a leading zero if it's a single digit (e.g., 01, 02)
+            const currentSlice = parseInt(sliceSlider.value); // Ensure it's a number
             const paddedSlice = String(currentSlice).padStart(2, '0');
             const imageUrl = `${imageFolderPath}${imageBaseName}${paddedSlice}${imageExtension}`;
             brainSliceImage.src = imageUrl;
             sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
 
-            // --- Annotations will go here in a later phase ---
-            // For now, clear any old annotations
+            // Clear previous annotations
             annotationOverlay.innerHTML = '';
+
+            // Add annotations for the current slice
+            annotations.forEach(annotation => {
+                if (annotation.slice === currentSlice) {
+                    const labelDiv = document.createElement('div');
+                    labelDiv.classList.add('annotation-label');
+                    labelDiv.textContent = annotation.text;
+                    labelDiv.style.left = `${annotation.x}%`;
+                    labelDiv.style.top = `${annotation.y}%`;
+                    
+                    // Add 'show' class after a small delay to trigger CSS transition
+                    // This creates a subtle fade-in effect
+                    setTimeout(() => labelDiv.classList.add('show'), 10);
+                    annotationOverlay.appendChild(labelDiv);
+                }
+            });
         }
 
         // Event listener for the slider
         sliceSlider.addEventListener('input', updateSlice);
 
-        // Load the first image when the page loads
+        // Load the first image and annotations when the page loads
         document.addEventListener('DOMContentLoaded', updateSlice);
 
-        // Optional: Preload all images for smoother scrolling
+        // Preload all images for smoother scrolling (already present, good!)
         const preloadedImages = [];
         for (let i = 1; i <= imageCount; i++) {
             const img = new Image();
