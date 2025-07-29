@@ -350,9 +350,7 @@
         // --- END THEME LOGIC ---
 
         // --- JSON FILENAMES (CRITICAL: THIS LIST MUST BE EXACT) ---
-        // This list tells the script which JSON files to fetch.
-        // It must be PERFECTLY formatted: no missing commas, no extra quotes.
-        // I have re-checked this list for common syntax errors.
+        // Corrected "Olfatory Sulcus.json" to "Olfactory Sulcus.json"
         const jsonFilenames = [
             "Angular Gyrus.json",
             "Aqueduct.json",
@@ -377,7 +375,7 @@
             "Mesencephalic cistern.json",
             "Midbrain.json",
             "Middle Frontal Gyrus.json",
-            "Olfatory Sulcus.json", 
+            "Olfactory Sulcus.json", // <-- CORRECTED NAME HERE
             "Optic Nerve.json",
             "Peduncles.json",
             "Pons.json",
@@ -392,7 +390,7 @@
             "Superior Parietal Lobule.json",
             "Suprachiasmatic cistern.json",
             "Supramarginal Gyrus.json",
-            "Thallamus.json" 
+            "Thallamus.json" // Assuming this is correct, otherwise change to "Thalamus.json"
         ];
         // --- END JSON FILENAMES ---
 
@@ -407,14 +405,15 @@
                         .then(response => {
                             console.log(`Fetched ${filename}. Status: ${response.status}`); // Debug log
                             if (!response.ok) {
+                                // Log full URL to diagnose 404s
                                 throw new Error(`Failed to load ${filename}: ${response.statusText} (URL: ${response.url})`);
                             }
                             return response.json();
                         })
                         .catch(error => {
                             console.error(`Error fetching or parsing ${filename}:`, error); // Critical error log
-                            alert(`Error loading data for ${filename}. Check console for network/parse issues.`); // User-friendly alert
-                            return null; 
+                            // Re-throwing the error to ensure Promise.all fails if any fetch fails
+                            throw error; 
                         })
                 );
 
@@ -422,8 +421,8 @@
                 console.log("All JSON fetches completed.", results); 
 
                 results.forEach(jsonData => {
-                    if (!jsonData) { // Check if fetch itself failed (returned null)
-                        return; // Skip this file if fetch failed
+                    if (!jsonData) { // Check if fetch itself failed (returned null/undefined)
+                        return; // Skip this file if fetch failed earlier in catch
                     }
                     if (!jsonData.markups || !Array.isArray(jsonData.markups)) {
                         console.warn("Skipping invalid or empty JSON data for a markup file (missing 'markups' array).", jsonData);
@@ -463,7 +462,9 @@
 
             } catch (e) {
                 console.error("Critical error during annotation loading or processing:", e); 
-                alert("A critical error occurred while loading annotations. Check console for details."); // Broader alert
+                alert("A critical error occurred while loading annotations: " + e.message + ". Check console for details."); // Broader alert
+                // Ensure annotationsLoaded is false if a critical error occurred
+                annotationsLoaded = false;
             } finally {
                 loadingOverlay.classList.add('hidden'); // Hide loading overlay
             }
@@ -534,6 +535,7 @@
                         annotationSvgOverlay.appendChild(line);
                         annotationSvgOverlay.appendChild(circle);
 
+                        // Add 'show' class after a small delay to trigger CSS transition for label
                         setTimeout(() => labelDiv.classList.add('show'), 10);
                     });
                     console.log("Total annotations rendered for slice", currentSlice, ":", annotationsOnSlice); 
