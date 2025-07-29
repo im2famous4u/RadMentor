@@ -4,114 +4,165 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anatomy - RadMentor</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet"/>
     <style>
-        /* Basic styling for the anatomy page, matching your current theme */
+        /* Base styles for all themes */
         body {
             font-family: 'Rubik', sans-serif;
             margin: 0;
-            background-color: #004d5e; /* Dark theme default */
-            color: #ffffff;
             transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        body.light-theme {
-            background-color: #e3f2fd; /* Light theme background */
-            color: #212121;
+            display: flex; /* Use flexbox to center content vertically/horizontally */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Ensure it takes full viewport height */
+            background-color: var(--bg-color); /* Apply background from theme variable */
+            color: var(--text-color); /* Apply text color from theme variable */
         }
 
-        .anatomy-container {
-            max-width: 900px; /* Adjust as needed for content width */
-            margin: 50px auto;
-            padding: 30px;
-            background-color: #043f4e; /* Dark theme container */
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        /* Light Theme Variables (Inspired by image_8c3936.png) */
+        body.light-theme {
+            --bg-color: #f0f8ff; /* Very light blue/off-white background */
+            --container-bg-color: #ffffff; /* Pure white container background */
+            --text-color: #333333; /* Dark grey for general text */
+            --heading-color: #0d47a1; /* Darker blue for headings */
+            --box-bg-color: #e3f2fd; /* Light blue for boxes */
+            --box-hover-bg-color: #bbdefb; /* Slightly darker light blue on hover */
+            --box-border-color: #90caf9; /* Medium blue for box borders */
+            --back-button-bg: #1e88e5; /* Standard blue button */
+            --back-button-hover-bg: #1565c0; /* Darker blue button on hover */
+            --welcome-title-color: #0d47a1; /* Specific for welcome title if needed */
         }
-        body.light-theme .anatomy-container {
-            background-color: #ffffff; /* Light theme container */
-            color: #212121;
+
+        /* Dark Theme Variables (Existing RadMentor dark theme) */
+        body:not(.light-theme) {
+            --bg-color: #004d5e;
+            --container-bg-color: #043f4e;
+            --text-color: #ffffff;
+            --heading-color: #ffffff;
+            --box-bg-color: #095a71;
+            --box-hover-bg-color: #064a5c;
+            --box-border-color: #043f4e; /* Darker border for dark theme boxes */
+            --back-button-bg: #00bcd4;
+            --back-button-hover-bg: #0097a7;
+            --welcome-title-color: #ffffff;
+        }
+
+        .anatomy-wrapper {
+            max-width: 960px; /* Wider wrapper for better content spread */
+            width: 90%; /* Take 90% of screen width */
+            margin: 50px auto; /* Adjust top margin as needed, auto for horizontal centering */
+            padding: 40px; /* More padding inside */
+            background-color: var(--container-bg-color);
+            border-radius: 12px; /* Slightly more rounded corners */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2); /* More prominent shadow */
+            box-sizing: border-box; /* Include padding in width */
         }
 
         h1 {
             text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 30px;
-            color: inherit; /* Inherit from parent for theme change */
-        }
-        .section-heading {
-            font-size: 1.8rem;
-            color: #00bcd4; /* Accent color for section headings */
-            margin-top: 40px;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #00bcd4;
-            padding-bottom: 5px;
-        }
-        .content-block {
-            background-color: #095a71; /* Slightly lighter block for content */
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            color: #e0f2f1; /* Light text for dark block */
-        }
-        body.light-theme .content-block {
-            background-color: #f0f8ff; /* Light blue background for light block */
-            color: #495057; /* Darker text for light block */
-            border: 1px solid #d0e0f0;
+            font-size: 3rem; /* Larger main title */
+            font-weight: 700; /* Bolder main title */
+            margin-bottom: 40px; /* More space below title */
+            color: var(--heading-color);
         }
 
-        p {
-            margin-bottom: 10px;
+        .anatomy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Responsive columns */
+            gap: 25px; /* More space between boxes */
+            margin-top: 30px;
         }
+
+        .anatomy-box {
+            background-color: var(--box-bg-color);
+            color: var(--text-color); /* Text color inherited from body */
+            padding: 30px; /* Increased padding inside boxes */
+            border-radius: 10px; /* Rounded corners for boxes */
+            text-align: center;
+            font-size: 1.4rem; /* Larger text in boxes */
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--box-border-color); /* Border for boxes */
+            display: flex; /* Use flex to center text vertically */
+            align-items: center;
+            justify-content: center;
+            min-height: 120px; /* Minimum height for consistent box size */
+        }
+
+        .anatomy-box:hover {
+            background-color: var(--box-hover-bg-color);
+            transform: translateY(-5px); /* Lift effect on hover */
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); /* Stronger shadow on hover */
+        }
+
         .back-button {
             display: block;
-            width: 180px; /* Slightly wider button */
-            margin: 40px auto 0;
-            padding: 12px 20px; /* Adjusted padding */
-            background-color: #1e88e5; /* Blue button color */
+            width: 200px;
+            margin: 50px auto 0; /* More margin from bottom content */
+            padding: 15px 25px;
+            background-color: var(--back-button-bg);
             color: white;
             text-align: center;
             border-radius: 5px;
             text-decoration: none;
             font-weight: bold;
+            font-size: 1.1rem;
             transition: background-color 0.3s ease;
-            font-size: 1.1rem; /* Slightly larger font */
         }
         .back-button:hover {
-            background-color: #1565c0;
+            background-color: var(--back-button-hover-bg);
         }
 
-        /* --- Theme compatibility for content page --- */
-        /* This JS snippet will read the theme from localStorage and apply it */
-        /* It needs to be inside a <script> tag */
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .anatomy-wrapper {
+                padding: 20px;
+                width: 95%; /* Take more width on smaller screens */
+            }
+            h1 {
+                font-size: 2.5rem;
+            }
+            .anatomy-box {
+                font-size: 1.2rem;
+                padding: 20px;
+                min-height: 100px;
+            }
+            .anatomy-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Adjust min box width */
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+            .anatomy-box {
+                font-size: 1.1rem;
+                min-height: 80px;
+            }
+            .anatomy-grid {
+                grid-template-columns: 1fr; /* Single column on very small screens */
+                gap: 10px;
+            }
+            .back-button {
+                width: 100%;
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="anatomy-container">
-        <h1>Anatomy MCQs</h1>
+    <div class="anatomy-wrapper">
+        <h1>Anatomy</h1>
 
-        <h2 class="section-heading">CT Anatomy</h2>
-        <div class="content-block">
-            <p>Content related to CT Anatomy MCQs will go here. This could include explanations, questions, images, etc.</p>
-            <p>Example: Question 1: What structure is highlighted in the given CT image?</p>
-            <p>More detailed content for CT Anatomy...</p>
-        </div>
-
-        <h2 class="section-heading">MRI Anatomy</h2>
-        <div class="content-block">
-            <p>Content related to MRI Anatomy MCQs will go here.</p>
-            <p>Example: Question 2: Identify the sequence used for this MRI brain image.</p>
-        </div>
-
-        <h2 class="section-heading">Gross Anatomy</h2>
-        <div class="content-block">
-            <p>Content related to Gross Anatomy MCQs will go here.</p>
-            <p>Example: Question 3: Which nerve supplies the diaphragm?</p>
-        </div>
-
-        <h2 class="section-heading">USG Anatomy</h2>
-        <div class="content-block">
-            <p>Content related to Ultrasound Anatomy MCQs will go here.</p>
-            <p>Example: Question 4: Describe the sonographic appearance of the normal gall bladder wall.</p>
+        <div class="anatomy-grid">
+            <div class="anatomy-box" onclick="alert('CT Anatomy MCQs coming soon!')">CT Anatomy</div>
+            <div class="anatomy-box" onclick="alert('MRI Anatomy MCQs coming soon!')">MRI Anatomy</div>
+            <div class="anatomy-box" onclick="alert('Gross Anatomy MCQs coming soon!')">Gross Anatomy</div>
+            <div class="anatomy-box" onclick="alert('USG Anatomy MCQs coming soon!')">USG Anatomy</div>
         </div>
 
         <a href="../index.html" class="back-button">Back to Dashboard</a>
@@ -123,6 +174,8 @@
             if (savedTheme === 'light') {
                 document.body.classList.add('light-theme');
             }
+            // Ensure the body's min-height is applied correctly for centering
+            document.body.style.minHeight = '100vh';
         });
     </script>
 </body>
