@@ -243,7 +243,7 @@
         const imageExtension = '.png'; 
         const imageFolderPath = './Images/'; 
 
-        // Removed annotationJsonPath and jsonFilenames as we're bypassing JSON loading for this test
+        const annotationJsonPath = './annotations/'; 
         const imageDimensionMM = 512; 
 
         const anatomyCanvas = document.getElementById('anatomyCanvas');
@@ -254,16 +254,9 @@
         const sliceNumberDisplay = document.getElementById('sliceNumberDisplay');
         const loadingOverlay = document.getElementById('loadingOverlay'); 
 
-        // Hardcoded a minimal annotations array for testing visibility
-        const allAnnotations = [
-            { slice: 1, text: "Falx - Test", pointX: 50, pointY: 20, labelX: 15, labelY: 15 },
-            { slice: 1, text: "Thalamus - Test", pointX: 60, pointY: 50, labelX: 75, labelY: 50 },
-            { slice: 2, text: "Lateral Ventricle - Test", pointX: 40, pointY: 45, labelX: 20, labelY: 40 }
-        ];
-        // Set annotationsLoaded to true immediately since data is hardcoded
-        let annotationsLoaded = true; 
-
-        const imagesCache = {}; // Cache for preloaded Image objects
+        let allAnnotations = []; 
+        let annotationsLoaded = false; 
+        const imagesCache = {}; 
 
         // --- THEME LOGIC (standard) ---
         function setTheme(theme) {
@@ -287,15 +280,106 @@
         setInitialTheme();
         // --- END THEME LOGIC ---
 
-        // Removed loadAnnotations() as we're bypassing JSON loading for this test
+        // --- JSON FILENAMES (CRITICAL: THIS LIST MUST BE EXACT) ---
+        const jsonFilenames = [
+            "Angular Gyrus.json", "Aqueduct.json", "Caudate Nucleus.json", "Central Lobule.json",
+            "Cerebellar Nuclei.json", "Cerebellar Peduncles.json", "Culmen.json", "Cuneus.json",
+            "Declive.json", "Flocculus.json", "Fornix.json", "Frontal horn of LV.json",
+            "Globus Pallidus.json", "Inferior Frontal Gyrus.json", "Internal Capsule.json",
+            "Interpeduncular cistern.json", "Lateral Occipitotemporal gyrus.json",
+            "Maxillary Sinus.json", 
+            "Medial Frontal Gyrus.json",
+            "Medulla Oblongata.json",
+            "Mesencephalic cistern.json",
+            "Midbrain.json",
+            "Middle Frontal Gyrus.json",
+            "Olfactory Sulcus.json", // Corrected name
+            "Optic Nerve.json", "Peduncles.json", "Pons.json", "Post Central Gyrus.json",
+            "Posterior horn of LV.json", "Pre Central Gyrus.json", "Precuneus.json", "Putamen.json",
+            "Septum Pellucidum.json", "Straight Gyrus.json", "Superior Frontal Gyrus.json",
+            "Superior Parietal Lobule.json", "Suprachiasmatic cistern.json", "Supramarginal Gyrus.json",
+            "Thallamus.json" // Assuming this is correct, otherwise change to "Thalamus.json"
+        ];
+        // --- END JSON FILENAMES ---
 
-        // --- Image Preloading ---
-        function preloadAllImages() {
-            for (let i = 1; i <= imageCount; i++) {
-                const img = new Image();
-                img.src = `${imageFolderPath}${imageBaseName}${i}${imageExtension}`;
-                imagesCache[i] = img; 
+        // --- Data Loading and Processing ---
+        async function loadAnnotations() {
+            console.log("Loading annotations started.");
+            loadingOverlay.classList.remove('hidden'); // Show loading overlay
+
+            try {
+                const fetchPromises = jsonFilenames.map(filename =>
+                    fetch(`${annotationJsonPath}${filename}`)
+                        .then(response => {
+                            console.log(`Fetched ${filename}. Status: ${response.status}`);
+                            if (!response.ok) {
+                                throw new Error(`Failed to load ${filename}: ${response.statusText} (URL: ${response.url})`);
+                            }
+                            return response.json();
+                        })
+                        .catch(error => {
+                            console.error(`Error fetching or parsing ${filename}:`, error);
+                            throw error; // Re-throw to ensure Promise.all fails if any fetch fails
+                        })
+                );
+
+                const results = await Promise.all(fetchPromises);
+                console.log("All JSON fetches completed.", results); 
+
+                results.forEach(jsonData => {
+                    if (!jsonData) { 
+                        return; // Skip if fetch failed
+                    }
+                    if (!jsonData.markups || !Array.isArray(jsonData.markups)) {
+                        console.warn("Skipping invalid or empty JSON data for a markup file (missing 'markups' array).", jsonData);
+                        return;
+                    }
+
+                    jsonData.markups.forEach(markup => {
+                        if (markup.type === "Fiducial" && Array.isArray(markup.controlPoints)) {
+                            markup.controlPoints.forEach(cp => {
+                                if (cp.position && cp.position.length === 3) {
+                                    const sliceZ = cp.position[2]; 
+                                    const imageSliceNumber = Math.round(sliceZ); // Directly use rounded Z as slice number
+
+                                    const pointX_percent = (cp.position[0] / imageDimensionMM) * 100;
+                                    const pointY_percent = (cp.position[1] / imageDimensionMM) * 100;
+
+                                    const cleanLabelText = cp.label.split(/-\d+/)[0].trim();
+
+                                    // Default label position: Offset from the point for visibility
+                                    const defaultLabelX = pointX_percent + 5; 
+                                    const defaultLabelY = pointY_percent - 5; 
+
+                                    allAnnotations.push({
+                                        slice: imageSliceNumber,
+                                        text: cleanLabelText,
+                                        pointX: pointX_percent,
+                                        pointY: pointY_percent,
+                                        labelX: defaultLabelX, 
+                                        labelY: defaultLabelY  
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
+                console.log("All annotations processed. Total annotations:", allAnnotations.length); 
+                annotationsLoaded = true; // Set flag to true
+
+            } catch (e) {
+                console.error("Critical error during annotation loading or processing:", e); 
+                alert("A critical error occurred while loading annotations: " + e.message + ". Check console for details."); 
+                annotationsLoaded = false; // Ensure flag is false if error
+            } finally {
+                // Ensure the loading overlay is hidden ONLY after a short delay
+                setTimeout(() => {
+                    loadingOverlay.classList.add('hidden'); // Hide loading overlay regardless of success/fail
+                }, 500); // 0.5 second delay
             }
+
+            // Always attempt to updateSlice even if annotations failed to load, to show the image
+            updateSlice();
         }
 
         // --- Canvas Drawing Logic ---
@@ -303,29 +387,33 @@
             const currentSlice = parseInt(sliceSlider.value);
             const imageToDraw = imagesCache[currentSlice];
 
+            // If the image is not yet loaded or not found in cache, draw black and log
             if (!imageToDraw || !imageToDraw.complete) {
                 ctx.clearRect(0, 0, anatomyCanvas.width, anatomyCanvas.height);
-                ctx.fillStyle = "#000"; 
+                ctx.fillStyle = "#000"; // Black background if image not ready
                 ctx.fillRect(0, 0, anatomyCanvas.width, anatomyCanvas.height);
-                // No console.warn here, to reduce noise in this minimal version
+                console.warn(`Image brain${currentSlice}.png not yet loaded or found. Skipping drawing for this slice.`);
                 return;
             }
 
+            // Resize canvas to match image wrapper's current size for responsiveness
             anatomyCanvas.width = imageWrapper.clientWidth;
             anatomyCanvas.height = imageWrapper.clientHeight;
 
+            // Draw image, scaled to fit canvas while maintaining aspect ratio
             const scale = Math.min(anatomyCanvas.width / imageToDraw.naturalWidth, anatomyCanvas.height / imageToDraw.naturalHeight);
             const scaledWidth = imageToDraw.naturalWidth * scale;
             const scaledHeight = imageToDraw.naturalHeight * scale;
             const offsetX = (anatomyCanvas.width - scaledWidth) / 2;
             const offsetY = (anatomyCanvas.height - scaledHeight) / 2;
 
-            ctx.clearRect(0, 0, anatomyCanvas.width, anatomyCanvas.height);
+            ctx.clearRect(0, 0, anatomyCanvas.width, anatomyCanvas.height); // Clear previous drawing
             ctx.drawImage(imageToDraw, offsetX, offsetY, scaledWidth, scaledHeight);
 
-            // Draw Annotations (now from hardcoded array)
-            if (annotationsLoaded) { // This will always be true in this version
+            // Draw Annotations only if loaded
+            if (annotationsLoaded) {
                 allAnnotations.filter(ann => ann.slice === currentSlice).forEach(annotation => {
+                    // Convert percentage coordinates to pixel coordinates on the *scaled and offset* canvas image
                     const pixelPointX = (annotation.pointX / 100) * scaledWidth + offsetX;
                     const pixelPointY = (annotation.pointY / 100) * scaledHeight + offsetY;
 
@@ -350,20 +438,22 @@
 
                     // Draw Point
                     ctx.beginPath();
-                    ctx.arc(pixelPointX, pixelPointY, 4, 0, Math.PI * 2); 
+                    ctx.arc(pixelPointX, pixelPointY, 4, 0, Math.PI * 2); // Radius 4
                     ctx.fillStyle = annotationPointColor;
                     ctx.fill();
 
                     // Draw Text Label Background
-                    ctx.font = '500 14px Rubik'; 
+                    ctx.font = '500 14px Rubik'; // Ensure font is loaded before measureText
                     const textMetrics = ctx.measureText(annotation.text);
                     const textWidth = textMetrics.width;
-                    const textHeight = parseInt(ctx.font.match(/\d+/)) * 1.5; 
+                    const textHeight = parseInt(ctx.font.match(/\d+/)) * 1.5; // Approximate height based on font size
 
-                    const bgPaddingX = 8; 
-                    const bgPaddingY = 6; 
+                    const bgPaddingX = 8; // Horizontal padding around text
+                    const bgPaddingY = 6; // Vertical padding around text
 
                     ctx.fillStyle = annotationBgColor;
+                    // Use ctx.roundRect for rounded rectangles (requires modern browser or polyfill)
+                    // Fallback to rect if roundRect is not supported
                     if (ctx.roundRect) {
                         ctx.beginPath();
                         ctx.roundRect(
@@ -371,13 +461,14 @@
                             pixelLabelY - textHeight / 2 - bgPaddingY,
                             textWidth + bgPaddingX * 2,
                             textHeight + bgPaddingY * 2,
-                            4 
+                            4 // border radius
                         );
                         ctx.fill();
                         ctx.strokeStyle = annotationBorderColor;
                         ctx.lineWidth = 1;
                         ctx.stroke();
                     } else {
+                        // Fallback for older browsers
                         ctx.fillRect(
                             pixelLabelX - textWidth / 2 - bgPaddingX,
                             pixelLabelY - textHeight / 2 - bgPaddingY,
@@ -400,6 +491,8 @@
                     ctx.textAlign = 'center';   
                     ctx.fillText(annotation.text, pixelLabelX, pixelLabelY);
                 });
+            } else {
+                // No console.warn here to reduce noise if it's expected not to load yet
             }
         }
 
@@ -408,41 +501,42 @@
             const currentSlice = parseInt(sliceSlider.value);
             sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
 
-            // Load and draw image (or draw from cache if already loaded)
             const imageToLoad = imagesCache[currentSlice];
             if (imageToLoad) {
                 if (imageToLoad.complete) {
                     drawCurrentSlice();
                 } else {
                     imageToLoad.onload = drawCurrentSlice;
-                    // No need to set img.src again, as it's preloaded already.
+                    // Ensure the image src is set to start loading if it's not already
+                    // This is redundant if preloading works, but acts as a robust fallback.
+                    imageToLoad.src = `${imageFolderPath}${imageBaseName}${currentSlice}${imageExtension}`; 
                 }
             } else {
-                // This scenario should not happen if preloadAllImages is correct
-                console.error("Image not found in cache for slice:", currentSlice);
+                console.error("Image object not found in cache for slice:", currentSlice, ". This indicates a preloading issue.");
+                // Attempt to load directly if not in cache (fallback)
+                const img = new Image();
+                img.src = `${imageFolderPath}${imageBaseName}${currentSlice}${imageExtension}`;
+                img.onload = drawCurrentSlice;
+                imagesCache[currentSlice] = img; // Add to cache for future use
             }
         }
 
         // --- Initial Setup ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Hide loading overlay immediately because annotations are hardcoded
-            loadingOverlay.classList.add('hidden'); 
-            
-            preloadAllImages(); 
+            preloadAllImages(); // Start preloading all images
 
+            // Set up initial canvas size based on wrapper
             function setCanvasSizeAndDraw() {
                 anatomyCanvas.width = imageWrapper.clientWidth;
                 anatomyCanvas.height = imageWrapper.clientHeight;
                 updateSlice(); // Call updateSlice after canvas is resized
             }
-            
-            // Set up initial canvas size and draw first slice
             setCanvasSizeAndDraw(); 
-            
+
             // Resize canvas on window resize to keep it responsive
             window.addEventListener('resize', setCanvasSizeAndDraw); 
             
-            // Initial slice display will be handled by setCanvasSizeAndDraw or image.onload
+            loadAnnotations(); // Start loading JSON data. updateSlice will be called by loadAnnotations() or image.onload
         });
 
         sliceSlider.addEventListener('input', updateSlice);
