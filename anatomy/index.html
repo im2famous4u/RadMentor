@@ -1,1 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anatomy - RadMentor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet"/>
+    <style>
+        /* Basic styling for the anatomy page, matching your current theme */
+        body {
+            font-family: 'Rubik', sans-serif;
+            margin: 0;
+            background-color: #004d5e; /* Dark theme default */
+            color: #ffffff;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        body.light-theme {
+            background-color: #e3f2fd; /* Light theme background */
+            color: #212121;
+        }
 
+        .anatomy-container {
+            max-width: 900px; /* Adjust as needed for content width */
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #043f4e; /* Dark theme container */
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        body.light-theme .anatomy-container {
+            background-color: #ffffff; /* Light theme container */
+            color: #212121;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            color: inherit; /* Inherit from parent for theme change */
+        }
+        .section-heading {
+            font-size: 1.8rem;
+            color: #00bcd4; /* Accent color for section headings */
+            margin-top: 40px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #00bcd4;
+            padding-bottom: 5px;
+        }
+        .content-block {
+            background-color: #095a71; /* Slightly lighter block for content */
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #e0f2f1; /* Light text for dark block */
+        }
+        body.light-theme .content-block {
+            background-color: #f0f8ff; /* Light blue background for light block */
+            color: #495057; /* Darker text for light block */
+            border: 1px solid #d0e0f0;
+        }
+
+        p {
+            margin-bottom: 10px;
+        }
+        .back-button {
+            display: block;
+            width: 180px; /* Slightly wider button */
+            margin: 40px auto 0;
+            padding: 12px 20px; /* Adjusted padding */
+            background-color: #1e88e5; /* Blue button color */
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            font-size: 1.1rem; /* Slightly larger font */
+        }
+        .back-button:hover {
+            background-color: #1565c0;
+        }
+
+        /* --- Theme compatibility for content page --- */
+        /* This JS snippet will read the theme from localStorage and apply it */
+        /* It needs to be inside a <script> tag */
+    </style>
+</head>
+<body>
+    <div class="anatomy-container">
+        <h1>Anatomy MCQs</h1>
+
+        <h2 class="section-heading">CT Anatomy</h2>
+        <div class="content-block">
+            <p>Content related to CT Anatomy MCQs will go here. This could include explanations, questions, images, etc.</p>
+            <p>Example: Question 1: What structure is highlighted in the given CT image?</p>
+            <p>More detailed content for CT Anatomy...</p>
+        </div>
+
+        <h2 class="section-heading">MRI Anatomy</h2>
+        <div class="content-block">
+            <p>Content related to MRI Anatomy MCQs will go here.</p>
+            <p>Example: Question 2: Identify the sequence used for this MRI brain image.</p>
+        </div>
+
+        <h2 class="section-heading">Gross Anatomy</h2>
+        <div class="content-block">
+            <p>Content related to Gross Anatomy MCQs will go here.</p>
+            <p>Example: Question 3: Which nerve supplies the diaphragm?</p>
+        </div>
+
+        <h2 class="section-heading">USG Anatomy</h2>
+        <div class="content-block">
+            <p>Content related to Ultrasound Anatomy MCQs will go here.</p>
+            <p>Example: Question 4: Describe the sonographic appearance of the normal gall bladder wall.</p>
+        </div>
+
+        <a href="../index.html" class="back-button">Back to Dashboard</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+            }
+        });
+    </script>
+</body>
+</html>
