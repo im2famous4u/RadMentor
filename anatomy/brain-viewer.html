@@ -35,7 +35,7 @@
             --slider-track-bg: #c5d9e8; /* Light blue for slider track */
             --slider-thumb-bg: #1e88e5; /* Blue for slider thumb */
             --annotation-text-color: #1a237e; /* Darker blue for annotation text */
-            --annotation-bg-color: rgba(255, 255, 255, 0.9); /* More opaque white background */
+            --annotation-bg-color: rgba(255, 255, 255, 0.95); /* More opaque white background */
             --annotation-border-color: #64b5f6; /* Light blue border */
             --annotation-line-color: #42a5f5; /* Medium blue for lines */
             --annotation-point-color: #f44336; /* Red dot for point */
@@ -55,7 +55,7 @@
             --slider-track-bg: #032b36; /* Darker track for dark theme */
             --slider-thumb-bg: #00bcd4; /* Brighter thumb for dark theme */
             --annotation-text-color: #e0f2f1; /* Light text for annotations */
-            --annotation-bg-color: rgba(0, 0, 0, 0.8); /* Semi-transparent black background */
+            --annotation-bg-color: rgba(0, 0, 0, 0.85); /* More opaque black background */
             --annotation-border-color: #00bcd4; /* Accent color border */
             --annotation-line-color: #00bcd4; /* Accent color for lines */
             --annotation-point-color: #f44336; /* Red dot for point */
@@ -67,7 +67,7 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             padding: 20px;
             margin: 20px auto;
-            max-width: 800px; /* Slightly wider to accommodate labels */
+            max-width: 800px; /* Wider to accommodate labels */
             width: 90%; /* Responsive width */
             box-sizing: border-box;
             display: flex;
@@ -88,7 +88,7 @@
             padding-bottom: 100%; /* Creates a square aspect ratio for the image area (if images are square) */
             background-color: #000; /* Black background for imaging studies */
             border-radius: 8px;
-            overflow: hidden;
+            overflow: hidden; /* Hide anything outside the wrapper */
             box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
         }
 
@@ -138,6 +138,10 @@
         /* Annotation Label Styling */
         .annotation-label {
             position: absolute;
+            /* Explicitly setting display and opacity to ensure visibility if JS fails or delays */
+            display: block; 
+            opacity: 1; 
+
             background-color: var(--annotation-bg-color);
             color: var(--annotation-text-color);
             padding: 5px 10px;
@@ -146,35 +150,38 @@
             font-weight: 500;
             white-space: nowrap; /* Keep text on one line */
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            transition: opacity 0.3s ease; /* Smooth fade in/out */
-            opacity: 1;
-            pointer-events: auto; /* Allows interaction with label if needed (e.g. hover) */
+            /* transition: opacity 0.3s ease; Removed for initial testing to ensure visibility */
+            pointer-events: auto;
             border: 1px solid var(--annotation-border-color);
             z-index: 10; /* Ensure labels are above the SVG lines */
             cursor: default;
         }
 
-        .annotation-label.show {
-            opacity: 1; /* Show when 'show' class is added */
+        /* Re-add transition and hide by default (optional, once confirmed working) */
+        /*
+        .annotation-label {
+            opacity: 0; 
+            transition: opacity 0.3s ease; 
         }
+        .annotation-label.show {
+            opacity: 1;
+        }
+        */
+
         /* Label positioning based on labelAlign and transform to ensure edge connection */
         .annotation-label.align-left {
-            /* If point is to the right, label is to the left of the point, line connects to its right edge */
             transform: translate(calc(-100% - 10px), -50%); /* 10px gap from point, vertically centered */
-            text-align: right; /* Text aligns right if line comes from right */
+            text-align: right;
         }
         .annotation-label.align-right {
-            /* If point is to the left, label is to the right of the point, line connects to its left edge */
             transform: translate(10px, -50%); /* 10px gap from point, vertically centered */
-            text-align: left; /* Text aligns left if line comes from left */
+            text-align: left;
         }
         .annotation-label.align-top {
-            /* If point is below, label is above, line connects to its bottom edge */
             transform: translate(-50%, calc(-100% - 10px)); /* 10px gap from point, horizontally centered */
             text-align: center;
         }
         .annotation-label.align-bottom {
-            /* If point is above, label is below, line connects to its top edge */
             transform: translate(-50%, 10px); /* 10px gap from point, horizontally centered */
             text-align: center;
         }
@@ -327,13 +334,10 @@
         // - slice: The image number (e.g., 1 for brain_01.jpg)
         // - text: The label text
         // - pointX, pointY: The (percentage) coordinates of the anatomical point on the image.
-        // - labelX, labelY: The (percentage) coordinates for the BASE POINT of the label box (usually a corner or edge center).
-        // - labelAlign: 'left', 'right', 'top', 'bottom' - controls how the label positions itself relative to labelX/Y for the line connection.
+        // - labelX, labelY: The (percentage) coordinates for the BASE POINT of the label box (where the line connects).
+        // - labelAlign: 'left', 'right', 'top', 'bottom' - controls how the label positions itself relative to labelX/Y.
         const annotations = [
             // --- Annotations for brain_01.jpg (Slice 1) ---
-            // pointX, pointY is where the line starts on the anatomy
-            // labelX, labelY is where the line ends on the label box
-            // labelAlign defines which edge of the label box the line connects to
             { slice: 1, text: "Falx", pointX: 50.66, pointY: 21.45, labelX: 12.38, labelY: 16.83, labelAlign: 'right' },
 
             // --- Annotations for brain_02.jpg (Slice 2) ---
@@ -341,8 +345,8 @@
 
             // --- Annotations for brain_03.jpg (Slice 3) ---
             { slice: 3, text: "Lateral Ventricle", pointX: 41.75, pointY: 56.93, labelX: 11.72, labelY: 24.26, labelAlign: 'right' },
-            // Example new annotation, adjust coordinates and alignment as needed for your specific images
-            // { slice: 3, text: "New Structure", pointX: 70, pointY: 60, labelX: 85, labelY: 65, labelAlign: 'left' },
+            // Add more annotations here as you identify structures on your images:
+            // { slice: X, text: "Your Label", pointX: XX.XX, pointY: YY.YY, labelX: XX.XX, labelY: YY.YY, labelAlign: 'right' },
         ];
         // --- END ANNOTATION DATA ---
 
@@ -378,17 +382,16 @@
                     labelDiv.classList.add('annotation-label');
                     labelDiv.textContent = annotation.text;
                     
-                    // Position label using its connection point (labelX, labelY)
-                    // The actual visual alignment will be handled by CSS transform
+                    // Position label using its connection point (labelX, labelY percentages)
                     labelDiv.style.left = `${annotation.labelX}%`;
                     labelDiv.style.top = `${annotation.labelY}%`;
 
-                    // Apply alignment class for CSS transform
+                    // Apply alignment class for CSS transform to shift the box itself
                     if (annotation.labelAlign) {
                         labelDiv.classList.add(`align-${annotation.labelAlign}`);
                     }
                     
-                    // Append to DOM first to get its rendered dimensions for line calculation
+                    // Append to DOM to make it part of the page
                     annotationOverlay.appendChild(labelDiv);
 
 
@@ -397,11 +400,9 @@
                     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
 
                     // Calculate line start/end points in pixels based on percentages
-                    // Line starts at anatomical point
                     const pX = (annotation.pointX / 100) * imageWidth;
                     const pY = (annotation.pointY / 100) * imageHeight;
 
-                    // Line ends at the label's base point (labelX, labelY percentages)
                     const lX = (annotation.labelX / 100) * imageWidth;
                     const lY = (annotation.labelY / 100) * imageHeight;
 
@@ -419,8 +420,10 @@
                     annotationSvgOverlay.appendChild(line);
                     annotationSvgOverlay.appendChild(circle);
 
-                    // Add 'show' class after a small delay to trigger CSS transition for label
-                    setTimeout(() => labelDiv.classList.add('show'), 10);
+                    // Re-add 'show' class after a small delay to trigger CSS transition for label
+                    // This relies on 'opacity: 0' and 'transition' being active in CSS (currently commented out for debug)
+                    // If you re-enable opacity:0 and transition, uncomment this line:
+                    // setTimeout(() => labelDiv.classList.add('show'), 10);
                 }
             });
         }
