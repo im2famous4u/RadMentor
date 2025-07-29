@@ -274,9 +274,9 @@
 
     <script>
         const imageCount = 24; // Total number of brain images
-        const imageBaseName = 'brain'; // Filenames are brain1.jpg, brain2.jpg...
-        const imageExtension = '.jpg';
-        const imageFolderPath = './'; // Images are in the same folder as this HTML file
+        const imageBaseName = 'brain'; // Filenames are brain1.png, brain2.png...
+        const imageExtension = '.png'; // <--- CHANGED TO .png
+        const imageFolderPath = './Images/'; // <--- CHANGED TO ./Images/
 
         const annotationJsonPath = './annotations/'; // Path to your annotations folder
         const imageDimensionMM = 512; // Your images are 512x512 pixels, representing 512x512 mm FOV
@@ -331,13 +331,13 @@
             "Internal Capsule.json",
             "Interpeduncular cistern.json",
             "Lateral Occipitotemporal gyrus.json",
-            "Maxillary Sinus.json", // This one seems out of place for brain, but included as per list.
+            "Maxillary Sinus.json", 
             "Medial Frontal Gyrus.json",
             "Medulla Oblongata.json",
             "Mesencephalic cistern.json",
             "Midbrain.json",
             "Middle Frontal Gyrus.json",
-            "Olfatory Sulcus.json", // Note: Usually "Olfactory Sulcus"
+            "Olfatory Sulcus.json", 
             "Optic Nerve.json",
             "Peduncles.json",
             "Pons.json",
@@ -352,7 +352,7 @@
             "Superior Parietal Lobule.json",
             "Suprachiasmatic cistern.json",
             "Supramarginal Gyrus.json",
-            "Thallamus.json" // Note: Usually "Thalamus"
+            "Thallamus.json" 
         ];
         // --- END JSON FILENAMES ---
 
@@ -368,7 +368,8 @@
                     })
                     .catch(error => {
                         console.error(`Error fetching ${filename}:`, error);
-                        return null; // Return null for failed fetches
+                        // Provide a more user-friendly error or fallback for failed JSONs
+                        return null; 
                     })
             );
 
@@ -376,7 +377,7 @@
 
             results.forEach(jsonData => {
                 if (!jsonData || !jsonData.markups || !Array.isArray(jsonData.markups)) {
-                    // console.warn("Skipping invalid JSON data:", jsonData);
+                    console.warn("Skipping invalid or empty JSON data for a markup file.", jsonData);
                     return;
                 }
 
@@ -385,26 +386,31 @@
                         markup.controlPoints.forEach(cp => {
                             if (cp.position && cp.position.length === 3) {
                                 const sliceZ = cp.position[2]; // The Z-coordinate from Slicer
-                                const imageSliceNumber = Math.round(sliceZ); // Assuming Z=1.0 for brain1.jpg, Z=2.0 for brain2.jpg etc.
+                                const imageSliceNumber = Math.round(sliceZ); // Directly use rounded Z as slice number
 
                                 // Convert Slicer's mm coordinates to percentages for 512x512 image
                                 // Assuming 1 pixel = 1mm, and Slicer origin maps cleanly to image origin
+                                // These X and Y values from Slicer (position[0], position[1]) are in millimeters.
+                                // Since your image is 512x512 mm, X/512 * 100 gives percentage.
                                 const pointX_percent = (cp.position[0] / imageDimensionMM) * 100;
                                 const pointY_percent = (cp.position[1] / imageDimensionMM) * 100;
 
+                                // Extract the main label text (e.g., "Angular Gyrus" from "Angular Gyrus-1")
+                                const cleanLabelText = cp.label.split('-')[0].trim();
+
                                 // Initial guess for label position: Offset from the point for visibility
                                 // You will fine-tune these labelX/labelY values visually.
-                                // For now, let's place it a bit to the right and above the point.
-                                const labelOffsetFromPointX = 10; // % offset from point for label
-                                const labelOffsetFromPointY = -5; // % offset from point for label
+                                // These are just starting points to get the labels on screen.
+                                const defaultLabelX = pointX_percent + 5; // Start label slightly right of point
+                                const defaultLabelY = pointY_percent - 5; // Start label slightly above point
 
                                 allAnnotations.push({
-                                    slice: imageSliceNumber, // Use the rounded Z as the slice number
-                                    text: cp.label.split('-')[0].trim(), // Take only the name before "-1", "-2" etc.
+                                    slice: imageSliceNumber,
+                                    text: cleanLabelText,
                                     pointX: pointX_percent,
                                     pointY: pointY_percent,
-                                    labelX: pointX_percent + labelOffsetFromPointX,
-                                    labelY: pointY_percent + labelOffsetFromPointY
+                                    labelX: defaultLabelX, // Initial label X percentage
+                                    labelY: defaultLabelY  // Initial label Y percentage
                                 });
                             }
                         });
@@ -412,7 +418,7 @@
                 });
             });
 
-            // After loading, update the slice to display annotations
+            // After all JSONs are loaded and processed, render the current slice
             updateSlice();
         }
 
@@ -424,8 +430,8 @@
         // Function to update the displayed image and slice number, and annotations
         function updateSlice() {
             const currentSlice = parseInt(sliceSlider.value); // Ensure it's a number
-            const paddedSlice = String(currentSlice); // No padding needed if filenames are brain1.jpg, brain2.jpg
-            const imageUrl = `${imageFolderPath}${imageBaseName}${paddedSlice}${imageExtension}`;
+            // Filenames are brain1.png, brain2.png, not brain01.png
+            const imageUrl = `${imageFolderPath}${imageBaseName}${currentSlice}${imageExtension}`; 
             brainSliceImage.src = imageUrl;
             sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
 
@@ -485,22 +491,28 @@
             });
         }
 
-        // Initial calls when the page is ready
+        // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', () => {
-            loadAnnotations(); // Start loading JSON data
-            // Initial slice display will happen after annotations are loaded via updateSlice()
+            // Start loading JSON annotations. updateSlice will be called after they load.
+            loadAnnotations(); 
+            // Also call updateSlice once DOM is ready if image is already cached
+            if (brainSliceImage.complete) {
+                updateSlice();
+            }
         });
 
-        // Event listener for the slider
+        // Ensure updateSlice runs when image is loaded (e.g., first load or if src changes)
+        // This is crucial for getting correct wrapper dimensions for line drawing.
+        brainSliceImage.addEventListener('load', updateSlice); 
+        
+        // Event listener for the slider (already present, good!)
         sliceSlider.addEventListener('input', updateSlice);
 
         // Preload all images for smoother scrolling
-        // (This will happen after initial slice is loaded, which is fine)
         const preloadedImages = [];
         for (let i = 1; i <= imageCount; i++) {
             const img = new Image();
-            const paddedSlice = String(i); // No padding needed for brain1.jpg
-            img.src = `${imageFolderPath}${imageBaseName}${paddedSlice}${imageExtension}`;
+            img.src = `${imageFolderPath}${imageBaseName}${i}${imageExtension}`; // Use 'i' directly for filename
             preloadedImages.push(img);
         }
     </script>
