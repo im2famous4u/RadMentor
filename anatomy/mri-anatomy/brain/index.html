@@ -351,6 +351,8 @@
 
         // --- JSON FILENAMES (CRITICAL: THIS LIST MUST BE EXACT) ---
         // This list tells the script which JSON files to fetch.
+        // It must be PERFECTLY formatted: no missing commas, no extra quotes.
+        // I have re-checked this list for common syntax errors.
         const jsonFilenames = [
             "Angular Gyrus.json",
             "Aqueduct.json",
@@ -403,13 +405,15 @@
                 const fetchPromises = jsonFilenames.map(filename =>
                     fetch(`${annotationJsonPath}${filename}`)
                         .then(response => {
+                            console.log(`Fetched ${filename}. Status: ${response.status}`); // Debug log
                             if (!response.ok) {
-                                throw new Error(`Failed to load ${filename}: ${response.statusText}`);
+                                throw new Error(`Failed to load ${filename}: ${response.statusText} (URL: ${response.url})`);
                             }
                             return response.json();
                         })
                         .catch(error => {
-                            console.error(`Error fetching or parsing ${filename}:`, error);
+                            console.error(`Error fetching or parsing ${filename}:`, error); // Critical error log
+                            alert(`Error loading data for ${filename}. Check console for network/parse issues.`); // User-friendly alert
                             return null; 
                         })
                 );
@@ -418,8 +422,11 @@
                 console.log("All JSON fetches completed.", results); 
 
                 results.forEach(jsonData => {
-                    if (!jsonData || !jsonData.markups || !Array.isArray(jsonData.markups)) {
-                        console.warn("Skipping invalid or empty JSON data for a markup file.", jsonData);
+                    if (!jsonData) { // Check if fetch itself failed (returned null)
+                        return; // Skip this file if fetch failed
+                    }
+                    if (!jsonData.markups || !Array.isArray(jsonData.markups)) {
+                        console.warn("Skipping invalid or empty JSON data for a markup file (missing 'markups' array).", jsonData);
                         return;
                     }
 
@@ -428,12 +435,12 @@
                             markup.controlPoints.forEach(cp => {
                                 if (cp.position && cp.position.length === 3) {
                                     const sliceZ = cp.position[2]; 
-                                    const imageSliceNumber = Math.round(sliceZ); 
+                                    const imageSliceNumber = Math.round(sliceZ); // Directly use rounded Z as slice number
 
                                     const pointX_percent = (cp.position[0] / imageDimensionMM) * 100;
                                     const pointY_percent = (cp.position[1] / imageDimensionMM) * 100;
 
-                                    const cleanLabelText = cp.label.split(/-\d+/)[0].trim();
+                                    const cleanLabelText = cp.label.split(/-\d+/)[0].trim(); // Robust parsing
 
                                     const defaultLabelX = pointX_percent + 5; 
                                     const defaultLabelY = pointY_percent - 5; 
@@ -451,12 +458,12 @@
                         }
                     });
                 });
-                console.log("All annotations processed. Total:", allAnnotations.length); 
+                console.log("All annotations processed. Total annotations:", allAnnotations.length); 
                 annotationsLoaded = true; // Set flag to true
 
             } catch (e) {
-                console.error("Error during annotation loading or processing:", e); 
-                alert("Failed to load annotations. Check console for details."); // User-friendly alert
+                console.error("Critical error during annotation loading or processing:", e); 
+                alert("A critical error occurred while loading annotations. Check console for details."); // Broader alert
             } finally {
                 loadingOverlay.classList.add('hidden'); // Hide loading overlay
             }
@@ -541,13 +548,20 @@
 
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', () => {
-            console.log("DOM content loaded.");
+            console.log("DOM content loaded."); 
             loadAnnotations(); // Start loading JSON data
+            // If image is already cached, 'load' event might not fire immediately.
+            // Also call updateSlice once DOM is ready if image is already complete.
+            // This ensures content is displayed even if 'load' doesn't fire.
+            if (brainSliceImage.complete) {
+                console.log("Image already complete on DOMContentLoaded, calling updateSlice."); 
+                updateSlice();
+            }
         });
 
         // Ensure updateSlice runs when image is loaded 
         brainSliceImage.addEventListener('load', () => {
-            console.log("Brain image loaded event fired."); 
+            console.log("Brain image loaded event fired. Calling updateSlice."); 
             updateSlice(); 
         });
         
