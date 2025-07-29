@@ -1,0 +1,38 @@
+# This is the name of your auto-deployment process on GitHub
+name: Deploy RadMentor to Firebase Hosting
+
+# This tells GitHub WHEN to run this process.
+# It will run every time you 'push' (save changes) to your 'main' branch.
+on:
+  push:
+    branches:
+      - main # IMPORTANT: Make sure this says 'main' or 'master' - whatever your project's main branch is called on GitHub.
+
+# These are the actual steps GitHub will follow to deploy your website.
+jobs:
+  deploy_website:
+    runs-on: ubuntu-latest # This means it will run on a standard computer setup provided by GitHub.
+
+    steps:
+      # Step 1: Get your website files from GitHub
+      - name: Get your code
+        uses: actions/checkout@v4
+
+      # Step 2: Prepare the tools needed for Firebase
+      - name: Set up Node.js (Firebase tool needs this)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Use a standard version of Node.js
+
+      # Step 3: Install the Firebase tool (like an app for Firebase)
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      # Step 4: Deploy your website to Firebase!
+      # It uses your secret key to connect to Firebase securely.
+      - name: Send website to Firebase Hosting
+        run: firebase deploy --only hosting --project radiology-mcqs # IMPORTANT: Make sure 'radiology-mcqs' is YOUR Firebase Project ID.
+        env:
+          # This is where your secret key is used.
+          # 'FIREBASE_TOKEN' must be the exact name you used for the secret in GitHub settings.
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
