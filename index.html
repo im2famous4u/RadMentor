@@ -105,49 +105,52 @@
 
         /* Specific Layouts and Components */
         .container {
-            max-width: 500px;
-            margin: 30px auto; /* Reduced top margin to move content up */
+            max-width: 500px; /* Fixed width for auth/profile forms */
+            margin: 30px auto;
             padding: 30px;
-            border-radius: 8px; /* Slightly less rounded corners */
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* More subtle shadow for light theme */
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         h1 {
             text-align: center;
-            font-size: 2.0rem; /* Slightly larger heading */
-            font-weight: 500; /* Less bold heading */
+            font-size: 2.0rem;
+            font-weight: 500;
             margin-bottom: 25px;
         }
 
         .input-group {
-            margin: 18px 0; /* Slightly more spacing for input groups */
+            margin: 18px 0;
         }
 
         input, select {
             width: 100%;
-            padding: 10px; /* Slightly less padding */
+            padding: 10px;
             font-size: 16px;
-            border-radius: 4px; /* Less rounded input fields */
-            box-sizing: border-box; /* Include padding in width */
+            border-radius: 4px;
+            box-sizing: border-box;
         }
 
         button {
             width: 100%;
-            padding: 10px; /* Slightly less button padding */
+            padding: 10px;
             font-size: 16px;
             font-weight: bold;
             border: none;
-            border-radius: 4px; /* Less rounded buttons */
+            border-radius: 4px;
             cursor: pointer;
-            margin-top: 20px; /* Slightly more top margin for buttons */
-            transition: background 0.2s ease-in-out; /* Faster transition */
+            margin-top: 20px;
+            transition: background 0.2s ease-in-out;
         }
 
+        /* Dashboard container will NOT have a fixed max-width, it will adapt */
         .dashboard {
             display: none;
             text-align: center;
             min-height: 300px;
-            padding-top: 60px; /* Space below fixed topbar */
+            padding-top: 50px; /* Space below fixed topbar */
+            margin: 0 auto; /* Allow full width, but center its children */
+            width: 100%; /* Take full available width */
         }
 
         .topbar {
@@ -161,7 +164,7 @@
             align-items: center;
             padding-right: 20px;
             z-index: 1000;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Subtle topbar shadow */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
         .menu-icon {
@@ -171,7 +174,7 @@
         }
 
         .user-greeting {
-            font-size: 1.0rem; /* Slightly larger greeting */
+            font-size: 1.0rem;
             margin-left: auto;
             padding-right: 15px;
             display: flex;
@@ -192,28 +195,27 @@
             font-size: 1.2rem;
             font-weight: 300;
             color: var(--text-color);
-            margin-bottom: 30px; /* Space before the grid */
+            margin-bottom: 30px;
         }
-
 
         .sidebar {
             position: fixed;
             top: 50px;
-            right: -270px; /* Adjusted: Pushed further off-screen to hide completely */
+            right: -270px; /* Correctly hidden off-screen */
             width: 250px;
             height: calc(100% - 50px);
             padding: 20px;
-            transition: right 0.2s ease-in-out; /* Faster sidebar transition */
+            transition: right 0.2s ease-in-out;
             z-index: 1001;
             overflow-y: auto;
         }
 
         .sidebar.show {
-            right: 0; /* Slides into view */
+            right: 0;
         }
 
         .sidebar-item {
-            padding: 10px 15px; /* Adjusted sidebar item padding */
+            padding: 10px 15px;
             cursor: pointer;
             text-align: left;
             font-size: 1.0rem;
@@ -223,87 +225,86 @@
             border-bottom: none;
         }
 
-        /* Dashboard main content area */
-        .dashboard-content {
-            margin-top: 55px; /* Adjusted space below fixed topbar */
-            padding: 20px;
-            min-height: 400px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
+        /* Dashboard main content area wrapper */
+        .dashboard-content-wrapper {
+            margin: 0 auto; /* Center the wrapper */
+            padding: 20px; /* Internal padding for the content */
+            width: 90%; /* Start wide on larger screens */
+            max-width: 1200px; /* Maximum width for very large screens */
+            box-sizing: border-box; /* Include padding in width */
         }
 
-        /* Specific Content Sections */
+        /* Adjust content-section max-width inside dashboard */
         .content-section {
             display: none;
             width: 100%;
-            max-width: 700px; /* Slightly wider content section */
+            max-width: 900px; /* Allows content sections to expand more */
             margin: 25px auto;
             text-align: left;
             line-height: 1.7;
-        }
-
-        .content-section h2 {
-            text-align: center;
-            font-size: 1.8rem;
-            margin-bottom: 25px;
-            color: var(--text-color);
-            font-weight: 500;
-        }
-
-        .content-section p {
-            margin-bottom: 18px;
-        }
-
-        .profile-field {
-            margin-bottom: 12px;
-            padding: 10px;
-            background-color: var(--profile-field-bg); /* Use theme variable */
-            color: var(--text-color); /* Ensure text color matches theme */
-            border-radius: 4px;
-            border: 1px solid #ced4da; /* Add border to profile fields in light theme */
-        }
-
-        .profile-field strong {
-            color: var(--text-color); /* Strong text also matches theme */
+            padding: 20px; /* Add some padding to content sections */
+            background-color: var(--container-bg-color); /* Match container background */
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         /* Dashboard grid for MCQs */
         .mcq-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Default to responsive minmax */
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Default: responsive minmax */
             gap: 20px;
             margin-top: 30px;
-            width: 100%;
-            max-width: 900px; /* Wider MCQ grid container */
+            width: 100%; /* Take full width of its parent (.dashboard-content-wrapper) */
         }
 
-        @media (min-width: 768px) { /* On tablets and larger, enforce 3 columns */
+        @media (min-width: 768px) { /* On tablets and larger, enforce 2 columns */
             .mcq-grid {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(2, 1fr); /* Two columns for 768px and up */
             }
-        }
-        @media (max-width: 767px) { /* On smaller screens, go to 2 columns or 1 */
-            .mcq-grid {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Adjust min width for smaller screens */
+            .dashboard-grid-item {
+                font-size: 1.2rem; /* Slightly larger text on tablets */
             }
         }
 
+        @media (min-width: 1024px) { /* On desktops and larger, enforce 3 columns */
+            .mcq-grid {
+                grid-template-columns: repeat(3, 1fr); /* Three columns for 1024px and up */
+            }
+             .dashboard-grid-item {
+                font-size: 1.3rem; /* Even larger text on desktops */
+            }
+        }
+
+        @media (max-width: 599px) { /* On very small screens (phones), maybe 1 column or 2 smaller ones */
+            .mcq-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Allows 1 or 2 columns based on tiny screens */
+            }
+            .dashboard-grid-item {
+                font-size: 1.0rem; /* Smaller text on tiny screens */
+            }
+             .welcome-title {
+                font-size: 1.8rem;
+            }
+            .welcome-subtitle {
+                font-size: 1.0rem;
+            }
+        }
 
         .dashboard-grid-item {
-            padding: 20px; /* Adjusted padding */
-            border-radius: 8px; /* Less rounded corners for grid items */
-            font-weight: 500; /* Less bold grid item text */
+            padding: 20px;
+            border-radius: 8px;
+            font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
             text-align: center;
             font-size: 1.1rem;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); /* Softer shadow for light theme grid items */
-            min-height: 80px; /* Ensure a consistent height for boxes */
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            min-height: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
+            word-break: break-word; /* Allow long text to break */
+            line-height: 1.3;
         }
         /* Theme specific colors for dashboard items */
         body:not(.light-theme) .dashboard-grid-item { /* Dark theme */
@@ -329,10 +330,10 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px;
-            background-color: var(--profile-field-bg); /* Use profile field bg for consistency */
+            background-color: var(--profile-field-bg);
             color: var(--text-color);
             border-radius: 4px;
-            border: 1px solid #ced4da; /* Add border to settings options in light theme */
+            border: 1px solid #ced4da;
         }
         .settings-option label {
             font-weight: bold;
@@ -341,7 +342,7 @@
         .settings-option button {
             width: auto;
             margin-top: 0;
-            padding: 6px 12px; /* Smaller button in settings */
+            padding: 6px 12px;
             font-size: 0.9rem;
         }
         .theme-toggle {
@@ -350,34 +351,34 @@
             gap: 15px;
         }
         .theme-toggle label {
-            font-weight: normal; /* Less bold theme labels */
+            font-weight: normal;
         }
         /* Style for radio buttons */
         .theme-toggle input[type="radio"] {
-            width: 18px; /* Standard size for radio button */
+            width: 18px;
             height: 18px;
             margin: 0;
             cursor: pointer;
-            -webkit-appearance: none; /* Hide default radio button */
+            -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            border: 2px solid var(--text-color); /* Border for radio button */
+            border: 2px solid var(--text-color);
             border-radius: 50%;
             outline: none;
             transition: background-color 0.2s ease, border-color 0.2s ease;
         }
 
         .theme-toggle input[type="radio"]:checked {
-            background-color: var(--button-bg-color); /* Fill color when checked */
-            border-color: var(--button-bg-color); /* Border color when checked */
+            background-color: var(--button-bg-color);
+            border-color: var(--button-bg-color);
         }
 
         /* Adjust logo positioning */
         img {
             position: absolute;
-            top: 15px; /* Moved closer to the top */
+            top: 15px;
             left: 20px;
-            height: 120px; /* Slightly reduced height */
+            height: 120px;
         }
     </style>
 </head>
@@ -583,7 +584,7 @@
             <div class="sidebar-item" onclick="logout()">🚪 Logout</div>
         </div>
 
-        <div class="dashboard-content" id="dashboard-main-content">
+        <div class="dashboard-content-wrapper" id="dashboard-main-content">
             <h1 class="welcome-title">Welcome to RadMentor</h1>
             <p class="welcome-subtitle">The World’s Most Comprehensive Radiology Learning Source</p>
 
@@ -936,11 +937,12 @@
             document.querySelectorAll('.content-section').forEach(section => {
                 section.style.display = 'none';
             });
+            // Hide the main dashboard content area, this will be explicitly shown if sectionId is 'main'
             document.getElementById('dashboard-main-content').style.display = 'none';
 
             // Show the requested section
             if (sectionId === 'main') {
-                document.getElementById('dashboard-main-content').style.display = 'flex'; // Use flex for centering
+                document.getElementById('dashboard-main-content').style.display = 'block'; /* Changed to block as it's a div holding flex content */
             } else if (sectionId === 'profile') {
                 populateProfileDetails(); // Populate before showing
                 document.getElementById('profile-section').style.display = 'block';
