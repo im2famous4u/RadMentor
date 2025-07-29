@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Brain MRI Viewer - RadMentor</title>
+    <title>MRI Anatomy - RadMentor</title>
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet"/>
     <style>
         /* Base styles for all themes */
@@ -11,14 +11,13 @@
             font-family: 'Rubik', sans-serif;
             margin: 0;
             transition: background-color 0.3s ease, color 0.3s ease;
-            display: flex;
+            display: flex; /* Use flexbox to center content vertically/horizontally */
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            min-height: 100vh; /* Ensure it takes full viewport height */
+            background-color: var(--bg-color); /* Apply background from theme variable */
+            color: var(--text-color); /* Apply text color from theme variable */
             flex-direction: column; /* Arrange items vertically */
-            overflow: hidden; /* Prevent body scroll if content overflows slightly */
         }
 
         /* Light Theme Variables */
@@ -32,13 +31,6 @@
             --box-border-color: #90caf9; /* Medium blue for box borders */
             --back-button-bg: #1e88e5; /* Standard blue button */
             --back-button-hover-bg: #1565c0; /* Darker blue button on hover */
-            --slider-track-bg: #c5d9e8; /* Light blue for slider track */
-            --slider-thumb-bg: #1e88e5; /* Blue for slider thumb */
-            --annotation-text-color: #1a237e; /* Darker blue for annotation text */
-            --annotation-bg-color: rgba(255, 255, 255, 0.95); /* More opaque white background */
-            --annotation-border-color: #64b5f6; /* Light blue border */
-            --annotation-line-color: #42a5f5; /* Medium blue for lines */
-            --annotation-point-color: #f44336; /* Red dot for point */
         }
 
         /* Dark Theme Variables */
@@ -52,22 +44,15 @@
             --box-border-color: #043f4e;
             --back-button-bg: #00bcd4;
             --back-button-hover-bg: #0097a7;
-            --slider-track-bg: #032b36; /* Darker track for dark theme */
-            --slider-thumb-bg: #00bcd4; /* Brighter thumb for dark theme */
-            --annotation-text-color: #e0f2f1; /* Light text for annotations */
-            --annotation-bg-color: rgba(0, 0, 0, 0.85); /* More opaque black background */
-            --annotation-border-color: #00bcd4; /* Accent color border */
-            --annotation-line-color: #00bcd4; /* Accent color for lines */
-            --annotation-point-color: #f44336; /* Red dot for point */
         }
 
-        .viewer-container {
+        .mri-anatomy-wrapper {
             background-color: var(--container-bg-color);
             border-radius: 12px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            padding: 20px;
+            padding: 40px; /* Increased padding */
             margin: 20px auto;
-            max-width: 800px; /* Wider to accommodate labels */
+            max-width: 960px; /* Wider content area */
             width: 90%; /* Responsive width */
             box-sizing: border-box;
             display: flex;
@@ -75,150 +60,51 @@
             align-items: center; /* Center items horizontally */
         }
 
-        .viewer-container h1 {
+        .mri-anatomy-wrapper h1 {
             color: var(--heading-color);
-            font-size: 2.2rem;
-            margin-bottom: 20px;
+            font-size: 2.8rem; /* Larger title */
+            margin-bottom: 40px; /* More space below title */
             text-align: center;
+            font-weight: 700;
         }
 
-        .image-wrapper {
-            position: relative;
-            width: 100%;
-            padding-bottom: 100%; /* Creates a square aspect ratio for the image area (if images are square) */
-            background-color: #000; /* Black background for imaging studies */
-            border-radius: 8px;
-            overflow: hidden; /* Hide anything outside the wrapper */
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+        .mri-options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Flexible columns */
+            gap: 25px; /* Space between boxes */
+            width: 100%; /* Take full width of parent */
+            max-width: 800px; /* Max width for the grid itself */
         }
 
-        .image-wrapper img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: contain; /* Ensures the image fits within the wrapper without cropping */
-            display: block;
-            user-select: none;
-            -webkit-user-drag: none;
-        }
-
-        /* SVG Overlay for Lines and Points */
-        .annotation-svg-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 9; /* Below labels, above image */
-            pointer-events: none; /* Crucial: allows clicks to pass through to image/labels */
-            overflow: visible; /* Allows SVG elements to go slightly outside if needed */
-        }
-        .annotation-svg-overlay line {
-            stroke: var(--annotation-line-color);
-            stroke-width: 2;
-            transition: opacity 0.3s ease;
-            opacity: 0; /* Hidden by default */
-            stroke-linecap: round;
-        }
-        .annotation-svg-overlay line.show {
-            opacity: 0.7;
-        }
-        .annotation-svg-overlay circle {
-            fill: var(--annotation-point-color);
-            transition: opacity 0.3s ease;
-            opacity: 0; /* Hidden by default */
-        }
-        .annotation-svg-overlay circle.show {
-            opacity: 1;
-        }
-
-
-        /* Annotation Label Styling */
-        .annotation-label {
-            position: absolute;
-            background-color: var(--annotation-bg-color);
-            color: var(--annotation-text-color);
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            white-space: nowrap; /* Keep text on one line */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            border: 1px solid var(--annotation-border-color);
-            z-index: 11; /* Ensure labels are above the SVG lines */
-            cursor: default;
-            
-            /* Core positioning logic: center the label div on its (left, top) coordinates */
-            transform: translate(-50%, -50%); 
-
-            /* --- Visibility control --- */
-            /* Start hidden, transition to visible */
-            opacity: 0; 
-            transition: opacity 0.3s ease; 
-            display: block; /* Ensure it's a block element for positioning */
-        }
-
-        .annotation-label.show {
-            opacity: 1; /* Make visible when 'show' class is added */
-        }
-
-        .controls {
-            width: 100%;
-            margin-top: 25px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
-
-        #sliceSlider {
-            width: 90%;
-            -webkit-appearance: none;
-            appearance: none;
-            height: 8px;
-            background: var(--slider-track-bg);
-            outline: none;
-            opacity: 0.9;
-            transition: opacity .2s;
-            border-radius: 5px;
-        }
-
-        #sliceSlider:hover {
-            opacity: 1;
-        }
-
-        #sliceSlider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--slider-thumb-bg);
-            cursor: grab;
-            box-shadow: 0 0 5px rgba(0,0,0,0.3);
-        }
-
-        #sliceSlider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--slider-thumb-bg);
-            cursor: grab;
-            box-shadow: 0 0 5px rgba(0,0,0,0.3);
-        }
-
-        #sliceNumberDisplay {
-            font-size: 1.1rem;
+        .mri-option-box {
+            background-color: var(--box-bg-color);
             color: var(--text-color);
+            padding: 25px; /* Padding inside boxes */
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2rem; /* Font size for options */
             font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--box-border-color);
+            min-height: 100px; /* Consistent box height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            word-break: break-word; /* Allow text to wrap if long */
+        }
+
+        .mri-option-box:hover {
+            background-color: var(--box-hover-bg-color);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
         }
 
         .back-button {
             display: block;
-            width: 200px;
-            margin: 40px auto 0;
+            width: 220px; /* Slightly wider back button */
+            margin: 50px auto 0;
             padding: 15px 25px;
             background-color: var(--back-button-bg);
             color: white;
@@ -235,332 +121,74 @@
 
         /* Responsive adjustments */
         @media (max-width: 768px) {
-            .viewer-container {
-                padding: 15px;
+            .mri-anatomy-wrapper {
+                padding: 25px;
                 width: 95%;
             }
-            h1 {
-                font-size: 2rem;
+            .mri-anatomy-wrapper h1 {
+                font-size: 2.2rem;
+            }
+            .mri-options-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 15px;
+            }
+            .mri-option-box {
+                font-size: 1.1rem;
+                min-height: 80px;
             }
         }
         @media (max-width: 480px) {
-            h1 {
+            .mri-anatomy-wrapper h1 {
                 font-size: 1.8rem;
+            }
+            .mri-options-grid {
+                grid-template-columns: 1fr; /* Single column on very small screens */
+                gap: 10px;
+            }
+            .mri-option-box {
+                font-size: 1rem;
+                min-height: 70px;
             }
             .back-button {
                 width: 100%;
                 font-size: 1rem;
             }
         }
-        /* Loading spinner CSS */
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.5rem;
-            z-index: 100; /* On top of everything */
-            transition: opacity 0.3s ease;
-            opacity: 1;
-        }
-        .loading-overlay.hidden {
-            opacity: 0;
-            pointer-events: none; /* Allow clicks through when hidden */
-        }
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid #fff;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
-    <div class="viewer-container">
-        <h1>Axial Brain Anatomy</h1>
+    <div class="mri-anatomy-wrapper">
+        <h1>MRI Anatomy</h1>
 
-        <div class="image-wrapper">
-            <img id="brainSliceImage" src="" alt="Brain Slice">
-            <svg class="annotation-svg-overlay" id="annotationSvgOverlay"></svg>
-            <div id="annotationOverlay"></div>
-            <div class="loading-overlay" id="loadingOverlay">
-                <div class="spinner"></div>&nbsp;Loading Annotations...
-            </div>
+        <div class="mri-options-grid">
+            <div class="mri-option-box" onclick="window.location.href='brain/'">Brain</div>
+            <div class="mri-option-box" onclick="alert('Face MRI content coming soon!')">Face</div>
+            <div class="mri-option-box" onclick="alert('Neck MRI content coming soon!')">Neck</div>
+            <div class="mri-option-box" onclick="alert('Female Pelvis MRI content coming soon!')">Female Pelvis</div>
+            <div class="mri-option-box" onclick="alert('Male Pelvis MRI content coming soon!')">Male Pelvis</div>
+            <div class="mri-option-box" onclick="alert('Brachial Plexus MRI content coming soon!')">Brachial Plexus</div>
+            <div class="mri-option-box" onclick="alert('Shoulder MRI content coming soon!')">Shoulder</div>
+            <div class="mri-option-box" onclick="alert('Upper Extremity MRI content coming soon!')">Upper Extremity</div>
+            <div class="mri-option-box" onclick="alert('Elbow MRI content coming soon!')">Elbow</div>
+            <div class="mri-option-box" onclick="alert('Wrist MRI content coming soon!')">Wrist</div>
+            <div class="mri-option-box" onclick="alert('Hip MRI content coming soon!')">Hip</div>
+            <div class="mri-option-box" onclick="alert('Lower Extremity MRI content coming soon!')">Lower Extremity</div>
+            <div class="mri-option-box" onclick="alert('Knee MRI content coming soon!')">Knee</div>
+            <div class="mri-option-box" onclick="alert('Ankle MRI content coming soon!')">Ankle</div>
         </div>
 
-        <div class="controls">
-            <input type="range" id="sliceSlider" min="1" max="24" value="1">
-            <div id="sliceNumberDisplay">Slice: 1 / 24</div>
-        </div>
-
-        <a href="../../index.html" class="back-button">Back to MRI Anatomy</a>
+        <a href="../../index.html" class="back-button">Back to Anatomy Main</a>
     </div>
 
     <script>
-        const imageCount = 24; // Total number of brain images
-        const imageBaseName = 'brain'; // Filenames are brain1.png, brain2.png...
-        const imageExtension = '.png'; // Confirmed as .png
-        const imageFolderPath = './Images/'; // Correct path to your Images subfolder
-
-        const annotationJsonPath = './annotations/'; // Path to your annotations folder
-        const imageDimensionMM = 512; // Your images are 512x512 pixels, representing 512x512 mm FOV
-
-        const brainSliceImage = document.getElementById('brainSliceImage');
-        const sliceSlider = document.getElementById('sliceSlider');
-        const sliceNumberDisplay = document.getElementById('sliceNumberDisplay');
-        const annotationOverlay = document.getElementById('annotationOverlay');
-        const annotationSvgOverlay = document.getElementById('annotationSvgOverlay');
-        const loadingOverlay = document.getElementById('loadingOverlay'); // New loading overlay element
-
-        let allAnnotations = []; // This will store all processed annotations from JSONs
-        let annotationsLoaded = false; // Flag to track if annotations are loaded
-
-        // --- THEME LOGIC ---
-        function setTheme(theme) {
-            if (theme === 'light') {
-                document.body.classList.add('light-theme');
-                localStorage.setItem('theme', 'light');
-            } else {
-                document.body.classList.remove('light-theme');
-                localStorage.setItem('theme', 'dark');
-            }
-        }
-
-        function setInitialTheme() {
+        // --- Theme Logic (Copied for consistency with main site) ---
+        document.addEventListener('DOMContentLoaded', () => {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'light') {
                 document.body.classList.add('light-theme');
-            } else {
-                document.body.classList.remove('light-theme');
             }
-        }
-        setInitialTheme();
-        // --- END THEME LOGIC ---
-
-        // --- JSON FILENAMES (CRITICAL: THIS LIST MUST BE EXACT) ---
-        // This list tells the script which JSON files to fetch.
-        const jsonFilenames = [
-            "Angular Gyrus.json",
-            "Aqueduct.json",
-            "Caudate Nucleus.json",
-            "Central Lobule.json",
-            "Cerebellar Nuclei.json",
-            "Cerebellar Peduncles.json",
-            "Culmen.json",
-            "Cuneus.json",
-            "Declive.json",
-            "Flocculus.json",
-            "Fornix.json",
-            "Frontal horn of LV.json",
-            "Globus Pallidus.json",
-            "Inferior Frontal Gyrus.json",
-            "Internal Capsule.json",
-            "Interpeduncular cistern.json",
-            "Lateral Occipitotemporal gyrus.json",
-            "Maxillary Sinus.json", 
-            "Medial Frontal Gyrus.json",
-            "Medulla Oblongata.json",
-            "Mesencephalic cistern.json",
-            "Midbrain.json",
-            "Middle Frontal Gyrus.json",
-            "Olfatory Sulcus.json", 
-            "Optic Nerve.json",
-            "Peduncles.json",
-            "Pons.json",
-            "Post Central Gyrus.json",
-            "Posterior horn of LV.json",
-            "Pre Central Gyrus.json",
-            "Precuneus.json",
-            "Putamen.json",
-            "Septum Pellucidum.json",
-            "Straight Gyrus.json",
-            "Superior Frontal Gyrus.json",
-            "Superior Parietal Lobule.json",
-            "Suprachiasmatic cistern.json",
-            "Supramarginal Gyrus.json",
-            "Thallamus.json" 
-        ];
-        // --- END JSON FILENAMES ---
-
-        // --- Data Loading and Processing ---
-        async function loadAnnotations() {
-            console.log("Loading annotations started."); // Debug log
-            loadingOverlay.classList.remove('hidden'); // Show loading overlay
-
-            try {
-                const fetchPromises = jsonFilenames.map(filename =>
-                    fetch(`${annotationJsonPath}${filename}`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`Failed to load ${filename}: ${response.statusText}`);
-                            }
-                            return response.json();
-                        })
-                        .catch(error => {
-                            console.error(`Error fetching or parsing ${filename}:`, error);
-                            return null; 
-                        })
-                );
-
-                const results = await Promise.all(fetchPromises);
-                console.log("All JSON fetches completed.", results); 
-
-                results.forEach(jsonData => {
-                    if (!jsonData || !jsonData.markups || !Array.isArray(jsonData.markups)) {
-                        console.warn("Skipping invalid or empty JSON data for a markup file.", jsonData);
-                        return;
-                    }
-
-                    jsonData.markups.forEach(markup => {
-                        if (markup.type === "Fiducial" && Array.isArray(markup.controlPoints)) {
-                            markup.controlPoints.forEach(cp => {
-                                if (cp.position && cp.position.length === 3) {
-                                    const sliceZ = cp.position[2]; 
-                                    const imageSliceNumber = Math.round(sliceZ); 
-
-                                    const pointX_percent = (cp.position[0] / imageDimensionMM) * 100;
-                                    const pointY_percent = (cp.position[1] / imageDimensionMM) * 100;
-
-                                    const cleanLabelText = cp.label.split(/-\d+/)[0].trim();
-
-                                    const defaultLabelX = pointX_percent + 5; 
-                                    const defaultLabelY = pointY_percent - 5; 
-
-                                    allAnnotations.push({
-                                        slice: imageSliceNumber,
-                                        text: cleanLabelText,
-                                        pointX: pointX_percent,
-                                        pointY: pointY_percent,
-                                        labelX: defaultLabelX, 
-                                        labelY: defaultLabelY  
-                                    });
-                                }
-                            });
-                        }
-                    });
-                });
-                console.log("All annotations processed. Total:", allAnnotations.length); 
-                annotationsLoaded = true; // Set flag to true
-
-            } catch (e) {
-                console.error("Error during annotation loading or processing:", e); 
-                alert("Failed to load annotations. Check console for details."); // User-friendly alert
-            } finally {
-                loadingOverlay.classList.add('hidden'); // Hide loading overlay
-            }
-
-            // After all JSONs are loaded and processed, render the current slice
-            updateSlice();
-        }
-
-        // --- Display Logic ---
-        // Initialize the slider's max value and display
-        sliceSlider.max = imageCount;
-        sliceNumberDisplay.textContent = `Slice: 1 / ${imageCount}`;
-
-        // Function to update the displayed image and slice number, and annotations
-        function updateSlice() {
-            try { 
-                const currentSlice = parseInt(sliceSlider.value); 
-                const imageUrl = `${imageFolderPath}${imageBaseName}${currentSlice}${imageExtension}`; 
-                brainSliceImage.src = imageUrl;
-                sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
-
-                // Clear previous annotations and SVG lines/circles
-                annotationOverlay.innerHTML = '';
-                annotationSvgOverlay.innerHTML = ''; 
-
-                const wrapperRect = brainSliceImage.parentElement.getBoundingClientRect();
-                const imageWidth = wrapperRect.width;
-                const imageHeight = wrapperRect.height;
-
-                console.log("Updating slice:", currentSlice); 
-                let annotationsOnSlice = 0; 
-
-                // Only attempt to render annotations if they have been successfully loaded
-                if (annotationsLoaded) {
-                    allAnnotations.filter(ann => ann.slice === currentSlice).forEach(annotation => {
-                        annotationsOnSlice++; 
-                        console.log("Rendering annotation:", annotation.text, "on slice", currentSlice); 
-
-                        const labelDiv = document.createElement('div');
-                        labelDiv.classList.add('annotation-label');
-                        labelDiv.textContent = annotation.text;
-                        
-                        labelDiv.style.left = `${annotation.labelX}%`;
-                        labelDiv.style.top = `${annotation.labelY}%`;
-                        
-                        annotationOverlay.appendChild(labelDiv);
-
-                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-
-                        const pX = (annotation.pointX / 100) * imageWidth;
-                        const pY = (annotation.pointY / 100) * imageHeight;
-
-                        const lX = (annotation.labelX / 100) * imageWidth; 
-                        const lY = (annotation.labelY / 100) * imageHeight; 
-
-                        line.setAttribute('x1', pX);
-                        line.setAttribute('y1', pY);
-                        line.setAttribute('x2', lX);
-                        line.setAttribute('y2', lY);
-                        line.classList.add('show');
-
-                        circle.setAttribute('cx', pX);
-                        circle.setAttribute('cy', pY);
-                        circle.setAttribute('r', 4); 
-                        circle.classList.add('show');
-
-                        annotationSvgOverlay.appendChild(line);
-                        annotationSvgOverlay.appendChild(circle);
-
-                        setTimeout(() => labelDiv.classList.add('show'), 10);
-                    });
-                    console.log("Total annotations rendered for slice", currentSlice, ":", annotationsOnSlice); 
-                } else {
-                    console.warn("Annotations not yet loaded or failed to load. Skipping rendering for this slice.");
-                }
-
-            } catch (e) {
-                console.error("Error during updateSlice display logic:", e); 
-            }
-        }
-
-        // --- Initial Load ---
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("DOM content loaded.");
-            loadAnnotations(); // Start loading JSON data
         });
-
-        // Ensure updateSlice runs when image is loaded 
-        brainSliceImage.addEventListener('load', () => {
-            console.log("Brain image loaded event fired."); 
-            updateSlice(); 
-        });
-        
-        sliceSlider.addEventListener('input', updateSlice);
-
-        // Preload all images for smoother scrolling
-        const preloadedImages = [];
-        for (let i = 1; i <= imageCount; i++) {
-            const img = new Image();
-            img.src = `${imageFolderPath}${imageBaseName}${i}${imageExtension}`;
-            preloadedImages.push(img);
-        }
-        console.log("Preloading images initiated."); 
+        // --- End Theme Logic ---
     </script>
 </body>
 </html>
