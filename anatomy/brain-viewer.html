@@ -138,10 +138,6 @@
         /* Annotation Label Styling */
         .annotation-label {
             position: absolute;
-            /* Explicitly setting display and opacity to ensure visibility if JS fails or delays */
-            display: block; 
-            opacity: 1; 
-
             background-color: var(--annotation-bg-color);
             color: var(--annotation-text-color);
             padding: 5px 10px;
@@ -150,40 +146,30 @@
             font-weight: 500;
             white-space: nowrap; /* Keep text on one line */
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            /* transition: opacity 0.3s ease; Removed for initial testing to ensure visibility */
-            pointer-events: auto;
+            transition: opacity 0.3s ease; /* Smooth fade in/out */
+            opacity: 0; /* Hidden by default */
+            pointer-events: auto; /* Allows interaction with label if needed (e.g. hover) */
             border: 1px solid var(--annotation-border-color);
             z-index: 10; /* Ensure labels are above the SVG lines */
             cursor: default;
         }
 
-        /* Re-add transition and hide by default (optional, once confirmed working) */
-        /*
-        .annotation-label {
-            opacity: 0; 
-            transition: opacity 0.3s ease; 
-        }
         .annotation-label.show {
-            opacity: 1;
+            opacity: 1; /* Show when 'show' class is added */
         }
-        */
-
         /* Label positioning based on labelAlign and transform to ensure edge connection */
+        /* These transforms shift the box relative to its own dimensions and the anchor point (labelX, labelY) */
         .annotation-label.align-left {
-            transform: translate(calc(-100% - 10px), -50%); /* 10px gap from point, vertically centered */
-            text-align: right;
+            transform: translate(-100%, -50%); /* Shifts left by 100% of its width, centers vertically */
         }
         .annotation-label.align-right {
-            transform: translate(10px, -50%); /* 10px gap from point, vertically centered */
-            text-align: left;
+            transform: translate(0%, -50%); /* Stays at labelX, centers vertically */
         }
         .annotation-label.align-top {
-            transform: translate(-50%, calc(-100% - 10px)); /* 10px gap from point, horizontally centered */
-            text-align: center;
+            transform: translate(-50%, -100%); /* Centers horizontally, shifts up by 100% of its height */
         }
         .annotation-label.align-bottom {
-            transform: translate(-50%, 10px); /* 10px gap from point, horizontally centered */
-            text-align: center;
+            transform: translate(-50%, 0%); /* Centers horizontally, stays at labelY */
         }
 
 
@@ -420,10 +406,8 @@
                     annotationSvgOverlay.appendChild(line);
                     annotationSvgOverlay.appendChild(circle);
 
-                    // Re-add 'show' class after a small delay to trigger CSS transition for label
-                    // This relies on 'opacity: 0' and 'transition' being active in CSS (currently commented out for debug)
-                    // If you re-enable opacity:0 and transition, uncomment this line:
-                    // setTimeout(() => labelDiv.classList.add('show'), 10);
+                    // Add 'show' class after a small delay to trigger CSS transition for label
+                    setTimeout(() => labelDiv.classList.add('show'), 10);
                 }
             });
         }
