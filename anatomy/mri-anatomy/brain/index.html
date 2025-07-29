@@ -147,7 +147,7 @@
             white-space: nowrap; /* Keep text on one line */
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             border: 1px solid var(--annotation-border-color);
-            z-index: 11; /* <--- CRITICAL CHANGE: Increased z-index to be above image and SVG */
+            z-index: 11; /* Ensure labels are above the SVG lines */
             cursor: default;
             
             /* Core positioning logic: center the label div on its (left, top) coordinates */
@@ -252,6 +252,39 @@
                 font-size: 1rem;
             }
         }
+        /* Loading spinner CSS */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            z-index: 100; /* On top of everything */
+            transition: opacity 0.3s ease;
+            opacity: 1;
+        }
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none; /* Allow clicks through when hidden */
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -261,11 +294,10 @@
         <div class="image-wrapper">
             <img id="brainSliceImage" src="" alt="Brain Slice">
             <svg class="annotation-svg-overlay" id="annotationSvgOverlay"></svg>
-            <div id="annotationOverlay">
-            <div style="position: absolute; left: 10%; top: 10%; background-color: yellow; color: black; padding: 10px; border: 2px solid red; z-index: 9999;">
-                DEBUG LABEL TEST
+            <div id="annotationOverlay"></div>
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="spinner"></div>&nbsp;Loading Annotations...
             </div>
-        </div>
         </div>
 
         <div class="controls">
@@ -279,8 +311,8 @@
     <script>
         const imageCount = 24; // Total number of brain images
         const imageBaseName = 'brain'; // Filenames are brain1.png, brain2.png...
-        const imageExtension = '.png'; // Changed to .png based on your images
-        const imageFolderPath = './Images/'; // Path to your Images subfolder
+        const imageExtension = '.png'; // Confirmed as .png
+        const imageFolderPath = './Images/'; // Correct path to your Images subfolder
 
         const annotationJsonPath = './annotations/'; // Path to your annotations folder
         const imageDimensionMM = 512; // Your images are 512x512 pixels, representing 512x512 mm FOV
@@ -290,8 +322,10 @@
         const sliceNumberDisplay = document.getElementById('sliceNumberDisplay');
         const annotationOverlay = document.getElementById('annotationOverlay');
         const annotationSvgOverlay = document.getElementById('annotationSvgOverlay');
+        const loadingOverlay = document.getElementById('loadingOverlay'); // New loading overlay element
 
         let allAnnotations = []; // This will store all processed annotations from JSONs
+        let annotationsLoaded = false; // Flag to track if annotations are loaded
 
         // --- THEME LOGIC ---
         function setTheme(theme) {
@@ -315,7 +349,7 @@
         setInitialTheme();
         // --- END THEME LOGIC ---
 
-        // --- JSON FILENAMES (YOU MUST ENSURE THIS LIST IS COMPLETE AND EXACT) ---
+        // --- JSON FILENAMES (CRITICAL: THIS LIST MUST BE EXACT) ---
         // This list tells the script which JSON files to fetch.
         const jsonFilenames = [
             "Angular Gyrus.json",
@@ -362,65 +396,70 @@
 
         // --- Data Loading and Processing ---
         async function loadAnnotations() {
-            const fetchPromises = jsonFilenames.map(filename =>
-                fetch(`${annotationJsonPath}${filename}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`Failed to load ${filename}: ${response.statusText}`);
-                        }
-                        return response.json();
-                    })
-                    .catch(error => {
-                        console.error(`Error fetching ${filename}:`, error);
-                        return null; 
-                    })
-            );
+            console.log("Loading annotations started."); // Debug log
+            loadingOverlay.classList.remove('hidden'); // Show loading overlay
 
-            const results = await Promise.all(fetchPromises);
-
-            results.forEach(jsonData => {
-                if (!jsonData || !jsonData.markups || !Array.isArray(jsonData.markups)) {
-                    console.warn("Skipping invalid or empty JSON data for a markup file.", jsonData);
-                    return;
-                }
-
-                jsonData.markups.forEach(markup => {
-                    if (markup.type === "Fiducial" && Array.isArray(markup.controlPoints)) {
-                        markup.controlPoints.forEach(cp => {
-                            if (cp.position && cp.position.length === 3) {
-                                const sliceZ = cp.position[2]; // The Z-coordinate from Slicer
-                                const imageSliceNumber = Math.round(sliceZ); // Directly use rounded Z as slice number
-
-                                // Convert Slicer's mm coordinates to percentages for 512x512 image
-                                // Assuming 1 pixel = 1mm, and Slicer origin maps cleanly to image origin
-                                // These X and Y values from Slicer (position[0], position[1]) are in millimeters.
-                                // Since your image is 512x512 mm, X/512 * 100 gives percentage.
-                                const pointX_percent = (cp.position[0] / imageDimensionMM) * 100;
-                                const pointY_percent = (cp.position[1] / imageDimensionMM) * 100;
-
-                                // Extract the main label text (e.g., "Angular Gyrus" from "Angular Gyrus-1")
-                                // Trim any trailing numbers and hyphens
-                                const cleanLabelText = cp.label.split(/-\d+/)[0].trim();
-
-                                // Initial guess for label position: Offset from the point for visibility
-                                // You will fine-tune these labelX/labelY values visually.
-                                // These are just starting points to get the labels on screen.
-                                const labelOffsetFromPointX = 5; // % offset from point for label
-                                const labelOffsetFromPointY = -5; // % offset from point for label
-
-                                allAnnotations.push({
-                                    slice: imageSliceNumber,
-                                    text: cleanLabelText,
-                                    pointX: pointX_percent,
-                                    pointY: pointY_percent,
-                                    labelX: pointX_percent + labelOffsetFromPointX,
-                                    labelY: pointY_percent + labelOffsetFromPointY
-                                });
+            try {
+                const fetchPromises = jsonFilenames.map(filename =>
+                    fetch(`${annotationJsonPath}${filename}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Failed to load ${filename}: ${response.statusText}`);
                             }
-                        });
+                            return response.json();
+                        })
+                        .catch(error => {
+                            console.error(`Error fetching or parsing ${filename}:`, error);
+                            return null; 
+                        })
+                );
+
+                const results = await Promise.all(fetchPromises);
+                console.log("All JSON fetches completed.", results); 
+
+                results.forEach(jsonData => {
+                    if (!jsonData || !jsonData.markups || !Array.isArray(jsonData.markups)) {
+                        console.warn("Skipping invalid or empty JSON data for a markup file.", jsonData);
+                        return;
                     }
+
+                    jsonData.markups.forEach(markup => {
+                        if (markup.type === "Fiducial" && Array.isArray(markup.controlPoints)) {
+                            markup.controlPoints.forEach(cp => {
+                                if (cp.position && cp.position.length === 3) {
+                                    const sliceZ = cp.position[2]; 
+                                    const imageSliceNumber = Math.round(sliceZ); 
+
+                                    const pointX_percent = (cp.position[0] / imageDimensionMM) * 100;
+                                    const pointY_percent = (cp.position[1] / imageDimensionMM) * 100;
+
+                                    const cleanLabelText = cp.label.split(/-\d+/)[0].trim();
+
+                                    const defaultLabelX = pointX_percent + 5; 
+                                    const defaultLabelY = pointY_percent - 5; 
+
+                                    allAnnotations.push({
+                                        slice: imageSliceNumber,
+                                        text: cleanLabelText,
+                                        pointX: pointX_percent,
+                                        pointY: pointY_percent,
+                                        labelX: defaultLabelX, 
+                                        labelY: defaultLabelY  
+                                    });
+                                }
+                            });
+                        }
+                    });
                 });
-            });
+                console.log("All annotations processed. Total:", allAnnotations.length); 
+                annotationsLoaded = true; // Set flag to true
+
+            } catch (e) {
+                console.error("Error during annotation loading or processing:", e); 
+                alert("Failed to load annotations. Check console for details."); // User-friendly alert
+            } finally {
+                loadingOverlay.classList.add('hidden'); // Hide loading overlay
+            }
 
             // After all JSONs are loaded and processed, render the current slice
             updateSlice();
@@ -433,93 +472,95 @@
 
         // Function to update the displayed image and slice number, and annotations
         function updateSlice() {
-            const currentSlice = parseInt(sliceSlider.value); // Ensure it's a number
-            // Filenames are brain1.png, brain2.png, not brain01.png
-            const imageUrl = `${imageFolderPath}${imageBaseName}${currentSlice}${imageExtension}`; 
-            brainSliceImage.src = imageUrl;
-            sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
+            try { 
+                const currentSlice = parseInt(sliceSlider.value); 
+                const imageUrl = `${imageFolderPath}${imageBaseName}${currentSlice}${imageExtension}`; 
+                brainSliceImage.src = imageUrl;
+                sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
 
-            // Clear previous annotations and SVG lines/circles
-            annotationOverlay.innerHTML = '';
-            annotationSvgOverlay.innerHTML = ''; // Clear SVG contents
+                // Clear previous annotations and SVG lines/circles
+                annotationOverlay.innerHTML = '';
+                annotationSvgOverlay.innerHTML = ''; 
 
-            // Get the current dimensions of the image wrapper to correctly position labels and lines
-            // It's important to do this *after* the image is potentially loaded/resized
-            const wrapperRect = brainSliceImage.parentElement.getBoundingClientRect();
-            const imageWidth = wrapperRect.width;
-            const imageHeight = wrapperRect.height;
+                const wrapperRect = brainSliceImage.parentElement.getBoundingClientRect();
+                const imageWidth = wrapperRect.width;
+                const imageHeight = wrapperRect.height;
 
+                console.log("Updating slice:", currentSlice); 
+                let annotationsOnSlice = 0; 
 
-            // Add annotations for the current slice
-            // Filter from the pre-processed allAnnotations array
-            allAnnotations.filter(ann => ann.slice === currentSlice).forEach(annotation => {
-                // Create Label
-                const labelDiv = document.createElement('div');
-                labelDiv.classList.add('annotation-label');
-                labelDiv.textContent = annotation.text;
-                
-                // Position label using its CENTER point (labelX, labelY percentages)
-                // The transform: translate(-50%, -50%) in CSS centers the div on these coordinates
-                labelDiv.style.left = `${annotation.labelX}%`;
-                labelDiv.style.top = `${annotation.labelY}%`;
-                
-                annotationOverlay.appendChild(labelDiv);
+                // Only attempt to render annotations if they have been successfully loaded
+                if (annotationsLoaded) {
+                    allAnnotations.filter(ann => ann.slice === currentSlice).forEach(annotation => {
+                        annotationsOnSlice++; 
+                        console.log("Rendering annotation:", annotation.text, "on slice", currentSlice); 
 
+                        const labelDiv = document.createElement('div');
+                        labelDiv.classList.add('annotation-label');
+                        labelDiv.textContent = annotation.text;
+                        
+                        labelDiv.style.left = `${annotation.labelX}%`;
+                        labelDiv.style.top = `${annotation.labelY}%`;
+                        
+                        annotationOverlay.appendChild(labelDiv);
 
-                // Create Line (SVG) and Point (SVG Circle)
-                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
 
-                // Calculate line start/end points in pixels based on percentages
-                const pX = (annotation.pointX / 100) * imageWidth;
-                const pY = (annotation.pointY / 100) * imageHeight;
+                        const pX = (annotation.pointX / 100) * imageWidth;
+                        const pY = (annotation.pointY / 100) * imageHeight;
 
-                const lX = (annotation.labelX / 100) * imageWidth; // Line ends at center of label box
-                const lY = (annotation.labelY / 100) * imageHeight; // Line ends at center of label box
+                        const lX = (annotation.labelX / 100) * imageWidth; 
+                        const lY = (annotation.labelY / 100) * imageHeight; 
 
-                line.setAttribute('x1', pX);
-                line.setAttribute('y1', pY);
-                line.setAttribute('x2', lX);
-                line.setAttribute('y2', lY);
-                line.classList.add('show');
+                        line.setAttribute('x1', pX);
+                        line.setAttribute('y1', pY);
+                        line.setAttribute('x2', lX);
+                        line.setAttribute('y2', lY);
+                        line.classList.add('show');
 
-                circle.setAttribute('cx', pX);
-                circle.setAttribute('cy', pY);
-                circle.setAttribute('r', 4); // Radius of the dot
-                circle.classList.add('show');
+                        circle.setAttribute('cx', pX);
+                        circle.setAttribute('cy', pY);
+                        circle.setAttribute('r', 4); 
+                        circle.classList.add('show');
 
-                annotationSvgOverlay.appendChild(line);
-                annotationSvgOverlay.appendChild(circle);
+                        annotationSvgOverlay.appendChild(line);
+                        annotationSvgOverlay.appendChild(circle);
 
-                // Add 'show' class after a small delay to trigger CSS transition for label
-                setTimeout(() => labelDiv.classList.add('show'), 10);
-            });
+                        setTimeout(() => labelDiv.classList.add('show'), 10);
+                    });
+                    console.log("Total annotations rendered for slice", currentSlice, ":", annotationsOnSlice); 
+                } else {
+                    console.warn("Annotations not yet loaded or failed to load. Skipping rendering for this slice.");
+                }
+
+            } catch (e) {
+                console.error("Error during updateSlice display logic:", e); 
+            }
         }
 
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Start loading JSON annotations. updateSlice will be called after they load.
-            loadAnnotations(); 
-            // Also call updateSlice once DOM is ready if image is already cached
-            if (brainSliceImage.complete) {
-                updateSlice();
-            }
+            console.log("DOM content loaded.");
+            loadAnnotations(); // Start loading JSON data
         });
 
-        // Ensure updateSlice runs when image is loaded (e.g., first load or if src changes)
-        // This is crucial for getting correct wrapper dimensions for line drawing.
-        brainSliceImage.addEventListener('load', updateSlice); 
+        // Ensure updateSlice runs when image is loaded 
+        brainSliceImage.addEventListener('load', () => {
+            console.log("Brain image loaded event fired."); 
+            updateSlice(); 
+        });
         
-        // Event listener for the slider (already present, good!)
         sliceSlider.addEventListener('input', updateSlice);
 
         // Preload all images for smoother scrolling
         const preloadedImages = [];
         for (let i = 1; i <= imageCount; i++) {
             const img = new Image();
-            img.src = `${imageFolderPath}${imageBaseName}${i}${imageExtension}`; // Use 'i' directly for filename
+            img.src = `${imageFolderPath}${imageBaseName}${i}${imageExtension}`;
             preloadedImages.push(img);
         }
+        console.log("Preloading images initiated."); 
     </script>
 </body>
 </html>
