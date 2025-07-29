@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Radiology MCQ Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet"/>
+    <style>
+        /* General Body Styles */
+        body {
+            font-family: 'Rubik', sans-serif;
+            margin: 0;
+            overflow-x: hidden; /* Prevent horizontal scrollbar from sidebar */
+            background-color: #004d5e; /* Default dark theme background */
+            color: #ffffff; /* Default dark theme text color */
+            transition: background-color 0.3s ease, color 0.3s ease; /* Smooth theme transition */
+        }
+
+        /* Light Theme Variables - Adjusted to resemble PrepLadder */
+        body.light-theme {
+            --bg-color: #e3f2fd; /* Light blue background */
+            --container-bg-color: #ffffff; /* White containers */
+            --text-color: #212121; /* Dark grey/black text */
+            --input-bg-color: #f5f5f5; /* Light grey input background */
+            --button-bg-color: #1e88e5; /* Blue button */
+            --button-hover-bg-color: #1565c0; /* Darker blue button hover */
+            --toggle-color: #1e88e5; /* Blue toggle */
+            --sidebar-bg-color: #ffffff; /* White sidebar */
+            --sidebar-item-border: 1px solid #e0e0e0; /* Light grey sidebar border */
+            --sidebar-item-hover-bg: #bbdefb; /* Light blue sidebar hover */
+            --topbar-bg-color: #e3f2fd; /* Light blue topbar */
+            --topbar-text-color: #212121; /* Dark text on topbar */
+            --profile-field-bg: #f8f8f8; /* Very light grey for profile fields */
+        }
+
+        /* Dark Theme Variables */
+        body:not(.light-theme) { /* Default to dark if light-theme class is not present */
+            --bg-color: #004d5e;
+            --container-bg-color: #043f4e;
+            --text-color: #ffffff;
+            --input-bg-color: #e0f2f1;
+            --button-bg-color: #00bcd4;
+            --button-hover-bg-color: #0097a7;
+            --toggle-color: #81d4fa;
+            --sidebar-bg-color: #043f4e;
+            --sidebar-item-border: 1px solid #095a71;
+            --sidebar-item-hover-bg: #065a73;
+            --topbar-bg-color: #002b36;
+            --topbar-text-color: #ffffff;
+            --profile-field-bg: #095a71;
+        }
+
+        /* Apply theme variables */
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        .container {
+            background-color: var(--container-bg-color);
+            color: var(--text-color); /* Ensure container text also changes */
+        }
+        h1 {
+            color: var(--text-color);
+        }
+        input, select {
+            background-color: var(--input-bg-color);
+            color: #000; /* Input text usually black for readability */
+            border: 1px solid #ced4da; /* Add a subtle border for light theme */
+        }
+        button {
+            background: var(--button-bg-color);
+            color: #fff;
+        }
+        button:hover {
+            background: var(--button-hover-bg-color);
+        }
+        .toggle {
+            color: var(--toggle-color);
+        }
+        .toggle:hover {
+            color: var(--text-color);
+        }
+        .topbar {
+            background-color: var(--topbar-bg-color);
+            color: var(--topbar-text-color);
+        }
+        .sidebar {
+            background-color: var(--sidebar-bg-color);
+            color: var(--text-color);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for light theme sidebar */
+        }
+        .sidebar-item {
+            border-bottom: var(--sidebar-item-border);
+        }
+        .sidebar-item:hover {
+            background-color: var(--sidebar-item-hover-bg);
+            color: var(--text-color); /* Keep text color readable on hover */
+        }
+        .dashboard-grid-item {
+            color: var(--text-color);
+        }
+        .dashboard-grid-item:hover {
+            color: var(--text-color);
+        }
+
+        /* Specific Layouts and Components */
+        .container {
+            max-width: 500px;
+            margin: 30px auto; /* Reduced top margin to move content up */
+            padding: 30px;
+            border-radius: 8px; /* Slightly less rounded corners */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* More subtle shadow for light theme */
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.0rem; /* Slightly larger heading */
+            font-weight: 500; /* Less bold heading */
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            margin: 18px 0; /* Slightly more spacing for input groups */
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px; /* Slightly less padding */
+            font-size: 16px;
+            border-radius: 4px; /* Less rounded input fields */
+            box-sizing: border-box; /* Include padding in width */
+        }
+
+        button {
+            width: 100%;
+            padding: 10px; /* Slightly less button padding */
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px; /* Less rounded buttons */
+            cursor: pointer;
+            margin-top: 20px; /* Slightly more top margin for buttons */
+            transition: background 0.2s ease-in-out; /* Faster transition */
+        }
+
+        .dashboard {
+            display: none;
+            text-align: center;
+            min-height: 300px;
+            padding-top: 60px; /* Space below fixed topbar */
+        }
+
+        .topbar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 50px;
+            display: none;
+            justify-content: flex-end;
+            align-items: center;
+            padding-right: 20px;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Subtle topbar shadow */
+        }
+
+        .menu-icon {
+            cursor: pointer;
+            font-size: 1.5rem;
+            margin-left: 15px;
+        }
+
+        .user-greeting {
+            font-size: 1.0rem; /* Slightly larger greeting */
+            margin-left: auto;
+            padding-right: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .welcome-text {
+            text-align: center;
+            margin-top: 30px; /* Reduced top margin for welcome text */
+            font-size: 2.2rem; /* Larger welcome text */
+            font-weight: 400; /* Less bold welcome text */
+            color: var(--text-color);
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 50px;
+            right: -270px; /* Adjusted: Pushed further off-screen to hide completely */
+            width: 250px;
+            height: calc(100% - 50px);
+            padding: 20px;
+            transition: right 0.2s ease-in-out; /* Faster sidebar transition */
+            z-index: 1001;
+            overflow-y: auto;
+        }
+
+        .sidebar.show {
+            right: 0; /* Slides into view */
+        }
+
+        .sidebar-item {
+            padding: 10px 15px; /* Adjusted sidebar item padding */
+            cursor: pointer;
+            text-align: left;
+            font-size: 1.0rem;
+        }
+
+        .sidebar-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Dashboard main content area */
+        .dashboard-content {
+            margin-top: 55px; /* Adjusted space below fixed topbar */
+            padding: 20px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        /* Specific Content Sections */
+        .content-section {
+            display: none;
+            width: 100%;
+            max-width: 700px; /* Slightly wider content section */
+            margin: 25px auto;
+            text-align: left;
+            line-height: 1.7;
+        }
+
+        .content-section h2 {
+            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .content-section p {
+            margin-bottom: 18px;
+        }
+
+        .profile-field {
+            margin-bottom: 12px;
+            padding: 10px;
+            background-color: var(--profile-field-bg); /* Use theme variable */
+            color: var(--text-color); /* Ensure text color matches theme */
+            border-radius: 4px;
+            border: 1px solid #ced4da; /* Add border to profile fields in light theme */
+        }
+
+        .profile-field strong {
+            color: var(--text-color); /* Strong text also matches theme */
+        }
+
+        /* Dashboard Boxes for MCQs */
+        .mcq-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Slightly wider min width */
+            gap: 20px;
+            margin-top: 30px;
+            width: 100%;
+            max-width: 900px; /* Wider MCQ grid */
+        }
+
+        .dashboard-grid-item {
+            padding: 20px; /* Adjusted padding */
+            border-radius: 8px; /* Less rounded corners for grid items */
+            font-weight: 500; /* Less bold grid item text */
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08); /* Softer shadow for light theme grid items */
+        }
+        /* Theme specific colors for dashboard items */
+        body:not(.light-theme) .dashboard-grid-item { /* Dark theme */
+            background: #095a71;
+            color: #e0f2f1;
+        }
+        body:not(.light-theme) .dashboard-grid-item:hover { /* Dark theme hover */
+            background: #064a5c;
+        }
+        body.light-theme .dashboard-grid-item { /* Light theme */
+            background: #fff; /* White background for light theme grid items */
+            color: #495057; /* Darker text color */
+            border: 1px solid #e0e0e0;
+        }
+        body.light-theme .dashboard-grid-item:hover { /* Light theme hover */
+            background: #f8f9fa; /* Slightly lighter background on hover */
+        }
+
+        /* Settings specific styles */
+        .settings-option {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: var(--profile-field-bg); /* Use profile field bg for consistency */
+            color: var(--text-color);
+            border-radius: 4px;
+            border: 1px solid #ced4da; /* Add border to settings options in light theme */
+        }
+        .settings-option label {
+            font-weight: bold;
+            color: var(--text-color);
+        }
+        .settings-option button {
+            width: auto;
+            margin-top: 0;
+            padding: 6px 12px; /* Smaller button in settings */
+            font-size: 0.9rem;
+        }
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .theme-toggle label {
+            font-weight: normal; /* Less bold theme labels */
+        }
+        /* Style for radio buttons */
+        .theme-toggle input[type="radio"] {
+            width: 18px; /* Standard size for radio button */
+            height: 18px;
+            margin: 0;
+            cursor: pointer;
+            -webkit-appearance: none; /* Hide default radio button */
+            -moz-appearance: none;
+            appearance: none;
+            border: 2px solid var(--text-color); /* Border for radio button */
+            border-radius: 50%;
+            outline: none;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .theme-toggle input[type="radio"]:checked {
+            background-color: var(--button-bg-color); /* Fill color when checked */
+            border-color: var(--button-bg-color); /* Border color when checked */
+        }
+
+        /* Adjust logo positioning */
+        img {
+            position: absolute;
+            top: 15px; /* Moved closer to the top */
+            left: 20px;
+            height: 120px; /* Slightly reduced height */
+        }
+    </style>
+</head>
+<body>
+
+    <img src="logo.png" alt="Rad Mentor Logo" />
+
+    <div class="container" id="auth-container" style="display: none;">
+        <h1>🔬 RadMentor - Login</h1>
+        <div class="input-group"><input type="email" id="email" placeholder="Email" /></div>
+        <div class="input-group"><input type="password" id="password" placeholder="Password" /></div>
+        <button onclick="handleAuth()" id="auth-btn">Sign In</button>
+        <div class="toggle" onclick="toggleAuth()">Don't have an account? Sign up</div>
+    </div>
+
+    <div class="container" id="profile-form" style="display: none;">
+        <h1>👤 Complete Your Profile</h1>
+        <div class="input-group"><input type="text" id="name" placeholder="Full Name" /></div>
+        <div class="input-group"><input type="date" id="dob" /></div>
+        <div class="input-group">
+            <select id="sex">
+                <option value="" disabled selected>Select Sex</option>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <select id="position">
+                <option value="" disabled selected>Select Position</option>
+                <option>Intern</option>
+                <option>Junior Resident</option>
+                <option>Senior Resident</option>
+                <option>Consultant</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <input list="colleges" id="college" placeholder="Medical College" />
+            <datalist id="colleges">
+                <option value="All India Institute of Medical Sciences, New Delhi">
+                <option value="Postgraduate Institute of Medical Education and Research, Chandigarh">
+                <option value="Christian Medical College, Vellore">
+                <option value="National Institute of Mental Health and Neuro Sciences, Bangalore">
+                <option value="Jawaharlal Institute of Postgraduate Medical Education & Research, Puducherry">
+                <option value="Amrita Vishwa Vidyapeetham, Coimbatore">
+                <option value="Sanjay Gandhi Postgraduate Institute of Medical Sciences, Lucknow">
+                <option value="Banaras Hindu University, Varanasi">
+                <option value="Kasturba Medical College, Manipal">
+                <option value="Sri Ramachandra Institute of Higher Education and Research, Chennai">
+                <option value="St. John's Medical College, Bangalore">
+                <option value="Aligarh Muslim University, Aligarh">
+                <option value="Grant Medical College and Sir J.J. Group of Hospitals, Mumbai">
+                <option value="Institute of Liver and Biliary Sciences, New Delhi">
+                <option value="Madras Medical College, Chennai">
+                <option value="Maulana Azad Medical College, New Delhi">
+                <option value="King George's Medical University, Lucknow">
+                <option value="Seth G.S. Medical College and K.E.M. Hospital, Mumbai">
+                <option value="Vardhman Mahavir Medical College & Safdarjung Hospital, New Delhi">
+                <option value="Lady Hardinge Medical College, New Delhi">
+                <option value="Armed Forces Medical College, Pune">
+                <option value="Lokmanya Tilak Municipal Medical College, Mumbai">
+                <option value="BJ Medical College, Ahmedabad">
+                <option value="Stanley Medical College, Chennai">
+                <option value="Govt. Medical College, Thiruvananthapuram">
+                <option value="Osmania Medical College, Hyderabad">
+                <option value="Gandhi Medical College, Hyderabad">
+                <option value="Bangalore Medical College and Research Institute, Bangalore">
+                <option value="Mysore Medical College and Research Institute, Mysore">
+                <option value="Dr. B.R. Ambedkar Medical College, Bangalore">
+                <option value="J.N. Medical College, Belagavi">
+                <option value="Kalinga Institute of Industrial Technology, Bhubaneswar">
+                <option value="Mahatma Gandhi Medical College & Research Institute, Puducherry">
+                <option value="Datta Meghe Institute of Medical Sciences, Wardha">
+                <option value="Saveetha Institute of Medical and Technical Sciences, Chennai">
+                <option value="Chettinad Academy of Research and Education, Chennai">
+                <option value="M.S. Ramaiah Medical College, Bangalore">
+                <option value="Bharati Vidyapeeth (Deemed to be University), Pune">
+                <option value="Krishna Institute of Medical Sciences, Karad">
+                <option value="Dr. D.Y. Patil Vidyapeeth, Pune">
+                <option value="SRM Institute of Science and Technology, Chennai">
+                <option value="Manipal University, Jaipur">
+                <option value="MGM Medical College, Aurangabad">
+                <option value="GITAM, Visakhapatnam">
+                <option value="Narayana Medical College, Nellore">
+                <option value="KSRM Medical College, Kadapa">
+                <option value="Deccan College of Medical Sciences, Hyderabad">
+                <option value="Meenakshi Amma Medical College and Hospital, Chennai">
+                <option value="MVJ Medical College and Research Hospital, Bangalore">
+                <option value="Acharya Institute of Health Sciences, Bangalore">
+                <option value="SDM College of Medical Sciences & Hospital, Dharwad">
+                <option value="Navodaya Medical College, Raichur">
+                <option value="JSS Medical College, Mysore">
+                <option value="Rural Medical College, Loni">
+                <option value="Pramukhswami Medical College, Anand">
+                <option value="Adichunchanagiri Institute of Medical Sciences, Mandya">
+                <option value="Vydehi Institute of Medical Sciences and Research Centre, Bangalore">
+                <option value="Rajarajeswari Medical College and Hospital, Bangalore">
+                <option value="Yenepoya Medical College, Mangaluru">
+                <option value="Father Muller Medical College, Mangaluru">
+                <option value="Kempegowda Institute of Medical Sciences, Bangalore">
+                <option value="Maharaja Agrasen Medical College, Agroha">
+                <option value="Christian Medical College, Ludhiana">
+                <option value="Mata Gujri Memorial Medical College, Kishanganj">
+                <option value="Hi-Tech Medical College & Hospital, Bhubaneswar">
+                <option value="Maharishi Markandeshwar (Deemed to be University), Ambala">
+                <option value="Teerthanker Mahaveer University, Moradabad">
+                <option value="Santosh Medical College and Hospital, Ghaziabad">
+                <option value="Sharda University, Greater Noida">
+                <option value="Netaji Subhash Chandra Bose Medical College, Jabalpur">
+                <option value="Moti Lal Nehru Medical College, Allahabad">
+                <option value="Gajra Raja Medical College, Gwalior">
+                <option value="S.M.S. Medical College, Jaipur">
+                <option value="R.N.T. Medical College, Udaipur">
+                <option value="JLN Medical College, Ajmer">
+                <option value="Dr. S.N. Medical College, Jodhpur">
+                <option value="Government Medical College, Kota">
+                <option value="M.P. Shah Medical College, Jamnagar">
+                <option value="Government Medical College, Surat">
+                <option value="Pt. Deendayal Upadhyay Medical College, Rajkot">
+                <option value="Medical College, Baroda">
+                <option value="Assam Medical College, Dibrugarh">
+                <option value="Gauhati Medical College, Guwahati">
+                <option value="Silchar Medical College & Hospital, Silchar">
+                <option value="Indira Gandhi Medical College, Shimla">
+                <option value="Sher-i-Kashmir Institute of Medical Sciences, Srinagar">
+                <option value="Government Medical College, Jammu">
+                <option value="King Edward Memorial Hospital and Seth Gordhandas Sunderdas Medical College, Mumbai">
+                <option value="BYL Nair Charitable Hospital and Topiwala National Medical College, Mumbai">
+                <option value="Seth G.S. Medical College, Mumbai">
+                <option value="Lokmanya Tilak Municipal Medical College, Mumbai">
+                <option value="BJ Medical College, Pune">
+                <option value="Government Medical College, Nagpur">
+                <option value="Indira Gandhi Government Medical College, Nagpur">
+                <option value="Dr. V. M. Government Medical College, Solapur">
+                <option value="Government Medical College, Aurangabad">
+                <option value="Grant Medical College, Mumbai">
+                <option value="Armed Forces Medical College, Pune">
+                <option value="Government Medical College, Akola">
+                <option value="Government Medical College, Miraj">
+                <option value="Government Medical College, Latur">
+                <option value="Government Medical College, Jalgaon">
+                <option value="Government Medical College, Dhule">
+                <option value="Government Medical College, Gondia">
+                <option value="Government Medical College, Chandrapur">
+                <option value="Government Medical College & Hospital, Baramati">
+                <option value="AIIMS Bhopal">
+                <option value="AIIMS Bhubaneswar">
+                <option value="AIIMS Jodhpur">
+                <option value="AIIMS Patna">
+                <option value="AIIMS Raipur">
+                <option value="AIIMS Rishikesh">
+                <option value="AIIMS Nagpur">
+                <option value="AIIMS Mangalagiri">
+                <option value="AIIMS Gorakhpur">
+                <option value="AIIMS Kalyani">
+                <option value="AIIMS Raebareli">
+                <option value="AIIMS Bathinda">
+                <option value="AIIMS Bilaspur">
+                <option value="AIIMS Deoghar">
+                <option value="AIIMS Guwahati">
+                <option value="AIIMS Rajkot">
+                <option value="AIIMS Vijaypur">
+                <option value="AIIMS Madurai">
+                <option value="AIIMS Darbhanga">
+                <option value="AIIMS Rewari">
+                <option value="AIIMS Kashmir">
+                <option value="AIIMS Jammu">
+                <option value="AIIMS Manipur">
+                <option value="AIIMS Mizoram">
+                <option value="AIIMS Sikkim">
+                <option value="AIIMS Tripura">
+            </datalist>
+        </div>
+        <div class="input-group">
+            <select id="exam_pursuing">
+                <option value="" disabled selected>What exam are you pursuing?</option>
+                <option>Final year exam</option>
+                <option>DNB</option>
+                <option>FRCR</option>
+                <option>NEET SS</option>
+                <option>INICET SS</option>
+                <option>MICR</option>
+                <option>Fellowship exams</option>
+            </select>
+        </div>
+        <button onclick="submitProfile()">Submit Profile</button>
+    </div>
+
+    <div class="container dashboard" id="dashboard" style="display: none;">
+        <div class="topbar">
+            <div class="user-greeting">Hi, <span id="user-greeting-name">Doctor</span>!</div>
+            <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+        </div>
+
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-item" onclick="showDashboardSection('main')">🏠 Home</div>
+            <div class="sidebar-item" onclick="showDashboardSection('profile')">👤 Profile</div>
+            <div class="sidebar-item" onclick="showDashboardSection('edit-profile')">✏️ Edit Profile</div>
+            <div class="sidebar-item" onclick="showDashboardSection('subscription')">💳 Subscription</div>
+            <div class="sidebar-item" onclick="showDashboardSection('settings')">⚙️ Settings</div>
+            <div class="sidebar-item" onclick="showDashboardSection('about-us')">ℹ️ About Us</div>
+            <div class="sidebar-item" onclick="showDashboardSection('contact-us')">📞 Contact Us</div>
+            <div class="sidebar-item" onclick="logout()">🚪 Logout</div>
+        </div>
+
+        <div class="dashboard-content" id="dashboard-main-content">
+            <h1 class="welcome-text">Welcome to RadMentor!</h1>
+            <p style="text-align: center; margin-top: 20px; font-size: 1.1rem;">
+                Please select a category below or use the menu at the top right to navigate.
+            </p>
+
+            <div class="mcq-grid">
+                <div class="dashboard-grid-item" onclick="alert('FRCR MCQs coming soon!')">FRCR</div>
+                <div class="dashboard-grid-item" onclick="alert('Superspeciality MCQs coming soon!')">Superspeciality MCQs</div>
+                <div class="dashboard-grid-item" onclick="alert('MICR MCQs coming soon!')">MICR</div>
+                <div class="dashboard-grid-item" onclick="alert('Final year MD / DNB MCQs coming soon!')">Final year MD / DNB</div>
+                <div class="dashboard-grid-item" onclick="alert('Anatomy MCQs coming soon!')">Anatomy</div>
+            </div>
+        </div>
+
+        <div class="content-section" id="profile-section">
+            <h2>Your Profile</h2>
+            <div class="profile-field"><strong>Full Name:</strong> <span id="display-name"></span></div>
+            <div class="profile-field"><strong>Date of Birth:</strong> <span id="display-dob"></span></div>
+            <div class="profile-field"><strong>Sex:</strong> <span id="display-sex"></span></div>
+            <div class="profile-field"><strong>Position:</strong> <span id="display-position"></span></div>
+            <div class="profile-field"><strong>Medical College:</strong> <span id="display-college"></span></div>
+            <div class="profile-field"><strong>Exam Pursuing:</strong> <span id="display-exam"></span></div>
+            <button onclick="showDashboardSection('edit-profile')">Edit Profile</button>
+        </div>
+
+        <div class="content-section" id="edit-profile-section">
+            <h2>Edit Your Profile</h2>
+            <div class="input-group"><input type="text" id="edit-name" placeholder="Full Name" /></div>
+            <div class="input-group"><input type="date" id="edit-dob" /></div>
+            <div class="input-group">
+                <select id="edit-sex">
+                    <option value="" disabled selected>Select Sex</option>
+                    <option>Male</option>
+                    <option>Female</option>
+                    <option>Other</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <select id="edit-position">
+                    <option value="" disabled selected>Select Position</option>
+                    <option>Intern</option>
+                    <option>Junior Resident</option>
+                    <option>Senior Resident</option>
+                    <option>Consultant</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <input list="colleges" id="edit-college" placeholder="Medical College" />
+                <datalist id="colleges"></datalist> </div>
+            <div class="input-group">
+                <select id="edit-exam-pursuing">
+                    <option value="" disabled selected>What exam are you pursuing?</option>
+                    <option>Final year exam</option>
+                    <option>DNB</option>
+                    <option>FRCR</option>
+                    <option>NEET SS</option>
+                    <option>INICET SS</option>
+                    <option>MICR</option>
+                    <option>Fellowship exams</option>
+                </select>
+            </div>
+            <button onclick="saveProfileChanges()">Save Changes</button>
+            <button onclick="showDashboardSection('profile')" style="background-color: #6c757d; color: white; margin-top: 10px;">Cancel</button>
+        </div>
+
+        <div class="content-section" id="subscription-section">
+            <h2>Subscription</h2>
+            <p><strong>Package A:</strong> Basic Access - Monthly MCQs</p>
+            <p><strong>Package B:</strong> Premium Access - All MCQs + Mock Tests</p>
+            <p><strong>Package C:</strong> Elite Access - All features + Personal Tutoring</p>
+            <p>Choose the plan that suits your learning journey! More details and pricing coming soon.</p>
+            <button onclick="alert('Navigate to subscription plans page!')" style="background-color: var(--button-bg-color);">View Plans</button>
+        </div>
+
+        <div class="content-section" id="settings-section">
+            <h2>Settings</h2>
+            <div class="settings-option">
+                <label>Membership Taken Date:</label>
+                <span id="membership-start-date">N/A</span>
+            </div>
+            <div class="settings-option">
+                <label>Membership End Date:</label>
+                <span id="membership-end-date">N/A</span>
+            </div>
+            <div class="settings-option">
+                <label>Clear Bookmarks:</label>
+                <button onclick="alert('Bookmarks cleared! (Placeholder)')" style="background-color: #dc3545; color: white;">Clear</button>
+            </div>
+            <div class="settings-option theme-toggle">
+                <label for="theme-switch-light">Light Theme</label>
+                <input type="radio" id="theme-switch-light" name="theme" value="light" onchange="setTheme('light')">
+                <label for="theme-switch-dark">Dark Theme</label>
+                <input type="radio" id="theme-switch-dark" name="theme" value="dark" onchange="setTheme('dark')">
+            </div>
+            <div class="settings-option">
+                <label>Notification Preferences:</label>
+                <button onclick="alert('Notification settings (Placeholder)')" style="background-color: #007bff; color: white;">Manage</button>
+            </div>
+            <div class="settings-option">
+                <label>Change Password:</label>
+                <button onclick="alert('Password change dialog (Placeholder)')" style="background-color: #6c757d; color: white;">Change</button>
+            </div>
+        </div>
+
+        <div class="content-section" id="about-us-section">
+            <h2>About Us</h2>
+            <p>We are two radiologists trained at one of India’s premier medical institutes, united by a shared vision: to make high-quality radiology education accessible, affordable, and reliable for all.</p>
+            <p>In a world where accurate knowledge can shape clinical decisions, we built this platform as a trusted source of learning—for students, residents, and practitioners alike. Every question, explanation, and update is curated by us, backed by evidence, and rooted in real-world radiology practice.</p>
+            <p>Whether you're preparing for exams or refining your diagnostic skills, our goal is to support your journey with clear, concise, and clinically relevant content—delivered with the precision you'd expect from radiologists.</p>
+            <p>Welcome to a community built by doctors, for doctors.</p>
+        </div>
+
+        <div class="content-section" id="contact-us-section">
+            <h2>Contact Us</h2>
+            <p>Have questions or feedback? We'd love to hear from you!</p>
+            <p>Email: <a href="mailto:support@radmentor.com" style="color: var(--toggle-color);">support@radmentor.com</a></p>
+            <p>Our team will get back to you as soon as possible.</p>
+        </div>
+
+    </div> <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Your Firebase Configuration - REPLACE WITH YOUR ACTUAL CONFIGURATION IF DIFFERENT
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw", // Your API Key
+            authDomain: "radiology-mcqs.firebaseapp.com",
+            projectId: "radiology-mcqs",
+            storageBucket: "radiology-mcqs.appspot.com",
+            messagingSenderId: "862300415358",
+            appId: "1:862300415358:web:097d5e413f388e30587f2f",
+            measurementId: "G-0V1SD1H95V"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let mode = 'signin'; // Variable to track if we are in sign-in or sign-up mode
+        let currentUserData = null; // To store current user's profile data
+
+        // --- Theme Logic ---
+        function setTheme(theme) {
+            if (theme === 'light') {
+                document.body.classList.add('light-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.body.classList.remove('light-theme');
+                localStorage.setItem('theme', 'dark');
+            }
+            // Update radio button states if they exist
+            const lightSwitch = document.getElementById('theme-switch-light');
+            const darkSwitch = document.getElementById('theme-switch-dark');
+            if (lightSwitch && darkSwitch) {
+                lightSwitch.checked = (theme === 'light');
+                darkSwitch.checked = (theme === 'dark');
+            }
+        }
+
+        function setInitialTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const lightSwitch = document.getElementById('theme-switch-light');
+            const darkSwitch = document.getElementById('theme-switch-dark');
+
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+                if (lightSwitch) lightSwitch.checked = true;
+            } else {
+                // Default to dark theme if no preference or explicitly dark
+                document.body.classList.remove('light-theme');
+                if (darkSwitch) darkSwitch.checked = true;
+            }
+        }
+
+        // --- Authentication Functions ---
+        function toggleAuth() {
+            mode = mode === 'signin' ? 'signup' : 'signin';
+            document.getElementById('auth-btn').textContent = mode === 'signin' ? 'Sign In' : 'Sign Up';
+            document.querySelector('.toggle').textContent = mode === 'signin'
+                ? "Don't have an account? Sign up"
+                : "Already have an account? Sign in";
+        }
+
+        function handleAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (email === "" || password === "") {
+                alert("Please enter both email and password.");
+                return;
+            }
+
+            if (mode === 'signin') {
+                auth.signInWithEmailAndPassword(email, password)
+                    .then(userCredential => {
+                        const user = userCredential.user;
+                        checkUserProfile(user);
+                    })
+                    .catch(err => {
+                        alert("Sign In Error: " + err.message);
+                    });
+            } else { // mode === 'signup'
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then(userCredential => {
+                        const user = userCredential.user;
+                        checkUserProfile(user);
+                    })
+                    .catch(err => {
+                        alert("Sign Up Error: " + err.message);
+                    });
+            }
+        }
+
+        function checkUserProfile(user) {
+            const userRef = db.collection('users').doc(user.uid);
+            userRef.get().then(doc => {
+                if (doc.exists) {
+                    currentUserData = doc.data(); // Store user data globally
+                    loadDashboard(currentUserData.name);
+                } else {
+                    document.getElementById('auth-container').style.display = 'none';
+                    document.getElementById('profile-form').style.display = 'block';
+                }
+            }).catch(error => {
+                console.error("Error checking user profile:", error);
+                alert("Error checking user profile. Please try again.");
+                document.getElementById('auth-container').style.display = 'none';
+                document.getElementById('profile-form').style.display = 'block';
+            });
+        }
+
+        // --- Profile Management ---
+        function submitProfile() {
+            const user = auth.currentUser;
+            if (!user) {
+                alert("No user logged in. Please sign in first.");
+                return;
+            }
+
+            const name = document.getElementById('name').value;
+            const dob = document.getElementById('dob').value;
+            const sex = document.getElementById('sex').value;
+            const position = document.getElementById('position').value;
+            const college = document.getElementById('college').value;
+            const examPursuing = document.getElementById('exam_pursuing').value;
+
+            if (!name || !dob || !sex || !position || !college || !examPursuing) {
+                alert("Please fill in all profile fields.");
+                return;
+            }
+
+            const profileData = {
+                name: name,
+                dob: dob,
+                sex: sex,
+                position: position,
+                college: college,
+                examPursuing: examPursuing, // Save the new field
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            db.collection('users').doc(user.uid).set(profileData)
+                .then(() => {
+                    currentUserData = profileData; // Update global user data
+                    document.getElementById('profile-form').style.display = 'none';
+                    loadDashboard(currentUserData.name);
+                })
+                .catch(err => {
+                    alert("Error saving profile: " + err.message);
+                });
+        }
+
+        function populateEditProfileForm() {
+            if (currentUserData) {
+                document.getElementById('edit-name').value = currentUserData.name || '';
+                document.getElementById('edit-dob').value = currentUserData.dob || '';
+                document.getElementById('edit-sex').value = currentUserData.sex || '';
+                document.getElementById('edit-position').value = currentUserData.position || '';
+                document.getElementById('edit-college').value = currentUserData.college || '';
+                document.getElementById('edit-exam-pursuing').value = currentUserData.examPursuing || '';
+            }
+        }
+
+        function saveProfileChanges() {
+            const user = auth.currentUser;
+            if (!user) {
+                alert("No user logged in.");
+                return;
+            }
+
+            const updatedProfileData = {
+                name: document.getElementById('edit-name').value,
+                dob: document.getElementById('edit-dob').value,
+                sex: document.getElementById('edit-sex').value,
+                position: document.getElementById('edit-position').value,
+                college: document.getElementById('edit-college').value,
+                examPursuing: document.getElementById('edit-exam-pursuing').value,
+                // Do not update `createdAt` as it's a creation timestamp
+            };
+
+            // Basic validation
+            if (!updatedProfileData.name || !updatedProfileData.dob || !updatedProfileData.sex ||
+                !updatedProfileData.position || !updatedProfileData.college || !updatedProfileData.examPursuing) {
+                alert("Please fill in all profile fields before saving.");
+                return;
+            }
+
+            db.collection('users').doc(user.uid).update(updatedProfileData)
+                .then(() => {
+                    currentUserData = { ...currentUserData, ...updatedProfileData }; // Update global data
+                    alert("Profile updated successfully!");
+                    showDashboardSection('profile'); // Go back to profile view
+                })
+                .catch(err => {
+                    alert("Error updating profile: " + err.message);
+                    console.error("Error updating profile:", err);
+                });
+        }
+
+        // --- Dashboard and Navigation ---
+        function loadDashboard(userName = "Doctor") {
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('profile-form').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.querySelector('.topbar').style.display = 'flex';
+
+            document.getElementById('user-greeting-name').textContent = userName;
+
+            // Show the main dashboard content by default
+            showDashboardSection('main');
+        }
+
+        function logout() {
+            auth.signOut().then(() => {
+                console.log("User signed out.");
+                // onAuthStateChanged listener will handle showing auth-container
+                currentUserData = null; // Clear global user data on logout
+            }).catch(error => {
+                alert("Error signing out: " + error.message);
+            });
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+
+        function showDashboardSection(sectionId) {
+            // Hide all content sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById('dashboard-main-content').style.display = 'none';
+
+            // Show the requested section
+            if (sectionId === 'main') {
+                document.getElementById('dashboard-main-content').style.display = 'flex'; // Use flex for centering
+            } else if (sectionId === 'profile') {
+                populateProfileDetails(); // Populate before showing
+                document.getElementById('profile-section').style.display = 'block';
+            } else if (sectionId === 'edit-profile') {
+                populateEditProfileForm(); // Populate before showing
+                document.getElementById('edit-profile-section').style.display = 'block';
+            } else if (sectionId === 'subscription') {
+                document.getElementById('subscription-section').style.display = 'block';
+            } else if (sectionId === 'settings') {
+                populateSettings(); // Populate settings dates
+                document.getElementById('settings-section').style.display = 'block';
+            } else if (sectionId === 'about-us') {
+                document.getElementById('about-us-section').style.display = 'block';
+            } else if (sectionId === 'contact-us') {
+                document.getElementById('contact-us-section').style.display = 'block';
+            }
+
+            // Hide sidebar after selection
+            document.getElementById('sidebar').classList.remove('show');
+        }
+
+        function populateProfileDetails() {
+            if (currentUserData) {
+                document.getElementById('display-name').textContent = currentUserData.name || 'N/A';
+                // For DOB, you might want to format it nicely
+                const dob = currentUserData.dob;
+                if (dob) {
+                    try {
+                        const dateObj = new Date(dob);
+                        document.getElementById('display-dob').textContent = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                    } catch (e) {
+                        document.getElementById('display-dob').textContent = dob; // Fallback to raw if invalid date
+                    }
+                } else {
+                    document.getElementById('display-dob').textContent = 'N/A';
+                }
+
+                document.getElementById('display-sex').textContent = currentUserData.sex || 'N/A';
+                document.getElementById('display-position').textContent = currentUserData.position || 'N/A';
+                document.getElementById('display-college').textContent = currentUserData.college || 'N/A';
+                document.getElementById('display-exam').textContent = currentUserData.examPursuing || 'N/A';
+            }
+        }
+
+        function populateSettings() {
+            // Placeholder for membership dates. In a real app, these would come from your database.
+            document.getElementById('membership-start-date').textContent = "July 28, 2025"; // Example
+            document.getElementById('membership-end-date').textContent = "July 28, 2026";   // Example
+
+            // Set initial theme switch state (for radio buttons)
+            setInitialTheme();
+        }
+
+        // Firebase Auth State Observer: This runs every time the user's login state changes
+        auth.onAuthStateChanged(user => {
+            // Hide all main containers first
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('profile-form').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'none';
+            document.querySelector('.topbar').style.display = 'none';
+            document.getElementById('sidebar').classList.remove('show'); // Ensure sidebar is closed
+
+            if (user) {
+                const userRef = db.collection('users').doc(user.uid);
+                userRef.get().then(doc => {
+                    if (doc.exists) {
+                        currentUserData = doc.data(); // Store user data
+                        loadDashboard(currentUserData.name);
+                    } else {
+                        // User is logged in but profile does NOT exist -> show profile form
+                        document.getElementById('profile-form').style.display = 'block';
+                    }
+                }).catch(error => {
+                    console.error("Error fetching user profile on state change:", error);
+                    document.getElementById('profile-form').style.display = 'block'; // Fallback
+                });
+            } else {
+                // No user is logged in -> show the authentication container
+                document.getElementById('auth-container').style.display = 'block';
+            }
+        });
+
+        // Set initial theme when the script loads
+        setInitialTheme();
+    </script>
+</body>
+</html>
