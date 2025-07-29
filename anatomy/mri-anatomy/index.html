@@ -1,1 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MRI Anatomy - RadMentor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+    <style>
+        /* Base styles for all themes */
+        body {
+            font-family: 'Rubik', sans-serif;
+            margin: 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            display: flex; /* Use flexbox to center content vertically/horizontally */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Ensure it takes full viewport height */
+            background-color: var(--bg-color); /* Apply background from theme variable */
+            color: var(--text-color); /* Apply text color from theme variable */
+            flex-direction: column; /* Arrange items vertically */
+        }
 
+        /* Light Theme Variables */
+        body.light-theme {
+            --bg-color: #f0f8ff; /* Very light blue/off-white background */
+            --container-bg-color: #ffffff; /* Pure white container background */
+            --text-color: #333333; /* Dark grey for general text */
+            --heading-color: #0d47a1; /* Darker blue for headings */
+            --box-bg-color: #e3f2fd; /* Light blue for boxes */
+            --box-hover-bg-color: #bbdefb; /* Slightly darker light blue on hover */
+            --box-border-color: #90caf9; /* Medium blue for box borders */
+            --back-button-bg: #1e88e5; /* Standard blue button */
+            --back-button-hover-bg: #1565c0; /* Darker blue button on hover */
+        }
+
+        /* Dark Theme Variables */
+        body:not(.light-theme) {
+            --bg-color: #004d5e;
+            --container-bg-color: #043f4e;
+            --text-color: #ffffff;
+            --heading-color: #ffffff;
+            --box-bg-color: #095a71;
+            --box-hover-bg-color: #064a5c;
+            --box-border-color: #043f4e;
+            --back-button-bg: #00bcd4;
+            --back-button-hover-bg: #0097a7;
+        }
+
+        .mri-anatomy-wrapper {
+            background-color: var(--container-bg-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            padding: 40px; /* Increased padding */
+            margin: 20px auto;
+            max-width: 960px; /* Wider content area */
+            width: 90%; /* Responsive width */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center items horizontally */
+        }
+
+        .mri-anatomy-wrapper h1 {
+            color: var(--heading-color);
+            font-size: 2.8rem; /* Larger title */
+            margin-bottom: 40px; /* More space below title */
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .mri-options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Flexible columns */
+            gap: 25px; /* Space between boxes */
+            width: 100%; /* Take full width of parent */
+            max-width: 800px; /* Max width for the grid itself */
+        }
+
+        .mri-option-box {
+            background-color: var(--box-bg-color);
+            color: var(--text-color);
+            padding: 25px; /* Padding inside boxes */
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.2rem; /* Font size for options */
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--box-border-color);
+            min-height: 100px; /* Consistent box height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            word-break: break-word; /* Allow text to wrap if long */
+        }
+
+        .mri-option-box:hover {
+            background-color: var(--box-hover-bg-color);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-button {
+            display: block;
+            width: 220px; /* Slightly wider back button */
+            margin: 50px auto 0;
+            padding: 15px 25px;
+            background-color: var(--back-button-bg);
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover {
+            background-color: var(--back-button-hover-bg);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .mri-anatomy-wrapper {
+                padding: 25px;
+                width: 95%;
+            }
+            .mri-anatomy-wrapper h1 {
+                font-size: 2.2rem;
+            }
+            .mri-options-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 15px;
+            }
+            .mri-option-box {
+                font-size: 1.1rem;
+                min-height: 80px;
+            }
+        }
+        @media (max-width: 480px) {
+            .mri-anatomy-wrapper h1 {
+                font-size: 1.8rem;
+            }
+            .mri-options-grid {
+                grid-template-columns: 1fr; /* Single column on very small screens */
+                gap: 10px;
+            }
+            .mri-option-box {
+                font-size: 1rem;
+                min-height: 70px;
+            }
+            .back-button {
+                width: 100%;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="mri-anatomy-wrapper">
+        <h1>MRI Anatomy</h1>
+
+        <div class="mri-options-grid">
+            <div class="mri-option-box" onclick="alert('Brain MRI content coming soon!')">Brain</div>
+            <div class="mri-option-box" onclick="alert('Face MRI content coming soon!')">Face</div>
+            <div class="mri-option-box" onclick="alert('Neck MRI content coming soon!')">Neck</div>
+            <div class="mri-option-box" onclick="alert('Female Pelvis MRI content coming soon!')">Female Pelvis</div>
+            <div class="mri-option-box" onclick="alert('Male Pelvis MRI content coming soon!')">Male Pelvis</div>
+            <div class="mri-option-box" onclick="alert('Brachial Plexus MRI content coming soon!')">Brachial Plexus</div>
+            <div class="mri-option-box" onclick="alert('Shoulder MRI content coming soon!')">Shoulder</div>
+            <div class="mri-option-box" onclick="alert('Upper Extremity MRI content coming soon!')">Upper Extremity</div>
+            <div class="mri-option-box" onclick="alert('Elbow MRI content coming soon!')">Elbow</div>
+            <div class="mri-option-box" onclick="alert('Wrist MRI content coming soon!')">Wrist</div>
+            <div class="mri-option-box" onclick="alert('Hip MRI content coming soon!')">Hip</div>
+            <div class="mri-option-box" onclick="alert('Lower Extremity MRI content coming soon!')">Lower Extremity</div>
+            <div class="mri-option-box" onclick="alert('Knee MRI content coming soon!')">Knee</div>
+            <div class="mri-option-box" onclick="alert('Ankle MRI content coming soon!')">Ankle</div>
+        </div>
+
+        <a href="../index.html" class="back-button">Back to Anatomy Main</a>
+    </div>
+
+    <script>
+        // --- Theme Logic (Copied for consistency with main site) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+            }
+        });
+        // --- End Theme Logic ---
+    </script>
+</body>
+</html>
