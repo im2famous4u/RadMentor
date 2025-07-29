@@ -104,7 +104,7 @@
             -webkit-user-drag: none;
         }
 
-        /* SVG Overlay for Lines */
+        /* SVG Overlay for Lines and Points */
         .annotation-svg-overlay {
             position: absolute;
             top: 0;
@@ -146,30 +146,23 @@
             font-weight: 500;
             white-space: nowrap; /* Keep text on one line */
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            transition: opacity 0.3s ease; /* Smooth fade in/out */
-            opacity: 0; /* Hidden by default */
-            pointer-events: auto; /* Allows interaction with label if needed (e.g. hover) */
             border: 1px solid var(--annotation-border-color);
             z-index: 10; /* Ensure labels are above the SVG lines */
             cursor: default;
+            
+            /* Core positioning logic: center the label div on its (left, top) coordinates */
+            transform: translate(-50%, -50%); 
 
-            /* Removed all transform: translate() from here and its specific align- classes */
-            /* The label's (left, top) will now be its top-left corner directly */
-            /* You will adjust labelX and labelY in the annotations data for positioning */
+            /* --- Visibility control --- */
+            /* Start hidden, transition to visible */
+            opacity: 0; 
+            transition: opacity 0.3s ease; 
+            display: block; /* Ensure it's a block element for positioning */
         }
 
         .annotation-label.show {
-            opacity: 1; /* Show when 'show' class is added */
+            opacity: 1; /* Make visible when 'show' class is added */
         }
-
-        /* Removed specific align-left/right/top/bottom classes as they are no longer used for transform */
-        /* If you still want text-alignment within the box, you can re-add them without transform */
-        /*
-        .annotation-label.align-left { text-align: right; }
-        .annotation-label.align-right { text-align: left; }
-        .annotation-label.align-top, .annotation-label.align-bottom { text-align: center; }
-        */
-
 
         .controls {
             width: 100%;
@@ -318,24 +311,19 @@
         // - slice: The image number (e.g., 1 for brain_01.jpg)
         // - text: The label text
         // - pointX, pointY: The (percentage) coordinates of the anatomical point on the image.
-        // - labelX, labelY: The (percentage) coordinates for the TOP-LEFT CORNER of the label box.
-        //   These values are now direct. You will need to adjust them to create the desired gap and position.
-        // - labelAlign: (Optional) Not used for transform anymore, but could be used for text-align within label or future features.
+        // - labelX, labelY: The (percentage) coordinates for the CENTER of the label box.
+        //   The line will also connect to this center point.
         const annotations = [
             // --- Annotations for brain_01.jpg (Slice 1) ---
-            // point: 50.66%, 21.45%
-            // label's TOP-LEFT corner (110, 113) pixels -> 18.15%, 18.65%
+            // point: 50.66%, 21.45% (Falx on image)
+            // label: center at 18.15%, 18.65% (adjusted for visual spacing)
             { slice: 1, text: "Falx", pointX: 50.66, pointY: 21.45, labelX: 18.15, labelY: 18.65 },
 
             // --- Annotations for brain_02.jpg (Slice 2) ---
-            // point: 50.66%, 21.45%
-            // label's TOP-LEFT corner (110, 113) pixels -> 18.15%, 18.65%
             { slice: 2, text: "Falx", pointX: 50.66, pointY: 21.45, labelX: 18.15, labelY: 18.65 },
 
             // --- Annotations for brain_03.jpg (Slice 3) ---
-            // point: 41.75%, 56.93%
-            // label's TOP-LEFT corner: let's pick new coordinates visually for the example, e.g. 5% left, 20% down
-            { slice: 3, text: "Lateral Ventricle", pointX: 41.75, pointY: 56.93, labelX: 5, labelY: 20 },
+            { slice: 3, text: "Lateral Ventricle", pointX: 41.75, pointY: 56.93, labelX: 15, labelY: 30 }, // Adjusted label position for better visibility
             // Add more annotations here as you identify structures on your images:
             // { slice: X, text: "Your Label", pointX: XX.XX, pointY: YY.YY, labelX: XX.XX, labelY: YY.YY },
         ];
@@ -373,13 +361,10 @@
                     labelDiv.classList.add('annotation-label');
                     labelDiv.textContent = annotation.text;
                     
-                    // labelX and labelY now directly control the top-left corner of the label box
+                    // Position label using its CENTER point (labelX, labelY percentages)
+                    // The transform: translate(-50%, -50%) in CSS centers the div on these coordinates
                     labelDiv.style.left = `${annotation.labelX}%`;
                     labelDiv.style.top = `${annotation.labelY}%`;
-
-                    // No specific align- classes are needed for transform anymore
-                    // If you want text-alignment within the box, you can re-add .align-left/.align-right
-                    // and use text-align: right/left; property for them.
                     
                     // Append to DOM to make it part of the page
                     annotationOverlay.appendChild(labelDiv);
@@ -393,14 +378,8 @@
                     const pX = (annotation.pointX / 100) * imageWidth;
                     const pY = (annotation.pointY / 100) * imageHeight;
 
-                    const lX = (annotation.labelX / 100) * imageWidth; // Line ends at top-left of label box
-                    const lY = (annotation.labelY / 100) * imageHeight; // Line ends at top-left of label box
-
-                    // To make the line go to a more central point of the label box's edge,
-                    // we need to know the label's actual width/height.
-                    // This is complex for SVG lines without knowing the size beforehand or using a listener.
-                    // For now, it will point to the top-left corner of the label box.
-                    // We can refine this if the current display isn't satisfactory.
+                    const lX = (annotation.labelX / 100) * imageWidth; // Line ends at center of label box
+                    const lY = (annotation.labelY / 100) * imageHeight; // Line ends at center of label box
 
                     line.setAttribute('x1', pX);
                     line.setAttribute('y1', pY);
