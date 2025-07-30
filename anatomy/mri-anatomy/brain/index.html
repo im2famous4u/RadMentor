@@ -6,7 +6,7 @@
     <title>Brain MRI Viewer - RadMentor</title>
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet"/>
     <style>
-        /* Base styles for all themes */
+        /* Base styles for all themes (unchanged) */
         body {
             font-family: 'Rubik', sans-serif;
             margin: 0;
@@ -17,31 +17,31 @@
             min-height: 100vh;
             background-color: var(--bg-color);
             color: var(--text-color);
-            flex-direction: column; /* Arrange items vertically */
-            overflow: hidden; /* Prevent body scroll if content overflows slightly */
+            flex-direction: column;
+            overflow: hidden;
         }
 
-        /* Light Theme Variables */
+        /* Light Theme Variables (unchanged) */
         body.light-theme {
-            --bg-color: #f0f8ff; /* Very light blue/off-white background */
-            --container-bg-color: #ffffff; /* Pure white container background */
-            --text-color: #333333; /* Dark grey for general text */
-            --heading-color: #0d47a1; /* Darker blue for headings */
-            --box-bg-color: #e3f2fd; /* Light blue for boxes */
-            --box-hover-bg-color: #bbdefb; /* Slightly darker light blue on hover */
-            --box-border-color: #90caf9; /* Medium blue for box borders */
-            --back-button-bg: #1e88e5; /* Standard blue button */
-            --back-button-hover-bg: #1565c0; /* Darker blue button on hover */
-            --slider-track-bg: #c5d9e8; /* Light blue for slider track */
-            --slider-thumb-bg: #1e88e5; /* Blue for slider thumb */
-            --annotation-text-color: #1a237e; /* Darker blue for annotation text */
-            --annotation-bg-color: rgba(255, 255, 255, 0.95); /* More opaque white background */
-            --annotation-border-color: #64b5f6; /* Light blue border */
-            --annotation-line-color: #42a5f5; /* Medium blue for lines */
-            --annotation-point-color: #f44336; /* Red dot for point */
+            --bg-color: #f0f8ff;
+            --container-bg-color: #ffffff;
+            --text-color: #333333;
+            --heading-color: #0d47a1;
+            --box-bg-color: #e3f2fd;
+            --box-hover-bg-color: #bbdefb;
+            --box-border-color: #90caf9;
+            --back-button-bg: #1e88e5;
+            --back-button-hover-bg: #1565c0;
+            --slider-track-bg: #c5d9e8;
+            --slider-thumb-bg: #1e88e5;
+            --annotation-text-color: #1a237e;
+            --annotation-bg-color: rgba(255, 255, 255, 0.95);
+            --annotation-border-color: #64b5f6;
+            --annotation-line-color: #42a5f5;
+            --annotation-point-color: #f44336;
         }
 
-        /* Dark Theme Variables */
+        /* Dark Theme Variables (unchanged) */
         body:not(.light-theme) {
             --bg-color: #004d5e;
             --container-bg-color: #043f4e;
@@ -52,13 +52,13 @@
             --box-border-color: #043f4e;
             --back-button-bg: #00bcd4;
             --back-button-hover-bg: #0097a7;
-            --slider-track-bg: #032b36; /* Darker track for dark theme */
-            --slider-thumb-bg: #00bcd4; /* Brighter thumb for dark theme */
-            --annotation-text-color: #e0f2f1; /* Light text for annotations */
-            --annotation-bg-color: rgba(0, 0, 0, 0.85); /* More opaque black background */
-            --annotation-border-color: #00bcd4; /* Accent color border */
-            --annotation-line-color: #00bcd4; /* Accent color for lines */
-            --annotation-point-color: #f44336; /* Red dot for point */
+            --slider-track-bg: #032b36;
+            --slider-thumb-bg: #00bcd4;
+            --annotation-text-color: #e0f2f1;
+            --annotation-bg-color: rgba(0, 0, 0, 0.85);
+            --annotation-border-color: #00bcd4;
+            --annotation-line-color: #00bcd4;
+            --annotation-point-color: #f44336;
         }
 
         .viewer-container {
@@ -67,12 +67,12 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             padding: 20px;
             margin: 20px auto;
-            max-width: 800px; /* Wider to accommodate labels */
-            width: 90%; /* Responsive width */
+            max-width: 800px;
+            width: 90%;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Center items horizontally */
+            align-items: center;
         }
 
         .viewer-container h1 {
@@ -82,14 +82,14 @@
             text-align: center;
         }
 
-        /* Image and Overlay Container */
+        /* Image and Overlay Container (unchanged) */
         .image-wrapper {
             position: relative;
             width: 100%;
-            padding-bottom: 100%; /* Creates a square aspect ratio for the image area (if images are square) */
-            background-color: #000; /* Black background for imaging studies */
+            padding-bottom: 100%;
+            background-color: #000;
             border-radius: 8px;
-            overflow: hidden; /* Hide anything outside the wrapper */
+            overflow: hidden;
             box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
         }
 
@@ -99,24 +99,26 @@
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: contain; /* Ensures the image fits within the wrapper without cropping */
+            object-fit: contain;
             display: block;
             user-select: none;
             -webkit-user-drag: none;
-            z-index: 8; /* Below labels and SVG lines */
+            z-index: 8;
         }
 
-        /* SVG Overlay for Lines and Points */
+        /* SVG Overlay for Lines and Points (MODIFIED) */
         .annotation-svg-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 9; /* Above image, below labels */
-            pointer-events: none; /* Crucial: allows clicks to pass through to image/labels */
-            overflow: visible; /* Allows SVG elements to go slightly outside if needed */
+            z-index: 9;
+            pointer-events: none;
+            overflow: visible;
         }
+
+        /* Lines are hidden by default */
         .annotation-svg-overlay line {
             stroke: var(--annotation-line-color);
             stroke-width: 2;
@@ -124,20 +126,23 @@
             opacity: 0; /* Hidden by default */
             stroke-linecap: round;
         }
-        .annotation-svg-overlay line.show {
+        /* Class to make lines visible on hover */
+        .annotation-svg-overlay line.visible-on-hover {
             opacity: 0.7;
         }
+
+        /* Circles are always visible now, but can change on hover */
         .annotation-svg-overlay circle {
             fill: var(--annotation-point-color);
-            transition: opacity 0.3s ease;
-            opacity: 0; /* Hidden by default */
+            transition: all 0.1s ease; /* Transition for 'r' (radius) */
+            opacity: 1; /* Always visible */
         }
-        .annotation-svg-overlay circle.show {
-            opacity: 1;
+        /* Optional: Make circle slightly larger on hover */
+        .annotation-svg-overlay circle.visible-on-hover-circle {
+            r: 6;
         }
 
-
-        /* Annotation Label Styling (HTML Divs) */
+        /* Annotation Label Styling (HTML Divs - MODIFIED) */
         .annotation-label {
             position: absolute;
             background-color: var(--annotation-bg-color);
@@ -146,25 +151,36 @@
             border-radius: 4px;
             font-size: 0.9rem;
             font-weight: 500;
-            white-space: nowrap; /* Keep text on one line */
+            white-space: nowrap;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             border: 1px solid var(--annotation-border-color);
-            z-index: 11; /* Ensure labels are on top */
+            z-index: 11;
             cursor: default;
             
-            /* Center the label div on its (left, top) coordinates */
-            transform: translate(-50%, -50%); 
-
-            /* Visibility control */
+            /* IMPORTANT: We will manage 'left' and 'transform' in JS based on alignment */
+            /* Remove transform: translate(-50%, -50%); from CSS */
+            /* opacity and transition remain for initial fade-in */
             opacity: 0; 
             transition: opacity 0.3s ease; 
-            display: block; /* Ensure it's a block element */
+            display: block; 
+            
+            text-align: left; /* Default text alignment */
         }
 
+        /* New classes for label alignment */
+        .annotation-label.align-left {
+            transform: translateY(-50%); /* Only vertical centering */
+        }
+        .annotation-label.align-right {
+            transform: translateX(-100%) translateY(-50%); /* Shift left by 100% of its width, then vertically center */
+            text-align: right;
+        }
+        
         .annotation-label.show {
-            opacity: 1; /* Make visible when 'show' class is added */
+            opacity: 1;
         }
 
+        /* Controls, Back Button, Loading Overlay (unchanged) */
         .controls {
             width: 100%;
             margin-top: 25px;
@@ -234,7 +250,7 @@
             background-color: var(--back-button-hover-bg);
         }
 
-        /* Responsive adjustments */
+        /* Responsive adjustments (unchanged) */
         @media (max-width: 768px) {
             .viewer-container {
                 padding: 15px;
@@ -253,28 +269,28 @@
                 font-size: 1rem;
             }
         }
-        /* Loading spinner CSS */
+        /* Loading spinner CSS (unchanged) */
         .loading-overlay {
-            position: fixed; /* Fixed to cover the entire viewport */
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(0, 0, 0, 0.85); /* Slightly darker to ensure visibility */
+            background-color: rgba(0, 0, 0, 0.85);
             color: white;
             display: flex;
-            flex-direction: column; /* Stack spinner and text */
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             font-size: 1.5rem;
-            z-index: 1000; /* Extremely high z-index to always be on top */
-            transition: opacity 0.5s ease; /* Slower transition for effect */
+            z-index: 1000;
+            transition: opacity 0.5s ease;
             opacity: 1;
-            pointer-events: auto; /* Block interaction when visible */
+            pointer-events: auto;
         }
         .loading-overlay.hidden {
             opacity: 0;
-            pointer-events: none; /* Crucial: allows clicks through when hidden */
+            pointer-events: none;
         }
         .spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
@@ -283,7 +299,7 @@
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
-            margin-bottom: 10px; /* Space between spinner and text */
+            margin-bottom: 10px;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -314,243 +330,301 @@
     </div>
 
     <script>
-    const imageCount = 24; 
-    const imageBaseName = 'brain'; 
-    const imageExtension = '.png'; 
-    const imageFolderPath = './Images/'; 
+        const imageCount = 24; 
+        const imageBaseName = 'brain'; 
+        const imageExtension = '.png'; 
+        const imageFolderPath = './Images/'; 
 
-    const annotationJsonPath = './annotations/'; 
-    const imageDimensionMM = 512; // Used for coordinate scaling
+        const annotationJsonPath = './annotations/'; 
+        const imageDimensionMM = 512; 
 
-    const brainSliceImage = document.getElementById('brainSliceImage');
-    const sliceSlider = document.getElementById('sliceSlider');
-    const sliceNumberDisplay = document.getElementById('sliceNumberDisplay');
-    const annotationOverlay = document.getElementById('annotationOverlay'); // HTML div for labels
-    const annotationSvgOverlay = document.getElementById('annotationSvgOverlay'); // SVG for lines/circles
-    const loadingOverlay = document.getElementById('loadingOverlay');
+        const brainSliceImage = document.getElementById('brainSliceImage');
+        const sliceSlider = document.getElementById('sliceSlider');
+        const sliceNumberDisplay = document.getElementById('sliceNumberDisplay');
+        const annotationOverlay = document.getElementById('annotationOverlay'); 
+        const annotationSvgOverlay = document.getElementById('annotationSvgOverlay'); 
+        const loadingOverlay = document.getElementById('loadingOverlay');
 
-    let allAnnotations = []; 
-    let annotationsLoaded = false; 
-    const preloadedImages = []; // Array to store preloaded Image objects for HTML img tag
+        let allAnnotations = []; 
+        let annotationsLoaded = false; 
+        const preloadedImages = []; 
 
-    // --- THEME LOGIC (standard) ---
-    function setTheme(theme) {
-        if (theme === 'light') {
-            document.body.classList.add('light-theme');
-            localStorage.setItem('theme', 'light');
-        } else {
-            document.body.classList.remove('light-theme');
-            localStorage.setItem('theme', 'dark');
-        }
-    }
+        // --- Configuration for aligned labels ---
+        // This is the X-percentage of the image where labels will align.
+        // Adjust this value as needed to move the alignment column left or right.
+        const ALIGNMENT_LINE_X_PERCENT = 80; // Example: 80% from the left edge for right-side alignment
+        const LABEL_OFFSET_FROM_LINE_PX = 10; // Pixels distance from the alignment line to the label's edge
+        // --- End configuration ---
 
-    function setInitialTheme() {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'light') {
-            document.body.classList.add('light-theme');
-        } else {
-            document.body.classList.remove('light-theme');
-        }
-    }
-    setInitialTheme();
-    // --- END THEME LOGIC ---
-
-    // --- JSON FILENAMES (CRITICAL: THIS LIST MUST BE EXACT) ---
-    const jsonFilenames = [
-        "Angular Gyrus.json", "Aqueduct.json", "Caudate Nucleus.json", "Central Lobule.json",
-        "Cerebellar Nuclei.json", "Cerebellar Peduncles.json", "Culmen.json", "Cuneus.json",
-        "Declive.json", "Flocculus.json", "Fornix.json", "Frontal horn of LV.json",
-        "Globus Pallidus.json", "Inferior Frontal Gyrus.json", "Internal Capsule.json",
-        "Interpeduncular cistern.json", "Lateral Occipitotemporal gyrus.json",
-        "Maxillary Sinus.json", 
-        "Medial Frontal Gyrus.json",
-        "Medulla Oblongata.json",
-        "Mesencephalic cistern.json",
-        "Midbrain.json",
-        "Middle Frontal Gyrus.json",
-        "Olfactory Sulcus.json", 
-        "Optic Nerve.json", "Peduncles.json", "Pons.json", "Post Central Gyrus.json",
-        "Posterior horn of LV.json", "Pre Central Gyrus.json", "Precuneus.json", "Putamen.json",
-        "Septum Pellucidum.json", "Straight Gyrus.json", "Superior Frontal Gyrus.json",
-        "Superior Parietal Lobule.json", "Suprachiasmatic cistern.json", "Supramarginal Gyrus.json",
-        "Thallamus.json" 
-    ];
-    // --- END JSON FILENAMES ---
-
-    // --- Data Loading and Processing ---
-    async function loadAnnotations() {
-        console.log("loadAnnotations started."); 
-        loadingOverlay.classList.remove('hidden'); 
-
-        const fetchPromises = jsonFilenames.map(filename =>
-            new Promise((resolve, reject) => { 
-                const timeoutId = setTimeout(() => {
-                    reject(new Error(`Fetch timed out for ${filename} after 10 seconds.`));
-                }, 10000); 
-
-                fetch(`${annotationJsonPath}${filename}`)
-                    .then(response => {
-                        clearTimeout(timeoutId); 
-                        if (!response.ok) {
-                            reject(new Error(`Failed to load ${filename}: ${response.statusText} (URL: ${response.url})`));
-                        }
-                        return response.json();
-                    })
-                    .then(jsonData => {
-                        resolve(jsonData);
-                    })
-                    .catch(error => {
-                        clearTimeout(timeoutId); 
-                        reject(error); 
-                    });
-            })
-        );
-
-        try {
-            const results = await Promise.all(fetchPromises);
-            console.log("All JSON fetches and parsing completed."); 
-
-            results.forEach(jsonData => {
-                if (!jsonData || !jsonData.markups || !Array.isArray(jsonData.markups)) {
-                    console.warn("Skipping invalid or empty JSON data for a markup file (missing 'markups' array).", jsonData);
-                    return;
-                }
-
-                jsonData.markups.forEach(markup => {
-                    if (markup.type === "Fiducial" && Array.isArray(markup.controlPoints)) {
-                        markup.controlPoints.forEach(cp => {
-                            if (cp.position && cp.position.length === 3) {
-                                const sliceZ = cp.position[2]; 
-                                const imageSliceNumber = Math.round(sliceZ); 
-
-                                const pointX_percent = (cp.position[0] / imageDimensionMM) * 100;
-                                const pointY_percent = (cp.position[1] / imageDimensionMM) * 100;
-
-                                const cleanLabelText = cp.label.split(/-\d+/)[0].trim();
-
-                                // For the label position, let's keep it close to the point but slightly offset
-                                // You might need to fine-tune these offsets for your specific labels
-                                const labelX = pointX_percent + 2; // Move slightly right
-                                const labelY = pointY_percent - 2; // Move slightly up
-
-                                allAnnotations.push({
-                                    slice: imageSliceNumber,
-                                    text: cleanLabelText,
-                                    pointX: pointX_percent,
-                                    pointY: pointY_percent,
-                                    labelX: labelX, 
-                                    labelY: labelY  
-                                });
-                            }
-                        });
-                    }
-                });
-            });
-            console.log("All annotations processed. Total annotations:", allAnnotations.length); 
-            annotationsLoaded = true; 
-
-        } catch (e) {
-            console.error("Critical error during annotation loading or processing:", e); 
-            alert("A critical error occurred while loading annotations: " + e.message + ". Check console for network/parsing details."); 
-            annotationsLoaded = false; 
-        } finally {
-            loadingOverlay.classList.add('hidden'); 
-        }
-
-        // Always attempt to updateSlice after annotations load, even if failed
-        updateSlice(); 
-    }
-
-    // --- Image Preloading ---
-    function preloadAllImages() {
-        console.log("Preloading images initiated.");
-        for (let i = 1; i <= imageCount; i++) {
-            const img = new Image();
-            img.src = `${imageFolderPath}${imageBaseName}${i}${imageExtension}`;
-            preloadedImages.push(img); 
-        }
-    }
-
-    // --- Display Logic ---
-    function updateSlice() {
-        const currentSlice = parseInt(sliceSlider.value); 
-        const imageUrl = `${imageFolderPath}${imageBaseName}${currentSlice}${imageExtension}`; 
-        
-        if (brainSliceImage.src !== new URL(imageUrl, window.location.href).href) {
-            brainSliceImage.src = imageUrl;
-        }
-
-        sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
-
-        // Clear previous annotations and SVG elements
-        annotationOverlay.innerHTML = ''; 
-        annotationSvgOverlay.innerHTML = ''; 
-
-        // Set up the onload handler for the image
-        brainSliceImage.onload = function() {
-            // Remove the onload handler after it fires
-            this.onload = null; 
-
-            const wrapperRect = brainSliceImage.parentElement.getBoundingClientRect();
-            const imageWidth = wrapperRect.width;
-            const imageHeight = wrapperRect.height;
-
-            if (annotationsLoaded) {
-                const annotationsForCurrentSlice = allAnnotations.filter(ann => ann.slice === currentSlice);
-                // console.log(`Found ${annotationsForCurrentSlice.length} annotations for slice ${currentSlice}.`);
-
-                annotationsForCurrentSlice.forEach(annotation => {
-                    // Create HTML Label div
-                    const labelDiv = document.createElement('div');
-                    labelDiv.classList.add('annotation-label');
-                    labelDiv.textContent = annotation.text;
-                    labelDiv.style.left = `${annotation.labelX}%`;
-                    labelDiv.style.top = `${annotation.labelY}%`;
-                    annotationOverlay.appendChild(labelDiv);
-
-                    // Create SVG Circle for the point
-                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    const pX = (annotation.pointX / 100) * imageWidth;
-                    const pY = (annotation.pointY / 100) * imageHeight;
-                    circle.setAttribute('cx', pX);
-                    circle.setAttribute('cy', pY);
-                    circle.setAttribute('r', 4); 
-                    circle.classList.add('show');
-                    annotationSvgOverlay.appendChild(circle);
-
-                    // Add 'show' class to HTML label to make it visible with transition
-                    setTimeout(() => labelDiv.classList.add('show'), 10);
-                });
+        // --- THEME LOGIC (standard) ---
+        function setTheme(theme) {
+            if (theme === 'light') {
+                document.body.classList.add('light-theme');
+                localStorage.setItem('theme', 'light');
             } else {
-                console.warn("Annotations not yet loaded or failed to load. Skipping rendering of annotations for this slice.");
+                document.body.classList.remove('light-theme');
+                localStorage.setItem('theme', 'dark');
             }
-        };
-
-        // If the image is already loaded (from cache or preloading), trigger the onload manually
-        if (brainSliceImage.complete) {
-            brainSliceImage.onload(); 
         }
-    }
 
-    // --- Initial Setup ---
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log("DOM content loaded. Initializing viewer."); 
-        preloadAllImages(); 
-        loadAnnotations(); 
-    });
+        function setInitialTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+            } else {
+                document.body.classList.remove('light-theme');
+            }
+        }
+        setInitialTheme();
+        // --- END THEME LOGIC ---
 
-    // Use 'change' event for slider to avoid excessive updates during drag
-    sliceSlider.addEventListener('change', updateSlice); 
-    
-    // Debounced resize event listener
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            console.log("Window resized, updating slice.");
-            updateSlice();
-        }, 100); 
-    });
-</script>
+        // --- JSON FILENAMES (CRITICAL: THIS LIST MUST BE EXACT) ---
+        const jsonFilenames = [
+            "Angular Gyrus.json", "Aqueduct.json", "Caudate Nucleus.json", "Central Lobule.json",
+            "Cerebellar Nuclei.json", "Cerebellar Peduncles.json", "Culmen.json", "Cuneus.json",
+            "Declive.json", "Flocculus.json", "Fornix.json", "Frontal horn of LV.json",
+            "Globus Pallidus.json", "Inferior Frontal Gyrus.json", "Internal Capsule.json",
+            "Interpeduncular cistern.json", "Lateral Occipitotemporal gyrus.json",
+            "Maxillary Sinus.json", 
+            "Medial Frontal Gyrus.json",
+            "Medulla Oblongata.json",
+            "Mesencephalic cistern.json",
+            "Midbrain.json",
+            "Middle Frontal Gyrus.json",
+            "Olfactory Sulcus.json", 
+            "Optic Nerve.json", "Peduncles.json", "Pons.json", "Post Central Gyrus.json",
+            "Posterior horn of LV.json", "Pre Central Gyrus.json", "Precuneus.json", "Putamen.json",
+            "Septum Pellucidum.json", "Straight Gyrus.json", "Superior Frontal Gyrus.json",
+            "Superior Parietal Lobule.json", "Suprachiasmatic cistern.json", "Supramarginal Gyrus.json",
+            "Thallamus.json" 
+        ];
+        // --- END JSON FILENAMES ---
+
+        // --- Data Loading and Processing ---
+        async function loadAnnotations() {
+            console.log("loadAnnotations started."); 
+            loadingOverlay.classList.remove('hidden'); 
+
+            const fetchPromises = jsonFilenames.map(filename =>
+                new Promise((resolve, reject) => { 
+                    const timeoutId = setTimeout(() => {
+                        reject(new Error(`Fetch timed out for ${filename} after 10 seconds.`));
+                    }, 10000); 
+
+                    fetch(`${annotationJsonPath}${filename}`)
+                        .then(response => {
+                            clearTimeout(timeoutId); 
+                            if (!response.ok) {
+                                reject(new Error(`Failed to load ${filename}: ${response.statusText} (URL: ${response.url})`));
+                            }
+                            return response.json();
+                        })
+                        .then(jsonData => {
+                            resolve(jsonData);
+                        })
+                        .catch(error => {
+                            clearTimeout(timeoutId); 
+                            reject(error); 
+                        });
+                })
+            );
+
+            try {
+                const results = await Promise.all(fetchPromises);
+                console.log("All JSON fetches and parsing completed."); 
+
+                results.forEach(jsonData => {
+                    if (!jsonData || !jsonData.markups || !Array.isArray(jsonData.markups)) {
+                        console.warn("Skipping invalid or empty JSON data for a markup file (missing 'markups' array).", jsonData);
+                        return;
+                    }
+
+                    jsonData.markups.forEach(markup => {
+                        if (markup.type === "Fiducial" && Array.isArray(markup.controlPoints)) {
+                            markup.controlPoints.forEach(cp => {
+                                if (cp.position && cp.position.length === 3) {
+                                    const sliceZ = cp.position[2]; 
+                                    const imageSliceNumber = Math.round(sliceZ); 
+
+                                    const pointX_percent = (cp.position[0] / imageDimensionMM) * 100;
+                                    const pointY_percent = (cp.position[1] / imageDimensionMM) * 100;
+
+                                    const cleanLabelText = cp.label.split(/-\d+/)[0].trim();
+
+                                    // Store pointX, pointY. labelX/Y will be calculated in updateSlice
+                                    allAnnotations.push({
+                                        slice: imageSliceNumber,
+                                        text: cleanLabelText,
+                                        pointX: pointX_percent,
+                                        pointY: pointY_percent,
+                                        // labelX and labelY will be determined dynamically for alignment
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
+                console.log("All annotations processed. Total annotations:", allAnnotations.length); 
+                annotationsLoaded = true; 
+
+            } catch (e) {
+                console.error("Critical error during annotation loading or processing:", e); 
+                alert("A critical error occurred while loading annotations: " + e.message + ". Check console for network/parsing details."); 
+                annotationsLoaded = false; 
+            } finally {
+                loadingOverlay.classList.add('hidden'); 
+            }
+            updateSlice(); 
+        }
+
+        // --- Image Preloading ---
+        function preloadAllImages() {
+            console.log("Preloading images initiated.");
+            for (let i = 1; i <= imageCount; i++) {
+                const img = new Image();
+                img.src = `${imageFolderPath}${imageBaseName}${i}${imageExtension}`;
+                preloadedImages.push(img); 
+            }
+        }
+
+        // --- Display Logic ---
+        function updateSlice() {
+            const currentSlice = parseInt(sliceSlider.value); 
+            const imageUrl = `${imageFolderPath}${imageBaseName}${currentSlice}${imageExtension}`; 
+            
+            if (brainSliceImage.src !== new URL(imageUrl, window.location.href).href) {
+                brainSliceImage.src = imageUrl;
+            }
+
+            sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
+
+            annotationOverlay.innerHTML = ''; 
+            annotationSvgOverlay.innerHTML = ''; 
+
+            brainSliceImage.onload = function() {
+                this.onload = null; 
+
+                const wrapperRect = brainSliceImage.parentElement.getBoundingClientRect();
+                const imageWidth = wrapperRect.width;
+                const imageHeight = wrapperRect.height;
+
+                if (annotationsLoaded) {
+                    const annotationsForCurrentSlice = allAnnotations.filter(ann => ann.slice === currentSlice);
+
+                    annotationsForCurrentSlice.forEach((annotation, index) => {
+                        // --- Calculate dynamic label and line positions ---
+                        const pX_px = (annotation.pointX / 100) * imageWidth; // Point X in pixels
+                        const pY_px = (annotation.pointY / 100) * imageHeight; // Point Y in pixels
+
+                        let labelX_px; // Final label X in pixels (left edge for left-aligned, right edge for right-aligned)
+                        let labelY_px = pY_px; // Labels will roughly align horizontally with their points
+                        
+                        let lineX2_px; // End X for the line
+                        
+                        const alignmentX_px = (ALIGNMENT_LINE_X_PERCENT / 100) * imageWidth;
+
+                        // Determine if label goes left or right of the point
+                        // For simplicity, let's always align labels to the right side of the image
+                        // or left side based on ALIGNMENT_LINE_X_PERCENT relative to image center.
+                        // For now, let's force all labels to align to the ALIGNMENT_LINE_X_PERCENT.
+
+                        labelX_px = alignmentX_px + LABEL_OFFSET_FROM_LINE_PX; // Label's left edge
+                        lineX2_px = alignmentX_px; // Line ends at the alignment line
+
+                        // --- Create HTML Label div ---
+                        const labelDiv = document.createElement('div');
+                        labelDiv.classList.add('annotation-label');
+                        labelDiv.textContent = annotation.text;
+                        
+                        // Set initial position and class. We'll refine transform after appending to measure width.
+                        labelDiv.style.top = `${labelY_px}px`; 
+                        labelDiv.style.left = `${labelX_px}px`; // Set left based on our alignment calculation
+                        labelDiv.classList.add('align-left'); // Default to align-left
+
+                        annotationOverlay.appendChild(labelDiv);
+
+                        // If you need right alignment for labels to the left of the image:
+                        if (pX_px < imageWidth / 2) { // Example logic: if point is on left half, align labels to left alignment line
+                            labelX_px = alignmentX_px - LABEL_OFFSET_FROM_LINE_PX; // Label's right edge
+                            lineX2_px = alignmentX_px; // Line ends at the alignment line
+                            labelDiv.style.left = `${labelX_px}px`;
+                            labelDiv.classList.remove('align-left');
+                            labelDiv.classList.add('align-right');
+                        } else { // If point is on right half, align labels to right alignment line
+                            labelX_px = alignmentX_px + LABEL_OFFSET_FROM_LINE_PX; // Label's left edge
+                            lineX2_px = alignmentX_px; // Line ends at the alignment line
+                            labelDiv.style.left = `${labelX_px}px`;
+                            labelDiv.classList.add('align-left'); // Already set, but explicit
+                            labelDiv.classList.remove('align-right');
+                        }
+                        
+                        // Recalculate labelY_px based on the image's bounding box and point's Y
+                        // This helps if we want labels to be perfectly aligned horizontally with their points.
+                        // Or, if we want them to stack more vertically, we could calculate a targetY for all labels.
+                        // For now, let's keep it simple: labels stay horizontally near their points.
+                        labelY_px = (annotation.pointY / 100) * imageHeight;
+                        labelDiv.style.top = `${labelY_px}px`;
+
+
+                        // --- Create SVG Line ---
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', pX_px); // Point X (start of line)
+                        line.setAttribute('y1', pY_px); // Point Y (start of line)
+                        line.setAttribute('x2', lineX2_px); // Line ends at the alignment line X
+                        line.setAttribute('y2', pY_px); // Line ends at the point's Y
+                        line.id = `line-${currentSlice}-${index}`;
+                        annotationSvgOverlay.appendChild(line);
+
+                        // --- Create SVG Circle for the point ---
+                        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        circle.setAttribute('cx', pX_px);
+                        circle.setAttribute('cy', pY_px);
+                        circle.setAttribute('r', 4); 
+                        circle.classList.add('show'); 
+                        circle.id = `circle-${currentSlice}-${index}`; 
+                        annotationSvgOverlay.appendChild(circle);
+
+                        // --- Add Hover Interactivity ---
+                        labelDiv.addEventListener('mouseover', () => {
+                            document.getElementById(`line-${currentSlice}-${index}`)?.classList.add('visible-on-hover');
+                            document.getElementById(`circle-${currentSlice}-${index}`)?.classList.add('visible-on-hover-circle');
+                        });
+                        labelDiv.addEventListener('mouseout', () => {
+                            document.getElementById(`line-${currentSlice}-${index}`)?.classList.remove('visible-on-hover');
+                            document.getElementById(`circle-${currentSlice}-${index}`)?.classList.remove('visible-on-hover-circle');
+                        });
+                        // --- End Hover Interactivity ---
+
+                        // Add 'show' class to HTML label to make it visible with transition
+                        setTimeout(() => labelDiv.classList.add('show'), 10);
+                    });
+                } else {
+                    console.warn("Annotations not yet loaded or failed to load. Skipping rendering of annotations for this slice.");
+                }
+            };
+
+            if (brainSliceImage.complete) {
+                brainSliceImage.onload(); 
+            }
+        }
+
+        // --- Initial Setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM content loaded. Initializing viewer."); 
+            preloadAllImages(); 
+            loadAnnotations(); 
+        });
+
+        sliceSlider.addEventListener('change', updateSlice); 
+        
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                console.log("Window resized, updating slice.");
+                updateSlice();
+            }, 100); 
+        });
+    </script>
 </body>
 </html>
