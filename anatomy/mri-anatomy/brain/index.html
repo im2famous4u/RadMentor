@@ -18,7 +18,8 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             flex-direction: column; /* Arrange items vertically */
-            overflow: hidden; /* Prevent body scroll if content overflows slightly */
+            overflow-x: hidden; /* Prevent horizontal body scroll if content overflows slightly */
+            overflow-y: auto; /* Allow vertical scroll for long pages */
         }
 
         /* Light Theme Variables */
@@ -67,8 +68,8 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             padding: 20px;
             margin: 20px auto;
-            max-width: 800px; /* Adjust max-width if needed to fit 700px image + padding */
-            width: 90%; /* Responsive width */
+            max-width: 1200px; /* Wider to accommodate side panels */
+            width: 95%; /* Responsive width */
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -82,11 +83,21 @@
             text-align: center;
         }
 
-        /* Image and Overlay Container (UPDATED for 700x512 images) */
+        /* NEW: Container for Image + Side Panels */
+        .viewer-content-area {
+            display: flex; /* Use flexbox to arrange items horizontally */
+            width: 100%; /* Take full width of parent viewer-container */
+            align-items: flex-start; /* Align items to the top */
+            gap: 10px; /* Space between image and panels */
+            justify-content: center; /* Center the image and panels as a group */
+        }
+
+        /* Update image-wrapper */
         .image-wrapper {
             position: relative;
-            width: 700px; /* IMPORTANT: Set this to your image's actual pixel width */
-            height: 512px; /* IMPORTANT: Set this to your image's actual pixel height */
+            flex-shrink: 0; /* Don't allow it to shrink */
+            width: 700px; /* Set a fixed width for the image area - ADJUST THIS TO YOUR IMAGE RESOLUTION */
+            height: 512px; /* Set a fixed height for the image area - ADJUST THIS TO YOUR IMAGE RESOLUTION */
             background-color: #000; /* Black background for imaging studies */
             border-radius: 8px;
             overflow: hidden; /* Hide anything outside the wrapper */
@@ -106,6 +117,26 @@
             z-index: 8; /* Below labels and SVG lines */
         }
 
+        /* NEW: Side Panels */
+        .annotation-side-panel {
+            flex-grow: 1; /* Allow panels to grow and take available space */
+            min-width: 150px; /* Minimum width for the panels */
+            max-width: 250px; /* Max width to prevent them from becoming too wide */
+            background-color: var(--container-bg-color); /* Match container background */
+            border-radius: 8px;
+            padding: 10px;
+            box-sizing: border-box;
+            position: relative; /* CRITICAL: For absolutely positioned labels WITHIN IT */
+            height: 512px; /* Match image height - ADJUST THIS TO YOUR IMAGE RESOLUTION */
+            overflow-y: auto; /* Allow scrolling if labels exceed height */
+            /* Hide scrollbar for aesthetics */
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+        .annotation-side-panel::-webkit-scrollbar { /* Chrome, Safari, Opera */
+            display: none;
+        }
+
         /* SVG Overlay for Lines and Points */
         .annotation-svg-overlay {
             position: absolute;
@@ -113,10 +144,11 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 9; /* Above image, below labels */
+            z-index: 9; /* Above image */
             pointer-events: none; /* Crucial: allows clicks to pass through to image/labels */
-            overflow: visible; /* Allows SVG elements to go slightly outside if needed */
+            overflow: visible; /* Allows SVG elements to go slightly outside if needed (e.g. to connect to panels) */
         }
+
         /* Lines are hidden by default, visible on hover */
         .annotation-svg-overlay line {
             stroke: var(--annotation-line-color);
@@ -128,6 +160,7 @@
         .annotation-svg-overlay line.visible-on-hover {
             opacity: 0.7;
         }
+
         /* Circles are always visible, can change on hover */
         .annotation-svg-overlay circle {
             fill: var(--annotation-point-color);
@@ -138,9 +171,9 @@
             r: 6; /* Make radius slightly larger on hover */
         }
 
-        /* Annotation Label Styling (HTML Divs) */
+        /* Annotation Label Styling (HTML Divs - MODIFIED) */
         .annotation-label {
-            position: absolute; /* Positioned absolutely within image-wrapper */
+            position: absolute; /* Positioned absolutely within its parent panel */
             background-color: var(--annotation-bg-color);
             color: var(--annotation-text-color);
             padding: 5px 10px;
@@ -150,18 +183,18 @@
             white-space: nowrap;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             border: 1px solid var(--annotation-border-color);
-            z-index: 11; /* Ensure labels are on top */
+            z-index: 11; /* Ensure labels are on top of other content if they overlap something */
             cursor: default;
             
-            /* Center the label vertically on its 'top' coordinate, and horizontally on its 'left' coordinate */
-            transform: translate(-50%, -50%); 
+            /* Vertical centering is handled by translateY */
+            transform: translateY(-50%); 
 
             /* Visibility control */
             opacity: 0; 
             transition: opacity 0.3s ease; 
             display: block; 
         }
-
+        
         .annotation-label.show {
             opacity: 1;
         }
@@ -236,6 +269,43 @@
         }
 
         /* Responsive adjustments */
+        @media (max-width: 1000px) { /* When screen is narrower, stack panels vertically */
+            .viewer-content-area {
+                flex-direction: column; /* Stack panels above/below image */
+                align-items: center; /* Center image and panels */
+                gap: 20px; /* More space when stacked */
+            }
+            .image-wrapper {
+                width: 100%; /* Image takes full width now */
+                max-width: 700px; /* Keep it from stretching too much on larger narrow screens */
+                height: auto;
+                padding-bottom: 100%; /* Maintain aspect ratio */
+            }
+            .annotation-side-panel {
+                width: 100%; /* Panels take full width */
+                max-width: 700px; /* Match image max-width */
+                height: auto; /* Height adjusts to content */
+                min-height: 80px; /* Ensure some height for stacked panels */
+                display: flex; /* Flexbox for horizontal arrangement of labels inside */
+                flex-direction: row; /* Labels flow horizontally */
+                flex-wrap: wrap; /* Labels wrap to next line */
+                justify-content: center; /* Center labels when wrapped */
+                gap: 10px; /* Space between labels in stacked panels */
+                padding: 15px;
+            }
+            .annotation-label {
+                position: relative; /* Labels become relative within panels when stacked */
+                top: auto;
+                left: auto;
+                right: auto;
+                transform: none; /* Remove absolute positioning transforms */
+                margin-top: 0; /* Reset margins if any were affecting vertical stacking */
+            }
+            .annotation-svg-overlay {
+                display: none; /* Hide lines and points when layout changes dramatically (can't connect well) */
+            }
+        }
+
         @media (max-width: 768px) {
             .viewer-container {
                 padding: 15px;
@@ -243,12 +313,6 @@
             }
             h1 {
                 font-size: 2rem;
-            }
-            /* Allow image to become responsive if screen is too small for 700px */
-            .image-wrapper {
-                width: 100%; /* Take full width of parent */
-                height: auto; /* Height auto based on aspect ratio */
-                padding-bottom: calc(512 / 700 * 100%); /* Maintain 700x512 aspect ratio */
             }
         }
         @media (max-width: 480px) {
@@ -302,12 +366,20 @@
     <div class="viewer-container">
         <h1>Axial Brain Anatomy</h1>
 
-        <div class="image-wrapper">
-            <img id="brainSliceImage" src="" alt="Brain Slice">
-            <svg class="annotation-svg-overlay" id="annotationSvgOverlay"></svg>
-            <div id="annotationOverlay"></div> <div class="loading-overlay" id="loadingOverlay">
-                <div class="spinner"></div>&nbsp;Loading Annotations...
+        <div class="viewer-content-area">
+            <div class="annotation-side-panel left-panel" id="leftAnnotationPanel"></div>
+            
+            <div class="image-wrapper">
+                <img id="brainSliceImage" src="" alt="Brain Slice">
+                <svg class="annotation-svg-overlay" id="annotationSvgOverlay"></svg>
+                <div id="annotationOverlay"></div> 
+                
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="spinner"></div>&nbsp;Loading Annotations...
+                </div>
             </div>
+            
+            <div class="annotation-side-panel right-panel" id="rightAnnotationPanel"></div>
         </div>
 
         <div class="controls">
@@ -330,18 +402,21 @@
         const brainSliceImage = document.getElementById('brainSliceImage');
         const sliceSlider = document.getElementById('sliceSlider');
         const sliceNumberDisplay = document.getElementById('sliceNumberDisplay');
-        const annotationOverlay = document.getElementById('annotationOverlay'); // Labels will be appended here
+        const annotationOverlay = document.getElementById('annotationOverlay'); // Not used for labels anymore
         const annotationSvgOverlay = document.getElementById('annotationSvgOverlay'); 
         const loadingOverlay = document.getElementById('loadingOverlay');
+
+        // NEW: References to the side panels
+        const leftAnnotationPanel = document.getElementById('leftAnnotationPanel');
+        const rightAnnotationPanel = document.getElementById('rightAnnotationPanel');
 
         let allAnnotations = []; 
         let annotationsLoaded = false; 
         const preloadedImages = []; 
 
-        // --- Configuration for in-image label placement ---
-        const IMAGE_MRI_DATA_WIDTH = 512; // The actual width of the central MRI data part of your 700px image
-        const LABEL_OFFSET_FROM_MRI_EDGE = 15; // Pixels distance from MRI data edge to label's *edge*
-        const LABEL_VERTICAL_SPACING = 15; // Vertical spacing between stacked labels in pixels
+        // --- Configuration for aligned labels ---
+        const LABEL_PANEL_PADDING = 10; // Padding inside the side panels in pixels
+        const LABEL_SPACING = 8;       // Vertical spacing between stacked labels in pixels (increased for more gap)
 
         // --- THEME LOGIC (standard) ---
         function setTheme(theme) {
@@ -434,17 +509,17 @@
                                     const imageSliceNumber = Math.round(sliceZ); 
 
                                     // X and Y are in original imageDimensionMM space (e.g., 0-512mm)
-                                    // Store as percentage of the *MRI data itself* (512x512 square)
-                                    const pointX_percent_mri_data = (cp.position[0] / imageDimensionMM) * 100;
-                                    const pointY_percent_mri_data = (cp.position[1] / imageDimensionMM) * 100;
+                                    // Convert to percentage for internal consistency relative to image size.
+                                    const pointX_percent = (cp.position[0] / imageDimensionMM) * 100;
+                                    const pointY_percent = (cp.position[1] / imageDimensionMM) * 100;
 
                                     const cleanLabelText = cp.label.split(/-\d+/)[0].trim();
 
                                     allAnnotations.push({
                                         slice: imageSliceNumber,
                                         text: cleanLabelText,
-                                        pointX: pointX_percent_mri_data, 
-                                        pointY: pointY_percent_mri_data, 
+                                        pointX: pointX_percent, // X coord of the point on the image (0-100%)
+                                        pointY: pointY_percent, // Y coord of the point on the image (0-100%)
                                     });
                                 }
                             });
@@ -461,7 +536,6 @@
             } finally {
                 loadingOverlay.classList.add('hidden'); 
             }
-            // Initial slice update after annotations load
             updateSlice(); 
         }
 
@@ -480,41 +554,45 @@
             const currentSlice = parseInt(sliceSlider.value); 
             const imageUrl = `${imageFolderPath}${imageBaseName}${currentSlice}${imageExtension}`; 
             
-            // Set the image src. This will trigger onload if image changes.
-            brainSliceImage.src = imageUrl;
+            if (brainSliceImage.src !== new URL(imageUrl, window.location.href).href) {
+                brainSliceImage.src = imageUrl;
+            }
 
             sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
 
-            // Clear previous labels and SVG elements
-            annotationOverlay.innerHTML = ''; 
+            // Clear previous SVG elements
             annotationSvgOverlay.innerHTML = ''; 
+            // Clear previous labels from side panels
+            leftAnnotationPanel.innerHTML = ''; 
+            rightAnnotationPanel.innerHTML = '';
+
+            // Reset for new slice's stacking logic. Store {top, bottom, height} for each placed label.
+            let placedLabelsLeft = [];
+            let placedLabelsRight = [];
 
             // This ensures annotations are drawn only after the image is fully loaded and sized
             brainSliceImage.onload = function() {
                 // Ensure this onload only fires once per image load
                 this.onload = null; 
 
-                // Get dynamic dimensions of the image wrapper (which is now 700x512 from CSS)
-                const imageWrapperWidth = brainSliceImage.offsetWidth;
-                const imageWrapperHeight = brainSliceImage.offsetHeight;
+                // Get dynamic dimensions of the image wrapper (which is where SVG coordinates are relative to)
+                const imageWidth = brainSliceImage.offsetWidth;
+                const imageHeight = brainSliceImage.offsetHeight;
                 
-                // Calculate the pixel offset of the *actual MRI data* within the 700px image
-                // Assuming black strips are added symmetrically to the 512px MRI data (700-512 = 188 / 2 = 94px strip on each side)
-                const blackStripLeftOffset = (imageWrapperWidth - IMAGE_MRI_DATA_WIDTH) / 2;
-                const blackStripRightOffset = imageWrapperWidth - blackStripLeftOffset; // Or simply imageWrapperWidth - blackStripLeftOffset
+                // Get the *current* bounding client rect for the image wrapper and panels
+                // These are viewport-relative coordinates needed for connecting lines correctly.
+                const imageWrapperRect = brainSliceImage.parentElement.getBoundingClientRect();
+                // We no longer need panelRects directly, as we use labelDiv.getBoundingClientRect() later.
 
                 if (annotationsLoaded) {
                     // Sort annotations by their Y-coordinate for consistent stacking
                     const annotationsForCurrentSlice = allAnnotations.filter(ann => ann.slice === currentSlice)
                                                                      .sort((a, b) => a.pointY - b.pointY);
 
-                    let placedLabelsLeftColumn = []; // Stores {top, bottom, element} for left column stacking
-                    let placedLabelsRightColumn = []; // Stores {top, bottom, element} for right column stacking
-
                     annotationsForCurrentSlice.forEach((annotation, index) => {
-                        // Convert point coordinates (which are 0-100% of 512px MRI data) to pixels relative to the 700x512 image wrapper
-                        const pX_px_image = blackStripLeftOffset + (annotation.pointX / 100) * IMAGE_MRI_DATA_WIDTH; 
-                        const pY_px_image = (annotation.pointY / 100) * imageWrapperHeight; // Y is 0-512 for both MRI and full image
+                        // Point coordinates on the image, in pixels, relative to image-wrapper's top-left (0,0)
+                        const pX_px_image = (annotation.pointX / 100) * imageWidth; 
+                        const pY_px_image = (annotation.pointY / 100) * imageHeight; 
 
                         // --- Create HTML Label div ---
                         const labelDiv = document.createElement('div');
@@ -522,71 +600,91 @@
                         labelDiv.textContent = annotation.text;
                         labelDiv.id = `label-${currentSlice}-${index}`;
                         
-                        annotationOverlay.appendChild(labelDiv); // Labels are appended directly to annotationOverlay
+                        let targetPanel;
+                        let placedLabelsArray; // Which stacking array to use (left or right panel)
+                        let isLeftPanel;
 
-                        // --- Calculate Label Position (including stacking) ---
-                        const labelHeight = labelDiv.offsetHeight; // Get height after appending
-
-                        let labelTargetX_px; // The X coordinate where the label's CENTER will be
-                        let lineX2_px_at_mri_edge; // The X coordinate where the line ends (at the MRI data edge)
-                        let isLeftColumn;     // To track which column it's in for stacking
-
-                        // Determine if the label should go on the left or right black strip based on original point X
-                        if (pX_px_image < imageWrapperWidth / 2) { // Point is on the left half of the overall 700px image
-                            isLeftColumn = true;
-                            labelTargetX_px = blackStripLeftOffset / 2; // Center of the left black strip
-                            lineX2_px_at_mri_edge = blackStripLeftOffset; // Line ends at the left edge of MRI data
-                        } else { // Point is on the right half of the overall 700px image
-                            isLeftColumn = false;
-                            labelTargetX_px = blackStripRightOffset + (imageWrapperWidth - blackStripRightOffset) / 2; // Center of the right black strip
-                            lineX2_px_at_mri_edge = blackStripRightOffset; // Line ends at the right edge of MRI data
+                        // Determine which side panel the label should go into
+                        if (pX_px_image < imageWidth / 2) { // If point is on the left half of the image
+                            targetPanel = leftAnnotationPanel;
+                            placedLabelsArray = placedLabelsLeft;
+                            isLeftPanel = true;
+                        } else { // If point is on the right half of the image
+                            targetPanel = rightAnnotationPanel;
+                            placedLabelsArray = placedLabelsRight;
+                            isLeftPanel = false;
                         }
+                        
+                        // Append to the correct panel temporarily to measure its actual dimensions
+                        targetPanel.appendChild(labelDiv); 
+                        const labelHeight = labelDiv.offsetHeight;
 
-                        // Initial desired Y (center of label) based on point's Y
-                        let desiredLabelCenterY_px = pY_px_image; 
+                        // --- Vertical Stacking Logic within the panel ---
+                        // Calculate desired Y position within the panel, proportional to point's Y on image
+                        // This desired Y is the center of the label relative to panel's top (0)
+                        let desiredLabelCenterY_panel = (annotation.pointY / 100) * targetPanel.offsetHeight; 
 
-                        // Determine which stacking array to use for this label's column
-                        let currentPlacedLabelsColumn = isLeftColumn ? placedLabelsLeftColumn : placedLabelsRightColumn;
+                        // Ensure label doesn't go off the top edge of the panel (consider padding)
+                        desiredLabelCenterY_panel = Math.max(desiredLabelCenterY_panel, (labelHeight / 2) + LABEL_PANEL_PADDING);
 
-                        // Ensure label doesn't go off the top edge (considering label height)
-                        desiredLabelCenterY_px = Math.max(desiredLabelCenterY_px, (labelHeight / 2)); 
-
-                        // Check for overlaps within the specific left/right column
-                        for (let i = 0; i < currentPlacedLabelsColumn.length; i++) {
-                            const existingLabel = currentPlacedLabelsColumn[i];
-                            // If current label's potential top collides with an existing label's bottom
-                            if ( (desiredLabelCenterY_px - (labelHeight / 2)) < (existingLabel.bottom + LABEL_VERTICAL_SPACING) ) {
+                        // Check for overlaps with already placed labels in this specific panel
+                        for (let i = 0; i < placedLabelsArray.length; i++) {
+                            const existingLabel = placedLabelsArray[i];
+                            // If current label's potential top is above or overlaps existing label's bottom
+                            if ( (desiredLabelCenterY_panel - (labelHeight / 2)) < (existingLabel.bottom + LABEL_SPACING) ) {
                                 // Overlap detected. Adjust current label's Y to be below the existing one.
-                                desiredLabelCenterY_px = existingLabel.bottom + LABEL_VERTICAL_SPACING + (labelHeight / 2);
+                                desiredLabelCenterY_panel = existingLabel.bottom + LABEL_SPACING + (labelHeight / 2);
                             }
                         }
 
-                        // Ensure label doesn't go off the bottom edge (considering label height)
-                        desiredLabelCenterY_px = Math.min(desiredLabelCenterY_px, imageWrapperHeight - (labelHeight / 2));
+                        // Ensure label doesn't go off the bottom edge of the panel (consider padding)
+                        desiredLabelCenterY_panel = Math.min(desiredLabelCenterY_panel, targetPanel.offsetHeight - (labelHeight / 2) - LABEL_PANEL_PADDING);
 
 
-                        // Apply the final positions (these are for the label's CENTER due to transform: translate(-50%,-50%))
-                        labelDiv.style.left = `${labelTargetX_px}px`; 
-                        labelDiv.style.top = `${desiredLabelCenterY_px}px`; 
-                        labelDiv.style.pointerEvents = 'auto'; // Ensure hover works on labels
+                        // Apply the final vertical position (relative to panel's top-left)
+                        // This 'top' style determines the vertical center of the label
+                        labelDiv.style.top = `${desiredLabelCenterY_panel}px`;
+                        
+                        // Horizontal positioning within the panel
+                        if (isLeftPanel) {
+                            labelDiv.style.left = `${LABEL_PANEL_PADDING}px`; 
+                        } else {
+                            labelDiv.style.right = `${LABEL_PANEL_PADDING}px`; 
+                        }
 
                         // Store this label's final actual (top, bottom) positions for future overlap checks
-                        currentPlacedLabelsColumn.push({
-                            top: desiredLabelCenterY_px - (labelHeight / 2), // Actual top edge of the label
-                            bottom: desiredLabelCenterY_px + (labelHeight / 2), // Actual bottom edge of the label
+                        placedLabelsArray.push({
+                            top: desiredLabelCenterY_panel - (labelHeight / 2), // Actual top edge of the label
+                            bottom: desiredLabelCenterY_panel + (labelHeight / 2), // Actual bottom edge of the label
+                            height: labelHeight,
                             element: labelDiv 
                         });
 
-                        // --- Create SVG Line (slanted) ---
+                        // --- Create SVG Line (slanting) ---
                         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                         
-                        // Line starts at the point on the MRI data
+                        // Line starts at the point (relative to image-wrapper's top-left)
                         line.setAttribute('x1', pX_px_image);
                         line.setAttribute('y1', pY_px_image);
                         
-                        // Line's X-endpoint is at the edge of the MRI data (transition to black strip)
-                        line.setAttribute('x2', lineX2_px_at_mri_edge); 
-                        line.setAttribute('y2', desiredLabelCenterY_px); // Line ends at label's vertical center
+                        // Line's X-endpoint at the image edge
+                        let lineX2_px;
+                        if (isLeftPanel) {
+                            lineX2_px = 0; // Left edge of image-wrapper
+                        } else {
+                            lineX2_px = imageWidth; // Right edge of image-wrapper
+                        }
+
+                        // Line's Y-endpoint: The label's vertical center, converted to image-wrapper's coordinates.
+                        // Get label's position relative to viewport
+                        const labelRect_actual = labelDiv.getBoundingClientRect(); 
+                        const labelCenterY_viewport = labelRect_actual.top + (labelRect_actual.height / 2);
+
+                        // Convert this viewport Y to be relative to the image-wrapper's top (which is SVG's 0 Y)
+                        const labelCenterY_image_coords = labelCenterY_viewport - imageWrapperRect.top;
+
+                        line.setAttribute('x2', lineX2_px); 
+                        line.setAttribute('y2', labelCenterY_image_coords); 
 
                         line.id = `line-${currentSlice}-${index}`;
                         annotationSvgOverlay.appendChild(line);
@@ -601,6 +699,9 @@
                         annotationSvgOverlay.appendChild(circle);
 
                         // --- Add Hover Interactivity ---
+                        // IMPORTANT: Add 'pointer-events: auto' to labels for hover to work
+                        labelDiv.style.pointerEvents = 'auto'; 
+
                         labelDiv.addEventListener('mouseover', () => {
                             document.getElementById(`line-${currentSlice}-${index}`)?.classList.add('visible-on-hover');
                             document.getElementById(`circle-${currentSlice}-${index}`)?.classList.add('visible-on-hover-circle');
