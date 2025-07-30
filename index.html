@@ -14,6 +14,13 @@
             background-color: var(--bg-color); /* Default dark theme background */
             color: var(--text-color); /* Default dark theme text color */
             transition: background-color 0.3s ease, color 0.3s ease; /* Smooth theme transition */
+            
+            /* Ensure body is a flex container for centering its main content */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Take full viewport height */
+            flex-direction: column; /* Stack children vertically if needed */
         }
 
         /* Light Theme Variables - Adjusted to resemble PrepLadder */
@@ -80,67 +87,86 @@
         /* Crucial: Ensure base container styles are maintained for login/profile forms */
         .container {
             max-width: 500px; /* Fixed width for auth/profile forms */
-            margin: 60px auto; /* Centered with vertical margin */
+            margin: 30px auto; /* Reduced margin top for login/profile forms */
             padding: 30px;
             background-color: var(--container-bg-color); /* Apply theme variable */
             color: var(--text-color); /* Apply theme variable */
             border-radius: 16px; /* Retain original rounding for login forms */
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); /* Retain original shadow */
-            /* Ensure it is a block for proper margin auto centering */
-            display: block; 
+            /* Flex for its internal content: h1, input groups, etc. */
+            display: flex; 
+            flex-direction: column;
+            align-items: center; /* Center horizontally within itself */
         }
+        /* Override body's flex for dashboard when dashboard is active */
+        .dashboard-active { /* Class added to body when dashboard is visible */
+            display: block; /* Revert body to block display */
+            justify-content: flex-start; /* Remove centering */
+            align-items: flex-start; /* Remove centering */
+        }
+        .dashboard-active .container { /* Containers within dashboard should not be flex-centered on body */
+            margin: 60px auto; /* Restore dashboard container margin */
+            max-width: 1200px; /* Dashboard wrapper max-width */
+            display: flex; /* Make it flex again for its internal content */
+            flex-direction: column;
+            align-items: center;
+        }
+
         h1 {
             color: var(--text-color);
+            text-align: center; /* Ensure all h1s are centered */
+        }
+        .container h1 { /* Specific styling for h1 within login/profile forms */
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            width: 100%; /* Ensure input groups take full width */
+            margin: 15px 0;
         }
         input, select {
-            background-color: var(--input-bg-color);
-            color: #000;
-            border: 1px solid #ced4da;
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 4px;
+            box-sizing: border-box;
         }
         button {
-            background: var(--button-bg-color);
-            color: #fff;
-        }
-        button:hover {
-            background: var(--button-hover-bg-color);
-        }
-        .toggle {
-            color: var(--toggle-color);
-        }
-        .toggle:hover {
-            color: var(--text-color); /* Ensures contrast on hover */
-        }
-        .topbar {
-            position: fixed;
-            top: 0;
-            right: 0;
             width: 100%;
-            height: 50px;
-            background-color: var(--topbar-bg-color);
-            color: var(--topbar-text-color);
-            display: none; 
-            justify-content: flex-end;
-            align-items: center;
-            padding-right: 20px;
-            z-index: 1000;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        .menu-icon {
+            padding: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 1.5rem;
-            margin-left: 15px; /* Adjust spacing */
-            display: flex; /* Ensure hamburger icon is centered vertically */
-            align-items: center;
-            height: 100%; /* Take full height of topbar */
+            margin-top: 20px;
+            transition: background 0.2s ease-in-out;
         }
-        .user-greeting {
-            font-size: 1.0rem; /* Slightly larger greeting */
-            margin-left: auto; /* Push to left */
-            padding-right: 15px; /* Space between name and menu */
-            display: flex;
-            align-items: center;
-            height: 100%; /* Take full height of topbar */
-            white-space: nowrap; /* Prevent wrapping */
+        /* Dashboard container will NOT have a fixed max-width, it will adapt */
+        .dashboard {
+            display: none;
+            text-align: center;
+            min-height: 300px;
+            padding-top: 50px;
+            margin: 0 auto; /* Allow full width, but center its children */
+            width: 100%; /* Take full available width */
+        }
+        .welcome-title {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 2.2rem;
+            font-weight: 400;
+            color: var(--text-color);
+        }
+        .welcome-subtitle {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 1.2rem;
+            font-weight: 300;
+            color: var(--text-color);
+            margin-bottom: 30px;
         }
         .sidebar {
             position: fixed;
@@ -439,6 +465,7 @@
             top: 15px;
             left: 20px;
             height: 120px;
+            z-index: 100; /* Ensure logo is above other content temporarily */
         }
     </style>
 </head>
@@ -447,8 +474,7 @@
     <img src="logo.png" alt="Rad Mentor Logo" />
 
     <div class="container" id="auth-container" style="display: none;">
-        <h1>🔬 RadMentor - Login</h1>
-        <div class="input-group"><input type="email" id="email" placeholder="Email" /></div>
+        <h1 class="welcome-title" style="font-size: 2.5rem; margin-bottom: 10px;">Welcome to RadMentor</h1> <p class="welcome-subtitle" style="font-size: 1.2rem; margin-bottom: 25px;">The World’s Most Comprehensive Radiology Learning Source</p> <h1>🔬 Login</h1> <div class="input-group"><input type="email" id="email" placeholder="Email" /></div>
         <div class="input-group"><input type="password" id="password" placeholder="Password" /></div>
         <button onclick="handleAuth()" id="auth-btn">Sign In</button>
         <div class="toggle" onclick="toggleAuth()">Don't have an account? Sign up</div>
@@ -635,7 +661,6 @@
         <div class="sidebar" id="sidebar">
             <div class="sidebar-item" onclick="showDashboardSection('main')">🏠 Home</div>
             <div class="sidebar-item" onclick="showDashboardSection('profile')">👤 Profile</div>
-            <div class="sidebar-item" onclick="showDashboardSection('edit-profile')">✏️ Edit Profile</div>
             <div class="sidebar-item" onclick="showDashboardSection('subscription')">💳 Subscription</div>
             <div class="sidebar-item" onclick="showDashboardSection('settings')">⚙️ Settings</div>
             <div class="sidebar-item" onclick="showDashboardSection('about-us')">ℹ️ About Us</div>
@@ -936,21 +961,35 @@
         }
 
         auth.onAuthStateChanged(user => {
-            document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('profile-form').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'none';
-            document.querySelector('.topbar').style.display = 'none';
-            document.getElementById('sidebar').classList.remove('show'); 
-
+            // Check if current user has 'admin' accessLevel to redirect
             if (user) {
-                if (!user.emailVerified) {
-                    auth.signOut(); 
+                db.collection('users').doc(user.uid).get().then(doc => {
+                    if (doc.exists && doc.data().accessLevel === 'admin') {
+                        // Redirect to admin dashboard
+                        window.location.href = 'admin.html'; // Assuming admin.html is in the root
+                        return; // Stop further execution for admin
+                    }
+                    // If not admin, proceed with regular user flow
+                    document.getElementById('auth-container').style.display = 'none';
+                    document.getElementById('profile-form').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'none';
+                    document.querySelector('.topbar').style.display = 'none';
+                    document.getElementById('sidebar').classList.remove('show'); 
+
+                    if (!user.emailVerified) {
+                        auth.signOut(); 
+                        document.getElementById('auth-container').style.display = 'block';
+                        document.getElementById('auth-message').textContent = "Your email is not verified. Please check your inbox for a verification link.";
+                        return;
+                    }
+                    checkUserProfileAndLog(user);
+                }).catch(error => {
+                    console.error("Error checking user role:", error);
+                    // Fallback to regular login/signup if role check fails
                     document.getElementById('auth-container').style.display = 'block';
-                    document.getElementById('auth-message').textContent = "Your email is not verified. Please check your inbox for a verification link.";
-                    return;
-                }
-                checkUserProfileAndLog(user);
+                });
             } else {
+                // No user is logged in -> show authentication container
                 document.getElementById('auth-container').style.display = 'block';
             }
         });
