@@ -6,42 +6,7 @@
     <title>Brain MRI Viewer - RadMentor</title>
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet"/>
     <style>
-        /* TEMPORARY DEBUGGING STYLES - REMOVE AFTER FIXING */
-.viewer-container {
-    border: 3px dashed purple !important;
-    min-height: 500px !important; /* Ensure it has some height */
-    max-width: 1200px !important; /* Ensure it's wide enough */
-    width: 95% !important;
-}
-
-.viewer-content-area {
-    border: 3px dashed orange !important;
-    min-height: 400px !important; /* Ensure it has some height */
-    width: 100% !important;
-    display: flex !important; /* Ensure flexbox is applied */
-    flex-wrap: nowrap !important; /* Prevent wrapping unexpectedly */
-    justify-content: center !important; /* Center content */
-    align-items: flex-start !important; /* Align children to top */
-    gap: 10px !important; /* Spacing between children */
-}
-
-.image-wrapper {
-    border: 3px dashed green !important;
-    width: 512px !important; /* Confirm fixed width */
-    height: 512px !important; /* Confirm fixed height */
-    flex-shrink: 0 !important; /* Prevent shrinking */
-}
-
-.annotation-side-panel {
-    background-color: #3333ff !important; /* Bright blue to see it */
-    border: 2px solid yellow !important; /* Bright border */
-    min-width: 150px !important; /* Ensure minimum width */
-    max-width: 250px !important;
-    height: 512px !important; /* Match image height */
-    flex-grow: 1 !important; /* Allow it to grow */
-    padding: 10px !important; /* Ensure padding is there */
-}
-/* END TEMPORARY DEBUGGING STYLES *//* Base styles for all themes */
+        /* Base styles for all themes */
         body {
             font-family: 'Rubik', sans-serif;
             margin: 0;
@@ -452,7 +417,6 @@
         // --- Configuration for aligned labels ---
         const LABEL_PANEL_PADDING = 10; // Padding inside the side panels in pixels
         const LABEL_SPACING = 8;       // Vertical spacing between stacked labels in pixels (increased for more gap)
-        const LINE_TO_IMAGE_EDGE_OFFSET = 5; // How far into the image the line "stops" before connecting to the label
 
         // --- THEME LOGIC (standard) ---
         function setTheme(theme) {
@@ -544,6 +508,8 @@
                                     const sliceZ = cp.position[2]; 
                                     const imageSliceNumber = Math.round(sliceZ); 
 
+                                    // X and Y are in original imageDimensionMM space (e.g., 0-512mm)
+                                    // Convert to percentage for internal consistency relative to image size.
                                     const pointX_percent = (cp.position[0] / imageDimensionMM) * 100;
                                     const pointY_percent = (cp.position[1] / imageDimensionMM) * 100;
 
@@ -616,8 +582,7 @@
                 // Get the *current* bounding client rect for the image wrapper and panels
                 // These are viewport-relative coordinates needed for connecting lines correctly.
                 const imageWrapperRect = brainSliceImage.parentElement.getBoundingClientRect();
-                const leftPanelRect = leftAnnotationPanel.getBoundingClientRect();
-                const rightPanelRect = rightAnnotationPanel.getBoundingClientRect();
+                // We no longer need panelRects directly, as we use labelDiv.getBoundingClientRect() later.
 
                 if (annotationsLoaded) {
                     // Sort annotations by their Y-coordinate for consistent stacking
@@ -625,8 +590,9 @@
                                                                      .sort((a, b) => a.pointY - b.pointY);
 
                     annotationsForCurrentSlice.forEach((annotation, index) => {
-                        const pX_px_image = (annotation.pointX / 100) * imageWidth; // Point X in pixels relative to image
-                        const pY_px_image = (annotation.pointY / 100) * imageHeight; // Point Y in pixels relative to image
+                        // Point coordinates on the image, in pixels, relative to image-wrapper's top-left (0,0)
+                        const pX_px_image = (annotation.pointX / 100) * imageWidth; 
+                        const pY_px_image = (annotation.pointY / 100) * imageHeight; 
 
                         // --- Create HTML Label div ---
                         const labelDiv = document.createElement('div');
@@ -655,28 +621,29 @@
 
                         // --- Vertical Stacking Logic within the panel ---
                         // Calculate desired Y position within the panel, proportional to point's Y on image
-                        // Initial Y is center of the label
-                        let desiredLabelY_panel_px = (annotation.pointY / 100) * targetPanel.offsetHeight; 
+                        // This desired Y is the center of the label relative to panel's top (0)
+                        let desiredLabelCenterY_panel = (annotation.pointY / 100) * targetPanel.offsetHeight; 
 
-                        // Ensure label doesn't go off the top edge of the panel
-                        desiredLabelY_panel_px = Math.max(desiredLabelY_panel_px, labelHeight / 2 + LABEL_PANEL_PADDING);
+                        // Ensure label doesn't go off the top edge of the panel (consider padding)
+                        desiredLabelCenterY_panel = Math.max(desiredLabelCenterY_panel, (labelHeight / 2) + LABEL_PANEL_PADDING);
 
                         // Check for overlaps with already placed labels in this specific panel
                         for (let i = 0; i < placedLabelsArray.length; i++) {
                             const existingLabel = placedLabelsArray[i];
-                            // Check if the current label's potential top collides with an existing label's bottom
-                            if (desiredLabelY_panel_px - (labelHeight / 2) < existingLabel.bottom + LABEL_SPACING) {
+                            // If current label's potential top is above or overlaps existing label's bottom
+                            if ( (desiredLabelCenterY_panel - (labelHeight / 2)) < (existingLabel.bottom + LABEL_SPACING) ) {
                                 // Overlap detected. Adjust current label's Y to be below the existing one.
-                                desiredLabelY_panel_px = existingLabel.bottom + LABEL_SPACING + (labelHeight / 2);
+                                desiredLabelCenterY_panel = existingLabel.bottom + LABEL_SPACING + (labelHeight / 2);
                             }
                         }
 
-                        // Ensure label doesn't go off the bottom edge of the panel
-                        desiredLabelY_panel_px = Math.min(desiredLabelY_panel_px, targetPanel.offsetHeight - (labelHeight / 2) - LABEL_PANEL_PADDING);
+                        // Ensure label doesn't go off the bottom edge of the panel (consider padding)
+                        desiredLabelCenterY_panel = Math.min(desiredLabelCenterY_panel, targetPanel.offsetHeight - (labelHeight / 2) - LABEL_PANEL_PADDING);
 
 
                         // Apply the final vertical position (relative to panel's top-left)
-                        labelDiv.style.top = `${desiredLabelY_panel_px}px`;
+                        // This 'top' style determines the vertical center of the label
+                        labelDiv.style.top = `${desiredLabelCenterY_panel}px`;
                         
                         // Horizontal positioning within the panel
                         if (isLeftPanel) {
@@ -687,38 +654,37 @@
 
                         // Store this label's final actual (top, bottom) positions for future overlap checks
                         placedLabelsArray.push({
-                            top: desiredLabelY_panel_px - (labelHeight / 2), // Actual top edge of the label
-                            bottom: desiredLabelY_panel_px + (labelHeight / 2), // Actual bottom edge of the label
+                            top: desiredLabelCenterY_panel - (labelHeight / 2), // Actual top edge of the label
+                            bottom: desiredLabelCenterY_panel + (labelHeight / 2), // Actual bottom edge of the label
                             height: labelHeight,
                             element: labelDiv 
                         });
 
-                        // --- Create SVG Line (slanted) ---
+                        // --- Create SVG Line (slanting) ---
                         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                         
-                        // Line starts at the point (relative to image-wrapper)
+                        // Line starts at the point (relative to image-wrapper's top-left)
                         line.setAttribute('x1', pX_px_image);
                         line.setAttribute('y1', pY_px_image);
                         
-                        // Line's mid-point at the image edge (no offset to image itself)
-                        let lineMidX_px;
+                        // Line's X-endpoint at the image edge
+                        let lineX2_px;
                         if (isLeftPanel) {
-                            lineMidX_px = 0; // Left edge of image-wrapper
+                            lineX2_px = 0; // Left edge of image-wrapper
                         } else {
-                            lineMidX_px = imageWidth; // Right edge of image-wrapper
+                            lineX2_px = imageWidth; // Right edge of image-wrapper
                         }
 
-                        // Line's end-point connects to the label in the panel
-                        // We need to convert the label's Y-position (relative to panel)
-                        // to the image-wrapper's coordinate system.
-                        // labelDiv.offsetTop is relative to its immediate parent (the panel).
-                        // panelRect.top is the panel's top relative to the viewport.
-                        // imageWrapperRect.top is the image-wrapper's top relative to the viewport.
-                        // So, labelY_in_image_coords = (label.offsetTop + panel.top) - imageWrapper.top
-                        const labelY_in_image_coords = (labelDiv.offsetTop + targetPanel.getBoundingClientRect().top) - imageWrapperRect.top;
+                        // Line's Y-endpoint: The label's vertical center, converted to image-wrapper's coordinates.
+                        // Get label's position relative to viewport
+                        const labelRect_actual = labelDiv.getBoundingClientRect(); 
+                        const labelCenterY_viewport = labelRect_actual.top + (labelRect_actual.height / 2);
 
-                        line.setAttribute('x2', lineMidX_px); // Line ends at the image edge
-                        line.setAttribute('y2', labelY_in_image_coords); // Line ends at label's vertical center on image edge
+                        // Convert this viewport Y to be relative to the image-wrapper's top (which is SVG's 0 Y)
+                        const labelCenterY_image_coords = labelCenterY_viewport - imageWrapperRect.top;
+
+                        line.setAttribute('x2', lineX2_px); 
+                        line.setAttribute('y2', labelCenterY_image_coords); 
 
                         line.id = `line-${currentSlice}-${index}`;
                         annotationSvgOverlay.appendChild(line);
