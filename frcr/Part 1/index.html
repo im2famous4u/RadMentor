@@ -1,375 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Radiology MCQ Portal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Quiz Fetcher</title>
     <style>
-        /* General Body Styles */
         body {
-            font-family: 'Rubik', sans-serif;
-            margin: 0;
-            overflow-x: hidden;
-            background-color: #004d5e; /* Default dark theme */
-            color: #ffffff;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            font-family: sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            padding: 20px;
         }
-
-        /* --- THEME VARIABLES --- */
-        /* Light Theme (PrepLadder-inspired) */
-        body.light-theme {
-            --bg-color: #e3f2fd;
-            --container-bg-color: #ffffff;
-            --text-color: #212121;
-            --text-color-light: #4b5563;
-            --button-bg-color: #1e88e5;
-            --button-hover-bg-color: #1565c0;
-            --toggle-color: #1e88e5;
-            --sidebar-bg-color: #ffffff;
-            --sidebar-item-border: 1px solid #e0e0e0;
-            --sidebar-item-hover-bg: #bbdefb;
-            --topbar-bg-color: #ffffff;
-            --topbar-text-color: #212121;
-            --grid-item-bg: #ffffff;
-            --grid-item-hover-bg: #f8f9fa;
-            --grid-item-border: 1px solid #e0e0e0;
-            --quiz-container-bg: #f9fafb;
-            --correct-answer-bg: #dcfce7;
-            --incorrect-answer-bg: #fee2e2;
-            --correct-answer-border: #22c55e;
-            --incorrect-answer-border: #ef4444;
+        #results {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #ccc;
         }
-
-        /* Dark Theme */
-        body:not(.light-theme) {
-            --bg-color: #004d5e;
-            --container-bg-color: #043f4e;
-            --text-color: #ffffff;
-            --text-color-light: #e5e7eb;
-            --button-bg-color: #00bcd4;
-            --button-hover-bg-color: #0097a7;
-            --toggle-color: #81d4fa;
-            --sidebar-bg-color: #043f4e;
-            --sidebar-item-border: 1px solid #095a71;
-            --sidebar-item-hover-bg: #065a73;
-            --topbar-bg-color: #002b36;
-            --topbar-text-color: #ffffff;
-            --grid-item-bg: #095a71;
-            --grid-item-hover-bg: #064a5c;
-            --grid-item-border: 1px solid #095a71;
-            --quiz-container-bg: #003a47;
-            --correct-answer-bg: #053824;
-            --incorrect-answer-bg: #4a151e;
-            --correct-answer-border: #34d399;
-            --incorrect-answer-border: #f87171;
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
         }
-
-        /* Apply theme variables */
-        body { background-color: var(--bg-color); color: var(--text-color); }
-        .container, .content-section, .quiz-section, .subtopic-section { background-color: var(--container-bg-color); color: var(--text-color); }
-        h1, h2, h3 { color: var(--text-color); }
-        input, select { background-color: var(--bg-color); color: var(--text-color); border: 1px solid var(--sidebar-item-border); }
-        button { background: var(--button-bg-color); color: #fff; }
-        button:hover { background: var(--button-hover-bg-color); }
-        .toggle { color: var(--toggle-color); }
-        .topbar { background-color: var(--topbar-bg-color); color: var(--topbar-text-color); }
-        .sidebar { background-color: var(--sidebar-bg-color); color: var(--text-color); }
-        .sidebar-item { border-bottom: var(--sidebar-item-border); }
-        .sidebar-item:hover { background-color: var(--sidebar-item-hover-bg); }
-        .dashboard-grid-item { background: var(--grid-item-bg); color: var(--text-color-light); border: var(--grid-item-border); }
-        .dashboard-grid-item:hover { background: var(--grid-item-hover-bg); }
-
-        /* General Layout */
-        .container { max-width: 500px; margin: 30px auto; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
-        h1 { text-align: center; font-size: 2.0rem; font-weight: 500; margin-bottom: 25px; }
-        .input-group { margin: 18px 0; }
-        input, select { width: 100%; padding: 12px; font-size: 16px; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; font-size: 16px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; margin-top: 20px; transition: background 0.2s; }
-        .dashboard { display: none; padding-top: 50px; width: 100%; }
-        .topbar { position: fixed; top: 0; right: 0; width: 100%; height: 50px; display: none; justify-content: flex-end; align-items: center; padding-right: 20px; z-index: 1000; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
-        .menu-icon { cursor: pointer; font-size: 1.5rem; margin-left: 15px; }
-        .user-greeting { font-size: 1.0rem; margin-left: auto; padding-right: 15px; }
-        .sidebar { position: fixed; top: 50px; right: -270px; width: 250px; height: calc(100% - 50px); padding: 20px; transition: right 0.2s; z-index: 1001; overflow-y: auto; }
-        .sidebar.show { right: 0; }
-        .sidebar-item { padding: 12px 15px; cursor: pointer; font-size: 1.0rem; }
-        .content-section, .quiz-section, .subtopic-section { display: none; width: 100%; max-width: 900px; margin: 25px auto; text-align: left; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
-        .dashboard-content-wrapper { margin: 0 auto; padding: 20px; width: 90%; max-width: 1200px; box-sizing: border-box; }
-        .welcome-title { text-align: center; margin-top: 30px; font-size: 2.2rem; font-weight: 400; }
-        .welcome-subtitle { text-align: center; margin-top: 10px; font-size: 1.2rem; font-weight: 300; margin-bottom: 30px; }
-        .mcq-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; margin-top: 30px; width: 100%; }
-        .dashboard-grid-item { padding: 20px; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s; text-align: center; font-size: 1.1rem; min-height: 80px; display: flex; align-items: center; justify-content: center; }
-        img.logo { position: absolute; top: 15px; left: 20px; height: 120px; }
-
-        /* --- QUIZ SPECIFIC STYLES --- */
-        .quiz-section { background-color: var(--quiz-container-bg); }
-        .correct-answer { background-color: var(--correct-answer-bg); border-left: 4px solid var(--correct-answer-border); }
-        .incorrect-answer { background-color: var(--incorrect-answer-bg); border-left: 4px solid var(--incorrect-answer-border); }
-        .loader { border: 4px solid var(--sidebar-item-border); border-top: 4px solid var(--button-bg-color); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 40px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .back-button { width: auto; padding: 8px 16px; font-size: 14px; margin: 0 0 20px 0; }
+        .question-block {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        h3 {
+            margin-top: 0;
+        }
     </style>
 </head>
 <body>
 
-    <img src="https://i.imgur.com/your-logo.png" alt="Rad Mentor Logo" class="logo" onerror="this.style.display='none'"/>
+    <h1>Quiz Data Fetcher</h1>
+    <p>Click the button to fetch and display questions from the "Basic Physics" sheet.</p>
+    <button id="fetch-btn">Fetch Questions</button>
 
-    <!-- Auth and Profile Forms (hidden by default) -->
-    <div class="container" id="auth-container" style="display: none;">
-        <h1>🔬 RadMentor - Login</h1>
-        <div class="input-group"><input type="email" id="email" placeholder="Email" /></div>
-        <div class="input-group"><input type="password" id="password" placeholder="Password" /></div>
-        <button onclick="handleAuth()" id="auth-btn">Sign In</button>
-        <div class="toggle" onclick="toggleAuth()">Don't have an account? Sign up</div>
-    </div>
-    <div class="container" id="profile-form" style="display: none;">
-        <h1>👤 Complete Your Profile</h1>
-        <!-- Profile fields will be here -->
-    </div>
-
-    <!-- Main Dashboard -->
-    <div class="dashboard" id="dashboard">
-        <div class="topbar">
-            <div class="user-greeting">Hi, <span id="user-greeting-name">Doctor</span>!</div>
-            <div class="menu-icon" onclick="toggleSidebar()">☰</div>
-        </div>
-
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-item" onclick="showDashboardSection('main')">🏠 Home</div>
-            <!-- Other sidebar items -->
-        </div>
-
-        <!-- Main Dashboard Content -->
-        <div class="dashboard-content-wrapper" id="dashboard-main-content">
-            <h1 class="welcome-title">FRCR Part 1</h1>
-            <p class="welcome-subtitle">The World’s Most Comprehensive Radiology Learning Source</p>
-            <div class="mcq-grid">
-                <div class="dashboard-grid-item" onclick="showSubtopicPage('physics')">Physics</div>
-                <div class="dashboard-grid-item" onclick="showSubtopicPage('anatomy')">Anatomy</div>
-                <!-- More grid items -->
-            </div>
-        </div>
-
-        <!-- Hidden Content Sections (Profile, Settings, etc.) -->
-        <div class="content-section" id="profile-section"></div>
-        
-        <!-- Subtopic Selection Pages -->
-        <div class="subtopic-section" id="physics-subtopic-section">
-             <button class="back-button" onclick="showDashboardSection('main')">← Back to Dashboard</button>
-             <h1 class="welcome-title">Physics</h1>
-             <div id="physics-grid" class="mcq-grid"></div>
-        </div>
-        <div class="subtopic-section" id="anatomy-subtopic-section">
-             <button class="back-button" onclick="showDashboardSection('main')">← Back to Dashboard</button>
-             <h1 class="welcome-title">Anatomy</h1>
-             <div id="anatomy-grid" class="mcq-grid"></div>
-        </div>
-
-        <!-- Integrated Quiz Section -->
-        <div class="quiz-section" id="quiz-section-container">
-            <button id="quiz-back-button" class="back-button">← Back to Topics</button>
-            <div id="quiz-window">
-                <div id="loader" class="loader hidden"></div>
-                <p id="loading-text" class="text-center hidden">Loading questions...</p>
-                <div id="info-message-area" class="text-center"></div>
-                <form id="quiz-form" class="hidden">
-                    <div class="mb-8 p-4 rounded-r-lg" style="background-color: var(--bg-color); border-left: 4px solid var(--button-bg-color);">
-                        <h2 id="topic-title" class="text-lg font-semibold mb-2" style="color: var(--button-bg-color);">Topic Name</h2>
-                        <h2 class="text-sm font-semibold mb-2">Question <span id="question-number">1</span> of <span id="total-questions">1</span></h2>
-                        <h3 id="main-question" class="text-xl font-semibold"></h3>
-                    </div>
-                    <div id="sub-questions-container" class="space-y-5"></div>
-                    <div class="mt-10">
-                        <button type="button" id="next-question-btn" class="w-full sm:w-auto py-3 px-6 rounded-lg hidden">Next Question</button>
-                    </div>
-                </form>
-                <div id="results-section" class="mt-10 hidden">
-                    <h3 class="text-2xl font-bold mb-4">Results</h3>
-                    <div id="results-container" class="space-y-4"></div>
-                    <div class="mt-6 p-4 rounded-lg text-center" style="background-color: var(--bg-color);">
-                        <p class="text-lg font-semibold" style="color: var(--button-bg-color);">Your final score is: <span id="score"></span></p>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div id="results">
+        <p>Fetched data will appear here...</p>
     </div>
 
     <script>
-        // --- CONFIG AND STATE ---
-        const physicsTopics = [
-            { name: "Basic Physics", sheetId: "1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8", gid: "588285606", data: null, loaded: false },
-            { name: "General radiation hazards and protection", sheetId: "1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8", gid: "191373979", data: null, loaded: false },
-            { name: "Image quality and X-ray production", sheetId: "1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8", gid: "1903698045", data: null, loaded: false },
-            { name: "Film screen Radiography", sheetId: "1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8", gid: "138096053", data: null, loaded: false },
-            { name: "Digital Radiography", sheetId: "1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8", gid: "1534241852", data: null, loaded: false },
-            { name: "Fluoroscopy", sheetId: "1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8", gid: "1433878716", data: null, loaded: false },
-            { name: "Computed Tomography", sheetId: "1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8", gid: "1396979222", data: null, loaded: false },
-            { name: "Nuclear Medicine", sheetId: "1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8", gid: "1908354972", data: null, loaded: false },
-            { name: "Ultrasound", sheetId: "1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8", gid: "1518985854", data: null, loaded: false },
-            { name: "Magnetic Resonance Imaging", sheetId: "1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8", gid: "113063858", data: null, loaded: false }
-        ];
-        const anatomyTopics = [
-            { name: "Head & Neck", sheetId: null, gid: null, data: [], loaded: true },
-            { name: "Chest", sheetId: null, gid: null, data: [], loaded: true },
-            { name: "Abdomen", sheetId: null, gid: null, data: [], loaded: true },
-        ];
+        document.getElementById('fetch-btn').addEventListener('click', fetchAndDisplayQuiz);
 
-        let isQuizSubmitted = false;
-        let currentQuizQuestionIndex = 0;
-        let activeQuizData = [];
-        let activeTopicList = [];
-        let activeTopicType = '';
+        /**
+         * Fetches data from the Google Sheet, parses it, and displays it on the page.
+         */
+        async function fetchAndDisplayQuiz() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Fetching data, please wait...</p>';
 
-        const dom = {
-            dashboard: document.getElementById('dashboard'),
-            topbar: document.querySelector('.topbar'),
-            sidebar: document.getElementById('sidebar'),
-            dashboardMainContent: document.getElementById('dashboard-main-content'),
-            quizSectionContainer: document.getElementById('quiz-section-container'),
-            physicsSubtopicSection: document.getElementById('physics-subtopic-section'),
-            anatomySubtopicSection: document.getElementById('anatomy-subtopic-section'),
-            physicsGrid: document.getElementById('physics-grid'),
-            anatomyGrid: document.getElementById('anatomy-grid'),
-            loader: document.getElementById('loader'),
-            loadingText: document.getElementById('loading-text'),
-            quizForm: document.getElementById('quiz-form'),
-            infoMessageArea: document.getElementById('info-message-area'),
-            topicTitle: document.getElementById('topic-title'),
-            mainQuestion: document.getElementById('main-question'),
-            questionNumber: document.getElementById('question-number'),
-            totalQuestions: document.getElementById('total-questions'),
-            subQuestionsContainer: document.getElementById('sub-questions-container'),
-            nextQuestionBtn: document.getElementById('next-question-btn'),
-            resultsSection: document.getElementById('results-section'),
-            resultsContainer: document.getElementById('results-container'),
-            score: document.getElementById('score'),
-            quizBackButton: document.getElementById('quiz-back-button'),
-        };
+            // Configuration for the Google Sheet
+            const sheetId = "1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8";
+            const gid = "588285606"; // This is the GID for the "Basic Physics" tab
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
 
-        // --- INITIALIZATION ---
-        document.addEventListener('DOMContentLoaded', () => {
-            setTheme(localStorage.getItem('theme') || 'dark');
-            showDashboardSection('main');
-            dom.dashboard.style.display = 'block';
-            dom.topbar.style.display = 'flex';
-            
-            renderSubtopicGrids();
-        });
-
-        function setTheme(theme) {
-            document.body.classList.toggle('light-theme', theme === 'light');
-            localStorage.setItem('theme', theme);
-        }
-        
-        // --- MAIN NAVIGATION ---
-        function showDashboardSection(sectionId) {
-            ['dashboard-main-content', 'quiz-section-container', 'physics-subtopic-section', 'anatomy-subtopic-section'].forEach(id => {
-                document.getElementById(id).style.display = 'none';
-            });
-            if (sectionId === 'main') {
-                dom.dashboardMainContent.style.display = 'block';
-            }
-            if (dom.sidebar) dom.sidebar.classList.remove('show');
-        }
-
-        function showSubtopicPage(topicType) {
-            showDashboardSection(topicType + '-subtopic-section'); // Hide others
-            document.getElementById(topicType + '-subtopic-section').style.display = 'block';
-        }
-
-        function toggleSidebar() {
-            dom.sidebar.classList.toggle('show');
-        }
-
-        // --- QUIZ FUNCTIONALITY ---
-        function renderSubtopicGrids() {
-            physicsTopics.forEach((topic, index) => {
-                const gridItem = createGridItem(topic.name, 'physics', index);
-                dom.physicsGrid.appendChild(gridItem);
-            });
-            anatomyTopics.forEach((topic, index) => {
-                const gridItem = createGridItem(topic.name, 'anatomy', index);
-                dom.anatomyGrid.appendChild(gridItem);
-            });
-        }
-        
-        function createGridItem(name, type, index) {
-            const gridItem = document.createElement('div');
-            gridItem.textContent = name;
-            gridItem.className = 'dashboard-grid-item';
-            gridItem.onclick = () => startQuiz(type, index);
-            return gridItem;
-        }
-
-        async function startQuiz(type, topicIndex) {
-            activeTopicType = type;
-            activeTopicList = (type === 'physics') ? physicsTopics : anatomyTopics;
-            const topic = activeTopicList[topicIndex];
-            
-            showDashboardSection('quiz-section-container');
-            hideQuizContent();
-            dom.quizBackButton.onclick = () => showSubtopicPage(activeTopicType);
-
-            if (topic.loaded && topic.data) {
-                startQuizForTopic(topic.data, topic.name);
-            } else if (topic.sheetId) {
-                showLoader(true);
-                const url = `https://docs.google.com/spreadsheets/d/${topic.sheetId}/export?format=csv&gid=${topic.gid}`;
-                try {
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error('Network response was not ok.');
-                    const csvText = await response.text();
-                    const parsedData = parseCsv(csvText);
-                    
-                    // --- DEBUGGING CODE ---
-                    console.log("--- RadMentor Debug: Data Fetched ---");
-                    console.log(`Topic: ${topic.name}`);
-                    console.log(`Number of questions found: ${parsedData.length}`);
-                    console.log("Full Parsed Data:", parsedData);
-                    console.log("---------------------------------------");
-                    // --- END DEBUGGING CODE ---
-
-                    if (parsedData.length === 0) throw new Error('CSV data is empty or could not be parsed.');
-                    
-                    topic.data = parsedData;
-                    topic.loaded = true;
-                    startQuizForTopic(topic.data, topic.name);
-
-                } catch (error) {
-                    console.error("Failed to load Google Sheet:", error);
-                    showInfoMessage(`<strong>Error:</strong> Could not load questions.`);
-                } finally {
-                    showLoader(false);
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok. Status: ${response.status}`);
                 }
-            } else {
-                 startQuizForTopic([], topic.name); // For topics with no sheetId
+                const csvText = await response.text();
+                const parsedData = parseCsv(csvText);
+
+                if (parsedData.length === 0) {
+                    resultsDiv.innerHTML = '<p>No questions found. The sheet might be empty or formatted incorrectly.</p>';
+                    return;
+                }
+
+                // --- DEBUGGING ---
+                // This will log the raw data to your browser's developer console (F12)
+                console.log("Fetched and Parsed Data:", parsedData);
+                // --- END DEBUGGING ---
+
+                // Format and display the data on the page
+                let htmlOutput = `<h2>Found ${parsedData.length} questions:</h2>`;
+                parsedData.forEach((question, index) => {
+                    htmlOutput += `<div class="question-block">`;
+                    htmlOutput += `<h3>Q${index + 1}: ${question.mainQuestion}</h3>`;
+                    htmlOutput += '<ul>';
+                    question.subQuestions.forEach(sq => {
+                        htmlOutput += `<li><strong>${sq.id}:</strong> ${sq.text} <em>(Answer: ${sq.correctAnswer})</em></li>`;
+                    });
+                    htmlOutput += '</ul>';
+                    htmlOutput += `</div>`;
+                });
+
+                resultsDiv.innerHTML = htmlOutput;
+
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                resultsDiv.innerHTML = `<p style="color: red;"><strong>Error:</strong> Could not fetch data. Please check the console (F12) for details and ensure the Google Sheet is published to the web as a CSV.</p>`;
             }
         }
 
-        function startQuizForTopic(quizDataArray, topicName) {
-            activeQuizData = quizDataArray;
-            dom.topicTitle.textContent = topicName;
-            
-            if (activeQuizData.length === 0) {
-                showInfoMessage("Questions for this topic are coming soon!");
-                return;
-            }
-            
-            dom.quizForm.style.display = 'block';
-            currentQuizQuestionIndex = 0;
-            loadQuizQuestion();
-        }
-
+        /**
+         * Parses raw CSV text into a structured array of quiz objects.
+         * @param {string} csvText - The raw CSV text from the fetch response.
+         * @returns {Array} An array of question objects.
+         */
         function parseCsv(csvText) {
             const rows = csvText.trim().split(/\r?\n/);
             const data = [];
+            // Start from row 1 to skip the header
             for (let i = 1; i < rows.length; i++) {
-                if (!rows[i]) continue;
+                if (!rows[i]) continue; // Skip empty rows
+
+                // This regex handles fields that are quoted and may contain commas
                 const rowData = rows[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
                 const cleanRow = rowData.map(field => field.trim().replace(/^"|"$/g, '').trim());
-                if (!cleanRow[0]) continue;
+
+                if (!cleanRow[0]) continue; // Skip if the main question is empty
+
                 const subQuestions = [];
                 for (let j = 0; j < 5; j++) {
+                    // Check if all required fields for a sub-question exist
                     if (cleanRow[1 + j] && cleanRow[6 + (j * 2)] && cleanRow[7 + (j * 2)]) {
                          subQuestions.push({
                             id: `${i}${String.fromCharCode(97 + j)}`,
@@ -379,81 +127,17 @@
                         });
                     }
                 }
-                if (subQuestions.length > 0) data.push({ mainQuestion: cleanRow[0], subQuestions });
+
+                if (subQuestions.length > 0) {
+                    data.push({ 
+                        mainQuestion: cleanRow[0], 
+                        subQuestions: subQuestions 
+                    });
+                }
             }
             return data;
         }
-
-        function loadQuizQuestion() {
-            hideQuizContent(true);
-            dom.quizForm.style.display = 'block';
-            isQuizSubmitted = false;
-            const quizData = activeQuizData[currentQuizQuestionIndex];
-            dom.questionNumber.textContent = currentQuizQuestionIndex + 1;
-            dom.totalQuestions.textContent = activeQuizData.length;
-            dom.mainQuestion.textContent = quizData.mainQuestion;
-            
-            dom.subQuestionsContainer.innerHTML = quizData.subQuestions.map(sq => `
-                <div class="sub-question-item flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg" id="item-${sq.id}" style="border-color: var(--sidebar-item-border);">
-                    <p class="text-md mb-3 sm:mb-0 flex-1"><span class="font-semibold">Q${sq.id}:</span> ${sq.text}</p>
-                    <div class="flex items-center space-x-6 shrink-0 ml-0 sm:ml-4">
-                        <label class="flex items-center space-x-2 cursor-pointer"><input type="radio" name="answer${sq.id}" value="True" class="form-radio h-5 w-5" required><span>True</span></label>
-                        <label class="flex items-center space-x-2 cursor-pointer"><input type="radio" name="answer${sq.id}" value="False" class="form-radio h-5 w-5" required><span>False</span></label>
-                    </div>
-                </div>`).join('');
-            document.querySelectorAll('input[type="radio"]').forEach(radio => radio.addEventListener('change', handleAnswerSelection));
-        }
-        
-        function handleAnswerSelection() {
-            if (isQuizSubmitted) return;
-            const allAnswered = activeQuizData[currentQuizQuestionIndex].subQuestions.every(sq => document.querySelector(`input[name="answer${sq.id}"]:checked`));
-            if (allAnswered) checkAnswers();
-        }
-
-        function checkAnswers() {
-            isQuizSubmitted = true;
-            dom.resultsContainer.innerHTML = '';
-            let scoreCount = 0;
-            const quizData = activeQuizData[currentQuizQuestionIndex];
-            quizData.subQuestions.forEach(sq => {
-                const userAnswer = document.querySelector(`input[name="answer${sq.id}"]:checked`).value;
-                const isCorrect = userAnswer.toLowerCase() === sq.correctAnswer.toLowerCase();
-                document.getElementById(`item-${sq.id}`).classList.add(isCorrect ? 'correct-answer' : 'incorrect-answer');
-                if (isCorrect) scoreCount++;
-                dom.resultsContainer.innerHTML += `
-                    <div class="p-4 rounded-lg ${isCorrect ? 'correct-answer' : 'incorrect-answer'}">
-                       <p class="font-semibold">A${sq.id}: Correct answer is <span class="font-bold">${sq.correctAnswer}</span>.</p>
-                       <p class="text-sm mt-1">You answered: ${userAnswer}.</p>
-                       <p class="mt-2 text-sm md:text-base">${sq.explanation}</p>
-                    </div>`;
-            });
-            dom.score.textContent = `${scoreCount} / ${quizData.subQuestions.length}`;
-            dom.resultsSection.style.display = 'block';
-            dom.nextQuestionBtn.style.display = 'inline-block';
-            dom.nextQuestionBtn.textContent = (currentQuizQuestionIndex >= activeQuizData.length - 1) ? 'Restart Topic' : 'Next Question';
-            document.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = true);
-        }
-
-        function loadNextQuestion() {
-            currentQuizQuestionIndex = (currentQuizQuestionIndex + 1) % activeQuizData.length;
-            loadQuizQuestion();
-        }
-
-        function hideQuizContent(keepFormWrapper = false) {
-            if (!keepFormWrapper) dom.quizForm.style.display = 'none';
-            dom.resultsSection.style.display = 'none';
-            dom.nextQuestionBtn.style.display = 'none';
-            dom.infoMessageArea.innerHTML = '';
-        }
-        function showLoader(show) {
-            dom.loader.style.display = show ? 'block' : 'none';
-            dom.loadingText.style.display = show ? 'block' : 'none';
-        }
-        function showInfoMessage(html) {
-            dom.infoMessageArea.innerHTML = `<div class="my-4 p-4 rounded-lg" style="background-color: var(--bg-color);">${html}</div>`;
-        }
-
-        dom.nextQuestionBtn.addEventListener('click', loadNextQuestion);
     </script>
+
 </body>
 </html>
