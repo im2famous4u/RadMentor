@@ -320,7 +320,16 @@
                     if (!response.ok) throw new Error('Network response was not ok.');
                     const csvText = await response.text();
                     const parsedData = parseCsv(csvText);
-                    if (parsedData.length === 0) throw new Error('CSV data is empty.');
+                    
+                    // --- DEBUGGING CODE ---
+                    console.log("--- RadMentor Debug: Data Fetched ---");
+                    console.log(`Topic: ${topic.name}`);
+                    console.log(`Number of questions found: ${parsedData.length}`);
+                    console.log("Full Parsed Data:", parsedData);
+                    console.log("---------------------------------------");
+                    // --- END DEBUGGING CODE ---
+
+                    if (parsedData.length === 0) throw new Error('CSV data is empty or could not be parsed.');
                     
                     topic.data = parsedData;
                     topic.loaded = true;
