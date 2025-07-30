@@ -3,265 +3,467 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>FRCR Physics Quiz</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet"/>
+    <title>FRCR Quiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <style>
-        /* General Body Styles from main portal */
-        body {
-            font-family: 'Rubik', sans-serif;
-            margin: 0;
-            overflow-x: hidden;
-            background-color: #004d5e; /* Default dark theme */
-            color: #ffffff;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        /* Light Theme Variables */
+        /* --- Theme Variables --- */
+        /* Light Theme (PrepLadder-style) */
         body.light-theme {
-            --bg-color: #e3f2fd;
+            --bg-color: #eef2f5; /* Light grey-blue background */
             --container-bg-color: #ffffff;
             --text-color: #212121;
-            --text-muted-color: #6c757d;
+            --text-color-light: #4a5568;
+            --header-text-color: #1e3a5f;
             --button-bg-color: #1e88e5;
             --button-hover-bg-color: #1565c0;
-            --option-bg-color: #f8f9fa;
-            --option-border-color: #dee2e6;
-            --correct-bg-color: #d4edda;
-            --correct-border-color: #c3e6cb;
-            --correct-text-color: #155724;
-            --incorrect-bg-color: #f8d7da;
-            --incorrect-border-color: #f5c6cb;
-            --incorrect-text-color: #721c24;
-            --explanation-bg: #e9ecef;
-            --radio-dot-bg: #1e88e5;
+            --selection-button-bg: #2c7a7b;
+            --selection-button-hover-bg: #319795;
+            --border-color: #e2e8f0;
+            --explanation-bg: #f7fafc;
+            --explanation-border: #4299e1;
+            --subset-item-correct-bg: #c6f6d5;
+            --subset-item-correct-border: #68d391;
+            --subset-item-incorrect-bg: #fed7d7;
+            --subset-item-incorrect-border: #fc8181;
         }
 
-        /* Dark Theme Variables */
+        /* Dark Theme (Default) */
         body:not(.light-theme) {
             --bg-color: #004d5e;
             --container-bg-color: #043f4e;
             --text-color: #ffffff;
-            --text-muted-color: #adb5bd;
+            --text-color-light: #adb5bd;
+            --header-text-color: #ffffff;
             --button-bg-color: #00bcd4;
             --button-hover-bg-color: #0097a7;
-            --option-bg-color: #095a71;
-            --option-border-color: #0a6b83;
-            --correct-bg-color: #1a5c34;
-            --correct-border-color: #2a9d58;
-            --correct-text-color: #e8f5e9;
-            --incorrect-bg-color: #6c2b2b;
-            --incorrect-border-color: #a04040;
-            --incorrect-text-color: #fde0e0;
+            --selection-button-bg: #007a8c;
+            --selection-button-hover-bg: #0097a7;
+            --border-color: #0a6b83;
             --explanation-bg: #002b36;
-            --radio-dot-bg: #81d4fa;
+            --explanation-border: #00bcd4;
+            --subset-item-correct-bg: #1a5c34;
+            --subset-item-correct-border: #2a9d58;
+            --subset-item-incorrect-bg: #5c1a1a;
+            --subset-item-incorrect-border: #a32a2a;
         }
 
-        /* Apply theme variables */
+        /* --- General Body Styles --- */
         body {
+            font-family: 'Rubik', sans-serif;
+            margin: 0;
+            padding: 15px;
             background-color: var(--bg-color);
             color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        /* --- Quiz Specific Styles --- */
-        .quiz-container {
+        .main-container {
+            width: 100%;
             max-width: 900px;
-            margin: 20px auto;
-            padding: 20px;
+        }
+
+        /* --- Screen Management --- */
+        .screen { display: none; width: 100%; }
+        .screen.active { display: block; }
+
+        /* --- Home and Category Screen Styles --- */
+        .selection-container {
             background-color: var(--container-bg-color);
             border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.07);
         }
-
-        .quiz-header {
+        .selection-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--option-border-color);
+            margin-bottom: 30px;
         }
-
-        .quiz-header h1 {
-            font-size: 1.8rem;
-            color: var(--text-color);
+        .selection-header h1 {
+            font-size: 2.2rem;
             margin: 0;
+            color: var(--header-text-color);
+            text-align: left;
+            flex-grow: 1;
         }
-
-        .back-link {
-            padding: 8px 16px;
-            background-color: var(--button-bg-color);
-            color: white;
-            text-decoration: none;
+        .theme-toggle-button {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 8px 12px;
             border-radius: 6px;
-            font-weight: 500;
-            transition: background-color 0.2s;
-        }
-        .back-link:hover {
-            background-color: var(--button-hover-bg-color);
+            cursor: pointer;
+            font-size: 1.2rem;
         }
 
-        .question-header {
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: var(--text-muted-color);
-            margin-bottom: 10px;
-        }
-
-        .question-text {
+        .selection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .selection-button {
+            background-color: var(--selection-button-bg);
+            color: white;
+            border: none;
+            padding: 25px;
+            border-radius: 8px;
+            cursor: pointer;
             font-size: 1.3rem;
             font-weight: 600;
-            line-height: 1.5;
-            margin-bottom: 25px;
+            transition: background-color 0.3s, transform 0.2s;
+            text-align: center;
         }
+        .selection-button:hover { background-color: var(--selection-button-hover-bg); transform: translateY(-5px); }
+        .selection-button.disabled { background-color: #a0aec0; cursor: not-allowed; transform: none; }
 
-        .options-container .option {
-            background-color: var(--option-bg-color);
-            border: 1px solid var(--option-border-color);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
+        /* --- Quiz View Styles --- */
+        .quiz-container { background-color: var(--container-bg-color); border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.07); display: flex; flex-direction: column; padding: 20px; }
+        .quiz-header {
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.2s ease;
         }
+        .quiz-header h1 { font-size: 1.8rem; margin: 0; color: var(--header-text-color); }
+        .back-button {
+             background-color: transparent;
+             color: var(--text-color);
+             border: 1px solid var(--border-color);
+             padding: 8px 16px;
+             border-radius: 6px;
+             cursor: pointer;
+             font-size: 0.9rem;
+             font-weight: 500;
+             transition: background-color 0.2s;
+        }
+        .back-button:hover{ background-color: var(--border-color); }
 
-        .option-text {
-            flex-grow: 1;
-            padding-right: 15px;
-            line-height: 1.5;
-        }
+        .loading-container, .error-container { text-align: center; padding: 40px; font-size: 1.2rem; }
+        .error-container { color: #c53030; background-color: #fed7d7; border: 1px solid #fbb6b6; border-radius: 8px; }
+
+        #questions-display { flex-grow: 1; }
+        .question-block { background-color: var(--container-bg-color); border-radius: 8px; padding: 20px; }
+        .question-number { font-size: 1.1rem; font-weight: 500; color: var(--text-color-light); margin-bottom: 15px; }
+        .main-question-text { font-size: 1.4rem; font-weight: 600; line-height: 1.5; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
         
-        /* --- Custom Radio Button Styles --- */
-        .radio-group {
-            display: flex;
-            gap: 20px;
-            align-items: center;
+        .subset-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: background-color 0.3s, border-color 0.3s;
         }
+        .subset-item.correct { background-color: var(--subset-item-correct-bg); border-color: var(--subset-item-correct-border); }
+        .subset-item.incorrect { background-color: var(--subset-item-incorrect-bg); border-color: var(--subset-item-incorrect-border); }
 
-        .radio-group label {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
-            color: var(--text-color);
-        }
-
-        .radio-group input[type="radio"] {
-            display: none; /* Hide the default radio button */
-        }
-
-        .radio-group label::before {
-            content: '';
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            border: 2px solid var(--text-muted-color);
-            background-color: white;
-            margin-right: 10px;
-            transition: all 0.2s ease;
-        }
-
-        .radio-group input[type="radio"]:checked + label::before {
-            border-color: var(--radio-dot-bg);
-            background-color: white;
-            transform: scale(1.1);
-        }
+        .subset-q-container { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+        .subset-q-text { flex-grow: 1; margin: 0; font-size: 1.1rem; line-height: 1.6; }
+        .subset-options { display: flex; gap: 10px; }
+        .subset-options label { display: block; padding: 8px 16px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
+        .subset-options input[type="radio"] { display: none; }
+        .subset-options input[type="radio"]:checked + label { border-color: #4299e1; background-color: #ebf8ff; color: #212121; font-weight: 600; }
         
-        .radio-group input[type="radio"]:checked + label::after {
-            content: '';
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background-color: var(--radio-dot-bg);
-            left: 6px; /* Position inside the ::before element */
-            top: 6px;
-            transform: scale(1);
-            transition: all 0.2s ease;
-        }
-        
-        .radio-group label {
-            position: relative;
-            padding-left: 32px; /* Space for custom radio */
-        }
-
-        .radio-group input[type="radio"]:checked + label::after {
-            left: 4px; /* Adjust positioning based on padding */
-            top: 4px;
-        }
-
-
-        /* Styles for after checking answer */
-        .option.correct {
-            background-color: var(--correct-bg-color);
-            border-color: var(--correct-border-color);
-            color: var(--correct-text-color);
-        }
-        .option.incorrect {
-            background-color: var(--incorrect-bg-color);
-            border-color: var(--incorrect-border-color);
-            color: var(--incorrect-text-color);
-        }
-        .option.correct .radio-group label, .option.incorrect .radio-group label {
-            color: var(--correct-text-color);
-        }
-        body.light-theme .option.incorrect .radio-group label {
-            color: var(--incorrect-text-color);
-        }
-
-
-        .explanation {
-            display: none; /* Hidden by default */
+        .all-explanations {
             margin-top: 25px;
             padding: 20px;
             background-color: var(--explanation-bg);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
-            border: 1px solid var(--option-border-color);
+            display: none; /* Hidden by default */
         }
-        .explanation h3 {
-            margin-top: 0;
-            color: var(--text-color);
-        }
-        .explanation p {
-            white-space: pre-wrap; /* Preserve newlines from concatenated explanations */
-        }
+        .all-explanations.visible { display: block; }
+        .all-explanations h3 { margin-top: 0; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); color: var(--header-text-color); }
+        .explanation-item p { margin: 0 0 10px 0; line-height: 1.6; }
+        .explanation-item:last-child p { margin-bottom: 0; }
 
-        .quiz-navigation {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 30px;
+        .navigation-controls { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid var(--border-color); margin-top: 20px; }
+        .nav-button { background-color: var(--button-bg-color); color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500; transition: background-color 0.2s; }
+        .nav-button:hover:not(:disabled) { background-color: var(--button-hover-bg-color); }
+        .nav-button:disabled { background-color: #a0aec0; cursor: not-allowed; }
+        #question-counter { font-size: 1.1rem; font-weight: 500; color: var(--text-color-light); text-align: center; padding-top: 1rem; }
+
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <!-- Home Screen -->
+        <div id="home-screen" class="screen active">
+            <div class="selection-container">
+                <div class="selection-header">
+                    <h1>FRCR Quiz</h1>
+                    <button id="theme-toggle-home" class="theme-toggle-button">🌓</button>
+                </div>
+                <div class="selection-grid">
+                    <button id="physics-btn" class="selection-button">Physics</button>
+                    <button id="anatomy-btn" class="selection-button disabled">Anatomy</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Physics Category Screen -->
+        <div id="physics-category-screen" class="screen">
+            <div class="selection-container">
+                <div class="quiz-header">
+                    <h1>Physics Topics</h1>
+                    <button class="back-button" data-target="home-screen">Home</button>
+                </div>
+                <div id="physics-topics-grid" class="selection-grid"></div>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-container">
+                <div class="quiz-header">
+                    <h1 id="quiz-title">Physics Questions</h1>
+                    <button class="back-button" data-target="physics-category-screen">Back to Topics</button>
+                </div>
+                <div id="loading-container" class="loading-container"><p>Loading questions...</p></div>
+                <div id="error-container" class="error-container" style="display:none;"></div>
+                <div id="questions-display"></div>
+                <div id="navigation-controls" style="display: none;">
+                    <button id="prev-button" class="nav-button">Previous</button>
+                    <button id="next-button" class="nav-button">Next</button>
+                </div>
+                <div id="question-counter"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const GOOGLE_SHEET_ID = '1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8';
+        const PHYSICS_TOPICS = [
+            { name: "Basic Physics", gid: "2009849222" },
+            { name: "General Radiation Hazards & Protection", gid: "2009849222" },
+            { name: "Image Quality & X-ray Production", gid: "1706416231" },
+            { name: "Film Screen Radiography", gid: "1257614317" },
+            { name: "Digital Radiography", gid: "917881905" },
+            { name: "Fluoroscopy", gid: "1461599884" },
+            { name: "Computed Tomography", gid: "986205874" },
+            { name: "Nuclear Medicine", gid: "2016453957" },
+            { name: "Ultrasound", gid: "638565218" },
+            { name: "Magnetic Resonance Imaging", gid: "2026917708" },
+        ];
+
+        // --- State ---
+        let allQuestions = [];
+        let currentQuestionIndex = 0;
+
+        // --- DOM Elements ---
+        const screens = document.querySelectorAll('.screen');
+        const physicsBtn = document.getElementById('physics-btn');
+        const physicsTopicsGrid = document.getElementById('physics-topics-grid');
+        const quizTitle = document.getElementById('quiz-title');
+        const backButtons = document.querySelectorAll('.back-button');
+        const themeToggleHome = document.getElementById('theme-toggle-home');
+        
+        const loadingContainer = document.getElementById('loading-container');
+        const errorContainer = document.getElementById('error-container');
+        const questionsDisplay = document.getElementById('questions-display');
+        const navigationControls = document.getElementById('navigation-controls');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        const questionCounter = document.getElementById('question-counter');
+
+        // --- Functions (Theming) ---
+        function setTheme(theme) {
+            localStorage.setItem('theme', theme);
+            if (theme === 'light') {
+                document.body.classList.add('light-theme');
+            } else {
+                document.body.classList.remove('light-theme');
+            }
         }
         
-        .quiz-navigation button {
-            width: auto;
-            padding: 12px 25px;
-            font-size: 1rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            background-color: var(--button-bg-color);
-            color: white;
-        }
-        .quiz-navigation button:hover {
-            background-color: var(--button-hover-bg-color);
-        }
-        .quiz-navigation button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('theme') || 'dark';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
         }
 
-        #score-display {
-            font-size: 1.2rem;
-            font-weight: bold;
+        // --- Functions (Navigation & Setup) ---
+        function showScreen(screenId) { screens.forEach(s => s.classList.toggle('active', s.id === screenId)); }
+        function populateTopics() {
+            physicsTopicsGrid.innerHTML = '';
+            PHYSICS_TOPICS.forEach(topic => {
+                const button = document.createElement('button');
+                button.className = 'selection-button';
+                button.textContent = topic.name;
+                button.addEventListener('click', () => startQuiz(topic));
+                physicsTopicsGrid.appendChild(button);
+            });
+        }
+        function startQuiz(topic) {
+            quizTitle.textContent = topic.name;
+            showScreen('quiz-screen');
+            resetQuizView();
+            fetchQuizData(GOOGLE_SHEET_ID, topic);
+        }
+        function resetQuizView() {
+            loadingContainer.style.display = 'block';
+            errorContainer.style.display = 'none';
+            errorContainer.textContent = '';
+            questionsDisplay.innerHTML = '';
+            navigationControls.style.display = 'none';
+            allQuestions = [];
+            currentQuestionIndex = 0;
         }
 
-        .final-score-container, .loading-container, .error-container {
-            text-align: center;
-            padding: 40px;
+        // --- Functions (Data Fetching & Parsing) ---
+        function fetchQuizData(sheetId, topic) {
+            const queryParam = topic.gid ? `gid=${topic.gid}` : `sheet=${encodeURIComponent(topic.sheetName)}`;
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&${queryParam}`;
+            
+            fetch(url)
+                .then(r => { if (!r.ok) throw new Error(`Network error: ${r.status}`); return r.text(); })
+                .then(csv => {
+                    allQuestions = parseCSVToQuestions(csv);
+                    if (allQuestions.length > 0) {
+                        navigationControls.style.display = 'flex';
+                        showQuestion(currentQuestionIndex);
+                    }
+                    loadingContainer.style.display = 'none';
+                })
+                .catch(err => {
+                    console.error('Data fetch/parse error:', err);
+                    loadingContainer.style.display = 'none';
+                    errorContainer.style.display = 'block';
+                    errorContainer.textContent = `Error loading questions. Please check sheet name/gid and sharing settings. Details: ${err.message}`;
+                });
         }
-        
-        .load
+        function parseCSVToQuestions(text) {
+            const rows = text.trim().split(/\r?\n/).map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(f => f.trim().replace(/^"|"$/g, '')));
+            if (rows.length < 2) { errorContainer.textContent = 'Sheet is empty.'; return []; }
+            const headers = rows[0].map(h => h.trim().toLowerCase());
+            const dataRows = rows.slice(1);
+            const questionIndex = headers.indexOf('question');
+            if (questionIndex === -1) { errorContainer.innerHTML = "<strong>Error:</strong> 'question' column not found."; return []; }
+            
+            return dataRows.map(row => {
+                const mainQuestionText = row[questionIndex];
+                if (!mainQuestionText) return null;
+                const subsets = [];
+                for (let i = 1; i <= 5; i++) {
+                    const subQHeader = i === 1 ? 'question a1' : `a${i}`;
+                    const ansHeader = `answer of a${i}`;
+                    const expHeader = `explanation of a${i}`;
+                    const subQIndex = headers.indexOf(subQHeader);
+                    const ansIndex = headers.indexOf(ansHeader);
+                    const expIndex = headers.indexOf(expHeader);
+                    if (subQIndex !== -1 && ansIndex !== -1) {
+                        const subQText = row[subQIndex];
+                        const correctAns = row[ansIndex];
+                        if (subQText && correctAns) {
+                            subsets.push({
+                                text: subQText,
+                                correctAnswer: correctAns,
+                                explanation: expIndex !== -1 ? row[expIndex] : ''
+                            });
+                        }
+                    }
+                }
+                return subsets.length > 0 ? { question: mainQuestionText, subsets } : null;
+            }).filter(Boolean);
+        }
+
+        // --- Functions (Quiz Rendering & Interaction) ---
+        function showQuestion(index) {
+            if (!allQuestions || allQuestions.length === 0) return;
+            const q = allQuestions[index];
+            
+            const allExplanations = [];
+            const subsetsHtml = q.subsets.map((subset, i) => {
+                if (subset.explanation) {
+                    allExplanations.push(`<div class="explanation-item"><p><strong>${String.fromCharCode(97 + i)})</strong> ${subset.explanation}</p></div>`);
+                }
+                return `
+                    <div class="subset-item" id="subset-${index}-${i}" data-answered="false">
+                        <div class="subset-q-container">
+                            <p class="subset-q-text"><strong>${String.fromCharCode(97 + i)})</strong> ${subset.text}</p>
+                            <div class="subset-options" data-subset-index="${i}">
+                                <input type="radio" id="q${index}s${i}t" name="q${index}s${i}" value="True"><label for="q${index}s${i}t">True</label>
+                                <input type="radio" id="q${index}s${i}f" name="q${index}s${i}" value="False"><label for="q${index}s${i}f">False</label>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            const explanationsContainerHtml = allExplanations.length > 0 ? `
+                <div class="all-explanations" id="explanations-${index}">
+                    <h3>Explanations</h3>
+                    ${allExplanations.join('')}
+                </div>
+            ` : '';
+
+            questionsDisplay.innerHTML = `
+                <div class="question-block" id="main-question-${index}">
+                    <div class="question-number">Question ${index + 1}</div>
+                    <p class="main-question-text">${q.question}</p>
+                    <div id="subsets-container">${subsetsHtml}</div>
+                    ${explanationsContainerHtml}
+                </div>`;
+            
+            updateNav(index);
+            attachSubsetListeners(index);
+        }
+
+        function attachSubsetListeners(questionIndex) {
+            const subsetsContainer = document.getElementById('subsets-container');
+            subsetsContainer.addEventListener('change', (e) => {
+                if (e.target.type === 'radio') {
+                    const subsetItem = e.target.closest('.subset-item');
+                    subsetItem.dataset.answered = "true";
+                    subsetItem.dataset.selected = e.target.value;
+
+                    const allAnswered = [...subsetsContainer.querySelectorAll('.subset-item')].every(item => item.dataset.answered === 'true');
+                    
+                    if (allAnswered) {
+                        evaluateAllAnswers(questionIndex);
+                    }
+                }
+            });
+        }
+
+        function evaluateAllAnswers(qIndex) {
+            allQuestions[qIndex].subsets.forEach((subset, sIndex) => {
+                const container = document.getElementById(`subset-${qIndex}-${sIndex}`);
+                const selectedValue = container.dataset.selected;
+                const isCorrect = selectedValue && (selectedValue.toLowerCase() === subset.correctAnswer.toLowerCase());
+                
+                container.classList.add(isCorrect ? 'correct' : 'incorrect');
+                container.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = true);
+            });
+            
+            const explanationsContainer = document.getElementById(`explanations-${qIndex}`);
+            if (explanationsContainer) {
+                explanationsContainer.classList.add('visible');
+            }
+        }
+
+        function updateNav(index) {
+            questionCounter.textContent = `Question ${index + 1} of ${allQuestions.length}`;
+            prevButton.disabled = index === 0;
+            nextButton.disabled = index === allQuestions.length - 1;
+        }
+
+        // --- Event Listeners (Initial Setup) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            setTheme(savedTheme);
+            populateTopics();
+            showScreen('home-screen');
+        });
+        physicsBtn.addEventListener('click', () => showScreen('physics-category-screen'));
+        backButtons.forEach(b => b.addEventListener('click', () => showScreen(b.dataset.target)));
+        themeToggleHome.addEventListener('click', toggleTheme);
+        prevButton.addEventListener('click', () => showQuestion(--currentQuestionIndex));
+        nextButton.addEventListener('click', () => showQuestion(++currentQuestionIndex));
+
+    </script>
+</body>
+</html>
