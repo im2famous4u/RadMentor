@@ -340,11 +340,11 @@
 
         // --- Configuration for in-image label placement (ADJUSTED FOR SINGLE LEFT STRIP) ---
         const IMAGE_MRI_DATA_WIDTH = 512; // The actual width of the central MRI data part of your 700px image
-        const BLACK_STRIP_WIDTH = 700 - IMAGE_MRI_DATA_WIDTH; // 188px
+        const BLACK_STRIP_WIDTH = 700 - IMAGE_MRI_DATA_WIDTH; // 188px (Width of the black strip on the left)
         const LABEL_OFFSET_FROM_MRI_EDGE = 15; // Pixels distance from MRI data edge to label's *closest edge*
 
         // Labels on the left black strip will align their RIGHT edge to this pixel coordinate
-        const LEFT_LABEL_ALIGN_RIGHT_EDGE_X = BLACK_STRIP_WIDTH - LABEL_OFFSET_FROM_MRI_EDGE; 
+        const LEFT_LABEL_ALIGN_RIGHT_EDGE_X_PX = BLACK_STRIP_WIDTH - LABEL_OFFSET_FROM_MRI_EDGE; 
 
         const LABEL_VERTICAL_SPACING = 15; // Vertical spacing between stacked labels in pixels
 
@@ -438,7 +438,7 @@
                                     const sliceZ = cp.position[2]; 
                                     const imageSliceNumber = Math.round(sliceZ); 
 
-                                    // X and Y are in original imageDimensionMM space (e.g., 0-512mm)
+                                    // X and Y are in original imageDimensionMM space (0-512mm for MRI data)
                                     // Store as percentage of the *MRI data itself* (512x512 square)
                                     const pointX_percent_mri_data = (cp.position[0] / imageDimensionMM) * 100;
                                     const pointY_percent_mri_data = (cp.position[1] / imageDimensionMM) * 100;
@@ -504,16 +504,14 @@
                 const imageWrapperHeight = brainSliceImage.offsetHeight;
                 
                 // Calculate the pixel offset of the *actual MRI data* within the 700px image
-                const mriDataStart_X_px = BLACK_STRIP_WIDTH; // MRI data starts at this X pixel
-                const mriDataEnd_X_px = BLACK_STRIP_WIDTH + IMAGE_MRI_DATA_WIDTH; // MRI data ends at this X pixel
-
+                const mriDataStart_X_px = BLACK_STRIP_WIDTH; 
 
                 if (annotationsLoaded) {
                     // Sort annotations by their Y-coordinate for consistent stacking
                     const annotationsForCurrentSlice = allAnnotations.filter(ann => ann.slice === currentSlice)
                                                                      .sort((a, b) => a.pointY - b.pointY);
 
-                    let placedLabelsLeftColumn = []; // All labels go to the left column now
+                    let placedLabelsColumn = []; // Stores {top, bottom, element} for stacking
 
                     annotationsForCurrentSlice.forEach((annotation, index) => {
                         // Convert point coordinates (which are 0-100% of 512px MRI data) 
@@ -531,40 +529,69 @@
 
                         // --- Calculate Label Position (including stacking) ---
                         const labelHeight = labelDiv.offsetHeight; // Get height after appending
+                        const labelWidth = labelDiv.offsetWidth; // Get width after appending
 
                         // Label's center X. It's aligned to the right edge of the black strip.
                         // Since transform(-50%, -50%) makes 'left' the center, calculate:
-                        const labelTargetX_px = LEFT_LABEL_ALIGN_RIGHT_EDGE_X - (labelDiv.offsetWidth / 2); 
+                        // This positions the label so its right edge is at LEFT_LABEL_ALIGN_RIGHT_EDGE_X_PX
+                        const labelTargetX_px = LEFT_LABEL_ALIGN_RIGHT_EDGE_X_PX - (labelWidth / 2); 
                         
                         const lineX2_px_at_mri_edge = mriDataStart_X_px; // Line ends at the left edge of MRI data
 
                         // Initial desired Y (center of label) based on point's Y
                         let desiredLabelCenterY_px = pY_px_image; 
 
-                        // Check for overlaps within the left column
-                        for (let i = 0; i < placedLabelsLeftColumn.length; i++) {
-                            const existingLabel = placedLabelsLeftColumn[i];
-                            // If current label's potential top collides with an existing label's bottom
-                            if ( (desiredLabelCenterY_px - (labelHeight / 2)) < (existingLabel.bottom + LABEL_VERTICAL_SPACING) ) {
-                                // Overlap detected. Adjust current label's Y to be below the existing one.
-                                desiredLabelCenterY_px = existingLabel.bottom + LABEL_VERTICAL_SPACING + (labelHeight / 2);
+                        // Determine the current vertical bounds. We need to check both up and down from desired Y.
+                        let bestY = desiredLabelCenterY_px;
+                        let foundFit = false;
+
+                        // Try placing at desired Y first (closest to original point)
+                        if (!checkOverlap(desiredLabelCenterY_px, labelHeight, placedLabelsColumn)) {
+                            foundFit = true;
+                        } else {
+                            // If overlaps, try moving up or down iteratively
+                            let offset = LABEL_VERTICAL_SPACING;
+                            while (!foundFit && (desiredLabelCenterY_px - offset >= 0 || desiredLabelCenterY_px + offset <= imageWrapperHeight)) {
+                                // Try moving up
+                                if (desiredLabelCenterY_px - offset >= (labelHeight / 2) && 
+                                    !checkOverlap(desiredLabelCenterY_px - offset, labelHeight, placedLabelsColumn)) {
+                                    bestY = desiredLabelCenterY_px - offset;
+                                    foundFit = true;
+                                    break;
+                                }
+                                // Try moving down
+                                if (desiredLabelCenterY_px + offset <= imageWrapperHeight - (labelHeight / 2) && 
+                                    !checkOverlap(desiredLabelCenterY_px + offset, labelHeight, placedLabelsColumn)) {
+                                    bestY = desiredLabelCenterY_px + offset;
+                                    foundFit = true;
+                                    break;
+                                }
+                                offset += LABEL_VERTICAL_SPACING; // Increase offset for next iteration
                             }
                         }
+                        
+                        // Fallback if no ideal spot found (shouldn't happen with enough space/small labels)
+                        if (!foundFit) {
+                           // If still no fit after extensive search, just stack downwards from last.
+                           // This is a failsafe for very dense labels.
+                           if (placedLabelsColumn.length > 0) {
+                               bestY = placedLabelsColumn[placedLabelsColumn.length - 1].bottom + LABEL_VERTICAL_SPACING + (labelHeight / 2);
+                           }
+                        }
 
-                        // Ensure label doesn't go off the top/bottom edges of the image wrapper
-                        desiredLabelCenterY_px = Math.max(desiredLabelCenterY_px, (labelHeight / 2)); 
-                        desiredLabelCenterY_px = Math.min(desiredLabelCenterY_px, imageWrapperHeight - (labelHeight / 2));
-
+                        // Ensure label is within overall image bounds after all adjustments
+                        bestY = Math.max(bestY, (labelHeight / 2)); 
+                        bestY = Math.min(bestY, imageWrapperHeight - (labelHeight / 2));
 
                         // Apply the final positions (these are for the label's CENTER due to transform: translate(-50%,-50%))
                         labelDiv.style.left = `${labelTargetX_px}px`; 
-                        labelDiv.style.top = `${desiredLabelCenterY_px}px`; 
+                        labelDiv.style.top = `${bestY}px`; 
                         labelDiv.style.pointerEvents = 'auto'; // Ensure hover works on labels
 
                         // Store this label's final actual (top, bottom) positions for future overlap checks
-                        placedLabelsLeftColumn.push({
-                            top: desiredLabelCenterY_px - (labelHeight / 2), // Actual top edge of the label
-                            bottom: desiredLabelCenterY_px + (labelHeight / 2), // Actual bottom edge of the label
+                        placedLabelsColumn.push({
+                            top: bestY - (labelHeight / 2), // Actual top edge of the label
+                            bottom: bestY + (labelHeight / 2), // Actual bottom edge of the label
                             element: labelDiv 
                         });
 
@@ -577,7 +604,7 @@
                         
                         // Line's X-endpoint is at the edge of the MRI data (transition to black strip)
                         line.setAttribute('x2', lineX2_px_at_mri_edge); 
-                        line.setAttribute('y2', desiredLabelCenterY_px); // Line ends at label's vertical center
+                        line.setAttribute('y2', bestY); // Line ends at label's vertical center (adjusted Y)
 
                         line.id = `line-${currentSlice}-${index}`;
                         annotationSvgOverlay.appendChild(line);
@@ -608,6 +635,21 @@
                     console.warn("Annotations not yet loaded or failed to load. Skipping rendering of annotations for this slice.");
                 }
             };
+
+            // Helper function to check if a potential label position overlaps with any already placed labels
+            function checkOverlap(testCenterY, testHeight, placedLabelsArr) {
+                const testTop = testCenterY - (testHeight / 2);
+                const testBottom = testCenterY + (testHeight / 2);
+                for (let i = 0; i < placedLabelsArr.length; i++) {
+                    const existing = placedLabelsArr[i];
+                    // Overlap if (testTop < existing.bottom AND testBottom > existing.top)
+                    if (testTop < existing.bottom && testBottom > existing.top) {
+                        return true; // Overlaps
+                    }
+                }
+                return false; // No overlap
+            }
+
 
             // If the image is already loaded (from cache or preloading), trigger the onload manually
             if (brainSliceImage.complete) {
