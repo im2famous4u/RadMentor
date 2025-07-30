@@ -171,7 +171,7 @@
             r: 6; /* Make radius slightly larger on hover */
         }
 
-        /* Annotation Label Styling (HTML Divs - MODIFIED) */
+        /* Annotation Label Styling (HTML Divs) */
         .annotation-label {
             position: absolute; /* Positioned absolutely within its parent panel */
             background-color: var(--annotation-bg-color);
@@ -566,10 +566,6 @@
             leftAnnotationPanel.innerHTML = ''; 
             rightAnnotationPanel.innerHTML = '';
 
-            // Reset for new slice's stacking logic. Store {top, bottom, height} for each placed label.
-            let placedLabelsLeft = [];
-            let placedLabelsRight = [];
-
             // This ensures annotations are drawn only after the image is fully loaded and sized
             brainSliceImage.onload = function() {
                 // Ensure this onload only fires once per image load
@@ -579,141 +575,157 @@
                 const imageWidth = brainSliceImage.offsetWidth;
                 const imageHeight = brainSliceImage.offsetHeight;
                 
-                // Get the *current* bounding client rect for the image wrapper and panels
-                // These are viewport-relative coordinates needed for connecting lines correctly.
+                // Get the *current* bounding client rect for the image wrapper.
+                // This is needed for connecting lines to labels in external panels.
                 const imageWrapperRect = brainSliceImage.parentElement.getBoundingClientRect();
-                // We no longer need panelRects directly, as we use labelDiv.getBoundingClientRect() later.
 
                 if (annotationsLoaded) {
                     // Sort annotations by their Y-coordinate for consistent stacking
                     const annotationsForCurrentSlice = allAnnotations.filter(ann => ann.slice === currentSlice)
                                                                      .sort((a, b) => a.pointY - b.pointY);
 
-                    annotationsForCurrentSlice.forEach((annotation, index) => {
-                        // Point coordinates on the image, in pixels, relative to image-wrapper's top-left (0,0)
-                        const pX_px_image = (annotation.pointX / 100) * imageWidth; 
-                        const pY_px_image = (annotation.pointY / 100) * imageHeight; 
+                    // --- Collect labels for both panels first, before appending ---
+                    let labelsToPlaceLeft = [];
+                    let labelsToPlaceRight = [];
 
-                        // --- Create HTML Label div ---
-                        const labelDiv = document.createElement('div');
-                        labelDiv.classList.add('annotation-label');
-                        labelDiv.textContent = annotation.text;
-                        labelDiv.id = `label-${currentSlice}-${index}`;
-                        
-                        let targetPanel;
-                        let placedLabelsArray; // Which stacking array to use (left or right panel)
-                        let isLeftPanel;
+                    annotationsForCurrentSlice.forEach((annotation, index) => {
+                        const pX_px_image = (annotation.pointX / 100) * imageWidth; 
 
                         // Determine which side panel the label should go into
                         if (pX_px_image < imageWidth / 2) { // If point is on the left half of the image
-                            targetPanel = leftAnnotationPanel;
-                            placedLabelsArray = placedLabelsLeft;
-                            isLeftPanel = true;
+                            labelsToPlaceLeft.push({ annotation, index, pX_px_image });
                         } else { // If point is on the right half of the image
-                            targetPanel = rightAnnotationPanel;
-                            placedLabelsArray = placedLabelsRight;
-                            isLeftPanel = false;
+                            labelsToPlaceRight.push({ annotation, index, pX_px_image });
                         }
-                        
-                        // Append to the correct panel temporarily to measure its actual dimensions
-                        targetPanel.appendChild(labelDiv); 
-                        const labelHeight = labelDiv.offsetHeight;
-
-                        // --- Vertical Stacking Logic within the panel ---
-                        // Calculate desired Y position within the panel, proportional to point's Y on image
-                        // This desired Y is the center of the label relative to panel's top (0)
-                        let desiredLabelCenterY_panel = (annotation.pointY / 100) * targetPanel.offsetHeight; 
-
-                        // Ensure label doesn't go off the top edge of the panel (consider padding)
-                        desiredLabelCenterY_panel = Math.max(desiredLabelCenterY_panel, (labelHeight / 2) + LABEL_PANEL_PADDING);
-
-                        // Check for overlaps with already placed labels in this specific panel
-                        for (let i = 0; i < placedLabelsArray.length; i++) {
-                            const existingLabel = placedLabelsArray[i];
-                            // If current label's potential top is above or overlaps existing label's bottom
-                            if ( (desiredLabelCenterY_panel - (labelHeight / 2)) < (existingLabel.bottom + LABEL_SPACING) ) {
-                                // Overlap detected. Adjust current label's Y to be below the existing one.
-                                desiredLabelCenterY_panel = existingLabel.bottom + LABEL_SPACING + (labelHeight / 2);
-                            }
-                        }
-
-                        // Ensure label doesn't go off the bottom edge of the panel (consider padding)
-                        desiredLabelCenterY_panel = Math.min(desiredLabelCenterY_panel, targetPanel.offsetHeight - (labelHeight / 2) - LABEL_PANEL_PADDING);
-
-
-                        // Apply the final vertical position (relative to panel's top-left)
-                        // This 'top' style determines the vertical center of the label
-                        labelDiv.style.top = `${desiredLabelCenterY_panel}px`;
-                        
-                        // Horizontal positioning within the panel
-                        if (isLeftPanel) {
-                            labelDiv.style.left = `${LABEL_PANEL_PADDING}px`; 
-                        } else {
-                            labelDiv.style.right = `${LABEL_PANEL_PADDING}px`; 
-                        }
-
-                        // Store this label's final actual (top, bottom) positions for future overlap checks
-                        placedLabelsArray.push({
-                            top: desiredLabelCenterY_panel - (labelHeight / 2), // Actual top edge of the label
-                            bottom: desiredLabelCenterY_panel + (labelHeight / 2), // Actual bottom edge of the label
-                            height: labelHeight,
-                            element: labelDiv 
-                        });
-
-                        // --- Create SVG Line (slanting) ---
-                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                        
-                        // Line starts at the point (relative to image-wrapper's top-left)
-                        line.setAttribute('x1', pX_px_image);
-                        line.setAttribute('y1', pY_px_image);
-                        
-                        // Line's X-endpoint at the image edge
-                        let lineX2_px;
-                        if (isLeftPanel) {
-                            lineX2_px = 0; // Left edge of image-wrapper
-                        } else {
-                            lineX2_px = imageWidth; // Right edge of image-wrapper
-                        }
-
-                        // Line's Y-endpoint: The label's vertical center, converted to image-wrapper's coordinates.
-                        // Get label's position relative to viewport
-                        const labelRect_actual = labelDiv.getBoundingClientRect(); 
-                        const labelCenterY_viewport = labelRect_actual.top + (labelRect_actual.height / 2);
-
-                        // Convert this viewport Y to be relative to the image-wrapper's top (which is SVG's 0 Y)
-                        const labelCenterY_image_coords = labelCenterY_viewport - imageWrapperRect.top;
-
-                        line.setAttribute('x2', lineX2_px); 
-                        line.setAttribute('y2', labelCenterY_image_coords); 
-
-                        line.id = `line-${currentSlice}-${index}`;
-                        annotationSvgOverlay.appendChild(line);
-
-                        // Create SVG Circle for the point (always visible)
-                        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        circle.setAttribute('cx', pX_px_image);
-                        circle.setAttribute('cy', pY_px_image);
-                        circle.setAttribute('r', 4); 
-                        circle.classList.add('show'); 
-                        circle.id = `circle-${currentSlice}-${index}`; 
-                        annotationSvgOverlay.appendChild(circle);
-
-                        // --- Add Hover Interactivity ---
-                        // IMPORTANT: Add 'pointer-events: auto' to labels for hover to work
-                        labelDiv.style.pointerEvents = 'auto'; 
-
-                        labelDiv.addEventListener('mouseover', () => {
-                            document.getElementById(`line-${currentSlice}-${index}`)?.classList.add('visible-on-hover');
-                            document.getElementById(`circle-${currentSlice}-${index}`)?.classList.add('visible-on-hover-circle');
-                        });
-                        labelDiv.addEventListener('mouseout', () => {
-                            document.getElementById(`line-${currentSlice}-${index}`)?.classList.remove('visible-on-hover');
-                            document.getElementById(`circle-${currentSlice}-${index}`)?.classList.remove('visible-on-hover-circle');
-                        });
-                        // --- End Hover Interactivity ---
-
-                        setTimeout(() => labelDiv.classList.add('show'), 10);
                     });
+
+                    // --- Function to place and stack labels in a panel ---
+                    // This function now returns the list of placed labels with their final calculated positions.
+                    const placeAndStackLabels = (labelsToProcess, targetPanel, isLeftPanel) => {
+                        let placedLabelsArray = []; // Local array for this panel's stacking
+                        
+                        // First, append all labels to measure them and find their natural height
+                        labelsToProcess.forEach(({ annotation, index }) => {
+                            const labelDiv = document.createElement('div');
+                            labelDiv.classList.add('annotation-label');
+                            labelDiv.textContent = annotation.text;
+                            labelDiv.id = `label-${currentSlice}-${index}`;
+                            targetPanel.appendChild(labelDiv);
+                            
+                            // Temporarily set initial Y (will be updated by stacking logic)
+                            // This ensures offsetHeight is calculated correctly for relative positioning
+                            labelDiv.style.top = '0px'; 
+                            labelDiv.style.left = isLeftPanel ? `${LABEL_PANEL_PADDING}px` : 'auto';
+                            labelDiv.style.right = isLeftPanel ? 'auto' : `${LABEL_PANEL_PADDING}px`;
+
+                            placedLabelsArray.push({
+                                annotation,
+                                index,
+                                pX_px_image: (annotation.pointX / 100) * imageWidth, // Need this inside loop too
+                                pY_px_image: (annotation.pointY / 100) * imageHeight, // Need this inside loop too
+                                labelDiv: labelDiv,
+                                // Placeholder for final top/bottom, to be calculated
+                                top: 0, 
+                                bottom: 0,
+                                height: labelDiv.offsetHeight
+                            });
+                        });
+
+                        // Now, iterate through the appended labels and apply stacking logic
+                        placedLabelsArray.forEach(labelItem => {
+                            const { annotation, index, pX_px_image, pY_px_image, labelDiv, height } = labelItem;
+
+                            // Calculate desired Y position within the panel, proportional to point's Y on image
+                            let desiredLabelCenterY_panel = (annotation.pointY / 100) * targetPanel.offsetHeight; 
+
+                            // Ensure label doesn't go off the top edge of the panel (consider padding)
+                            desiredLabelCenterY_panel = Math.max(desiredLabelCenterY_panel, (height / 2) + LABEL_PANEL_PADDING);
+
+                            // Check for overlaps with already placed labels in this specific panel
+                            for (let i = 0; i < placedLabelsArray.indexOf(labelItem); i++) { // Only check against labels already processed
+                                const existingLabel = placedLabelsArray[i];
+                                if ( (desiredLabelCenterY_panel - (height / 2)) < (existingLabel.bottom + LABEL_SPACING) ) {
+                                    desiredLabelCenterY_panel = existingLabel.bottom + LABEL_SPACING + (height / 2);
+                                }
+                            }
+
+                            // Ensure label doesn't go off the bottom edge of the panel (consider padding)
+                            desiredLabelCenterY_panel = Math.min(desiredLabelCenterY_panel, targetPanel.offsetHeight - (height / 2) - LABEL_PANEL_PADDING);
+
+                            // Apply the final vertical position (relative to panel's top-left)
+                            labelDiv.style.top = `${desiredLabelCenterY_panel}px`;
+                            
+                            // Update stored position
+                            labelItem.top = desiredLabelCenterY_panel - (height / 2);
+                            labelItem.bottom = desiredLabelCenterY_panel + (height / 2);
+
+                            // --- Create SVG Line (slanting) ---
+                            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                            
+                            // Line starts at the point on the image (relative to image-wrapper's top-left)
+                            line.setAttribute('x1', pX_px_image);
+                            line.setAttribute('y1', pY_px_image);
+                            
+                            // Line's X-endpoint at the image edge
+                            let lineX2_px;
+                            if (isLeftPanel) {
+                                lineX2_px = 0; // Left edge of image-wrapper
+                            } else {
+                                lineX2_px = imageWidth; // Right edge of image-wrapper
+                            }
+
+                            // Line's Y-endpoint: The label's vertical center, converted to image-wrapper's coordinates.
+                            const labelRect_actual = labelDiv.getBoundingClientRect(); 
+                            const labelCenterY_viewport = labelRect_actual.top + (labelRect_actual.height / 2);
+
+                            // Convert this viewport Y to be relative to the image-wrapper's top (which is SVG's 0 Y)
+                            const labelCenterY_image_coords = labelCenterY_viewport - imageWrapperRect.top;
+
+                            line.setAttribute('x2', lineX2_px); 
+                            line.setAttribute('y2', labelCenterY_image_coords); 
+
+                            line.id = `line-${currentSlice}-${index}`;
+                            annotationSvgOverlay.appendChild(line);
+
+                            // Create SVG Circle for the point (always visible)
+                            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                            circle.setAttribute('cx', pX_px_image);
+                            circle.setAttribute('cy', pY_px_image);
+                            circle.setAttribute('r', 4); 
+                            circle.classList.add('show'); 
+                            circle.id = `circle-${currentSlice}-${index}`; 
+                            annotationSvgOverlay.appendChild(circle);
+
+                            // --- Add Hover Interactivity ---
+                            labelDiv.style.pointerEvents = 'auto'; // Ensure hover works on labels
+
+                            labelDiv.addEventListener('mouseover', () => {
+                                document.getElementById(`line-${currentSlice}-${index}`)?.classList.add('visible-on-hover');
+                                document.getElementById(`circle-${currentSlice}-${index}`)?.classList.add('visible-on-hover-circle');
+                            });
+                            labelDiv.addEventListener('mouseout', () => {
+                                document.getElementById(`line-${currentSlice}-${index}`)?.classList.remove('visible-on-hover');
+                                document.getElementById(`circle-${currentSlice}-${index}`)?.classList.remove('visible-on-hover-circle');
+                            });
+                        });
+                        return placedLabelsArray; // Return the list of placed labels
+                    }; // End of placeAndStackLabels function
+
+                    // Execute for left panel
+                    placeAndStackLabels(labelsToPlaceLeft, leftAnnotationPanel, true);
+                    // Execute for right panel
+                    placeAndStackLabels(labelsToPlaceRight, rightAnnotationPanel, false);
+                    
+                    // Add 'show' class to all HTML labels after a small delay to trigger CSS transition
+                    // This is done after all labels are placed to ensure consistent animation.
+                    // Loop through all annotations, regardless of panel.
+                    annotationsForCurrentSlice.forEach((annotation, index) => {
+                         const labelElement = document.getElementById(`label-${currentSlice}-${index}`);
+                         if(labelElement) {
+                             setTimeout(() => labelElement.classList.add('show'), 10);
+                         }
+                    });
+
                 } else {
                     console.warn("Annotations not yet loaded or failed to load. Skipping rendering of annotations for this slice.");
                 }
