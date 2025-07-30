@@ -82,11 +82,11 @@
             text-align: center;
         }
 
-        /* Image and Overlay Container (UPDATED) */
+        /* Image and Overlay Container (UPDATED for 700x512 images) */
         .image-wrapper {
             position: relative;
-            width: 700px; /* NEW: Image width matches your edited images */
-            height: 512px; /* NEW: Image height matches your edited images */
+            width: 700px; /* IMPORTANT: Set this to your image's actual pixel width */
+            height: 512px; /* IMPORTANT: Set this to your image's actual pixel height */
             background-color: #000; /* Black background for imaging studies */
             border-radius: 8px;
             overflow: hidden; /* Hide anything outside the wrapper */
@@ -138,7 +138,7 @@
             r: 6; /* Make radius slightly larger on hover */
         }
 
-        /* Annotation Label Styling (HTML Divs - UPDATED) */
+        /* Annotation Label Styling (HTML Divs) */
         .annotation-label {
             position: absolute; /* Positioned absolutely within image-wrapper */
             background-color: var(--annotation-bg-color);
@@ -339,15 +339,9 @@
         const preloadedImages = []; 
 
         // --- Configuration for in-image label placement ---
-        const IMAGE_DATA_CENTER_X = 350; // Center X of the 700px image (700/2 = 350)
-        const IMAGE_DATA_WIDTH = 512; // The actual width of the MRI data part of your 700px image (512px central)
-
-        // Labels on the left black strip will align their RIGHT edge to this pixel coordinate
-        const LEFT_LABEL_ALIGN_X = (700 - IMAGE_DATA_WIDTH) / 2 - 10; // Left black strip right edge - offset
-        // Labels on the right black strip will align their LEFT edge to this pixel coordinate
-        const RIGHT_LABEL_ALIGN_X = (700 - IMAGE_DATA_WIDTH) / 2 + IMAGE_DATA_WIDTH + 10; // Right black strip left edge + offset
-
-        const LABEL_VERTICAL_SPACING = 15; // Vertical spacing between stacked labels in pixels (increased for more gap)
+        const IMAGE_MRI_DATA_WIDTH = 512; // The actual width of the central MRI data part of your 700px image
+        const LABEL_OFFSET_FROM_MRI_EDGE = 15; // Pixels distance from MRI data edge to label's *edge*
+        const LABEL_VERTICAL_SPACING = 15; // Vertical spacing between stacked labels in pixels
 
         // --- THEME LOGIC (standard) ---
         function setTheme(theme) {
@@ -467,6 +461,7 @@
             } finally {
                 loadingOverlay.classList.add('hidden'); 
             }
+            // Initial slice update after annotations load
             updateSlice(); 
         }
 
@@ -485,41 +480,40 @@
             const currentSlice = parseInt(sliceSlider.value); 
             const imageUrl = `${imageFolderPath}${imageBaseName}${currentSlice}${imageExtension}`; 
             
-            if (brainSliceImage.src !== new URL(imageUrl, window.location.href).href) {
-                brainSliceImage.src = imageUrl;
-            }
+            // Set the image src. This will trigger onload if image changes.
+            brainSliceImage.src = imageUrl;
 
             sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
 
-            annotationOverlay.innerHTML = ''; // Clear previous labels
-            annotationSvgOverlay.innerHTML = ''; // Clear previous SVG elements
+            // Clear previous labels and SVG elements
+            annotationOverlay.innerHTML = ''; 
+            annotationSvgOverlay.innerHTML = ''; 
 
             // This ensures annotations are drawn only after the image is fully loaded and sized
             brainSliceImage.onload = function() {
                 // Ensure this onload only fires once per image load
                 this.onload = null; 
 
-                // Get dynamic dimensions of the image wrapper (700x512 from CSS)
+                // Get dynamic dimensions of the image wrapper (which is now 700x512 from CSS)
                 const imageWrapperWidth = brainSliceImage.offsetWidth;
                 const imageWrapperHeight = brainSliceImage.offsetHeight;
                 
                 // Calculate the pixel offset of the *actual MRI data* within the 700px image
                 // Assuming black strips are added symmetrically to the 512px MRI data (700-512 = 188 / 2 = 94px strip on each side)
-                const blackStripLeftOffset = (imageWrapperWidth - IMAGE_DATA_WIDTH) / 2;
-                const blackStripRightOffset = imageWrapperWidth - blackStripLeftOffset;
-
+                const blackStripLeftOffset = (imageWrapperWidth - IMAGE_MRI_DATA_WIDTH) / 2;
+                const blackStripRightOffset = imageWrapperWidth - blackStripLeftOffset; // Or simply imageWrapperWidth - blackStripLeftOffset
 
                 if (annotationsLoaded) {
                     // Sort annotations by their Y-coordinate for consistent stacking
                     const annotationsForCurrentSlice = allAnnotations.filter(ann => ann.slice === currentSlice)
                                                                      .sort((a, b) => a.pointY - b.pointY);
 
-                    let placedLabelsLeft = []; // Store {top, bottom, element} for left side stacking
-                    let placedLabelsRight = []; // Store {top, bottom, element} for right side stacking
+                    let placedLabelsLeftColumn = []; // Stores {top, bottom, element} for left column stacking
+                    let placedLabelsRightColumn = []; // Stores {top, bottom, element} for right column stacking
 
                     annotationsForCurrentSlice.forEach((annotation, index) => {
                         // Convert point coordinates (which are 0-100% of 512px MRI data) to pixels relative to the 700x512 image wrapper
-                        const pX_px_image = blackStripLeftOffset + (annotation.pointX / 100) * IMAGE_DATA_WIDTH; 
+                        const pX_px_image = blackStripLeftOffset + (annotation.pointX / 100) * IMAGE_MRI_DATA_WIDTH; 
                         const pY_px_image = (annotation.pointY / 100) * imageWrapperHeight; // Y is 0-512 for both MRI and full image
 
                         // --- Create HTML Label div ---
@@ -528,40 +522,39 @@
                         labelDiv.textContent = annotation.text;
                         labelDiv.id = `label-${currentSlice}-${index}`;
                         
-                        annotationOverlay.appendChild(labelDiv); // Append to overlay inside image-wrapper
+                        annotationOverlay.appendChild(labelDiv); // Labels are appended directly to annotationOverlay
 
                         // --- Calculate Label Position (including stacking) ---
                         const labelHeight = labelDiv.offsetHeight; // Get height after appending
 
-                        let labelTargetX_px; // The X coordinate where the label's center will be
-                        let lineX2_px;        // The X coordinate where the line ends (at the MRI data edge)
+                        let labelTargetX_px; // The X coordinate where the label's CENTER will be
+                        let lineX2_px_at_mri_edge; // The X coordinate where the line ends (at the MRI data edge)
                         let isLeftColumn;     // To track which column it's in for stacking
 
-                        if (pX_px_image < IMAGE_DATA_CENTER_X) { // Point is on the left half of the *overall image* (which includes black strip)
-                            // This label should go in the LEFT black strip
+                        // Determine if the label should go on the left or right black strip based on original point X
+                        if (pX_px_image < imageWrapperWidth / 2) { // Point is on the left half of the overall 700px image
                             isLeftColumn = true;
-                            labelTargetX_px = LEFT_LABEL_ALIGN_X; // Align to right side of left black strip
-                            lineX2_px = blackStripLeftOffset;     // Line ends at the left edge of MRI data
-                        } else {
-                            // This label should go in the RIGHT black strip
+                            labelTargetX_px = blackStripLeftOffset / 2; // Center of the left black strip
+                            lineX2_px_at_mri_edge = blackStripLeftOffset; // Line ends at the left edge of MRI data
+                        } else { // Point is on the right half of the overall 700px image
                             isLeftColumn = false;
-                            labelTargetX_px = RIGHT_LABEL_ALIGN_X; // Align to left side of right black strip
-                            lineX2_px = blackStripRightOffset;    // Line ends at the right edge of MRI data
+                            labelTargetX_px = blackStripRightOffset + (imageWrapperWidth - blackStripRightOffset) / 2; // Center of the right black strip
+                            lineX2_px_at_mri_edge = blackStripRightOffset; // Line ends at the right edge of MRI data
                         }
 
                         // Initial desired Y (center of label) based on point's Y
                         let desiredLabelCenterY_px = pY_px_image; 
 
-                        // Determine which stacking array to use
-                        let currentPlacedLabels = isLeftColumn ? placedLabelsLeft : placedLabelsRight;
+                        // Determine which stacking array to use for this label's column
+                        let currentPlacedLabelsColumn = isLeftColumn ? placedLabelsLeftColumn : placedLabelsRightColumn;
 
                         // Ensure label doesn't go off the top edge (considering label height)
-                        desiredLabelCenterY_px = Math.max(desiredLabelCenterY_px, (labelHeight / 2));
+                        desiredLabelCenterY_px = Math.max(desiredLabelCenterY_px, (labelHeight / 2)); 
 
                         // Check for overlaps within the specific left/right column
-                        for (let i = 0; i < currentPlacedLabels.length; i++) {
-                            const existingLabel = currentPlacedLabels[i];
-                            // Check if the current label's potential top collides with an existing label's bottom
+                        for (let i = 0; i < currentPlacedLabelsColumn.length; i++) {
+                            const existingLabel = currentPlacedLabelsColumn[i];
+                            // If current label's potential top collides with an existing label's bottom
                             if ( (desiredLabelCenterY_px - (labelHeight / 2)) < (existingLabel.bottom + LABEL_VERTICAL_SPACING) ) {
                                 // Overlap detected. Adjust current label's Y to be below the existing one.
                                 desiredLabelCenterY_px = existingLabel.bottom + LABEL_VERTICAL_SPACING + (labelHeight / 2);
@@ -578,21 +571,21 @@
                         labelDiv.style.pointerEvents = 'auto'; // Ensure hover works on labels
 
                         // Store this label's final actual (top, bottom) positions for future overlap checks
-                        currentPlacedLabels.push({
+                        currentPlacedLabelsColumn.push({
                             top: desiredLabelCenterY_px - (labelHeight / 2), // Actual top edge of the label
                             bottom: desiredLabelCenterY_px + (labelHeight / 2), // Actual bottom edge of the label
                             element: labelDiv 
                         });
 
-                        // --- Create SVG Line (slanting) ---
+                        // --- Create SVG Line (slanted) ---
                         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                         
-                        // Line starts at the point on the image data
+                        // Line starts at the point on the MRI data
                         line.setAttribute('x1', pX_px_image);
                         line.setAttribute('y1', pY_px_image);
                         
                         // Line's X-endpoint is at the edge of the MRI data (transition to black strip)
-                        line.setAttribute('x2', lineX2_px); 
+                        line.setAttribute('x2', lineX2_px_at_mri_edge); 
                         line.setAttribute('y2', desiredLabelCenterY_px); // Line ends at label's vertical center
 
                         line.id = `line-${currentSlice}-${index}`;
