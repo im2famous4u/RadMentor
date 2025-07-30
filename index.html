@@ -6,151 +6,105 @@
     <title>Radiology MCQ Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet"/>
     <style>
-        /* General Body Styles */
+        /* Your existing CSS (no changes here for now) */
         body {
             font-family: 'Rubik', sans-serif;
             margin: 0;
-            overflow-x: hidden; /* Prevent horizontal scrollbar from sidebar */
-            background-color: #004d5e; /* Default dark theme background */
-            color: #ffffff; /* Default dark theme text color */
-            transition: background-color 0.3s ease, color 0.3s ease; /* Smooth theme transition */
+            background-color: #004d5e;
+            color: #ffffff;
         }
 
-        /* Light Theme Variables - Adjusted to resemble PrepLadder */
-        body.light-theme {
-            --bg-color: #e3f2fd; /* Light blue background */
-            --container-bg-color: #ffffff; /* White containers */
-            --text-color: #212121; /* Dark grey/black text */
-            --input-bg-color: #f5f5f5; /* Light grey input background */
-            --button-bg-color: #1e88e5; /* Blue button */
-            --button-hover-bg-color: #1565c0; /* Darker blue button hover */
-            --toggle-color: #1e88e5; /* Blue toggle */
-            --sidebar-bg-color: #ffffff; /* White sidebar */
-            --sidebar-item-border: 1px solid #e0e0e0; /* Light grey sidebar border */
-            --sidebar-item-hover-bg: #bbdefb; /* Light blue sidebar hover */
-            --topbar-bg-color: #e3f2fd; /* Light blue topbar */
-            --topbar-text-color: #212121; /* Dark text on topbar */
-            --profile-field-bg: #f8f8f8; /* Very light grey for profile fields */
-        }
-
-        /* Dark Theme Variables */
-        body:not(.light-theme) { /* Default to dark if light-theme class is not present */
-            --bg-color: #004d5e;
-            --container-bg-color: #043f4e;
-            --text-color: #ffffff;
-            --input-bg-color: #e0f2f1;
-            --button-bg-color: #00bcd4;
-            --button-hover-bg-color: #0097a7;
-            --toggle-color: #81d4fa;
-            --sidebar-bg-color: #043f4e;
-            --sidebar-item-border: 1px solid #095a71;
-            --sidebar-item-hover-bg: #065a73;
-            --topbar-bg-color: #002b36;
-            --topbar-text-color: #ffffff;
-            --profile-field-bg: #095a71;
-        }
-
-        /* Apply theme variables */
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-        }
         .container {
-            background-color: var(--container-bg-color);
-            color: var(--text-color); /* Ensure container text also changes */
-        }
-        h1 {
-            color: var(--text-color);
-        }
-        input, select {
-            background-color: var(--input-bg-color);
-            color: #000; /* Input text usually black for readability */
-            border: 1px solid #ced4da; /* Add a subtle border for light theme */
-        }
-        button {
-            background: var(--button-bg-color);
-            color: #fff;
-        }
-        button:hover {
-            background: var(--button-hover-bg-color);
-        }
-        .toggle {
-            color: var(--toggle-color);
-        }
-        .toggle:hover {
-            color: #ffffff; /* Ensures contrast on hover regardless of theme */
-        }
-        .topbar {
-            background-color: var(--topbar-bg-color);
-            color: var(--topbar-text-color);
-        }
-        .sidebar {
-            background-color: var(--sidebar-bg-color);
-            color: var(--text-color);
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for light theme sidebar */
-        }
-        .sidebar-item {
-            border-bottom: var(--sidebar-item-border);
-        }
-        .sidebar-item:hover {
-            background-color: var(--sidebar-item-hover-bg);
-            color: var(--text-color); /* Keep text color readable on hover */
-        }
-        .dashboard-grid-item {
-            color: var(--text-color);
-        }
-        .dashboard-grid-item:hover {
-            color: var(--text-color);
-        }
-
-        /* Specific Layouts and Components */
-        .container {
-            max-width: 500px; /* Fixed width for auth/profile forms */
-            margin: 30px auto;
+            max-width: 500px;
+            margin: 60px auto;
             padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background-color: #043f4e;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         }
 
         h1 {
             text-align: center;
-            font-size: 2.0rem;
-            font-weight: 500;
-            margin-bottom: 25px;
+            color: #ffffff;
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 20px;
         }
 
         .input-group {
-            margin: 18px 0;
+            margin: 15px 0;
         }
 
         input, select {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             font-size: 16px;
-            border-radius: 4px;
-            box-sizing: border-box;
+            border-radius: 8px;
+            border: none;
+            background-color: #e0f2f1;
+            color: #000;
         }
 
         button {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             font-size: 16px;
+            background: #00bcd4;
+            color: #fff;
             font-weight: bold;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
-            margin-top: 20px;
-            transition: background 0.2s ease-in-out;
+            margin-top: 15px;
+            transition: background 0.3s ease;
         }
 
-        /* Dashboard container will NOT have a fixed max-width, it will adapt */
+        button:hover {
+            background: #0097a7;
+        }
+
+        .toggle {
+            text-align: center;
+            margin-top: 15px;
+            cursor: pointer;
+            color: #81d4fa;
+            text-decoration: underline;
+        }
+
+        .toggle:hover {
+            color: #ffffff;
+        }
+
         .dashboard {
             display: none;
             text-align: center;
-            min-height: 300px;
-            padding-top: 50px; /* Space below fixed topbar */
-            margin: 0 auto; /* Allow full width, but center its children */
-            width: 100%; /* Take full available width */
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .paper-btn {
+            padding: 15px;
+            background: #ffffff;
+            color: #004d5e;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .paper-btn:hover {
+            background: #e0f7fa;
+        }
+
+        .logout-btn-bottom { 
+            margin-top: 20px;
+            background: #f44336;
+            display: none; 
         }
 
         .topbar {
@@ -159,232 +113,94 @@
             right: 0;
             width: 100%;
             height: 50px;
-            display: none;
+            background-color: #002b36;
+            color: white;
+            display: none; 
             justify-content: flex-end;
             align-items: center;
             padding-right: 20px;
             z-index: 1000;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
         .menu-icon {
             cursor: pointer;
             font-size: 1.5rem;
-            margin-left: 15px;
+            margin-left: 10px; 
         }
 
         .user-greeting {
-            font-size: 1.0rem;
-            margin-left: auto;
-            padding-right: 15px;
-            display: flex;
+            font-size: 0.9rem;
+            margin-left: auto; 
+            padding-right: 10px; 
+            display: flex; 
             align-items: center;
-            gap: 8px;
+            gap: 5px; 
+        }
+        
+        .welcome-text {
+            text-align: center;
+            margin-top: 50px; 
+            font-size: 1.8rem;
+            color: #ffffff;
+            font-weight: bold;
         }
 
-        .welcome-title {
-            text-align: center;
-            margin-top: 30px;
-            font-size: 2.2rem;
-            font-weight: 400;
-            color: var(--text-color);
-        }
-        .welcome-subtitle {
-            text-align: center;
-            margin-top: 10px;
-            font-size: 1.2rem;
-            font-weight: 300;
-            color: var(--text-color);
-            margin-bottom: 30px;
-        }
 
         .sidebar {
             position: fixed;
             top: 50px;
-            right: -270px; /* Correctly hidden off-screen */
+            right: -250px; 
             width: 250px;
             height: calc(100% - 50px);
+            background-color: #043f4e;
+            color: white;
             padding: 20px;
-            transition: right 0.2s ease-in-out;
+            transition: right 0.3s ease;
             z-index: 1001;
-            overflow-y: auto;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3); 
         }
 
         .sidebar.show {
-            right: 0;
+            right: 0; 
         }
 
         .sidebar-item {
-            padding: 10px 15px;
+            padding: 12px 0;
+            border-bottom: 1px solid #095a71;
             cursor: pointer;
-            text-align: left;
-            font-size: 1.0rem;
+            text-align: left; 
         }
 
         .sidebar-item:last-child {
-            border-bottom: none;
+            border-bottom: none; 
         }
-
-        /* Dashboard main content area wrapper */
-        .dashboard-content-wrapper {
-            margin: 0 auto; /* Center the wrapper */
-            padding: 20px; /* Internal padding for the content */
-            width: 90%; /* Start wide on larger screens */
-            max-width: 1200px; /* Maximum width for very large screens */
-            box-sizing: border-box; /* Include padding in width */
-        }
-
-        /* Adjust content-section max-width inside dashboard */
-        .content-section {
-            display: none;
-            width: 100%;
-            max-width: 900px; /* Allows content sections to expand more */
-            margin: 25px auto;
-            text-align: left;
-            line-height: 1.7;
-            padding: 20px; /* Add some padding to content sections */
-            background-color: var(--container-bg-color); /* Match container background */
+        
+        /* New CSS for restricted/subscriber content visibility */
+        .restricted-content {
+            display: none; /* Hidden by default */
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fce8e6; /* Light red background */
+            color: #c0392b; /* Dark red text */
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Dashboard grid for MCQs */
-        .mcq-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Default: responsive minmax */
-            gap: 20px;
-            margin-top: 30px;
-            width: 100%; /* Take full width of its parent (.dashboard-content-wrapper) */
-        }
-
-        @media (min-width: 768px) { /* On tablets and larger, enforce 2 columns */
-            .mcq-grid {
-                grid-template-columns: repeat(2, 1fr); /* Two columns for 768px and up */
-            }
-            .dashboard-grid-item {
-                font-size: 1.2rem; /* Slightly larger text on tablets */
-            }
-        }
-
-        @media (min-width: 1024px) { /* On desktops and larger, enforce 3 columns */
-            .mcq-grid {
-                grid-template-columns: repeat(3, 1fr); /* Three columns for 1024px and up */
-            }
-             .dashboard-grid-item {
-                font-size: 1.3rem; /* Even larger text on desktops */
-            }
-        }
-
-        @media (max-width: 599px) { /* On very small screens (phones), maybe 1 column or 2 smaller ones */
-            .mcq-grid {
-                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Allows 1 or 2 columns based on tiny screens */
-            }
-            .dashboard-grid-item {
-                font-size: 1.0rem; /* Smaller text on tiny screens */
-            }
-             .welcome-title {
-                font-size: 1.8rem;
-            }
-            .welcome-subtitle {
-                font-size: 1.0rem;
-            }
-        }
-
-        .dashboard-grid-item {
-            padding: 20px;
-            border-radius: 8px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
+            border: 1px solid #c0392b;
             text-align: center;
-            font-size: 1.1rem;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-            min-height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            word-break: break-word; /* Allow long text to break */
-            line-height: 1.3;
         }
-        /* Theme specific colors for dashboard items */
-        body:not(.light-theme) .dashboard-grid-item { /* Dark theme */
-            background: #095a71;
-            color: #e0f2f1;
-        }
-        body:not(.light-theme) .dashboard-grid-item:hover { /* Dark theme hover */
-            background: #064a5c;
-        }
-        body.light-theme .dashboard-grid-item { /* Light theme */
-            background: #fff; /* White background for light theme grid items */
-            color: #495057; /* Darker text color */
-            border: 1px solid #e0e0e0;
-        }
-        body.light-theme .dashboard-grid-item:hover { /* Light theme hover */
-            background: #f8f9fa; /* Slightly lighter background on hover */
-        }
-
-        /* Settings specific styles */
-        .settings-option {
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background-color: var(--profile-field-bg);
-            color: var(--text-color);
-            border-radius: 4px;
-            border: 1px solid #ced4da;
-        }
-        .settings-option label {
-            font-weight: bold;
-            color: var(--text-color);
-        }
-        .settings-option button {
-            width: auto;
-            margin-top: 0;
-            padding: 6px 12px;
-            font-size: 0.9rem;
-        }
-        .theme-toggle {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .theme-toggle label {
-            font-weight: normal;
-        }
-        /* Style for radio buttons */
-        .theme-toggle input[type="radio"] {
-            width: 18px;
-            height: 18px;
-            margin: 0;
-            cursor: pointer;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            border: 2px solid var(--text-color);
-            border-radius: 50%;
-            outline: none;
-            transition: background-color 0.2s ease, border-color 0.2s ease;
-        }
-
-        .theme-toggle input[type="radio"]:checked {
-            background-color: var(--button-bg-color);
-            border-color: var(--button-bg-color);
-        }
-
-        /* Adjust logo positioning */
-        img {
-            position: absolute;
-            top: 15px;
-            left: 20px;
-            height: 120px;
+        .subscriber-content {
+            /* Initially hidden or shown based on your preference, will be controlled by JS */
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e6f7f0; /* Light green background */
+            color: #27ae60; /* Dark green text */
+            border-radius: 8px;
+            border: 1px solid #27ae60;
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
-    <img src="logo.png" alt="Rad Mentor Logo" />
+    <img src="logo.png" alt="Rad Mentor Logo" style="position: absolute; top: 15px; left: 20px; height: 120px;" />
 
     <div class="container" id="auth-container" style="display: none;">
         <h1>🔬 RadMentor - Login</h1>
@@ -392,10 +208,14 @@
         <div class="input-group"><input type="password" id="password" placeholder="Password" /></div>
         <button onclick="handleAuth()" id="auth-btn">Sign In</button>
         <div class="toggle" onclick="toggleAuth()">Don't have an account? Sign up</div>
+        <p id="auth-message" style="color: #f00; text-align: center; margin-top: 10px;"></p>
     </div>
 
     <div class="container" id="profile-form" style="display: none;">
         <h1>👤 Complete Your Profile</h1>
+        <p style="text-align: center; color: #81d4fa; font-size: 0.9rem;">
+            Please complete your profile to continue.
+        </p>
         <div class="input-group"><input type="text" id="name" placeholder="Full Name" /></div>
         <div class="input-group"><input type="date" id="dob" /></div>
         <div class="input-group">
@@ -525,71 +345,71 @@
                 <option value="Government Medical College, Chandrapur">
                 <option value="Government Medical College & Hospital, Baramati">
                 <option value="AIIMS Bhopal">
-                <option value="AIIMS Bhubaneswar">
-                <option value="AIIMS Jodhpur">
-                <option value="AIIMS Patna">
-                <option value="AIIMS Raipur">
-                <option value="AIIMS Rishikesh">
-                <option value="AIIMS Nagpur">
-                <option value="AIIMS Mangalagiri">
-                <option value="AIIMS Gorakhpur">
-                <option value="AIIMS Kalyani">
-                <option value="AIIMS Raebareli">
-                <option value="AIIMS Bathinda">
-                <option value="AIIMS Bilaspur">
-                <option value="AIIMS Deoghar">
-                <option value="AIIMS Guwahati">
-                <option value="AIIMS Rajkot">
-                <option value="AIIMS Vijaypur">
-                <option value="AIIMS Madurai">
-                <option value="AIIMS Darbhanga">
-                <option value="AIIMS Rewari">
-                <option value="AIIMS Kashmir">
-                <option value="AIIMS Jammu">
-                <option value="AIIMS Manipur">
-                <option value="AIIMS Mizoram">
-                <option value="AIIMS Sikkim">
-                <option value="AIIMS Tripura">
-            </datalist>
-        </div>
-        <div class="input-group">
-            <select id="exam_pursuing">
-                <option value="" disabled selected>What exam are you pursuing?</option>
-                <option>Final year exam</option>
-                <option>DNB</option>
-                <option>FRCR</option>
-                <option>NEET SS</option>
-                <option>INICET SS</option>
-                <option>MICR</option>
-                <option>Fellowship exams</option>
-            </select>
-        </div>
-        <button onclick="submitProfile()">Submit Profile</button>
-    </div>
+                <option value="AIIMS Bhubaneswar">
+                <option value="AIIMS Jodhpur">
+                <option value="AIIMS Patna">
+                <option value="AIIMS Raipur">
+                <option value="AIIMS Rishikesh">
+                <option value="AIIMS Nagpur">
+                <option value="AIIMS Mangalagiri">
+                <option value="AIIMS Gorakhpur">
+                <option value="AIIMS Kalyani">
+                <option value="AIIMS Raebareli">
+                <option value="AIIMS Bathinda">
+                <option value="AIIMS Bilaspur">
+                <option value="AIIMS Deoghar">
+                <option value="AIIMS Guwahati">
+                <option value="AIIMS Rajkot">
+                <option value="AIIMS Vijaypur">
+                <option value="AIIMS Madurai">
+                <option value="AIIMS Darbhanga">
+                <option value="AIIMS Rewari">
+                <option value="AIIMS Kashmir">
+                <option value="AIIMS Jammu">
+                <option value="AIIMS Manipur">
+                <option value="AIIMS Mizoram">
+                <option value="AIIMS Sikkim">
+                <option value="AIIMS Tripura">
+            </datalist>
+        </div>
+        <div class="input-group">
+            <select id="exam_pursuing">
+                <option value="" disabled selected>What exam are you pursuing?</option>
+                <option>Final year exam</option>
+                <option>DNB</option>
+                <option>FRCR</option>
+                <option>NEET SS</option>
+                <option>INICET SS</option>
+                <option>MICR</option>
+                <option>Fellowship exams</option>
+            </select>
+        </div>
+        <button onclick="submitProfile()">Submit Profile</button>
+    </div>
 
-    <div class="container dashboard" id="dashboard" style="display: none;">
-        <div class="topbar">
-            <div class="user-greeting">Hi, <span id="user-greeting-name">Doctor</span>!</div>
-            <div class="menu-icon" onclick="toggleSidebar()">☰</div>
-        </div>
+    <div class="container dashboard" id="dashboard" style="display: none;">
+        <div class="topbar">
+            <div class="user-greeting">Hi, <span id="user-greeting-name">Doctor</span>!</div>
+            <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+        </div>
 
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-item" onclick="showDashboardSection('main')">🏠 Home</div>
-            <div class="sidebar-item" onclick="showDashboardSection('profile')">👤 Profile</div>
-            <div class="sidebar-item" onclick="showDashboardSection('edit-profile')">✏️ Edit Profile</div>
-            <div class="sidebar-item" onclick="showDashboardSection('subscription')">💳 Subscription</div>
-            <div class="sidebar-item" onclick="showDashboardSection('settings')">⚙️ Settings</div>
-            <div class="sidebar-item" onclick="showDashboardSection('about-us')">ℹ️ About Us</div>
-            <div class="sidebar-item" onclick="showDashboardSection('contact-us')">📞 Contact Us</div>
-            <div class="sidebar-item" onclick="logout()">🚪 Logout</div>
-        </div>
-
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-item" onclick="showDashboardSection('main')">🏠 Home</div>
+            <div class="sidebar-item" onclick="showDashboardSection('profile')">👤 Profile</div>
+            <div class="sidebar-item" onclick="showDashboardSection('edit-profile')">✏️ Edit Profile</div>
+            <div class="sidebar-item" onclick="showDashboardSection('subscription')">💳 Subscription</div>
+            <div class="sidebar-item" onclick="showDashboardSection('settings')">⚙️ Settings</div>
+            <div class="sidebar-item" onclick="showDashboardSection('about-us')">ℹ️ About Us</div>
+            <div class="sidebar-item" onclick="showDashboardSection('contact-us')">📞 Contact Us</div>
+            <div class="sidebar-item" onclick="logout()">🚪 Logout</div>
+        </div>
+        
         <div class="dashboard-content-wrapper" id="dashboard-main-content">
             <h1 class="welcome-title">Welcome to RadMentor</h1>
             <p class="welcome-subtitle">The World’s Most Comprehensive Radiology Learning Source</p>
 
             <div class="mcq-grid">
-                <div class="dashboard-grid-item" onclick="window.location.href='frcr/Part 1/index.html'">FRCR</div>
+                <div class="dashboard-grid-item" onclick="window.location.href='frcr/'">FRCR</div>
                 <div class="dashboard-grid-item" onclick="alert('MICR MCQs coming soon!')">MICR</div>
                 <div class="dashboard-grid-item" onclick="window.location.href='anatomy/'">Anatomy</div>
                 <div class="dashboard-grid-item" onclick="alert('MD / DNB MCQs coming soon!')">MD / DNB</div>
@@ -632,7 +452,8 @@
             </div>
             <div class="input-group">
                 <input list="colleges" id="edit-college" placeholder="Medical College" />
-                <datalist id="colleges"></datalist> </div>
+                <datalist id="colleges"></datalist> 
+            </div>
             <div class="input-group">
                 <select id="edit-exam-pursuing">
                     <option value="" disabled selected>What exam are you pursuing?</option>
@@ -646,7 +467,7 @@
                 </select>
             </div>
             <button onclick="saveProfileChanges()">Save Changes</button>
-            <button onclick="showDashboardSection('profile')" style="background-color: #6c757d; color: white; margin-top: 10px;">Cancel</button>
+            <button onclick="showDashboardSection('profile')" style="background-color: #6c757d; margin-top: 10px;">Cancel</button>
         </div>
 
         <div class="content-section" id="subscription-section">
@@ -767,14 +588,17 @@
             document.querySelector('.toggle').textContent = mode === 'signin'
                 ? "Don't have an account? Sign up"
                 : "Already have an account? Sign in";
+            document.getElementById('auth-message').textContent = ''; // Clear message on toggle
         }
 
         function handleAuth() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const authMessage = document.getElementById('auth-message');
+            authMessage.textContent = ''; // Clear previous messages
 
             if (email === "" || password === "") {
-                alert("Please enter both email and password.");
+                authMessage.textContent = "Please enter both email and password.";
                 return;
             }
 
@@ -782,42 +606,121 @@
                 auth.signInWithEmailAndPassword(email, password)
                     .then(userCredential => {
                         const user = userCredential.user;
-                        checkUserProfile(user);
+                        if (!user.emailVerified) {
+                            auth.signOut(); // Log them out immediately
+                            authMessage.textContent = "Please verify your email address. Check your inbox for a verification link.";
+                            return;
+                        }
+                        checkUserProfileAndLog(user); // Log login time and access level
                     })
                     .catch(err => {
-                        alert("Sign In Error: " + err.message);
+                        authMessage.textContent = "Sign In Error: " + err.message;
                     });
             } else { // mode === 'signup'
                 auth.createUserWithEmailAndPassword(email, password)
                     .then(userCredential => {
                         const user = userCredential.user;
-                        checkUserProfile(user);
+                        return user.sendEmailVerification().then(() => {
+                            auth.signOut(); // Log them out immediately after sending verification
+                            authMessage.textContent = "Verification email sent! Please verify your email address before signing in.";
+                            // Immediately create profile with default restricted access
+                            return db.collection('users').doc(user.uid).set({
+                                email: user.email,
+                                accessLevel: 'restricted', // Default access level
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                name: '', // Name will be filled out on profile form
+                                dob: '',
+                                sex: '',
+                                position: '',
+                                college: '',
+                                examPursuing: ''
+                            });
+                        });
                     })
                     .catch(err => {
-                        alert("Sign Up Error: " + err.message);
+                        authMessage.textContent = "Sign Up Error: " + err.message;
                     });
             }
         }
 
-        function checkUserProfile(user) {
+        // Function to check user profile, assign default role, and log login
+        function checkUserProfileAndLog(user) {
             const userRef = db.collection('users').doc(user.uid);
             userRef.get().then(doc => {
+                let userAccessLevel = 'restricted'; // Default if no profile or accessLevel exists
                 if (doc.exists) {
                     currentUserData = doc.data(); // Store user data globally
-                    loadDashboard(currentUserData.name);
+                    if (currentUserData.accessLevel) {
+                        userAccessLevel = currentUserData.accessLevel;
+                    }
+                } else {
+                    // This is a new user who just verified their email and is logging in for the first time
+                    // or an old user without a profile. Create a basic profile for them.
+                    userRef.set({
+                        email: user.email,
+                        accessLevel: 'restricted', // Default access level for new profiles
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        name: '', // Name will be filled out on profile form
+                        dob: '',
+                        sex: '',
+                        position: '',
+                        college: '',
+                        examPursuing: ''
+                    }, { merge: true }).then(() => {
+                        currentUserData = { email: user.email, accessLevel: 'restricted' };
+                    });
+                }
+
+                // Log the login event
+                db.collection('loginLogs').add({
+                    userId: user.uid,
+                    email: user.email,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    accessLevel: userAccessLevel
+                }).then(() => {
+                    console.log("Login event logged for user:", user.email, "Access:", userAccessLevel);
+                }).catch(logErr => {
+                    console.error("Error logging login event:", logErr);
+                });
+
+                // Now proceed based on profile existence
+                if (doc.exists && doc.data().name) { // Check if profile exists and name is filled
+                    loadDashboard(doc.data().name, userAccessLevel);
                 } else {
                     document.getElementById('auth-container').style.display = 'none';
                     document.getElementById('profile-form').style.display = 'block';
                 }
             }).catch(error => {
-                console.error("Error checking user profile:", error);
-                alert("Error checking user profile. Please try again.");
-                document.getElementById('auth-container').style.display = 'none';
-                document.getElementById('profile-form').style.display = 'block';
+                console.error("Error checking user profile or logging in:", error);
+                alert("An error occurred. Please try again.");
             });
         }
 
-        // --- Profile Management ---
+        // Firebase Auth State Observer: This runs every time the user's login state changes
+        auth.onAuthStateChanged(user => {
+            // Hide all sections initially
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('profile-form').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'none';
+            document.querySelector('.topbar').style.display = 'none';
+            document.getElementById('sidebar').classList.remove('show'); 
+
+            if (user) {
+                if (!user.emailVerified) {
+                    auth.signOut(); // Log them out if email not verified
+                    document.getElementById('auth-container').style.display = 'block';
+                    document.getElementById('auth-message').textContent = "Your email is not verified. Please check your inbox for a verification link.";
+                    return;
+                }
+                // If email is verified, proceed to check profile and access
+                checkUserProfileAndLog(user);
+            } else {
+                // No user is logged in -> show authentication container
+                document.getElementById('auth-container').style.display = 'block';
+            }
+        });
+
+        // Function to submit the user's profile data
         function submitProfile() {
             const user = auth.currentUser;
             if (!user) {
@@ -825,103 +728,93 @@
                 return;
             }
 
-            const name = document.getElementById('name').value;
-            const dob = document.getElementById('dob').value;
-            const sex = document.getElementById('sex').value;
-            const position = document.getElementById('position').value;
-            const college = document.getElementById('college').value;
-            const examPursuing = document.getElementById('exam_pursuing').value;
+            const profileData = {
+                name: document.getElementById('name').value,
+                dob: document.getElementById('dob').value,
+                sex: document.getElementById('sex').value,
+                position: document.getElementById('position').value,
+                college: document.getElementById('college').value,
+                examPursuing: document.getElementById('exam_pursuing').value,
+                // Do not overwrite accessLevel or createdAt if already set by initial signup
+            };
 
-            if (!name || !dob || !sex || !position || !college || !examPursuing) {
+            // Basic validation
+            if (!profileData.name || !profileData.dob || !profileData.sex || !profileData.position || !profileData.college || !profileData.examPursuing) {
                 alert("Please fill in all profile fields.");
                 return;
             }
 
-            const profileData = {
-                name: name,
-                dob: dob,
-                sex: sex,
-                position: position,
-                college: college,
-                examPursuing: examPursuing, // Save the new field
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            db.collection('users').doc(user.uid).set(profileData)
+            db.collection('users').doc(user.uid).update(profileData) // Use update to merge, not overwrite
                 .then(() => {
-                    currentUserData = profileData; // Update global user data
+                    // Update currentUserData with new profile info
+                    currentUserData = { ...currentUserData, ...profileData }; 
                     document.getElementById('profile-form').style.display = 'none';
-                    loadDashboard(currentUserData.name);
+                    loadDashboard(currentUserData.name, currentUserData.accessLevel);
                 })
-                .catch(err => {
-                    alert("Error saving profile: " + err.message);
-                });
+                .catch(err => alert("Error saving profile: " + err.message));
         }
 
-        function populateEditProfileForm() {
-            if (currentUserData) {
-                document.getElementById('edit-name').value = currentUserData.name || '';
-                document.getElementById('edit-dob').value = currentUserData.dob || '';
-                document.getElementById('edit-sex').value = currentUserData.sex || '';
-                document.getElementById('edit-position').value = currentUserData.position || '';
-                document.getElementById('edit-college').value = currentUserData.college || '';
-                document.getElementById('edit-exam-pursuing').value = currentUserData.examPursuing || '';
-            }
-        }
-
-        function saveProfileChanges() {
-            const user = auth.currentUser;
-            if (!user) {
-                alert("No user logged in.");
-                return;
-            }
-
-            const updatedProfileData = {
-                name: document.getElementById('edit-name').value,
-                dob: document.getElementById('edit-dob').value,
-                sex: document.getElementById('edit-sex').value,
-                position: document.getElementById('edit-position').value,
-                college: document.getElementById('edit-college').value,
-                examPursuing: document.getElementById('edit-exam-pursuing').value,
-                // Do not update `createdAt` as it's a creation timestamp
-            };
-
-            // Basic validation
-            if (!updatedProfileData.name || !updatedProfileData.dob || !updatedProfileData.sex ||
-                !updatedProfileData.position || !updatedProfileData.college || !updatedProfileData.examPursuing) {
-                alert("Please fill in all profile fields before saving.");
-                return;
-            }
-
-            db.collection('users').doc(user.uid).update(updatedProfileData)
-                .then(() => {
-                    currentUserData = { ...currentUserData, ...updatedProfileData }; // Update global data
-                    alert("Profile updated successfully!");
-                    showDashboardSection('profile'); // Go back to profile view
-                })
-                .catch(err => {
-                    alert("Error updating profile: " + err.message);
-                    console.error("Error updating profile:", err);
-                });
-        }
-
-        // --- Dashboard and Navigation ---
-        function loadDashboard(userName = "Doctor") {
+        // Function to load the dashboard and display content based on access level
+        function loadDashboard(userName = "Doctor", accessLevel = "restricted") {
             document.getElementById('auth-container').style.display = 'none';
             document.getElementById('profile-form').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
             document.querySelector('.topbar').style.display = 'flex';
-
+            
             document.getElementById('user-greeting-name').textContent = userName;
 
-            // Show the main dashboard content by default
-            showDashboardSection('main');
+            // Show main dashboard content by default
+            showDashboardSection('main'); 
+
+            // Display restricted/subscriber messages
+            const restrictedMessageDiv = document.createElement('div');
+            restrictedMessageDiv.className = 'restricted-content';
+            restrictedMessageDiv.innerHTML = '<p>You have restricted access. Some content may not be available. Please subscribe for full access.</p><button onclick="showDashboardSection(\'subscription\')">View Subscription Plans</button>';
+
+            const subscriberMessageDiv = document.createElement('div');
+            subscriberMessageDiv.className = 'subscriber-content';
+            subscriberMessageDiv.innerHTML = '<p>You have full subscriber access! Enjoy all features.</p>';
+
+            const dashboardContent = document.getElementById('dashboard-main-content');
+            
+            // Clear previous messages if any
+            dashboardContent.querySelectorAll('.restricted-content, .subscriber-content').forEach(el => el.remove());
+
+            if (accessLevel === 'restricted') {
+                dashboardContent.appendChild(restrictedMessageDiv);
+            } else if (accessLevel === 'subscriber') {
+                dashboardContent.appendChild(subscriberMessageDiv);
+            }
+
+            // Example: Restrict certain buttons based on accessLevel
+            document.querySelectorAll('.mcq-grid .dashboard-grid-item').forEach(item => {
+                // If it's a restricted user, and this is a premium feature, disable it
+                // You'll define what's restricted vs. subscriber here
+                const feature = item.textContent.trim(); // Get the text like "FRCR", "MICR"
+                if (accessLevel === 'restricted' && (feature === 'FRCR' || feature === 'MICR' || feature === 'Superspeciality MCQs' || feature === 'Fellowship Exams')) {
+                     item.style.opacity = '0.5';
+                     item.style.pointerEvents = 'none';
+                     item.onclick = () => alert('This content is for subscribers only. Please subscribe to unlock!');
+                } else {
+                    // Re-enable if previously restricted (e.g., user logs in as subscriber)
+                    item.style.opacity = '1';
+                    item.style.pointerEvents = 'auto';
+                    // Re-assign original onclick from HTML based on initial setup
+                    if (feature === 'FRCR') item.onclick = () => window.location.href='frcr/';
+                    else if (feature === 'Anatomy') item.onclick = () => window.location.href='anatomy/';
+                    // For others, keep alerts as per current setup or replace with actual links
+                    else if (feature === 'MICR') item.onclick = () => alert('MICR MCQs coming soon!');
+                    else if (feature === 'MD / DNB') item.onclick = () => alert('MD / DNB MCQs coming soon!');
+                    else if (feature === 'Superspeciality MCQs') item.onclick = () => alert('Superspeciality MCQs coming soon!');
+                    else if (feature === 'Fellowship Exams') item.onclick = () => alert('Fellowship Exams MCQs coming soon!');
+
+                }
+            });
         }
 
         function logout() {
             auth.signOut().then(() => {
                 console.log("User signed out.");
-                // onAuthStateChanged listener will handle showing auth-container
                 currentUserData = null; // Clear global user data on logout
             }).catch(error => {
                 alert("Error signing out: " + error.message);
@@ -933,48 +826,43 @@
         }
 
         function showDashboardSection(sectionId) {
-            // Hide all content sections
             document.querySelectorAll('.content-section').forEach(section => {
                 section.style.display = 'none';
             });
-            // Hide the main dashboard content area, this will be explicitly shown if sectionId is 'main'
             document.getElementById('dashboard-main-content').style.display = 'none';
 
-            // Show the requested section
             if (sectionId === 'main') {
-                document.getElementById('dashboard-main-content').style.display = 'block'; /* Changed to block as it's a div holding flex content */
+                document.getElementById('dashboard-main-content').style.display = 'flex'; 
             } else if (sectionId === 'profile') {
-                populateProfileDetails(); // Populate before showing
+                populateProfileDetails(); 
                 document.getElementById('profile-section').style.display = 'block';
             } else if (sectionId === 'edit-profile') {
-                populateEditProfileForm(); // Populate before showing
+                populateEditProfileForm(); 
                 document.getElementById('edit-profile-section').style.display = 'block';
             } else if (sectionId === 'subscription') {
                 document.getElementById('subscription-section').style.display = 'block';
             } else if (sectionId === 'settings') {
-                populateSettings(); // Populate settings dates
+                populateSettings(); 
                 document.getElementById('settings-section').style.display = 'block';
             } else if (sectionId === 'about-us') {
                 document.getElementById('about-us-section').style.display = 'block';
             } else if (sectionId === 'contact-us') {
                 document.getElementById('contact-us-section').style.display = 'block';
             }
-
-            // Hide sidebar after selection
+            
             document.getElementById('sidebar').classList.remove('show');
         }
 
         function populateProfileDetails() {
             if (currentUserData) {
                 document.getElementById('display-name').textContent = currentUserData.name || 'N/A';
-                // For DOB, you might want to format it nicely
                 const dob = currentUserData.dob;
                 if (dob) {
                     try {
                         const dateObj = new Date(dob);
                         document.getElementById('display-dob').textContent = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
                     } catch (e) {
-                        document.getElementById('display-dob').textContent = dob; // Fallback to raw if invalid date
+                        document.getElementById('display-dob').textContent = dob; 
                     }
                 } else {
                     document.getElementById('display-dob').textContent = 'N/A';
@@ -984,48 +872,26 @@
                 document.getElementById('display-position').textContent = currentUserData.position || 'N/A';
                 document.getElementById('display-college').textContent = currentUserData.college || 'N/A';
                 document.getElementById('display-exam').textContent = currentUserData.examPursuing || 'N/A';
+                // Display access level in profile or settings
+                document.getElementById('membership-status').textContent = currentUserData.accessLevel ? currentUserData.accessLevel.toUpperCase() : 'N/A';
+
             }
         }
 
         function populateSettings() {
-            // Placeholder for membership dates. In a real app, these would come from your database.
-            document.getElementById('membership-start-date').textContent = "July 28, 2025"; // Example
-            document.getElementById('membership-end-date').textContent = "July 28, 2026";   // Example
-
-            // Set initial theme switch state (for radio buttons)
+            document.getElementById('membership-start-date').textContent = "Not yet subscribed"; 
+            document.getElementById('membership-end-date').textContent = "Not yet subscribed"; 
+            if (currentUserData && currentUserData.accessLevel) {
+                 document.getElementById('membership-status').textContent = currentUserData.accessLevel.toUpperCase();
+                 // In a real app, dates would come from Firestore or a subscription service
+                 if (currentUserData.accessLevel === 'subscriber') {
+                     document.getElementById('membership-start-date').textContent = "Jan 1, 2025 (Example)";
+                     document.getElementById('membership-end-date').textContent = "Jan 1, 2026 (Example)";
+                 }
+            }
             setInitialTheme();
         }
 
-        // Firebase Auth State Observer: This runs every time the user's login state changes
-        auth.onAuthStateChanged(user => {
-            // Hide all main containers first
-            document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('profile-form').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'none';
-            document.querySelector('.topbar').style.display = 'none';
-            document.getElementById('sidebar').classList.remove('show'); // Ensure sidebar is closed
-
-            if (user) {
-                const userRef = db.collection('users').doc(user.uid);
-                userRef.get().then(doc => {
-                    if (doc.exists) {
-                        currentUserData = doc.data(); // Store user data
-                        loadDashboard(currentUserData.name);
-                    } else {
-                        // User is logged in but profile does NOT exist -> show profile form
-                        document.getElementById('profile-form').style.display = 'block';
-                    }
-                }).catch(error => {
-                    console.error("Error fetching user profile on state change:", error);
-                    document.getElementById('profile-form').style.display = 'block'; // Fallback
-                });
-            } else {
-                // No user is logged in -> show the authentication container
-                document.getElementById('auth-container').style.display = 'block';
-            }
-        });
-
-        // Set initial theme when the script loads
         setInitialTheme();
     </script>
 </body>
