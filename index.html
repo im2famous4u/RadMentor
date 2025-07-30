@@ -6,201 +6,349 @@
     <title>Radiology MCQ Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet"/>
     <style>
-        /* Your existing CSS (no changes here for now) */
+        /* General Body Styles */
         body {
             font-family: 'Rubik', sans-serif;
             margin: 0;
-            background-color: #004d5e;
-            color: #ffffff;
+            overflow-x: hidden; /* Prevent horizontal scrollbar from sidebar */
+            background-color: #004d5e; /* Default dark theme background */
+            color: #ffffff; /* Default dark theme text color */
+            transition: background-color 0.3s ease, color 0.3s ease; /* Smooth theme transition */
         }
 
+        /* Light Theme Variables - Adjusted to resemble PrepLadder */
+        body.light-theme {
+            --bg-color: #e3f2fd; /* Light blue background */
+            --container-bg-color: #ffffff; /* White containers */
+            --text-color: #212121; /* Dark grey/black text */
+            --input-bg-color: #f5f5f5; /* Light grey input background */
+            --button-bg-color: #1e88e5; /* Blue button */
+            --button-hover-bg-color: #1565c0; /* Darker blue button hover */
+            --toggle-color: #1e88e5; /* Blue toggle */
+            --sidebar-bg-color: #ffffff; /* White sidebar */
+            --sidebar-item-border: 1px solid #e0e0e0; /* Light grey sidebar border */
+            --sidebar-item-hover-bg: #bbdefb; /* Light blue sidebar hover */
+            --topbar-bg-color: #e3f2fd; /* Light blue topbar */
+            --topbar-text-color: #212121; /* Dark text on topbar */
+            --profile-field-bg: #f8f8f8; /* Very light grey for profile fields */
+        }
+
+        /* Dark Theme Variables */
+        body:not(.light-theme) { /* Default to dark if light-theme class is not present */
+            --bg-color: #004d5e;
+            --container-bg-color: #043f4e;
+            --text-color: #ffffff;
+            --input-bg-color: #e0f2f1;
+            --button-bg-color: #00bcd4;
+            --button-hover-bg-color: #0097a7;
+            --toggle-color: #81d4fa;
+            --sidebar-bg-color: #043f4e;
+            --sidebar-item-border: 1px solid #095a71;
+            --sidebar-item-hover-bg: #065a73;
+            --topbar-bg-color: #002b36;
+            --topbar-text-color: #ffffff;
+            --profile-field-bg: #095a71;
+        }
+
+        /* New Gradient Theme Variables (Subtle Pink to Subtle Blue) */
+        body.gradient-theme {
+            --bg-color: linear-gradient(to right, #e0e7f7, #f7e0e0); /* Subtle blue to subtle pink gradient */
+            --container-bg-color: rgba(255, 255, 255, 0.95); /* Slightly translucent white container */
+            --text-color: #333333; /* Dark grey for general text */
+            --input-bg-color: #f0f0f0; /* Light grey input */
+            --button-bg-color: #6a0dad; /* A purplish blue that looks good on gradient */
+            --button-hover-bg-color: #4b0082; /* Darker purple */
+            --toggle-color: #6a0dad; /* Purplish blue toggle */
+            --sidebar-bg-color: #ffffff; /* White sidebar */
+            --sidebar-item-border: 1px solid #e0e0e0;
+            --sidebar-item-hover-bg: #f0f8ff; /* Very light blue hover */
+            --topbar-bg-color: rgba(255, 255, 255, 0.9); /* Slightly translucent topbar */
+            --topbar-text-color: #212121;
+            --profile-field-bg: #f8f8f8;
+            /* Applying gradient to body background */
+            background: var(--bg-color);
+        }
+
+        /* Apply theme variables to elements (updated to use var) */
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        .container {
+            background-color: var(--container-bg-color);
+            color: var(--text-color);
+        }
+        h1 {
+            color: var(--text-color);
+        }
+        input, select {
+            background-color: var(--input-bg-color);
+            color: #000;
+            border: 1px solid #ced4da;
+        }
+        button {
+            background: var(--button-bg-color);
+            color: #fff;
+        }
+        button:hover {
+            background: var(--button-hover-bg-color);
+        }
+        .toggle {
+            color: var(--toggle-color);
+        }
+        .toggle:hover {
+            color: var(--text-color); /* Ensures contrast on hover */
+        }
+        .topbar {
+            background-color: var(--topbar-bg-color);
+            color: var(--topbar-text-color);
+        }
+        .sidebar {
+            background-color: var(--sidebar-bg-color);
+            color: var(--text-color);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar-item {
+            border-bottom: var(--sidebar-item-border);
+        }
+        .sidebar-item:hover {
+            background-color: var(--sidebar-item-hover-bg);
+            color: var(--text-color);
+        }
+        .dashboard-grid-item {
+            color: var(--text-color);
+        }
+        .dashboard-grid-item:hover {
+            color: var(--text-color);
+        }
+        .welcome-title, .welcome-subtitle {
+            color: var(--text-color);
+        }
+        .profile-field {
+            background-color: var(--profile-field-bg);
+            color: var(--text-color);
+            border: 1px solid #ced4da;
+        }
+        .profile-field strong {
+            color: var(--text-color);
+        }
+        .settings-option {
+            background-color: var(--profile-field-bg);
+            color: var(--text-color);
+            border: 1px solid #ced4da;
+        }
+        .settings-option label {
+            color: var(--text-color);
+        }
+        .theme-toggle input[type="radio"] {
+            border: 2px solid var(--text-color);
+        }
+        .theme-toggle input[type="radio"]:checked {
+            background-color: var(--button-bg-color);
+            border-color: var(--button-bg-color);
+        }
+
+        /* Specific Layouts and Components (unchanged from previous styling) */
         .container {
             max-width: 500px;
-            margin: 60px auto;
+            margin: 30px auto;
             padding: 30px;
-            background-color: #043f4e;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-
         h1 {
             text-align: center;
-            color: #ffffff;
-            font-size: 1.6rem;
-            font-weight: 700;
-            margin-bottom: 20px;
+            font-size: 2.0rem;
+            font-weight: 500;
+            margin-bottom: 25px;
         }
-
         .input-group {
-            margin: 15px 0;
+            margin: 18px 0;
         }
-
         input, select {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             font-size: 16px;
-            border-radius: 8px;
-            border: none;
-            background-color: #e0f2f1;
-            color: #000;
+            border-radius: 4px;
+            box-sizing: border-box;
         }
-
         button {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             font-size: 16px;
-            background: #00bcd4;
-            color: #fff;
             font-weight: bold;
             border: none;
-            border-radius: 8px;
+            border-radius: 4px;
             cursor: pointer;
-            margin-top: 15px;
-            transition: background 0.3s ease;
+            margin-top: 20px;
+            transition: background 0.2s ease-in-out;
         }
-
-        button:hover {
-            background: #0097a7;
-        }
-
-        .toggle {
-            text-align: center;
-            margin-top: 15px;
-            cursor: pointer;
-            color: #81d4fa;
-            text-decoration: underline;
-        }
-
-        .toggle:hover {
-            color: #ffffff;
-        }
-
         .dashboard {
             display: none;
             text-align: center;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .paper-btn {
-            padding: 15px;
-            background: #ffffff;
-            color: #004d5e;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .paper-btn:hover {
-            background: #e0f7fa;
-        }
-
-        .logout-btn-bottom { 
-            margin-top: 20px;
-            background: #f44336;
-            display: none; 
-        }
-
-        .topbar {
-            position: fixed;
-            top: 0;
-            right: 0;
+            min-height: 300px;
+            padding-top: 50px;
+            margin: 0 auto;
             width: 100%;
-            height: 50px;
-            background-color: #002b36;
-            color: white;
-            display: none; 
-            justify-content: flex-end;
-            align-items: center;
-            padding-right: 20px;
-            z-index: 1000;
         }
-
-        .menu-icon {
-            cursor: pointer;
-            font-size: 1.5rem;
-            margin-left: 10px; 
-        }
-
-        .user-greeting {
-            font-size: 0.9rem;
-            margin-left: auto; 
-            padding-right: 10px; 
-            display: flex; 
-            align-items: center;
-            gap: 5px; 
-        }
-        
-        .welcome-text {
+        .welcome-title {
             text-align: center;
-            margin-top: 50px; 
-            font-size: 1.8rem;
-            color: #ffffff;
-            font-weight: bold;
+            margin-top: 30px;
+            font-size: 2.2rem;
+            font-weight: 400;
+            color: var(--text-color);
         }
-
-
+        .welcome-subtitle {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 1.2rem;
+            font-weight: 300;
+            color: var(--text-color);
+            margin-bottom: 30px;
+        }
         .sidebar {
             position: fixed;
             top: 50px;
-            right: -250px; 
+            right: -270px;
             width: 250px;
             height: calc(100% - 50px);
-            background-color: #043f4e;
-            color: white;
             padding: 20px;
-            transition: right 0.3s ease;
+            transition: right 0.2s ease-in-out;
             z-index: 1001;
-            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3); 
+            overflow-y: auto;
         }
-
         .sidebar.show {
-            right: 0; 
+            right: 0;
         }
-
-        .sidebar-item {
-            padding: 12px 0;
-            border-bottom: 1px solid #095a71;
+        .dashboard-content-wrapper {
+            margin: 0 auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 1200px;
+            box-sizing: border-box;
+        }
+        .content-section {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            margin: 25px auto;
+            text-align: left;
+            line-height: 1.7;
+            padding: 20px;
+            background-color: var(--container-bg-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .mcq-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+            width: 100%;
+        }
+        @media (min-width: 768px) {
+            .mcq-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .dashboard-grid-item {
+                font-size: 1.2rem;
+            }
+        }
+        @media (min-width: 1024px) {
+            .mcq-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+             .dashboard-grid-item {
+                font-size: 1.3rem;
+            }
+        }
+        @media (max-width: 599px) {
+            .mcq-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            }
+            .dashboard-grid-item {
+                font-size: 1.0rem;
+            }
+             .welcome-title {
+                font-size: 1.8rem;
+            }
+            .welcome-subtitle {
+                font-size: 1.0rem;
+            }
+        }
+        .dashboard-grid-item {
+            padding: 20px;
+            border-radius: 8px;
+            font-weight: 500;
             cursor: pointer;
-            text-align: left; 
+            transition: all 0.2s;
+            text-align: center;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            word-break: break-word;
+            line-height: 1.3;
+        }
+        body:not(.light-theme) .dashboard-grid-item { 
+            background: #095a71;
+            color: #e0f2f1;
+        }
+        body:not(.light-theme) .dashboard-grid-item:hover { 
+            background: #064a5c;
+        }
+        body.light-theme .dashboard-grid-item { 
+            background: #fff;
+            color: #495057;
+            border: 1px solid #e0e0e0;
+        }
+        body.light-theme .dashboard-grid-item:hover { 
+            background: #f8f9fa;
+        }
+        /* Gradient theme specific dashboard items */
+        body.gradient-theme .dashboard-grid-item {
+            background-color: rgba(255, 255, 255, 0.8); /* Slightly translucent white */
+            color: #333333;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+        body.gradient-theme .dashboard-grid-item:hover {
+            background-color: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
         }
 
-        .sidebar-item:last-child {
-            border-bottom: none; 
-        }
-        
-        /* New CSS for restricted/subscriber content visibility */
         .restricted-content {
-            display: none; /* Hidden by default */
+            display: none; 
             margin-top: 20px;
             padding: 15px;
-            background-color: #fce8e6; /* Light red background */
-            color: #c0392b; /* Dark red text */
+            background-color: #fce8e6; 
+            color: #c0392b; 
             border-radius: 8px;
             border: 1px solid #c0392b;
             text-align: center;
         }
         .subscriber-content {
-            /* Initially hidden or shown based on your preference, will be controlled by JS */
             margin-top: 20px;
             padding: 15px;
-            background-color: #e6f7f0; /* Light green background */
-            color: #27ae60; /* Dark green text */
+            background-color: #e6f7f0; 
+            color: #27ae60; 
             border-radius: 8px;
             border: 1px solid #27ae60;
             text-align: center;
+        }
+        img {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            height: 120px;
         }
     </style>
 </head>
 <body>
 
-    <img src="logo.png" alt="Rad Mentor Logo" style="position: absolute; top: 15px; left: 20px; height: 120px;" />
+    <img src="logo.png" alt="Rad Mentor Logo" />
 
     <div class="container" id="auth-container" style="display: none;">
         <h1>🔬 RadMentor - Login</h1>
@@ -339,70 +487,65 @@
                 <option value="Government Medical College, Akola">
                 <option value="Government Medical College, Miraj">
                 <option value="Government Medical College, Latur">
-                <option value="Government Medical College, Jalgaon">
-                <option value="Government Medical College, Dhule">
-                <option value="Government Medical College, Gondia">
-                <option value="Government Medical College, Chandrapur">
-                <option value="Government Medical College & Hospital, Baramati">
                 <option value="AIIMS Bhopal">
-                <option value="AIIMS Bhubaneswar">
-                <option value="AIIMS Jodhpur">
-                <option value="AIIMS Patna">
-                <option value="AIIMS Raipur">
-                <option value="AIIMS Rishikesh">
-                <option value="AIIMS Nagpur">
-                <option value="AIIMS Mangalagiri">
-                <option value="AIIMS Gorakhpur">
-                <option value="AIIMS Kalyani">
-                <option value="AIIMS Raebareli">
-                <option value="AIIMS Bathinda">
-                <option value="AIIMS Bilaspur">
-                <option value="AIIMS Deoghar">
-                <option value="AIIMS Guwahati">
-                <option value="AIIMS Rajkot">
-                <option value="AIIMS Vijaypur">
-                <option value="AIIMS Madurai">
-                <option value="AIIMS Darbhanga">
-                <option value="AIIMS Rewari">
-                <option value="AIIMS Kashmir">
-                <option value="AIIMS Jammu">
-                <option value="AIIMS Manipur">
-                <option value="AIIMS Mizoram">
-                <option value="AIIMS Sikkim">
-                <option value="AIIMS Tripura">
-            </datalist>
-        </div>
-        <div class="input-group">
-            <select id="exam_pursuing">
-                <option value="" disabled selected>What exam are you pursuing?</option>
-                <option>Final year exam</option>
-                <option>DNB</option>
-                <option>FRCR</option>
-                <option>NEET SS</option>
-                <option>INICET SS</option>
-                <option>MICR</option>
-                <option>Fellowship exams</option>
-            </select>
-        </div>
-        <button onclick="submitProfile()">Submit Profile</button>
-    </div>
+                <option value="AIIMS Bhubaneswar">
+                <option value="AIIMS Jodhpur">
+                <option value="AIIMS Patna">
+                <option value="AIIMS Raipur">
+                <option value="AIIMS Rishikesh">
+                <option value="AIIMS Nagpur">
+                <option value="AIIMS Mangalagiri">
+                <option value="AIIMS Gorakhpur">
+                <option value="AIIMS Kalyani">
+                <option value="AIIMS Raebareli">
+                <option value="AIIMS Bathinda">
+                <option value="AIIMS Bilaspur">
+                <option value="AIIMS Deoghar">
+                <option value="AIIMS Guwahati">
+                <option value="AIIMS Rajkot">
+                <option value="AIIMS Vijaypur">
+                <option value="AIIMS Madurai">
+                <option value="AIIMS Darbhanga">
+                <option value="AIIMS Rewari">
+                <option value="AIIMS Kashmir">
+                <option value="AIIMS Jammu">
+                <option value="AIIMS Manipur">
+                <option value="AIIMS Mizoram">
+                <option value="AIIMS Sikkim">
+                <option value="AIIMS Tripura">
+            </datalist>
+        </div>
+        <div class="input-group">
+            <select id="exam_pursuing">
+                <option value="" disabled selected>What exam are you pursuing?</option>
+                <option>Final year exam</option>
+                <option>DNB</option>
+                <option>FRCR</option>
+                <option>NEET SS</option>
+                <option>INICET SS</option>
+                <option>MICR</option>
+                <option>Fellowship exams</option>
+            </select>
+        </div>
+        <button onclick="submitProfile()">Submit Profile</button>
+    </div>
 
-    <div class="container dashboard" id="dashboard" style="display: none;">
-        <div class="topbar">
-            <div class="user-greeting">Hi, <span id="user-greeting-name">Doctor</span>!</div>
-            <div class="menu-icon" onclick="toggleSidebar()">☰</div>
-        </div>
+    <div class="container dashboard" id="dashboard" style="display: none;">
+        <div class="topbar">
+            <div class="user-greeting">Hi, <span id="user-greeting-name">Doctor</span>!</div>
+            <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+        </div>
 
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-item" onclick="showDashboardSection('main')">🏠 Home</div>
-            <div class="sidebar-item" onclick="showDashboardSection('profile')">👤 Profile</div>
-            <div class="sidebar-item" onclick="showDashboardSection('edit-profile')">✏️ Edit Profile</div>
-            <div class="sidebar-item" onclick="showDashboardSection('subscription')">💳 Subscription</div>
-            <div class="sidebar-item" onclick="showDashboardSection('settings')">⚙️ Settings</div>
-            <div class="sidebar-item" onclick="showDashboardSection('about-us')">ℹ️ About Us</div>
-            <div class="sidebar-item" onclick="showDashboardSection('contact-us')">📞 Contact Us</div>
-            <div class="sidebar-item" onclick="logout()">🚪 Logout</div>
-        </div>
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-item" onclick="showDashboardSection('main')">🏠 Home</div>
+            <div class="sidebar-item" onclick="showDashboardSection('profile')">👤 Profile</div>
+            <div class="sidebar-item" onclick="showDashboardSection('edit-profile')">✏️ Edit Profile</div>
+            <div class="sidebar-item" onclick="showDashboardSection('subscription')">💳 Subscription</div>
+            <div class="sidebar-item" onclick="showDashboardSection('settings')">⚙️ Settings</div>
+            <div class="sidebar-item" onclick="showDashboardSection('about-us')">ℹ️ About Us</div>
+            <div class="sidebar-item" onclick="showDashboardSection('contact-us')">📞 Contact Us</div>
+            <div class="sidebar-item" onclick="logout()">🚪 Logout</div>
+        </div>
         
         <div class="dashboard-content-wrapper" id="dashboard-main-content">
             <h1 class="welcome-title">Welcome to RadMentor</h1>
@@ -498,7 +641,7 @@
                 <input type="radio" id="theme-switch-light" name="theme" value="light" onchange="setTheme('light')">
                 <label for="theme-switch-dark">Dark Theme</label>
                 <input type="radio" id="theme-switch-dark" name="theme" value="dark" onchange="setTheme('dark')">
-            </div>
+                <label for="theme-switch-gradient">Gradient Theme</label> <input type="radio" id="theme-switch-gradient" name="theme" value="gradient" onchange="setTheme('gradient')"> </div>
             <div class="settings-option">
                 <label>Notification Preferences:</label>
                 <button onclick="alert('Notification settings (Placeholder)')" style="background-color: #007bff; color: white;">Manage</button>
@@ -507,6 +650,8 @@
                 <label>Change Password:</label>
                 <button onclick="alert('Password change dialog (Placeholder)')" style="background-color: #6c757d; color: white;">Change</button>
             </div>
+            <div class="settings-option"> <label>Membership Status:</label>
+                <span id="membership-status">N/A</span> </div>
         </div>
 
         <div class="content-section" id="about-us-section">
@@ -550,33 +695,31 @@
 
         // --- Theme Logic ---
         function setTheme(theme) {
+            document.body.classList.remove('light-theme', 'gradient-theme'); // Remove all theme classes first
             if (theme === 'light') {
                 document.body.classList.add('light-theme');
-                localStorage.setItem('theme', 'light');
-            } else {
-                document.body.classList.remove('light-theme');
-                localStorage.setItem('theme', 'dark');
+            } else if (theme === 'gradient') { // Handle new gradient theme
+                document.body.classList.add('gradient-theme');
             }
-            // Update radio button states if they exist
-            const lightSwitch = document.getElementById('theme-switch-light');
-            const darkSwitch = document.getElementById('theme-switch-dark');
-            if (lightSwitch && darkSwitch) {
-                lightSwitch.checked = (theme === 'light');
-                darkSwitch.checked = (theme === 'dark');
-            }
+            localStorage.setItem('theme', theme); // Save selected theme
         }
 
         function setInitialTheme() {
             const savedTheme = localStorage.getItem('theme');
             const lightSwitch = document.getElementById('theme-switch-light');
             const darkSwitch = document.getElementById('theme-switch-dark');
+            const gradientSwitch = document.getElementById('theme-switch-gradient'); // New gradient switch
 
             if (savedTheme === 'light') {
                 document.body.classList.add('light-theme');
                 if (lightSwitch) lightSwitch.checked = true;
-            } else {
+            } else if (savedTheme === 'gradient') { // Handle initial gradient theme load
+                document.body.classList.add('gradient-theme');
+                if (gradientSwitch) gradientSwitch.checked = true;
+            }
+            else {
                 // Default to dark theme if no preference or explicitly dark
-                document.body.classList.remove('light-theme');
+                document.body.classList.remove('light-theme', 'gradient-theme');
                 if (darkSwitch) darkSwitch.checked = true;
             }
         }
@@ -626,7 +769,7 @@
                             // Immediately create profile with default restricted access
                             return db.collection('users').doc(user.uid).set({
                                 email: user.email,
-                                accessLevel: 'restricted', // Default access level
+                                accessLevel: 'restricted', // <--- THIS LINE SETS DEFAULT ACCESS ON SIGNUP
                                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                                 name: '', // Name will be filled out on profile form
                                 dob: '',
@@ -658,7 +801,7 @@
                     // or an old user without a profile. Create a basic profile for them.
                     userRef.set({
                         email: user.email,
-                        accessLevel: 'restricted', // Default access level for new profiles
+                        accessLevel: 'restricted', // <--- THIS LINE SETS DEFAULT ACCESS FOR USERS W/O PROFILE
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                         name: '', // Name will be filled out on profile form
                         dob: '',
@@ -788,21 +931,17 @@
 
             // Example: Restrict certain buttons based on accessLevel
             document.querySelectorAll('.mcq-grid .dashboard-grid-item').forEach(item => {
-                // If it's a restricted user, and this is a premium feature, disable it
-                // You'll define what's restricted vs. subscriber here
-                const feature = item.textContent.trim(); // Get the text like "FRCR", "MICR"
+                const feature = item.textContent.trim(); 
                 if (accessLevel === 'restricted' && (feature === 'FRCR' || feature === 'MICR' || feature === 'Superspeciality MCQs' || feature === 'Fellowship Exams')) {
                      item.style.opacity = '0.5';
                      item.style.pointerEvents = 'none';
                      item.onclick = () => alert('This content is for subscribers only. Please subscribe to unlock!');
                 } else {
-                    // Re-enable if previously restricted (e.g., user logs in as subscriber)
                     item.style.opacity = '1';
                     item.style.pointerEvents = 'auto';
                     // Re-assign original onclick from HTML based on initial setup
                     if (feature === 'FRCR') item.onclick = () => window.location.href='frcr/';
                     else if (feature === 'Anatomy') item.onclick = () => window.location.href='anatomy/';
-                    // For others, keep alerts as per current setup or replace with actual links
                     else if (feature === 'MICR') item.onclick = () => alert('MICR MCQs coming soon!');
                     else if (feature === 'MD / DNB') item.onclick = () => alert('MD / DNB MCQs coming soon!');
                     else if (feature === 'Superspeciality MCQs') item.onclick = () => alert('Superspeciality MCQs coming soon!');
@@ -872,7 +1011,6 @@
                 document.getElementById('display-position').textContent = currentUserData.position || 'N/A';
                 document.getElementById('display-college').textContent = currentUserData.college || 'N/A';
                 document.getElementById('display-exam').textContent = currentUserData.examPursuing || 'N/A';
-                // Display access level in profile or settings
                 document.getElementById('membership-status').textContent = currentUserData.accessLevel ? currentUserData.accessLevel.toUpperCase() : 'N/A';
 
             }
@@ -882,8 +1020,7 @@
             document.getElementById('membership-start-date').textContent = "Not yet subscribed"; 
             document.getElementById('membership-end-date').textContent = "Not yet subscribed"; 
             if (currentUserData && currentUserData.accessLevel) {
-                 document.getElementById('membership-status').textContent = currentUserData.accessLevel.toUpperCase();
-                 // In a real app, dates would come from Firestore or a subscription service
+                 document.getElementById('membership-status').textContent = currentUserData.accessLevel ? currentUserData.accessLevel.toUpperCase() : 'N/A'; // Ensure access level is shown
                  if (currentUserData.accessLevel === 'subscriber') {
                      document.getElementById('membership-start-date').textContent = "Jan 1, 2025 (Example)";
                      document.getElementById('membership-end-date').textContent = "Jan 1, 2026 (Example)";
