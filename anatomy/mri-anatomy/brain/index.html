@@ -6,7 +6,42 @@
     <title>Brain MRI Viewer - RadMentor</title>
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet"/>
     <style>
-        /* Base styles for all themes */
+        /* TEMPORARY DEBUGGING STYLES - REMOVE AFTER FIXING */
+.viewer-container {
+    border: 3px dashed purple !important;
+    min-height: 500px !important; /* Ensure it has some height */
+    max-width: 1200px !important; /* Ensure it's wide enough */
+    width: 95% !important;
+}
+
+.viewer-content-area {
+    border: 3px dashed orange !important;
+    min-height: 400px !important; /* Ensure it has some height */
+    width: 100% !important;
+    display: flex !important; /* Ensure flexbox is applied */
+    flex-wrap: nowrap !important; /* Prevent wrapping unexpectedly */
+    justify-content: center !important; /* Center content */
+    align-items: flex-start !important; /* Align children to top */
+    gap: 10px !important; /* Spacing between children */
+}
+
+.image-wrapper {
+    border: 3px dashed green !important;
+    width: 512px !important; /* Confirm fixed width */
+    height: 512px !important; /* Confirm fixed height */
+    flex-shrink: 0 !important; /* Prevent shrinking */
+}
+
+.annotation-side-panel {
+    background-color: #3333ff !important; /* Bright blue to see it */
+    border: 2px solid yellow !important; /* Bright border */
+    min-width: 150px !important; /* Ensure minimum width */
+    max-width: 250px !important;
+    height: 512px !important; /* Match image height */
+    flex-grow: 1 !important; /* Allow it to grow */
+    padding: 10px !important; /* Ensure padding is there */
+}
+/* END TEMPORARY DEBUGGING STYLES *//* Base styles for all themes */
         body {
             font-family: 'Rubik', sans-serif;
             margin: 0;
