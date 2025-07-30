@@ -69,7 +69,7 @@
             background: var(--bg-color);
         }
 
-        /* Apply theme variables to elements (updated to use var) */
+        /* Apply theme variables to elements */
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
@@ -148,9 +148,9 @@
             border-color: var(--button-bg-color);
         }
 
-        /* Specific Layouts and Components (unchanged from previous styling) */
+        /* Specific Layouts and Components */
         .container {
-            max-width: 500px;
+            max-width: 500px; /* Fixed width for auth/profile forms */
             margin: 30px auto;
             padding: 30px;
             border-radius: 8px;
@@ -183,13 +183,14 @@
             margin-top: 20px;
             transition: background 0.2s ease-in-out;
         }
+        /* Dashboard container will NOT have a fixed max-width, it will adapt */
         .dashboard {
             display: none;
             text-align: center;
             min-height: 300px;
             padding-top: 50px;
-            margin: 0 auto;
-            width: 100%;
+            margin: 0 auto; /* Allow full width, but center its children */
+            width: 100%; /* Take full available width */
         }
         .welcome-title {
             text-align: center;
@@ -209,7 +210,7 @@
         .sidebar {
             position: fixed;
             top: 50px;
-            right: -270px;
+            right: -270px; /* Correctly hidden off-screen */
             width: 250px;
             height: calc(100% - 50px);
             padding: 20px;
@@ -220,12 +221,17 @@
         .sidebar.show {
             right: 0;
         }
+        /* Dashboard main content area wrapper - RESTORED FLEX/CENTERING */
         .dashboard-content-wrapper {
-            margin: 0 auto;
-            padding: 20px;
-            width: 90%;
-            max-width: 1200px;
-            box-sizing: border-box;
+            margin: 0 auto; /* Center the wrapper */
+            padding: 20px; /* Internal padding for the content */
+            width: 90%; /* Start wide on larger screens */
+            max-width: 1200px; /* Maximum width for very large screens */
+            box-sizing: border-box; /* Include padding in width */
+            display: flex; /* RESTORED */
+            flex-direction: column; /* RESTORED */
+            align-items: center; /* RESTORED */
+            justify-content: flex-start; /* RESTORED */
         }
         .content-section {
             display: none;
@@ -239,32 +245,33 @@
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
+        /* Dashboard grid for MCQs - RESTORED GRID PROPERTIES */
         .mcq-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
+            display: grid; /* RESTORED */
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* RESTORED */
+            gap: 20px; /* RESTORED */
             margin-top: 30px;
             width: 100%;
         }
-        @media (min-width: 768px) {
+        @media (min-width: 768px) { 
             .mcq-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(2, 1fr); /* RESTORED */
             }
             .dashboard-grid-item {
                 font-size: 1.2rem;
             }
         }
-        @media (min-width: 1024px) {
+        @media (min-width: 1024px) { 
             .mcq-grid {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(3, 1fr); /* RESTORED */
             }
              .dashboard-grid-item {
                 font-size: 1.3rem;
             }
         }
-        @media (max-width: 599px) {
+        @media (max-width: 599px) { 
             .mcq-grid {
-                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
             }
             .dashboard-grid-item {
                 font-size: 1.0rem;
@@ -487,65 +494,70 @@
                 <option value="Government Medical College, Akola">
                 <option value="Government Medical College, Miraj">
                 <option value="Government Medical College, Latur">
+                <option value="Government Medical College, Jalgaon">
+                <option value="Government Medical College, Dhule">
+                <option value="Government Medical College, Gondia">
+                <option value="Government Medical College, Chandrapur">
+                <option value="Government Medical College & Hospital, Baramati">
                 <option value="AIIMS Bhopal">
-                <option value="AIIMS Bhubaneswar">
-                <option value="AIIMS Jodhpur">
-                <option value="AIIMS Patna">
-                <option value="AIIMS Raipur">
-                <option value="AIIMS Rishikesh">
-                <option value="AIIMS Nagpur">
-                <option value="AIIMS Mangalagiri">
-                <option value="AIIMS Gorakhpur">
-                <option value="AIIMS Kalyani">
-                <option value="AIIMS Raebareli">
-                <option value="AIIMS Bathinda">
-                <option value="AIIMS Bilaspur">
-                <option value="AIIMS Deoghar">
-                <option value="AIIMS Guwahati">
-                <option value="AIIMS Rajkot">
-                <option value="AIIMS Vijaypur">
-                <option value="AIIMS Madurai">
-                <option value="AIIMS Darbhanga">
-                <option value="AIIMS Rewari">
-                <option value="AIIMS Kashmir">
-                <option value="AIIMS Jammu">
-                <option value="AIIMS Manipur">
-                <option value="AIIMS Mizoram">
-                <option value="AIIMS Sikkim">
-                <option value="AIIMS Tripura">
-            </datalist>
-        </div>
-        <div class="input-group">
-            <select id="exam_pursuing">
-                <option value="" disabled selected>What exam are you pursuing?</option>
-                <option>Final year exam</option>
-                <option>DNB</option>
-                <option>FRCR</option>
-                <option>NEET SS</option>
-                <option>INICET SS</option>
-                <option>MICR</option>
-                <option>Fellowship exams</option>
-            </select>
-        </div>
-        <button onclick="submitProfile()">Submit Profile</button>
-    </div>
+                <option value="AIIMS Bhubaneswar">
+                <option value="AIIMS Jodhpur">
+                <option value="AIIMS Patna">
+                <option value="AIIMS Raipur">
+                <option value="AIIMS Rishikesh">
+                <option value="AIIMS Nagpur">
+                <option value="AIIMS Mangalagiri">
+                <option value="AIIMS Gorakhpur">
+                <option value="AIIMS Kalyani">
+                <option value="AIIMS Raebareli">
+                <option value="AIIMS Bathinda">
+                <option value="AIIMS Bilaspur">
+                <option value="AIIMS Deoghar">
+                <option value="AIIMS Guwahati">
+                <option value="AIIMS Rajkot">
+                <option value="AIIMS Vijaypur">
+                <option value="AIIMS Madurai">
+                <option value="AIIMS Darbhanga">
+                <option value="AIIMS Rewari">
+                <option value="AIIMS Kashmir">
+                <option value="AIIMS Jammu">
+                <option value="AIIMS Manipur">
+                <option value="AIIMS Mizoram">
+                <option value="AIIMS Sikkim">
+                <option value="AIIMS Tripura">
+            </datalist>
+        </div>
+        <div class="input-group">
+            <select id="exam_pursuing">
+                <option value="" disabled selected>What exam are you pursuing?</option>
+                <option>Final year exam</option>
+                <option>DNB</option>
+                <option>FRCR</option>
+                <option>NEET SS</option>
+                <option>INICET SS</option>
+                <option>MICR</option>
+                <option>Fellowship exams</option>
+            </select>
+        </div>
+        <button onclick="submitProfile()">Submit Profile</button>
+    </div>
 
-    <div class="container dashboard" id="dashboard" style="display: none;">
-        <div class="topbar">
-            <div class="user-greeting">Hi, <span id="user-greeting-name">Doctor</span>!</div>
-            <div class="menu-icon" onclick="toggleSidebar()">☰</div>
-        </div>
+    <div class="container dashboard" id="dashboard" style="display: none;">
+        <div class="topbar">
+            <div class="user-greeting">Hi, <span id="user-greeting-name">Doctor</span>!</div>
+            <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+        </div>
 
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-item" onclick="showDashboardSection('main')">🏠 Home</div>
-            <div class="sidebar-item" onclick="showDashboardSection('profile')">👤 Profile</div>
-            <div class="sidebar-item" onclick="showDashboardSection('edit-profile')">✏️ Edit Profile</div>
-            <div class="sidebar-item" onclick="showDashboardSection('subscription')">💳 Subscription</div>
-            <div class="sidebar-item" onclick="showDashboardSection('settings')">⚙️ Settings</div>
-            <div class="sidebar-item" onclick="showDashboardSection('about-us')">ℹ️ About Us</div>
-            <div class="sidebar-item" onclick="showDashboardSection('contact-us')">📞 Contact Us</div>
-            <div class="sidebar-item" onclick="logout()">🚪 Logout</div>
-        </div>
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-item" onclick="showDashboardSection('main')">🏠 Home</div>
+            <div class="sidebar-item" onclick="showDashboardSection('profile')">👤 Profile</div>
+            <div class="sidebar-item" onclick="showDashboardSection('edit-profile')">✏️ Edit Profile</div>
+            <div class="sidebar-item" onclick="showDashboardSection('subscription')">💳 Subscription</div>
+            <div class="sidebar-item" onclick="showDashboardSection('settings')">⚙️ Settings</div>
+            <div class="sidebar-item" onclick="showDashboardSection('about-us')">ℹ️ About Us</div>
+            <div class="sidebar-item" onclick="showDashboardSection('contact-us')">📞 Contact Us</div>
+            <div class="sidebar-item" onclick="logout()">🚪 Logout</div>
+        </div>
         
         <div class="dashboard-content-wrapper" id="dashboard-main-content">
             <h1 class="welcome-title">Welcome to RadMentor</h1>
@@ -1020,7 +1032,7 @@
             document.getElementById('membership-start-date').textContent = "Not yet subscribed"; 
             document.getElementById('membership-end-date').textContent = "Not yet subscribed"; 
             if (currentUserData && currentUserData.accessLevel) {
-                 document.getElementById('membership-status').textContent = currentUserData.accessLevel ? currentUserData.accessLevel.toUpperCase() : 'N/A'; // Ensure access level is shown
+                 document.getElementById('membership-status').textContent = currentUserData.accessLevel ? currentUserData.accessLevel.toUpperCase() : 'N/A'; 
                  if (currentUserData.accessLevel === 'subscriber') {
                      document.getElementById('membership-start-date').textContent = "Jan 1, 2025 (Example)";
                      document.getElementById('membership-end-date').textContent = "Jan 1, 2026 (Example)";
