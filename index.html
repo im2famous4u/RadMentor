@@ -7,472 +7,333 @@
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        // Set up Tailwind dark mode
-        tailwind.config = {
-            darkMode: 'class', // or 'media'
-        }
-    </script>
 
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <!-- Feather Icons -->
     <script src="https://unpkg.com/feather-icons"></script>
 
     <style>
-        /* Custom styles to complement Tailwind */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* Light gray background (slate-50) */
+        body { font-family: 'Inter', sans-serif; position: relative; }
+        #landing-page::before {
+            content: ''; position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: radial-gradient(ellipse at top, #fff5e6, white 70%);
+            z-index: -1;
         }
-
-        /* Custom gradient for buttons and highlights */
-        .rad-gradient {
-            background: linear-gradient(90deg, #1e40af, #3b82f6);
+        .hero-gradient-text {
+            background-image: linear-gradient(to right, #3b82f6, #60a5fa);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900;
         }
-        .rad-gradient-text {
-            background: linear-gradient(90deg, #1e40af, #3b82f6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .hero-button, .header-signup-btn { background-color: #2563eb; transition: background-color 0.2s; }
+        .hero-button:hover, .header-signup-btn:hover { background-color: #1d4ed8; }
+        .rad-gradient { background: linear-gradient(90deg, #1e40af, #3b82f6); }
+        .dashboard-theme { background-color: #101827; color: #f9fafb; }
+        .dashboard-card {
+            background-color: #1F2937; border: 1px solid #374151; color: #ffffff;
+            cursor: pointer; transition: all 0.2s ease; text-align: center;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 600; font-size: 1.25rem; min-height: 140px; border-radius: 0.75rem;
         }
-
-        /* Styles for dashboard items and cards */
-        .dashboard-grid-item, .pricing-card, .feature-card {
-            transition: all 0.3s ease;
+        .dashboard-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.25); border-color: #4b5563; }
+        .dashboard-greeting { color: #ffffff; font-weight: 800; }
+        .dashboard-sub-greeting { color: #d1d5db; }
+        .header-dark {
+            background: #101827 !important;
+            border-bottom: 1px solid #1f2937;
+            backdrop-filter: none;
         }
-        .dashboard-grid-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-        .pricing-card:hover {
-            transform: scale(1.05);
-            border-color: #3b82f6;
-        }
-        .feature-card:hover {
-            background-color: #f3f4f6;
-        }
-        .dark .feature-card:hover {
-             background-color: #374151; /* gray-700 */
-        }
+        .header-dark span, .header-dark a { color: #ffffff !important; }
+        .header-dark i { color: #ffffff !important; }
     </style>
 </head>
-<body class="text-gray-800 dark:text-gray-200 pt-16 bg-slate-50 dark:bg-gray-900">
+<body class="text-gray-800 pt-16">
 
-    <!-- =================================================
-    PERSISTENT HEADER
-    ================================================== -->
-    <header class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
+    <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm transition-colors duration-300">
         <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <a href="/" class="flex items-center"><img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/><span class="text-2xl font-bold text-gray-800">RadMentor</span></a>
+            <nav id="main-nav" class="hidden md:flex items-center space-x-8"><a href="#courses" class="text-gray-600 hover:text-blue-600">Courses</a><a href="#features" class="text-gray-600 hover:text-blue-600">Features</a><a href="#pricing" class="text-gray-600 hover:text-blue-600">Pricing</a><a href="#about" class="text-gray-600 hover:text-blue-600">About Us</a></nav>
             <div class="flex items-center">
-                <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
-                <span class="text-2xl font-bold text-gray-800 dark:text-white">RadMentor</span>
-            </div>
-            <nav id="main-nav" class="hidden md:flex items-center space-x-8">
-                <a href="#courses" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Courses</a>
-                <a href="#features" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Features</a>
-                <a href="#pricing" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Pricing</a>
-                <a href="#about" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">About Us</a>
-            </nav>
-            <div class="flex items-center">
-                <!-- Logged Out Navigation -->
-                <div id="logged-out-nav" class="hidden md:flex items-center">
-                    <button onclick="showAuthModal('signin')" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 mr-6">Login</button>
-                    <button onclick="showAuthModal('signup')" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                        Sign Up
-                    </button>
-                </div>
-
-                <!-- Logged In Navigation -->
-                <div id="logged-in-nav" class="hidden relative">
-                    <button id="user-menu-button" class="flex items-center space-x-2">
-                        <span class="font-semibold text-gray-700 dark:text-gray-200">Hi, <span id="user-greeting-header"></span></span>
-                        <i data-feather="chevron-down" class="w-4 h-4 text-gray-700 dark:text-gray-300"></i>
-                    </button>
-                    <!-- Dropdown Menu -->
-                    <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50 hidden border dark:border-gray-700">
-                        <!-- Admin link will be injected here by JS -->
-                        <a href="#" onclick="showDashboardSection('main')" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">My Dashboard</a>
-                        <a href="#" onclick="alert('Bookmarks page coming soon!')" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Bookmarks</a>
-                        <a href="#" onclick="showDashboardSection('settings')" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Settings</a>
-                        <div class="border-t border-gray-100 dark:border-gray-700"></div>
-                        <a href="#" onclick="logout()" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Logout</a>
-                    </div>
-                </div>
-
-                <button id="mobile-menu-button" class="md:hidden ml-4 text-gray-700 dark:text-gray-300">
-                    <i data-feather="menu"></i>
-                </button>
+                <div id="logged-out-nav" class="hidden md:flex items-center"><button onclick="showAuthModal('signin')" class="text-gray-600 hover:text-blue-600 mr-6 font-medium">Login</button><button onclick="showAuthModal('signup')" class="header-signup-btn text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">Sign Up</button></div>
+                <div id="logged-in-nav" class="hidden relative"><button id="user-menu-button" class="flex items-center space-x-2"><span class="font-semibold text-gray-700">Hi, <span id="user-greeting-header"></span></span><i data-feather="chevron-down" class="w-4 h-4 text-gray-700"></i></button><div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden"><a href="#" onclick="showDashboardSection('main')" class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">My Dashboard</a><a href="#" onclick="showDashboardSection('profile')" class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">My Profile</a><a href="#" onclick="showDashboardSection('settings')" class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">Settings</a><div class="border-t border-gray-100"></div><a href="#" onclick="logout()" class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">Logout</a></div></div>
+                <button id="mobile-menu-button" class="md:hidden ml-4 text-gray-700"><i data-feather="menu"></i></button>
             </div>
         </div>
-         <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 right-0 bg-white dark:bg-gray-800 shadow-md px-6 pb-4">
-            <a href="#courses" class="block py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Courses</a>
-            <a href="#features" class="block py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Features</a>
-            <a href="#pricing" class="block py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Pricing</a>
-            <a href="#about" class="block py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">About Us</a>
-            <div id="mobile-logged-out-nav">
-                <button onclick="showAuthModal('signin')" class="block w-full text-left py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Login</button>
-            </div>
-              <div id="mobile-logged-in-nav" class="hidden border-t mt-2 pt-2 dark:border-gray-700">
-                  <a href="#" onclick="showDashboardSection('main')" class="block py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">My Dashboard</a>
-                  <a href="#" onclick="alert('Bookmarks page coming soon!')" class="block py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Bookmarks</a>
-                  <a href="#" onclick="logout()" class="block py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Logout</a>
-            </div>
-        </div>
+        <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 right-0 bg-white shadow-md px-6 pb-4"><div id="mobile-logged-out-nav"><a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a><a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a><a href="#pricing" class="block py-2 text-gray-600 hover:text-blue-600">Pricing</a><a href="#about" class="block py-2 text-gray-600 hover:text-blue-600">About Us</a><div class="border-t mt-2 pt-2"><button onclick="showAuthModal('signin')" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Login</button></div></div></div>
     </header>
 
-    <!-- =================================================
-    LANDING PAGE SECTION
-    ================================================== -->
     <div id="landing-page">
         <main>
-            <!-- Hero Section -->
-            <section class="bg-white dark:bg-gray-900 pt-16 pb-20">
-                <div class="container mx-auto px-6 text-center">
-                    <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 dark:text-white leading-tight">
-                        The World’s Most Comprehensive <br class="hidden md:block" /> <span class="rad-gradient-text">Radiology Learning Source</span>
-                    </h1>
-                    <p class="mt-6 text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-                        Master radiology with our expert-curated Q-banks, mock exams, and in-depth content. Built by radiologists, for future radiologists.
-                    </p>
-                    <div class="mt-8 flex justify-center gap-4">
-                        <button onclick="showAuthModal('signup')" class="rad-gradient text-white font-bold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-lg">
-                            Get Started for Free
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Courses Section -->
-            <section id="courses" class="py-20">
-                <div class="container mx-auto px-6">
-                    <div class="text-center mb-12">
-                        <h2 class="text-4xl font-bold text-gray-900 dark:text-white">Prepare for Any Exam</h2>
-                        <p class="mt-4 text-lg text-gray-600 dark:text-gray-300">Targeted preparation for all major radiology exams.</p>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <!-- Course Items -->
-                        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 dark:border-gray-700">
-                            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">FRCR</h3>
-                            <p class="mt-2 text-gray-600 dark:text-gray-300">Comprehensive question banks and mock tests for the FRCR exam.</p>
-                        </div>
-                        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 dark:border-gray-700">
-                            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">MD / DNB</h3>
-                            <p class="mt-2 text-gray-600 dark:text-gray-300">Master your final year exams with our targeted content.</p>
-                        </div>
-                        <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 dark:border-gray-700">
-                            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">Anatomy</h3>
-                            <p class="mt-2 text-gray-600 dark:text-gray-300">Detailed anatomical modules to build a strong foundation.</p>
-                        </div>
-                         <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 dark:border-gray-700">
-                            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">MICR</h3>
-                            <p class="mt-2 text-gray-600 dark:text-gray-300">Practice with MCQs tailored for the MICR examination.</p>
-                        </div>
-                         <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 dark:border-gray-700">
-                            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">Superspeciality</h3>
-                            <p class="mt-2 text-gray-600 dark:text-gray-300">Prepare for NEET SS & INICET SS with high-yield questions.</p>
-                        </div>
-                         <div class="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 dark:border-gray-700">
-                            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">Fellowship Exams</h3>
-                            <p class="mt-2 text-gray-600 dark:text-gray-300">Excel in your fellowship exams with our specialized modules.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Features Section -->
-            <section id="features" class="py-20 bg-white dark:bg-gray-900">
-                <div class="container mx-auto px-6">
-                    <div class="text-center mb-12">
-                        <h2 class="text-4xl font-bold text-gray-900 dark:text-white">A Smarter Way to Learn</h2>
-                        <p class="mt-4 text-lg text-gray-600 dark:text-gray-300">Tools designed for deep understanding and long-term retention.</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-center">
-                        <div class="feature-card p-6 rounded-lg">
-                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="award" class="text-white"></i></div>
-                            <h3 class="mt-6 text-xl font-bold text-gray-900 dark:text-white">Expert-Curated Content</h3>
-                            <p class="mt-2 text-gray-600 dark:text-gray-300">All questions and explanations are created and verified by top radiologists.</p>
-                        </div>
-                        <div class="feature-card p-6 rounded-lg">
-                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="target" class="text-white"></i></div>
-                            <h3 class="mt-6 text-xl font-bold text-gray-900 dark:text-white">Realistic Exam Simulation</h3>
-                            <p class="mt-2 text-gray-600 dark:text-gray-300">Experience the real exam environment with our timed mock tests.</p>
-                        </div>
-                        <div class="feature-card p-6 rounded-lg">
-                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="bar-chart-2" class="text-white"></i></div>
-                            <h3 class="mt-6 text-xl font-bold text-gray-900 dark:text-white">Deep Analytics</h3>
-                            <p class="mt-2 text-gray-600 dark:text-gray-300">Track your progress, identify weak areas, and compare with peers.</p>
-                        </div>
-                        <!-- Add more feature cards as needed -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- Pricing Section -->
-            <section id="pricing" class="py-20">
-                <div class="container mx-auto px-6">
-                    <div class="text-center mb-12">
-                        <h2 class="text-4xl font-bold text-gray-900 dark:text-white">Flexible Plans for Every Need</h2>
-                        <p class="mt-4 text-lg text-gray-600 dark:text-gray-300">Choose the plan that’s right for your learning journey.</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-center">
-                        <!-- Free Plan -->
-                        <div class="pricing-card bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border-2 border-transparent w-full flex flex-col">
-                            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">Free</h3>
-                            <p class="mt-2 text-gray-600 dark:text-gray-300">Get a taste of our platform.</p>
-                            <div class="mt-6 text-4xl font-extrabold text-gray-900 dark:text-white">$0</div>
-                            <ul class="mt-8 space-y-4 text-left flex-grow text-gray-600 dark:text-gray-300">
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Limited MCQs</li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Case of the Week</li>
-                            </ul>
-                            <button onclick="showAuthModal('signup')" class="mt-8 w-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white font-bold py-3 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                                Sign Up for Free
-                            </button>
-                        </div>
-                        <!-- Q-Bank Pass -->
-                        <div class="pricing-card bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border-2 border-transparent w-full flex flex-col">
-                            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">Q-Bank Pass</h3>
-                            <p class="mt-2 text-gray-600 dark:text-gray-300">For focused question practice.</p>
-                            <div class="mt-6 text-4xl font-extrabold text-gray-900 dark:text-white">$29 <span class="text-lg font-medium text-gray-500 dark:text-gray-400">/mo</span></div>
-                            <ul class="mt-8 space-y-4 text-left flex-grow text-gray-600 dark:text-gray-300">
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>All MCQ Banks</b></li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Basic Analytics</li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Personal Notes</li>
-                            </ul>
-                            <button onclick="alert('Payment integration coming soon!')" class="mt-8 w-full rad-gradient text-white font-bold py-3 rounded-lg hover:shadow-lg transition-shadow">
-                                Choose Plan
-                            </button>
-                        </div>
-                        <!-- Smart-Prep Pass -->
-                        <div class="pricing-card bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl border-2 border-blue-500 w-full relative flex flex-col">
-                            <div class="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-sm font-bold px-4 py-1 rounded-full">POPULAR</div>
-                            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">Smart-Prep Pass</h3>
-                            <p class="mt-2 text-blue-600 dark:text-blue-400">Learn smarter, not harder.</p>
-                            <div class="mt-6 text-4xl font-extrabold text-gray-900 dark:text-white">$49 <span class="text-lg font-medium text-gray-500 dark:text-gray-400">/mo</span></div>
-                            <ul class="mt-8 space-y-4 text-left flex-grow text-gray-600 dark:text-gray-300">
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Everything in Q-Bank</b></li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Flashcards & SRS</b></li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Deep Analytics</li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Leaderboard Access</li>
-                            </ul>
-                            <button onclick="alert('Payment integration coming soon!')" class="mt-8 w-full rad-gradient text-white font-bold py-3 rounded-lg hover:shadow-lg transition-shadow">
-                                Choose Plan
-                            </button>
-                        </div>
-                         <!-- All-Access Pass -->
-                        <div class="pricing-card bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border-2 border-transparent w-full flex flex-col">
-                            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">All-Access Pass</h3>
-                            <p class="mt-2 text-gray-600 dark:text-gray-300">The complete package.</p>
-                            <div class="mt-6 text-4xl font-extrabold text-gray-900 dark:text-white">$69 <span class="text-lg font-medium text-gray-500 dark:text-gray-400">/mo</span></div>
-                            <ul class="mt-8 space-y-4 text-left flex-grow text-gray-600 dark:text-gray-300">
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Everything in Smart-Prep</b></li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Full Mock Exams</b></li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Personalized Study Planner</b></li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Priority Support</li>
-                            </ul>
-                            <button onclick="alert('Payment integration coming soon!')" class="mt-8 w-full rad-gradient text-white font-bold py-3 rounded-lg hover:shadow-lg transition-shadow">
-                                Choose Plan
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- About Us Section -->
-            <section id="about" class="py-20 bg-white dark:bg-gray-900">
-                <div class="container mx-auto px-6">
-                      <div class="text-center mb-12">
-                        <h2 class="text-4xl font-bold text-gray-900 dark:text-white">Built by Doctors, for Doctors</h2>
-                    </div>
-                    <div class="max-w-4xl mx-auto bg-gray-50 dark:bg-gray-800 p-10 rounded-xl border border-gray-200 dark:border-gray-700 text-center">
-                        <p class="text-lg text-gray-600 dark:text-gray-300">
-                            We are two radiologists trained at one of India’s premier medical institutes, united by a shared vision: to make high-quality radiology education accessible, affordable, and reliable for all. Every question, explanation, and update is curated by us, backed by evidence, and rooted in real-world radiology practice.
-                        </p>
-                          <p class="mt-4 text-lg font-semibold text-gray-800 dark:text-white">Welcome to a community built with precision and care.</p>
-                    </div>
-                </div>
-            </section>
+            <section class="pt-20 pb-24"><div class="container mx-auto px-6 text-center"><h1 class="text-5xl md:text-7xl font-black text-gray-900 leading-tight">The World’s Most Comprehensive<br/><span class="hero-gradient-text">Radiology Learning Source</span></h1><p class="mt-6 text-lg text-gray-600 max-w-2xl mx-auto">Master radiology with our expert-curated Q-banks, mock exams, and in-depth content. Built by radiologists, for future radiologists.</p><div class="mt-10 flex justify-center"><button onclick="showAuthModal('signup')" class="hero-button text-lg font-semibold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow">Get Started for Free</button></div></div></section>
+            <section id="courses" class="py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold text-gray-900">Prepare for Any Exam</h2><p class="mt-4 text-lg text-gray-600">Targeted preparation for all major radiology exams.</p></div><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"><div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100"><h3 class="text-2xl font-bold text-gray-800">FRCR</h3><p class="mt-2 text-gray-600">Comprehensive question banks and mock tests for the FRCR exam.</p></div><div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100"><h3 class="text-2xl font-bold text-gray-800">MD / DNB</h3><p class="mt-2 text-gray-600">Master your final year exams with our targeted content.</p></div><div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100"><h3 class="text-2xl font-bold text-gray-800">Anatomy</h3><p class="mt-2 text-gray-600">Detailed anatomical modules to build a strong foundation.</p></div></div></div></section>
+            <section id="about" class="py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold text-gray-900">Built by Doctors, for Doctors</h2></div><div class="max-w-4xl mx-auto bg-white/60 backdrop-blur-sm p-10 rounded-xl border text-left space-y-4 text-lg text-gray-700"><p>We are two radiologists trained at one of India’s premier medical institutes, united by a shared vision: to make high-quality radiology education accessible, affordable, and reliable for all.</p><p>In a world where accurate knowledge can shape clinical decisions, we built this platform as a trusted source of learning—for students, residents, and practitioners alike. Every question, explanation, and update is curated by us, backed by evidence, and rooted in real-world radiology practice.</p><p>Whether you're preparing for exams or refining your diagnostic skills, our goal is to support your journey with clear, concise, and clinically relevant content—delivered with the precision you'd expect from radiologists.</p><p class="font-semibold text-gray-800 pt-2">Welcome to a community built by Radiologists, for Radiologists.</p></div></div></section>
         </main>
-
-        <!-- Footer -->
-        <footer class="bg-gray-900 text-white">
-            <div class="container mx-auto px-6 py-12">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div>
-                        <h3 class="text-xl font-bold">RadMentor</h3>
-                        <p class="mt-2 text-gray-400">The future of radiology education.</p>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold">Quick Links</h3>
-                        <ul class="mt-2 space-y-2">
-                            <li><a href="#courses" class="text-gray-400 hover:text-white">Courses</a></li>
-                            <li><a href="#features" class="text-gray-400 hover:text-white">Features</a></li>
-                            <li><a href="#pricing" class="text-gray-400 hover:text-white">Pricing</a></li>
-                            <li><a href="#" onclick="showAuthModal('signup')" class="text-gray-400 hover:text-white">Sign Up</a></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold">Contact</h3>
-                         <p class="mt-2 text-gray-400">Email: <a href="mailto:support@radmentor.com" class="hover:text-white">support@radmentor.com</a></p>
-                    </div>
-                </div>
-                <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-500">
-                    &copy; 2024 RadMentor. All Rights Reserved.
-                </div>
-            </div>
-        </footer>
+        <footer class="bg-gray-900 text-white"><div class="container mx-auto px-6 py-12"><div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-500">&copy; 2025 RadMentor. All Rights Reserved.</div></div></footer>
     </div>
-
-    <!-- =================================================
-    AUTHENTICATION MODAL
-    ================================================== -->
-    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md relative">
-            <button onclick="hideAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white">
-                <i data-feather="x" class="w-7 h-7"></i>
-            </button>
-
-            <div class="p-8 md:p-12">
-                <div id="auth-container">
-                    <h1 id="auth-title" class="text-3xl font-bold text-gray-900 dark:text-white text-center mb-2">Login to RadMentor</h1>
-                    <p id="auth-subtitle" class="text-gray-600 dark:text-gray-300 text-center mb-8">Welcome back!</p>
-                    <div class="space-y-4">
-                        <input type="email" id="email" placeholder="Email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <input type="password" id="password" placeholder="Password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    </div>
-                    <button onclick="handleAuth()" id="auth-btn" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Sign In</button>
-                    <div class="text-center mt-6">
-                        <button onclick="toggleAuth()" id="toggle-btn" class="text-blue-600 dark:text-blue-400 hover:underline">Don't have an account? Sign up</button>
-                    </div>
-                    <p id="auth-message" class="text-red-500 text-center mt-4 font-medium"></p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- =================================================
-    PROFILE COMPLETION FORM
-    ================================================== -->
-    <div id="profile-form-container" class="fixed inset-0 bg-gray-100 dark:bg-gray-900 z-50 p-4 hidden overflow-y-auto">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl mx-auto my-8 p-8 md:p-12">
-             <h1 class="text-3xl font-bold text-gray-900 dark:text-white text-center">Complete Your Profile</h1>
-             <p class="text-gray-600 dark:text-gray-300 text-center mb-8">Please provide a few more details to get started.</p>
-             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="md:col-span-2"><input type="text" id="name" placeholder="Full Name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
-                <div>
-                    <label class="font-medium text-gray-700 dark:text-gray-300">Date of Birth</label>
-                    <input type="date" id="dob" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                </div>
-                <div>
-                    <label class="font-medium text-gray-700 dark:text-gray-300">Sex</label>
-                    <select id="sex" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <option value="" disabled selected>Select Sex</option>
-                        <option>Male</option><option>Female</option><option>Other</option>
-                    </select>
-                </div>
-                 <div>
-                    <label class="font-medium text-gray-700 dark:text-gray-300">Position</label>
-                    <select id="position" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <option value="" disabled selected>Select Position</option>
-                        <option>Intern</option><option>Junior Resident</option><option>Senior Resident</option><option>Consultant</option>
-                    </select>
-                </div>
-                 <div>
-                    <label class="font-medium text-gray-700 dark:text-gray-300">Exam Pursuing</label>
-                    <select id="exam_pursuing" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <option value="" disabled selected>Select Exam</option>
-                        <option>Final year exam</option><option>DNB</option><option>FRCR</option><option>NEET SS</option><option>INICET SS</option><option>MICR</option><option>Fellowship exams</option>
-                    </select>
-                </div>
-                <div class="md:col-span-2">
-                      <label class="font-medium text-gray-700 dark:text-gray-300">Medical College</label>
-                      <input list="colleges" id="college" placeholder="Type to search your college" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                      <datalist id="colleges">
-                        <option value="All India Institute of Medical Sciences, New Delhi"></option>
-                        <option value="Postgraduate Institute of Medical Education and Research, Chandigarh"></option>
-                        <option value="Christian Medical College, Vellore"></option>
-                        <option value="National Institute of Mental Health and Neuro Sciences, Bangalore"></option>
-                        <option value="Jawaharlal Institute of Postgraduate Medical Education & Research, Puducherry"></option>
-                        <!-- Add all other colleges from your previous list here -->
-                      </datalist>
-                </div>
-             </div>
-             <button onclick="submitProfile()" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Submit Profile</button>
-        </div>
-    </div>
-
-
-    <!-- =================================================
-    DASHBOARD SECTION
-    ================================================== -->
+    
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[100] flex items-center justify-center p-4 hidden"> </div>
+    <div id="profile-form-container" class="fixed inset-0 bg-gray-100 z-[100] p-4 hidden overflow-y-auto"> </div>
+    
     <div id="dashboard" class="hidden">
-        <!-- Dashboard Main Content -->
-        <div class="pt-16 pb-12 bg-gray-50 dark:bg-gray-900 min-h-screen">
+        <aside id="sidebar" class="fixed top-0 right-0 h-full bg-white shadow-xl z-[60] w-72 p-6 transform translate-x-full transition-transform duration-300 ease-in-out"><div class="flex justify-between items-center mb-8"><h2 class="text-xl font-bold text-gray-800">Menu</h2><button id="close-sidebar-button" class="text-gray-600 hover:text-gray-900"><i data-feather="x"></i></button></div><nav class="space-y-2 text-gray-800"><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100" onclick="showDashboardSection('main')"><i data-feather="home" class="mr-3 w-5 h-5"></i>Home</a><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100" onclick="showDashboardSection('profile')"><i data-feather="user" class="mr-3 w-5 h-5"></i>Profile</a><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100" onclick="showDashboardSection('analytics')"><i data-feather="bar-chart-2" class="mr-3 w-5 h-5"></i>Analytics</a><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100" onclick="showDashboardSection('settings')"><i data-feather="settings" class="mr-3 w-5 h-5"></i>Settings</a><div class="border-t my-2"></div><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100" onclick="logout()"><i data-feather="log-out" class="mr-3 w-5 h-5"></i>Logout</a></nav></aside>
+        
+        <div id="dashboard-content-wrapper" class="min-h-screen dashboard-theme pt-8 pb-12">
             <div class="container mx-auto px-6">
-                <!-- Main Dashboard View -->
-                <div id="dashboard-main-content">
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Welcome to RadMentor</h1>
-                    <p class="mt-2 text-lg text-gray-600 dark:text-gray-300">Select a category to start your preparation.</p>
-                    
-                    <div id="access-level-notice"></div>
-
-                    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="dashboard-grid-item bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border dark:border-gray-700" onclick="window.location.href='https://raw.githubusercontent.com/im2famous4u/RadMentor/main/frcr/index.html'">
-                            <h3 class="text-xl font-bold text-gray-800 dark:text-white">FRCR MCQs</h3>
-                        </div>
-                        <div class="dashboard-grid-item bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border dark:border-gray-700" onclick="window.location.href='https://raw.githubusercontent.com/im2famous4u/RadMentor/main/Anatomy.html'">
-                            <h3 class="text-xl font-bold text-gray-800 dark:text-white">Anatomy MCQs</h3>
-                        </div>
-                        <div class="dashboard-grid-item bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border dark:border-gray-700" onclick="alert('Flashcards coming soon!')">
-                            <h3 class="text-xl font-bold text-gray-800 dark:text-white">Flashcards (SRS)</h3>
-                        </div>
-                        <!-- Add other dashboard items here -->
-                    </div>
-                </div>
-
-                <!-- Other Dashboard Sections -->
-                <div id="profile-section" class="hidden bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border dark:border-gray-700"></div>
-                <div id="analytics-section" class="hidden bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border dark:border-gray-700"></div>
-                <div id="planner-section" class="hidden bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border dark:border-gray-700"></div>
-                <div id="subscription-section" class="hidden bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border dark:border-gray-700"></div>
-                <div id="settings-section" class="hidden bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md border dark:border-gray-700"></div>
-                
-                <!-- Admin Dashboard Section -->
-                <div id="admin-section" class="hidden">
-                     <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Admin Dashboard</h1>
-                     <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
-                         <h2 class="text-2xl font-bold mb-4 text-gray-900 dark:text-white">User Management</h2>
-                         <div class="overflow-x-auto">
-                             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                     <tr>
-                                         <th scope="col" class="py-3 px-6">User</th>
-                                         <th scope="col" class="py-3 px-6">Email</th>
-                                         <th scope="col" class="py-3 px-6">Access Level</th>
-                                         <th scope="col" class="py-3 px-6">Actions</th>
-                                     </tr>
-                                 </thead>
-                                 <tbody id="user-list">
-                                     <!-- User data will be populated by JS -->
-                                 </tbody>
-                             </table>
-                         </div>
-                     </div>
-                </div>
-
+                <div id="dashboard-main-content" class="hidden"><h1 class="text-4xl dashboard-greeting">Welcome to RadMentor</h1><p class="mt-2 text-lg dashboard-sub-greeting">The World’s Most Comprehensive Radiology Learning Source</p><div id="access-level-notice" class="text-white mt-6"></div><div class="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"><div class="dashboard-card" onclick="window.location.href='https://im2famous4u.github.io/RadMentor/frcr/index.html'">FRCR</div><div class="dashboard-card" onclick="alert('MICR page coming soon!')">MICR</div><div class="dashboard-card" onclick="window.location.href='https://im2famous4u.github.io/RadMentor/anatomy/index.html'">Anatomy</div><div class="dashboard-card" onclick="alert('MD / DNB page coming soon!')">MD / DNB</div><div class="dashboard-card" onclick="alert('Superspeciality page coming soon!')">Superspeciality MCQs</div><div class="dashboard-card" onclick="alert('Fellowship page coming soon!')">Fellowship Exams</div></div></div>
+                <div id="admin-section" class="hidden bg-gray-100 p-4 sm:p-8 rounded-xl text-gray-800"></div>
+                <div id="profile-section" class="hidden bg-white p-8 rounded-lg shadow-md text-gray-800"></div>
+                <div id="analytics-section" class="hidden bg-white p-8 rounded-lg shadow-md text-gray-800"></div>
+                <div id="settings-section" class="hidden bg-white p-8 rounded-lg shadow-md text-gray-800"></div>
             </div>
         </div>
     </div>
 
-    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-    <!-- Custom JavaScript -->
-    <script src="app.js" defer></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
+            authDomain: "radiology-mcqs.firebaseapp.com",
+            projectId: "radiology-mcqs",
+            storageBucket: "radiology-mcqs.appspot.com",
+            messagingSenderId: "862300415358",
+            appId: "1:862300415358:web:097d5e413f388e30587f2f",
+            measurementId: "G-0V1SD1H95V"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        let currentUserData = null;
+        const ui = { header: document.querySelector('header'), landingPage: document.getElementById('landing-page'), dashboard: document.getElementById('dashboard'), profileForm: document.getElementById('profile-form-container'), loggedOutNav: document.getElementById('logged-out-nav'), loggedInNav: document.getElementById('logged-in-nav'), mobileLoggedOutNav: document.getElementById('mobile-logged-out-nav'), mainNav: document.getElementById('main-nav'), userMenuButton: document.getElementById('user-menu-button'), userMenu: document.getElementById('user-menu'), mobileMenuButton: document.getElementById('mobile-menu-button'), mobileMenu: document.getElementById('mobile-menu'), sidebar: document.getElementById('sidebar'), closeSidebarBtn: document.getElementById('close-sidebar-button'), mainDashboard: document.getElementById('dashboard-main-content'), adminDashboard: document.getElementById('admin-section') };
+        
+        ui.userMenuButton.addEventListener('click', (e) => { e.stopPropagation(); ui.userMenu.classList.toggle('hidden'); });
+        ui.mobileMenuButton.addEventListener('click', () => { if (currentUserData) { ui.sidebar.classList.remove('translate-x-full'); } else { ui.mobileMenu.classList.toggle('hidden'); } });
+        ui.closeSidebarBtn.addEventListener('click', () => ui.sidebar.classList.add('translate-x-full'));
+        window.addEventListener('click', (e) => { if (ui.loggedInNav && !ui.loggedInNav.contains(e.target)) ui.userMenu.classList.add('hidden'); });
+        
+        function logout() { auth.signOut(); }
+        
+        auth.onAuthStateChanged(user => {
+            if (user && user.emailVerified) {
+                db.collection('users').doc(user.uid).get().then(doc => {
+                    if (doc.exists) {
+                        currentUserData = { uid: user.uid, ...doc.data() };
+                        setupUIForLoggedInUser(currentUserData);
+                    }
+                });
+            } else {
+                currentUserData = null;
+                setupUIForLoggedOutUser();
+            }
+        });
+
+        function setupUIForLoggedInUser(userData) {
+            ui.landingPage.classList.add('hidden');
+            ui.dashboard.classList.remove('hidden');
+            ui.loggedOutNav.style.display = 'none';
+            ui.loggedInNav.style.display = 'block';
+            ui.mainNav.style.display = 'none';
+            ui.header.classList.add('header-dark');
+            document.getElementById('user-greeting-header').textContent = userData.name ? userData.name.split(' ')[0] : 'User';
+
+            if (!userData.name) {
+                ui.profileForm.innerHTML = createProfileForm();
+                ui.profileForm.classList.remove('hidden');
+                ui.dashboard.classList.add('hidden');
+                document.getElementById('submit-profile-btn').addEventListener('click', submitProfile);
+            } else {
+                updateDashboardView(userData);
+            }
+        }
+
+        function setupUIForLoggedOutUser() {
+            ui.landingPage.classList.remove('hidden');
+            ui.dashboard.classList.add('hidden');
+            ui.profileForm.classList.add('hidden');
+            ui.loggedOutNav.style.display = 'flex';
+            ui.loggedInNav.style.display = 'none';
+            ui.mainNav.style.display = 'flex';
+            ui.header.classList.remove('header-dark');
+        }
+        
+        function updateDashboardView(userData) {
+            const isAdmin = userData.accessLevel === 'admin';
+            const adminMenuLink = document.getElementById('admin-menu-link');
+            if (isAdmin) {
+                if (!adminMenuLink) {
+                    const link = document.createElement('a'); link.id = 'admin-menu-link'; link.href = "https://im2famous4u.github.io/RadMentor/admin.html"; link.className = "block px-4 py-2 text-sm text-blue-700 font-bold hover:bg-gray-100"; link.textContent = "Admin Panel"; ui.userMenu.insertBefore(link, ui.userMenu.firstChild);
+                }
+            } else {
+                if (adminMenuLink) adminMenuLink.remove();
+            }
+            showDashboardSection('main');
+        }
+        
+        function showDashboardSection(sectionId) {
+            [ui.mainDashboard, ui.adminDashboard, document.getElementById('profile-section'), document.getElementById('settings-section'), document.getElementById('analytics-section')].forEach(el => { if(el) el.classList.add('hidden'); });
+            const elementToShow = document.getElementById(sectionId === 'main' ? 'dashboard-main-content' : `${sectionId}-section`);
+            if (elementToShow) elementToShow.classList.remove('hidden');
+            
+            if (sectionId === 'profile') populateProfileDetails();
+            if (sectionId === 'settings') populateSettingsDetails();
+            if (sectionId === 'analytics') populateAnalyticsDetails();
+            
+            ui.sidebar.classList.add('translate-x-full');
+        }
+        
+        function populateProfileDetails() {
+            const section = document.getElementById('profile-section');
+            section.innerHTML = `
+                <h2 class="text-2xl font-bold mb-6">My Profile</h2>
+                <div class="space-y-4 max-w-lg">
+                    <div class="p-4 bg-gray-100 rounded-lg"><strong>Name:</strong> ${currentUserData.name || 'N/A'}</div>
+                    <div class="p-4 bg-gray-100 rounded-lg"><strong>Email:</strong> ${currentUserData.email}</div>
+                    <div class="p-4 bg-gray-100 rounded-lg"><strong>Access Level:</strong> <span class="font-semibold text-blue-600">${currentUserData.accessLevel}</span></div>
+                </div>`;
+        }
+
+        function populateSettingsDetails() {
+            const section = document.getElementById('settings-section');
+            section.innerHTML = `
+                <h2 class="text-2xl font-bold mb-6">Settings</h2>
+                <div class="space-y-6 max-w-lg">
+                    <div><h3 class="text-lg font-semibold">Account</h3><button class="mt-2 text-blue-600 hover:underline">Change Password (coming soon)</button></div>
+                    <div><h3 class="text-lg font-semibold">Notifications</h3><p class="text-gray-600">Notification settings will be available here soon.</p></div>
+                </div>`;
+        }
+        
+        function populateAnalyticsDetails() {
+            const section = document.getElementById('analytics-section');
+            section.innerHTML = `<h2 class="text-2xl font-bold mb-6">My Analytics</h2><p class="text-gray-600">Your performance analytics dashboard is coming soon!</p>`;
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => { feather.replace(); });
+
+        // --- All other JavaScript functions (handleAuth, submitProfile, etc.) are included here ---
+        function showAuthModal(mode = 'signin') {
+            const authModal = document.getElementById('auth-modal');
+            authModal.innerHTML = createAuthForm(mode);
+            authModal.classList.remove('hidden');
+            feather.replace();
+        }
+
+        function hideAuthModal() {
+            document.getElementById('auth-modal').classList.add('hidden');
+        }
+
+        function toggleAuth() {
+            const authContainer = document.getElementById('auth-container');
+            const currentMode = authContainer.dataset.mode;
+            const newMode = currentMode === 'signin' ? 'signup' : 'signin';
+            showAuthModal(newMode);
+        }
+
+        function handleAuth() {
+            const mode = document.getElementById('auth-container').dataset.mode;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const authMessage = document.getElementById('auth-message');
+            authMessage.textContent = '';
+
+            if (!email || !password) {
+                authMessage.textContent = "Please enter both email and password.";
+                return;
+            }
+
+            if (mode === 'signin') {
+                auth.signInWithEmailAndPassword(email, password)
+                    .catch(err => { authMessage.textContent = err.message; });
+            } else {
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then(userCredential => {
+                        userCredential.user.sendEmailVerification().then(() => {
+                            db.collection('users').doc(userCredential.user.uid).set({
+                                email: userCredential.user.email,
+                                accessLevel: 'restricted',
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            auth.signOut();
+                            alert("Verification email sent! Please check your inbox.");
+                            hideAuthModal();
+                        });
+                    })
+                    .catch(err => { authMessage.textContent = err.message; });
+            }
+        }
+        
+        function submitProfile() {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const profileData = {
+                name: document.getElementById('profile-name').value,
+                dob: document.getElementById('profile-dob').value,
+                sex: document.getElementById('profile-sex').value,
+                position: document.getElementById('profile-position').value,
+                college: document.getElementById('profile-college').value,
+                examPursuing: document.getElementById('profile-exam').value,
+            };
+
+            if (Object.values(profileData).some(val => !val)) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            db.collection('users').doc(user.uid).update(profileData)
+                .then(() => {
+                    ui.profileForm.classList.add('hidden');
+                    currentUserData = { ...currentUserData, ...profileData };
+                    setupUIForLoggedInUser(currentUserData);
+                })
+                .catch(err => alert("Error saving profile: " + err.message));
+        }
+
+        function createAuthForm(mode) {
+            const title = mode === 'signin' ? 'Login to RadMentor' : 'Create Your Account';
+            const subtitle = mode === 'signin' ? 'Welcome back!' : 'Start your journey with us today.';
+            const buttonText = mode === 'signin' ? 'Sign In' : 'Sign Up';
+            const toggleText = mode === 'signin' ? "Don't have an account? Sign up" : 'Already have an account? Sign in';
+
+            return `
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
+                    <button onclick="hideAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800"><i data-feather="x" class="w-7 h-7"></i></button>
+                    <div class="p-8 md:p-12" id="auth-container" data-mode="${mode}">
+                        <h1 class="text-3xl font-bold text-gray-900 text-center mb-2">${title}</h1>
+                        <p class="text-gray-600 text-center mb-8">${subtitle}</p>
+                        <div class="space-y-4">
+                            <input type="email" id="email" placeholder="Email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <input type="password" id="password" placeholder="Password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <button onclick="handleAuth()" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">${buttonText}</button>
+                        <div class="text-center mt-6"><button onclick="toggleAuth()" class="text-blue-600 hover:underline">${toggleText}</button></div>
+                        <p id="auth-message" class="text-red-500 text-center mt-4 font-medium"></p>
+                    </div>
+                </div>`;
+        }
+
+        function createProfileForm() {
+            return `
+                <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-auto my-8 p-8 md:p-12">
+                     <h1 class="text-3xl font-bold text-gray-900 text-center">Complete Your Profile</h1>
+                     <p class="text-gray-600 text-center mb-8">Please provide a few more details to get started.</p>
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2"><input type="text" id="profile-name" placeholder="Full Name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
+                        <div><label class="font-medium text-gray-700">Date of Birth</label><input type="date" id="profile-dob" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
+                        <div><label class="font-medium text-gray-700">Sex</label><select id="profile-sex" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"><option value="" disabled selected>Select Sex</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+                        <div><label class="font-medium text-gray-700">Position</label><select id="profile-position" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"><option value="" disabled selected>Select Position</option><option>Intern</option><option>Junior Resident</option><option>Senior Resident</option><option>Consultant</option></select></div>
+                        <div><label class="font-medium text-gray-700">Exam Pursuing</label><select id="profile-exam" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"><option value="" disabled selected>Select Exam</option><option>Final year exam</option><option>DNB</option><option>FRCR</option><option>NEET SS</option><option>INICET SS</option><option>MICR</option><option>Fellowship exams</option></select></div>
+                        <div class="md:col-span-2"><label class="font-medium text-gray-700">Medical College</label><input list="colleges" id="profile-college" placeholder="Type to search your college" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"><datalist id="colleges"><option value="All India Institute of Medical Sciences, New Delhi"><option value="Postgraduate Institute of Medical Education and Research, Chandigarh"><option value="Christian Medical College, Vellore"><option value="National Institute of Mental Health and Neuro Sciences, Bangalore"><option value="Jawaharlal Institute of Postgraduate Medical Education & Research, Puducherry"><option value="Amrita Vishwa Vidyapeetham, Coimbatore"><option value="Sanjay Gandhi Postgraduate Institute of Medical Sciences, Lucknow"><option value="Banaras Hindu University, Varanasi"><option value="Kasturba Medical College, Manipal"><option value="Sri Ramachandra Institute of Higher Education and Research, Chennai"><option value="St. John's Medical College, Bangalore"><option value="Aligarh Muslim University, Aligarh"><option value="Grant Medical College and Sir J.J. Group of Hospitals, Mumbai"><option value="Institute of Liver and Biliary Sciences, New Delhi"><option value="Madras Medical College, Chennai"><option value="Maulana Azad Medical College, New Delhi"><option value="King George's Medical University, Lucknow"><option value="Seth G.S. Medical College and K.E.M. Hospital, Mumbai"><option value="Vardhman Mahavir Medical College & Safdarjung Hospital, New Delhi"><option value="Lady Hardinge Medical College, New Delhi"><option value="Armed Forces Medical College, Pune"><option value="Lokmanya Tilak Municipal Medical College, Mumbai"><option value="BJ Medical College, Ahmedabad"><option value="Stanley Medical College, Chennai"><option value="Govt. Medical College, Thiruvananthapuram"><option value="Osmania Medical College, Hyderabad"><option value="Gandhi Medical College, Hyderabad"><option value="Bangalore Medical College and Research Institute, Bangalore"><option value="Mysore Medical College and Research Institute, Mysore"><option value="Dr. B.R. Ambedkar Medical College, Bangalore"><option value="J.N. Medical College, Belagavi"><option value="Kalinga Institute of Industrial Technology, Bhubaneswar"><option value="Mahatma Gandhi Medical College & Research Institute, Puducherry"><option value="Datta Meghe Institute of Medical Sciences, Wardha"><option value="Saveetha Institute of Medical and Technical Sciences, Chennai"><option value="Chettinad Academy of Research and Education, Chennai"><option value="M.S. Ramaiah Medical College, Bangalore"><option value="Bharati Vidyapeeth (Deemed to be University), Pune"><option value="Krishna Institute of Medical Sciences, Karad"><option value="Dr. D.Y. Patil Vidyapeeth, Pune"><option value="SRM Institute of Science and Technology, Chennai"><option value="Manipal University, Jaipur"><option value="MGM Medical College, Aurangabad"><option value="GITAM, Visakhapatnam"><option value="Narayana Medical College, Nellore"><option value="KSRM Medical College, Kadapa"><option value="Deccan College of Medical Sciences, Hyderabad"><option value="Meenakshi Amma Medical College and Hospital, Chennai"><option value="MVJ Medical College and Research Hospital, Bangalore"><option value="Acharya Institute of Health Sciences, Bangalore"><option value="SDM College of Medical Sciences & Hospital, Dharwad"><option value="Navodaya Medical College, Raichur"><option value="JSS Medical College, Mysore"><option value="Rural Medical College, Loni"><option value="Pramukhswami Medical College, Anand"><option value="Adichunchanagiri Institute of Medical Sciences, Mandya"><option value="Vydehi Institute of Medical Sciences and Research Centre, Bangalore"><option value="Rajarajeswari Medical College and Hospital, Bangalore"><option value="Yenepoya Medical College, Mangaluru"><option value="Father Muller Medical College, Mangaluru"><option value="Kempegowda Institute of Medical Sciences, Bangalore"><option value="Maharaja Agrasen Medical College, Agroha"><option value="Christian Medical College, Ludhiana"><option value="Mata Gujri Memorial Medical College, Kishanganj"><option value="Hi-Tech Medical College & Hospital, Bhubaneswar"><option value="Maharishi Markandeshwar (Deemed to be University), Ambala"><option value="Teerthanker Mahaveer University, Moradabad"><option value="Santosh Medical College and Hospital, Ghaziabad"><option value="Sharda University, Greater Noida"><option value="Netaji Subhash Chandra Bose Medical College, Jabalpur"><option value="Moti Lal Nehru Medical College, Allahabad"><option value="Gajra Raja Medical College, Gwalior"><option value="S.M.S. Medical College, Jaipur"><option value="R.N.T. Medical College, Udaipur"><option value="JLN Medical College, Ajmer"><option value="Dr. S.N. Medical College, Jodhpur"><option value="Government Medical College, Kota"><option value="M.P. Shah Medical College, Jamnagar"><option value="Government Medical College, Surat"><option value="Pt. Deendayal Upadhyay Medical College, Rajkot"><option value="Medical College, Baroda"><option value="Assam Medical College, Dibrugarh"><option value="Gauhati Medical College, Guwahati"><option value="Silchar Medical College & Hospital, Silchar"><option value="Indira Gandhi Medical College, Shimla"><option value="Sher-i-Kashmir Institute of Medical Sciences, Srinagar"><option value="Government Medical College, Jammu"><option value="King Edward Memorial Hospital and Seth Gordhandas Sunderdas Medical College, Mumbai"><option value="BYL Nair Charitable Hospital and Topiwala National Medical College, Mumbai"><option value="Seth G.S. Medical College, Mumbai"><option value="Lokmanya Tilak Municipal Medical College, Mumbai"><option value="BJ Medical College, Pune"><option value="Government Medical College, Nagpur"><option value="Indira Gandhi Government Medical College, Nagpur"><option value="Dr. V. M. Government Medical College, Solapur"><option value="Government Medical College, Aurangabad"><option value="Grant Medical College, Mumbai"><option value="Armed Forces Medical College, Pune"><option value="Government Medical College, Akola"><option value="Government Medical College, Miraj"><option value="Government Medical College, Latur"><option value="AIIMS Bhopal"><option value="AIIMS Bhubaneswar"><option value="AIIMS Jodhpur"><option value="AIIMS Patna"><option value="AIIMS Raipur"><option value="AIIMS Rishikesh"><option value="AIIMS Nagpur"><option value="AIIMS Mangalagiri"><option value="AIIMS Gorakhpur"><option value="AIIMS Kalyani"><option value="AIIMS Raebareli"><option value="AIIMS Bathinda"><option value="AIIMS Bilaspur"><option value="AIIMS Deoghar"><option value="AIIMS Guwahati"><option value="AIIMS Rajkot"><option value="AIIMS Vijaypur"><option value="AIIMS Madurai"><option value="AIIMS Darbhanga"><option value="AIIMS Rewari"><option value="AIIMS Kashmir"><option value="AIIMS Jammu"><option value="AIIMS Manipur"><option value="AIIMS Mizoram"><option value="AIIMS Sikkim"><option value="AIIMS Tripura"></datalist></div>
+                     </div>
+                     <button id="submit-profile-btn" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Submit Profile</button>
+                </div>`;
+        }
+    </script>
 </body>
 </html>
