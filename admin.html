@@ -1,394 +1,562 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RadMentor - Admin Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet"/>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RadMentor - Comprehensive Radiology Learning Source</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+
     <style>
-        /* General Body Styles */
+        /* Custom styles to complement Tailwind */
         body {
-            font-family: 'Rubik', sans-serif;
-            margin: 0;
-            overflow-x: hidden;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            transition: background-color 0.3s ease, color 0.3s ease;
-            display: flex;
-            justify-content: flex-start; 
-            align-items: center; 
-            min-height: 100vh;
-            flex-direction: column;
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Light gray background */
         }
 
-        /* --- Theme Variables (Copied from index.html for consistency) --- */
-        body.light-theme {
-            --bg-color: #e3f2fd;
-            --container-bg-color: #ffffff;
-            --text-color: #212121;
-            --input-bg-color: #f5f5f5;
-            --button-bg-color: #1e88e5;
-            --button-hover-bg-color: #1565c0;
-            --toggle-color: #1e88e5;
-            --sidebar-bg-color: #ffffff;
-            --sidebar-item-border: 1px solid #e0e0e0;
-            --sidebar-item-hover-bg: #bbdefb;
-            --topbar-bg-color: #e3f2fd;
-            --topbar-text-color: #212121;
-            --profile-field-bg: #f8f8f8;
-            --section-card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --select-text-color: #212121; /* Specific for dropdown text */
-            --select-background-color: #ffffff; /* Specific for dropdown background */
+        /* Custom gradient for buttons and highlights */
+        .rad-gradient {
+            background: linear-gradient(90deg, #1e40af, #3b82f6);
         }
-        body:not(.light-theme):not(.gradient-theme) { 
-            --bg-color: #004d5e;
-            --container-bg-color: #043f4e;
-            --text-color: #ffffff;
-            --input-bg-color: #e0f2f1;
-            --button-bg-color: #00bcd4;
-            --button-hover-bg-color: #0097a7;
-            --toggle-color: #81d4fa;
-            --sidebar-bg-color: #043f4e;
-            --sidebar-item-border: 1px solid #095a71;
-            --sidebar-item-hover-bg: #065a73;
-            --topbar-bg-color: #002b36;
-            --topbar-text-color: #ffffff;
-            --profile-field-bg: #095a71;
-            --section-card-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            --select-text-color: #ffffff;
-            --select-background-color: #095a71;
-        }
-        body.gradient-theme {
-            --bg-color: linear-gradient(to right, #e0e7f7, #f7e0e0);
-            --container-bg-color: rgba(255, 255, 255, 0.95);
-            --text-color: #333333;
-            --input-bg-color: #f0f0f0;
-            --button-bg-color: #6a0dad;
-            --button-hover-bg-color: #4b0082;
-            --toggle-color: #6a0dad;
-            --sidebar-bg-color: #ffffff;
-            --sidebar-item-border: 1px solid #e0e0e0;
-            --sidebar-item-hover-bg: #f0f8ff;
-            --topbar-bg-color: rgba(255, 255, 255, 0.9);
-            --topbar-text-color: #212121;
-            --profile-field-bg: #f8f8f8;
-            --section-card-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            background: var(--bg-color);
-            --select-text-color: #212121;
-            --select-background-color: #e3f2fd;
-        }
-        /* General apply */
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
+        .rad-gradient-text {
+            background: linear-gradient(90deg, #1e40af, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .admin-dashboard-wrapper {
-            width: 90%;
-            max-width: 1200px;
-            margin: 50px auto 20px auto; 
-            padding: 30px;
-            background-color: var(--container-bg-color);
-            color: var(--text-color);
-            border-radius: 16px;
-            box-shadow: var(--section-card-shadow);
-            box-sizing: border-box;
-            padding-top: 80px; /* Space for the fixed topbar */
+        /* Styles for the dashboard part, adapted from your original file */
+        .dashboard-grid-item {
+            transition: all 0.2s;
         }
-
-        .admin-dashboard-wrapper h1 {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 30px;
-            color: var(--heading-color);
+        .dashboard-grid-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
-        .admin-dashboard-wrapper h2 {
-            font-size: 1.8rem;
-            margin-top: 40px;
-            margin-bottom: 20px;
-            color: var(--heading-color);
-            border-bottom: 1px solid var(--sidebar-item-border); 
-            padding-bottom: 10px;
+        .sidebar {
+            transition: transform 0.3s ease-in-out;
         }
-
-        .admin-topbar {
-            position: fixed;
-            top: 0;
-            left: 0; 
-            width: 100%;
-            height: 60px; /* Increased height for better spacing */
-            background-color: var(--topbar-bg-color);
-            color: var(--topbar-text-color);
-            display: flex;
-            justify-content: space-between; 
-            align-items: center;
-            padding: 0 20px;
-            z-index: 1000;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            box-sizing: border-box; /* Include padding in height */
+        .pricing-card {
+            transition: all 0.3s ease;
         }
-
-        .admin-topbar .greeting {
-            font-size: 1.1rem; /* Slightly larger */
-            font-weight: 500;
-            flex-grow: 1; 
-            text-align: left; /* Align greeting to left */
-            padding-left: 10px; /* Padding for greeting */
+        .pricing-card:hover {
+            transform: scale(1.05);
+            border-color: #3b82f6;
         }
-        .admin-topbar .admin-top-controls {
-            display: flex;
-            gap: 15px;
-            align-items: center;
+        .feature-card {
+            transition: all 0.2s ease;
         }
-        .admin-topbar .admin-top-controls a,
-        .admin-topbar .admin-top-controls button {
-            background: var(--button-bg-color);
-            color: white;
-            padding: 8px 15px; /* Adjusted padding */
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 0.95rem; /* Slightly larger font */
-            transition: background 0.2s ease;
-            border: none;
-            cursor: pointer;
-            white-space: nowrap; /* Prevent buttons from wrapping */
-        }
-        .admin-topbar .admin-top-controls a:hover,
-        .admin-topbar .admin-top-controls button:hover {
-            background: var(--button-hover-bg-color);
-        }
-
-        .admin-logo {
-            position: absolute; 
-            top: 5px; /* Adjusted top to fit in new topbar height */
-            left: 20px;
-            height: 50px; /* Reduced height to fit in topbar */
-            z-index: 1010; /* Above topbar */
-        }
-
-        /* --- Admin Specific Tables --- */
-        .admin-table-container {
-            overflow-x: auto; 
-            margin-bottom: 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-radius: 8px;
-        }
-        .admin-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.95rem;
-            text-align: left;
-            background-color: var(--profile-field-bg); /* Use a light background for table */
-            color: var(--text-color);
-        }
-        .admin-table th, .admin-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid var(--sidebar-item-border); 
-            white-space: nowrap; /* Prevent content from wrapping unless necessary */
-        }
-        .admin-table th {
-            background-color: var(--sidebar-item-hover-bg); 
-            font-weight: bold;
-            color: var(--text-color);
-        }
-        .admin-table tr:hover {
-            background-color: rgba(0, 0, 0, 0.05); 
-        }
-        body.light-theme .admin-table tr:hover {
-            background-color: rgba(0, 0, 0, 0.03); 
-        }
-
-        /* Specific styles for Access Level Select */
-        .admin-table select {
-            width: 120px; /* Fixed width for consistency */
-            padding: 5px;
-            border-radius: 4px;
-            border: 1px solid var(--toggle-color);
-            background-color: var(--select-background-color); /* Use theme variable */
-            color: var(--select-text-color); /* Use theme variable */
-            font-size: 0.9rem;
-            -webkit-appearance: none; /* Remove default arrow */
-            -moz-appearance: none;
-            appearance: none;
-            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%2C197.3L159.2%2C69.5c-3.1-3.1-8.2-3.1-11.3%2C0L5.3%2C197.3c-3.1%2C3.1-3.1%2C8.2%2C0%2C11.3l19.7%2C19.7c3.1%2C3.1%2C8.2%2C3.1%2C11.3%2C0l113.8-113.8l113.8%2C113.8c3.1%2C3.1%2C8.2%2C3.1%2C11.3%2C0l19.7-19.7c3.1-3.1%2C3.1-8.2%2C0-11.3z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
-            background-repeat: no-repeat;
-            background-position: right 8px center;
-            background-size: 8px;
-            padding-right: 25px; /* Space for arrow */
-        }
-        body.dark-theme .admin-table select {
-            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2C197.3L159.2%2C69.5c-3.1-3.1-8.2-3.1-11.3%2C0L5.3%2C197.3c-3.1%2C3.1-3.1%2C8.2%2C0%2C11.3l19.7%2C19.7c3.1%2C3.1%2C8.2%2C3.1%2C11.3%2C0l113.8-113.8l113.8%2C113.8c3.1%2C3.1%2C8.2%2C3.1%2C11.3%2C0l19.7-19.7c3.1-3.1%2C3.1-8.2%2C0-11.3z%22%2F%3E%3C%2Fsvg%3E'); /* White arrow for dark theme */
-        }
-
-        /* Status dot for online/offline */
-        .status-dot {
-            height: 10px;
-            width: 10px;
-            background-color: #bbb; /* Default grey */
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-        }
-        .status-dot.online {
-            background-color: #28a745; /* Green */
-        }
-        .status-dot.offline {
-            background-color: #dc3545; /* Red */
-        }
-
-        /* Table button styles */
-        .admin-table button {
-            padding: 5px 10px;
-            font-size: 0.85rem;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 0 5px; /* Space between buttons if multiple */
-            min-width: 80px; /* Consistent width for buttons */
-        }
-        .admin-table button.manage-sub {
-            background-color: #007bff; /* Blue */
-            color: white;
-            border: none;
-        }
-        .admin-table button.delete-user {
-            background-color: #dc3545; /* Red */
-            color: white;
-            border: none;
-        }
-
-        /* No results message */
-        .no-results {
-            text-align: center;
-            padding: 30px;
-            font-style: italic;
-            color: var(--text-color);
-        }
-
-        /* Media queries for responsiveness */
-        @media (max-width: 768px) {
-            .admin-dashboard-wrapper {
-                padding: 15px;
-                width: 95%;
-                margin-top: 70px; /* Adjust top margin for smaller screens */
-            }
-            .admin-dashboard-wrapper h1 {
-                font-size: 2rem;
-                margin-bottom: 20px;
-            }
-            .admin-dashboard-wrapper h2 {
-                font-size: 1.5rem;
-                margin-top: 30px;
-                margin-bottom: 15px;
-            }
-            .admin-topbar {
-                height: 50px;
-                padding: 0 10px;
-                flex-wrap: wrap; /* Allow wrapping if items are too wide */
-                justify-content: center; /* Center items if wrapped */
-            }
-            .admin-topbar .greeting {
-                text-align: center;
-                width: 100%; /* Take full width if wrapped */
-                padding-left: 0;
-            }
-            .admin-topbar .admin-top-controls {
-                width: 100%;
-                justify-content: center;
-                gap: 5px; /* Smaller gap for buttons */
-            }
-            .admin-logo {
-                top: 5px; /* Adjust position */
-                left: 5px; /* Adjust position */
-                height: 40px; /* Smaller logo */
-            }
-            .admin-table th, .admin-table td {
-                padding: 8px 10px;
-                font-size: 0.85rem;
-            }
-            .admin-table select {
-                width: 100px;
-                font-size: 0.8rem;
-            }
-            .admin-table button {
-                min-width: 60px;
-                font-size: 0.75rem;
-                padding: 4px 8px;
-            }
-        }
-        @media (max-width: 480px) {
-            .admin-dashboard-wrapper {
-                padding: 10px;
-                margin-top: 60px;
-            }
-            .admin-dashboard-wrapper h1 {
-                font-size: 1.8rem;
-            }
-            .admin-topbar .admin-top-controls {
-                flex-direction: column; /* Stack buttons vertically */
-            }
+        .feature-card:hover {
+             background-color: #f3f4f6;
         }
     </style>
 </head>
-<body>
+<body class="text-gray-800 pt-16"> <!-- Add padding-top to body to avoid content being hidden by fixed header -->
 
-    <img src="logo.png" alt="Rad Mentor Logo" class="admin-logo" />
+    <!-- =================================================
+    PERSISTENT HEADER
+    This header is now outside the landing page/dashboard divs
+    and will always be visible.
+    ================================================== -->
+    <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
+                <span class="text-2xl font-bold text-gray-800">RadMentor</span>
+            </div>
+            <nav id="main-nav" class="hidden md:flex items-center space-x-8">
+                <a href="#courses" class="text-gray-600 hover:text-blue-600">Courses</a>
+                <a href="#features" class="text-gray-600 hover:text-blue-600">Features</a>
+                <a href="#pricing" class="text-gray-600 hover:text-blue-600">Pricing</a>
+                <a href="#about" class="text-gray-600 hover:text-blue-600">About Us</a>
+            </nav>
+            <div class="flex items-center">
+                <!-- Logged Out Navigation (Visible by default) -->
+                <div id="logged-out-nav" class="hidden md:flex items-center">
+                    <button onclick="showAuthModal('signin')" class="text-gray-600 hover:text-blue-600 mr-6">Login</button>
+                    <button onclick="showAuthModal('signup')" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                        Sign Up
+                    </button>
+                </div>
 
-    <div class="admin-topbar">
-        <div class="greeting">Hi, Administrator!</div>
-        <div class="admin-top-controls">
-            <a href="index.html" class="admin-button">User Portal</a>
-            <button onclick="adminLogout()">Log Out</button>
+                <!-- Logged In Navigation (Hidden by default) -->
+                <div id="logged-in-nav" class="hidden relative">
+                    <button id="user-menu-button" class="flex items-center space-x-2">
+                        <span class="font-semibold text-gray-700">Hi, <span id="user-greeting-header"></span></span>
+                        <i data-feather="chevron-down" class="w-4 h-4 text-gray-700"></i>
+                    </button>
+                    <!-- Dropdown Menu -->
+                    <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden">
+                        <!-- Admin link will be injected here by JS if user is admin -->
+                        <a href="#" onclick="showDashboardSection('main')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Dashboard</a>
+                        <a href="#" onclick="alert('Bookmarks page coming soon!')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Bookmarks</a>
+                        <a href="#" onclick="showDashboardSection('settings')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                        <div class="border-t border-gray-100"></div>
+                        <a href="#" onclick="logout()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                    </div>
+                </div>
+
+                <button id="mobile-menu-button" class="md:hidden ml-4 text-gray-700">
+                    <i data-feather="menu"></i>
+                </button>
+            </div>
+             <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 right-0 bg-white shadow-md px-6 pb-4">
+                <a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a>
+                <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a>
+                <a href="#pricing" class="block py-2 text-gray-600 hover:text-blue-600">Pricing</a>
+                <a href="#about" class="block py-2 text-gray-600 hover:text-blue-600">About Us</a>
+                <div id="mobile-logged-out-nav">
+                    <button onclick="showAuthModal('signin')" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Login</button>
+                </div>
+                 <div id="mobile-logged-in-nav" class="hidden border-t mt-2 pt-2">
+                     <a href="#" onclick="showDashboardSection('main')" class="block py-2 text-gray-600 hover:text-blue-600">My Dashboard</a>
+                     <a href="#" onclick="alert('Bookmarks page coming soon!')" class="block py-2 text-gray-600 hover:text-blue-600">Bookmarks</a>
+                     <a href="#" onclick="logout()" class="block py-2 text-gray-600 hover:text-blue-600">Logout</a>
+                </div>
+            </div>
+        </header>
+
+    <!-- =================================================
+    LANDING PAGE SECTION
+    This is the new public-facing homepage.
+    It will be hidden after successful login.
+    ================================================== -->
+    <div id="landing-page">
+        <main>
+            <!-- Hero Section -->
+            <section class="bg-white pt-16 pb-20">
+                <div class="container mx-auto px-6 text-center">
+                    <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
+                        The World’s Most Comprehensive <br class="hidden md:block" /> <span class="rad-gradient-text">Radiology Learning Source</span>
+                    </h1>
+                    <p class="mt-6 text-lg text-gray-600 max-w-3xl mx-auto">
+                        Master radiology with our expert-curated Q-banks, mock exams, and in-depth content. Built by radiologists, for future radiologists.
+                    </p>
+                    <div class="mt-8 flex justify-center gap-4">
+                        <button onclick="showAuthModal('signup')" class="rad-gradient text-white font-bold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-lg">
+                            Get Started for Free
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Courses Section -->
+            <section id="courses" class="py-20">
+                <div class="container mx-auto px-6">
+                    <div class="text-center mb-12">
+                        <h2 class="text-4xl font-bold text-gray-900">Prepare for Any Exam</h2>
+                        <p class="mt-4 text-lg text-gray-600">Targeted preparation for all major radiology exams.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Course Items -->
+                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
+                            <h3 class="text-2xl font-bold text-gray-800">FRCR</h3>
+                            <p class="mt-2 text-gray-600">Comprehensive question banks and mock tests for the FRCR exam.</p>
+                        </div>
+                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
+                            <h3 class="text-2xl font-bold text-gray-800">MD / DNB</h3>
+                            <p class="mt-2 text-gray-600">Master your final year exams with our targeted content.</p>
+                        </div>
+                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
+                            <h3 class="text-2xl font-bold text-gray-800">Anatomy</h3>
+                            <p class="mt-2 text-gray-600">Detailed anatomical modules to build a strong foundation.</p>
+                        </div>
+                         <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
+                            <h3 class="text-2xl font-bold text-gray-800">MICR</h3>
+                            <p class="mt-2 text-gray-600">Practice with MCQs tailored for the MICR examination.</p>
+                        </div>
+                         <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
+                            <h3 class="text-2xl font-bold text-gray-800">Superspeciality</h3>
+                            <p class="mt-2 text-gray-600">Prepare for NEET SS & INICET SS with high-yield questions.</p>
+                        </div>
+                         <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
+                            <h3 class="text-2xl font-bold text-gray-800">Fellowship Exams</h3>
+                            <p class="mt-2 text-gray-600">Excel in your fellowship exams with our specialized modules.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Section -->
+            <section id="features" class="py-20 bg-white">
+                <div class="container mx-auto px-6">
+                    <div class="text-center mb-12">
+                        <h2 class="text-4xl font-bold text-gray-900">A Smarter Way to Learn</h2>
+                        <p class="mt-4 text-lg text-gray-600">Tools designed for deep understanding and long-term retention.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="feature-card p-6 rounded-lg">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="award" class="text-white"></i></div>
+                            <h3 class="mt-6 text-xl font-bold">Expert-Curated Content</h3>
+                            <p class="mt-2 text-gray-600">All questions and explanations are created and verified by top radiologists.</p>
+                        </div>
+                        <div class="feature-card p-6 rounded-lg">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="target" class="text-white"></i></div>
+                            <h3 class="mt-6 text-xl font-bold">Realistic Exam Simulation</h3>
+                            <p class="mt-2 text-gray-600">Experience the real exam environment with our timed mock tests.</p>
+                        </div>
+                        <div class="feature-card p-6 rounded-lg">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="bar-chart-2" class="text-white"></i></div>
+                            <h3 class="mt-6 text-xl font-bold">Deep Analytics</h3>
+                            <p class="mt-2 text-gray-600">Track your progress, identify weak areas, and compare with peers.</p>
+                        </div>
+                        <div class="feature-card p-6 rounded-lg">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="copy" class="text-white"></i></div>
+                            <h3 class="mt-6 text-xl font-bold">Digital Flashcards & SRS</h3>
+                            <p class="mt-2 text-gray-600">Master key concepts with our Spaced Repetition System for long-term memory.</p>
+                        </div>
+                        <div class="feature-card p-6 rounded-lg">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="edit" class="text-white"></i></div>
+                            <h3 class="mt-6 text-xl font-bold">Personal Notes</h3>
+                            <p class="mt-2 text-gray-600">Add your own notes to questions and review them anytime.</p>
+                        </div>
+                        <div class="feature-card p-6 rounded-lg">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="calendar" class="text-white"></i></div>
+                            <h3 class="mt-6 text-xl font-bold">Personalized Study Planner</h3>
+                            <p class="mt-2 text-gray-600">Get a custom study schedule based on your exam date and performance.</p>
+                        </div>
+                        <div class="feature-card p-6 rounded-lg">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="image" class="text-white"></i></div>
+                            <h3 class="mt-6 text-xl font-bold">Case of the Week</h3>
+                            <p class="mt-2 text-gray-600">Challenge yourself with interesting cases curated by our experts.</p>
+                        </div>
+                        <div class="feature-card p-6 rounded-lg">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="users" class="text-white"></i></div>
+                            <h3 class="mt-6 text-xl font-bold">Community Leaderboard</h3>
+                            <p class="mt-2 text-gray-600">See how you stack up against peers in a friendly, competitive environment.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pricing Section -->
+            <section id="pricing" class="py-20">
+                <div class="container mx-auto px-6">
+                    <div class="text-center mb-12">
+                        <h2 class="text-4xl font-bold text-gray-900">Flexible Plans for Every Need</h2>
+                        <p class="mt-4 text-lg text-gray-600">Choose the plan that’s right for your learning journey.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <!-- Free Plan -->
+                        <div class="pricing-card bg-white p-8 rounded-xl shadow-lg border-2 border-transparent w-full flex flex-col">
+                            <h3 class="text-2xl font-bold text-gray-800">Free</h3>
+                            <p class="mt-2 text-gray-600">Get a taste of our platform.</p>
+                            <div class="mt-6 text-4xl font-extrabold">
+                                $0
+                            </div>
+                            <ul class="mt-8 space-y-4 text-left flex-grow">
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Limited MCQs</li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Case of the Week</li>
+                            </ul>
+                            <button onclick="showAuthModal('signup')" class="mt-8 w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-lg hover:bg-gray-300 transition-colors">
+                                Sign Up for Free
+                            </button>
+                        </div>
+                        <!-- Q-Bank Pass -->
+                        <div class="pricing-card bg-white p-8 rounded-xl shadow-lg border-2 border-transparent w-full flex flex-col">
+                            <h3 class="text-2xl font-bold text-gray-800">Q-Bank Pass</h3>
+                            <p class="mt-2 text-gray-600">For focused question practice.</p>
+                            <div class="mt-6 text-4xl font-extrabold">
+                                $29 <span class="text-lg font-medium text-gray-500">/mo</span>
+                            </div>
+                            <ul class="mt-8 space-y-4 text-left flex-grow">
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>All MCQ Banks</b></li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Basic Analytics</li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Personal Notes</li>
+                            </ul>
+                            <button onclick="alert('Payment integration coming soon!')" class="mt-8 w-full rad-gradient text-white font-bold py-3 rounded-lg hover:shadow-lg transition-shadow">
+                                Choose Plan
+                            </button>
+                        </div>
+                        <!-- Smart-Prep Pass -->
+                        <div class="pricing-card bg-white p-8 rounded-xl shadow-2xl border-2 border-blue-500 w-full relative flex flex-col">
+                            <div class="absolute top-0 -translate-y-1/2 bg-blue-500 text-white text-sm font-bold px-4 py-1 rounded-full">POPULAR</div>
+                            <h3 class="text-2xl font-bold text-gray-800">Smart-Prep Pass</h3>
+                            <p class="mt-2 text-blue-600">Learn smarter, not harder.</p>
+                            <div class="mt-6 text-4xl font-extrabold">
+                                $49 <span class="text-lg font-medium text-gray-500">/mo</span>
+                            </div>
+                            <ul class="mt-8 space-y-4 text-left flex-grow">
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Everything in Q-Bank</b></li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Flashcards & SRS</b></li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Deep Analytics</li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Leaderboard Access</li>
+                            </ul>
+                            <button onclick="alert('Payment integration coming soon!')" class="mt-8 w-full rad-gradient text-white font-bold py-3 rounded-lg hover:shadow-lg transition-shadow">
+                                Choose Plan
+                            </button>
+                        </div>
+                         <!-- All-Access Pass -->
+                        <div class="pricing-card bg-white p-8 rounded-xl shadow-lg border-2 border-transparent w-full flex flex-col">
+                            <h3 class="text-2xl font-bold text-gray-800">All-Access Pass</h3>
+                            <p class="mt-2 text-gray-600">The complete package.</p>
+                            <div class="mt-6 text-4xl font-extrabold">
+                                $69 <span class="text-lg font-medium text-gray-500">/mo</span>
+                            </div>
+                            <ul class="mt-8 space-y-4 text-left flex-grow">
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Everything in Smart-Prep</b></li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Full Mock Exams</b></li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Personalized Study Planner</b></li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Priority Support</li>
+                            </ul>
+                            <button onclick="alert('Payment integration coming soon!')" class="mt-8 w-full rad-gradient text-white font-bold py-3 rounded-lg hover:shadow-lg transition-shadow">
+                                Choose Plan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- About Us Section -->
+            <section id="about" class="py-20 bg-white">
+                <div class="container mx-auto px-6">
+                     <div class="text-center mb-12">
+                        <h2 class="text-4xl font-bold text-gray-900">Built by Doctors, for Doctors</h2>
+                    </div>
+                    <div class="max-w-4xl mx-auto bg-gray-50 p-10 rounded-xl border border-gray-200 text-center">
+                        <p class="text-lg text-gray-600">
+                            We are two radiologists trained at one of India’s premier medical institutes, united by a shared vision: to make high-quality radiology education accessible, affordable, and reliable for all. Every question, explanation, and update is curated by us, backed by evidence, and rooted in real-world radiology practice.
+                        </p>
+                         <p class="mt-4 text-lg font-semibold text-gray-800">Welcome to a community built with precision and care.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-900 text-white">
+            <div class="container mx-auto px-6 py-12">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold">RadMentor</h3>
+                        <p class="mt-2 text-gray-400">The future of radiology education.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold">Quick Links</h3>
+                        <ul class="mt-2 space-y-2">
+                            <li><a href="#courses" class="text-gray-400 hover:text-white">Courses</a></li>
+                            <li><a href="#features" class="text-gray-400 hover:text-white">Features</a></li>
+                            <li><a href="#pricing" class="text-gray-400 hover:text-white">Pricing</a></li>
+                            <li><a href="#" onclick="showAuthModal('signup')" class="text-gray-400 hover:text-white">Sign Up</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold">Contact</h3>
+                         <p class="mt-2 text-gray-400">Email: <a href="mailto:support@radmentor.com" class="hover:text-white">support@radmentor.com</a></p>
+                    </div>
+                </div>
+                <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-500">
+                    &copy; 2024 RadMentor. All Rights Reserved.
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- =================================================
+    AUTHENTICATION MODAL
+    This will pop up for login/signup.
+    ================================================== -->
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
+            <button onclick="hideAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
+                <i data-feather="x" class="w-7 h-7"></i>
+            </button>
+
+            <div class="p-8 md:p-12">
+                <div id="auth-container">
+                    <h1 id="auth-title" class="text-3xl font-bold text-gray-900 text-center mb-2">Login to RadMentor</h1>
+                    <p id="auth-subtitle" class="text-gray-600 text-center mb-8">Welcome back!</p>
+                    <div class="space-y-4">
+                        <input type="email" id="email" placeholder="Email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="password" id="password" placeholder="Password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <button onclick="handleAuth()" id="auth-btn" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Sign In</button>
+                    <div class="text-center mt-6">
+                        <button onclick="toggleAuth()" id="toggle-btn" class="text-blue-600 hover:underline">Don't have an account? Sign up</button>
+                    </div>
+                    <p id="auth-message" class="text-red-500 text-center mt-4 font-medium"></p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="admin-dashboard-wrapper">
-        <h1>Admin Dashboard</h1>
-
-        <h2>User Management</h2>
-        <div class="admin-table-container">
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>#</th> <th>User</th>
-                        <th>Email</th>
-                        <th>Status</th>
-                        <th>Last Login</th>
-                        <th>Access Level</th>
-                        <th>Subscription Start</th>
-                        <th>Subscription End</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="user-list">
-                    <tr><td colspan="9" class="no-results" id="user-list-message">Loading users...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <h2>Login Activity Log</h2>
-        <div class="admin-table-container">
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>User Email</th>
-                        <th>Timestamp</th>
-                        <th>Access Level at Login</th>
-                        </tr>
-                </thead>
-                <tbody id="login-logs-list">
-                    <tr><td colspan="3" class="no-results" id="login-logs-message">Loading logs...</td></tr>
-                </tbody>
-            </table>
+    <!-- =================================================
+    PROFILE COMPLETION FORM
+    Shown after first signup.
+    ================================================== -->
+    <div id="profile-form-container" class="fixed inset-0 bg-gray-100 z-50 p-4 hidden overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-auto my-8 p-8 md:p-12">
+             <h1 class="text-3xl font-bold text-gray-900 text-center">Complete Your Profile</h1>
+             <p class="text-gray-600 text-center mb-8">Please provide a few more details to get started.</p>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2"><input type="text" id="name" placeholder="Full Name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
+                <div>
+                    <label class="font-medium text-gray-700">Date of Birth</label>
+                    <input type="date" id="dob" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="font-medium text-gray-700">Sex</label>
+                    <select id="sex" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="" disabled selected>Select Sex</option>
+                        <option>Male</option><option>Female</option><option>Other</option>
+                    </select>
+                </div>
+                 <div>
+                    <label class="font-medium text-gray-700">Position</label>
+                    <select id="position" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="" disabled selected>Select Position</option>
+                        <option>Intern</option><option>Junior Resident</option><option>Senior Resident</option><option>Consultant</option>
+                    </select>
+                </div>
+                 <div>
+                    <label class="font-medium text-gray-700">Exam Pursuing</label>
+                    <select id="exam_pursuing" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="" disabled selected>Select Exam</option>
+                        <option>Final year exam</option><option>DNB</option><option>FRCR</option><option>NEET SS</option><option>INICET SS</option><option>MICR</option><option>Fellowship exams</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                     <label class="font-medium text-gray-700">Medical College</label>
+                     <input list="colleges" id="college" placeholder="Type to search your college" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                     <datalist id="colleges">
+                        <!-- Options from your original file are included here -->
+                     </datalist>
+                </div>
+             </div>
+             <button onclick="submitProfile()" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Submit Profile</button>
         </div>
     </div>
 
+
+    <!-- =================================================
+    DASHBOARD SECTION
+    This is the main app view for logged-in users.
+    It's hidden by default.
+    ================================================== -->
+    <div id="dashboard" class="hidden">
+        <!-- Dashboard Sidebar -->
+        <div id="sidebar" class="fixed top-0 right-0 h-full bg-white shadow-xl z-50 w-72 p-6 transform translate-x-full">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold">Menu</h2>
+                <button id="close-sidebar-button" class="text-gray-600 hover:text-gray-900"><i data-feather="x"></i></button>
+            </div>
+            <nav class="space-y-2">
+                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 bg-blue-100 font-semibold" onclick="showDashboardSection('main')"><i data-feather="home" class="mr-3 w-5 h-5"></i>Home</a>
+                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('profile')"><i data-feather="user" class="mr-3 w-5 h-5"></i>Profile</a>
+                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('analytics')"><i data-feather="bar-chart-2" class="mr-3 w-5 h-5"></i>Analytics</a>
+                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('planner')"><i data-feather="calendar" class="mr-3 w-5 h-5"></i>Study Planner</a>
+                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('subscription')"><i data-feather="credit-card" class="mr-3 w-5 h-5"></i>Subscription</a>
+                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('settings')"><i data-feather="settings" class="mr-3 w-5 h-5"></i>Settings</a>
+                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="logout()"><i data-feather="log-out" class="mr-3 w-5 h-5"></i>Logout</a>
+            </nav>
+        </div>
+        
+        <!-- Dashboard Main Content -->
+        <div class="pt-16 pb-12 bg-gray-50 min-h-screen">
+            <div class="container mx-auto px-6">
+                <!-- Main Dashboard View -->
+                <div id="dashboard-main-content">
+                    <h1 class="text-3xl font-bold text-gray-900">Welcome to RadMentor</h1>
+                    <p class="mt-2 text-lg text-gray-600">Select a category to start your preparation.</p>
+                    
+                    <div id="access-level-notice"></div>
+
+                    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="window.location.href='frcr/'">
+                            <h3 class="text-xl font-bold text-gray-800">FRCR MCQs</h3>
+                        </div>
+                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="window.location.href='anatomy/'">
+                            <h3 class="text-xl font-bold text-gray-800">Anatomy MCQs</h3>
+                        </div>
+                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Flashcards coming soon!')">
+                            <h3 class="text-xl font-bold text-gray-800">Flashcards (SRS)</h3>
+                        </div>
+                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Case of the Week coming soon!')">
+                            <h3 class="text-xl font-bold text-gray-800">Case of the Week</h3>
+                        </div>
+                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Leaderboard coming soon!')">
+                            <h3 class="text-xl font-bold text-gray-800">Leaderboard</h3>
+                        </div>
+                         <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Personal notes coming soon!')">
+                            <h3 class="text-xl font-bold text-gray-800">My Notes</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other Dashboard Sections (Profile, Settings, etc.) -->
+                <div id="profile-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
+                <div id="analytics-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
+                <div id="planner-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
+                <div id="subscription-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
+                <div id="settings-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
+                
+                <!-- NEW: Admin Dashboard Section -->
+                <div id="admin-section" class="hidden">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-6">Admin Dashboard</h1>
+                    <!-- User Management Table -->
+                    <div class="bg-white p-8 rounded-lg shadow-md">
+                        <h2 class="text-2xl font-bold mb-4">User Management</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="py-3 px-6">User</th>
+                                        <th scope="col" class="py-3 px-6">Email</th>
+                                        <th scope="col" class="py-3 px-6">Access Level</th>
+                                        <th scope="col" class="py-3 px-6">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="user-list">
+                                    <!-- User data will be populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Login Activity Table -->
+                    <div class="bg-white p-8 rounded-lg shadow-md mt-8">
+                        <h2 class="text-2xl font-bold mb-4">Recent Login Activity</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="py-3 px-6">User Email</th>
+                                        <th scope="col" class="py-3 px-6">Timestamp</th>
+                                        <th scope="col" class="py-3 px-6">Access at Login</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="login-logs-list">
+                                    <!-- Log data will be populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
     <script>
+        // --- Feather Icons Initialization ---
+        feather.replace();
+
+        // --- Firebase Configuration ---
         const firebaseConfig = {
-            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw", 
+            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
             authDomain: "radiology-mcqs.firebaseapp.com",
             projectId: "radiology-mcqs",
             storageBucket: "radiology-mcqs.appspot.com",
@@ -397,295 +565,470 @@
             measurementId: "G-0V1SD1H95V"
         };
 
+        // --- Firebase Initialization ---
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // --- Theme Logic (Copied for consistency) ---
-        function setInitialTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'light') {
-                document.body.classList.add('light-theme');
-            } else if (savedTheme === 'gradient') {
-                document.body.classList.add('gradient-theme');
+        // --- Global State ---
+        let authMode = 'signin';
+        let currentUserData = null;
+
+        // --- UI Elements ---
+        const authModal = document.getElementById('auth-modal');
+        const authTitle = document.getElementById('auth-title');
+        const authSubtitle = document.getElementById('auth-subtitle');
+        const authBtn = document.getElementById('auth-btn');
+        const toggleBtn = document.getElementById('toggle-btn');
+        const authMessage = document.getElementById('auth-message');
+        const landingPage = document.getElementById('landing-page');
+        const dashboard = document.getElementById('dashboard');
+        const profileFormContainer = document.getElementById('profile-form-container');
+        const loggedOutNav = document.getElementById('logged-out-nav');
+        const loggedInNav = document.getElementById('logged-in-nav');
+        const mobileLoggedOutNav = document.getElementById('mobile-logged-out-nav');
+        const mobileLoggedInNav = document.getElementById('mobile-logged-in-nav');
+        const userMenuButton = document.getElementById('user-menu-button');
+        const userMenu = document.getElementById('user-menu');
+
+        // --- Mobile Menu Toggle ---
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // --- User Menu Dropdown Toggle ---
+        userMenuButton.addEventListener('click', () => {
+            userMenu.classList.toggle('hidden');
+        });
+        
+        // Close dropdown if clicked outside
+        window.addEventListener('click', function(e) {
+            if (!loggedInNav.contains(e.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+
+
+        // --- Auth Modal Logic ---
+        function showAuthModal(mode = 'signin') {
+            authMode = mode;
+            updateAuthModalUI();
+            authModal.classList.remove('hidden');
+        }
+
+        function hideAuthModal() {
+            authModal.classList.add('hidden');
+            authMessage.textContent = '';
+        }
+
+        function toggleAuth() {
+            authMode = authMode === 'signin' ? 'signup' : 'signin';
+            updateAuthModalUI();
+        }
+
+        function updateAuthModalUI() {
+            if (authMode === 'signin') {
+                authTitle.textContent = 'Login to RadMentor';
+                authSubtitle.textContent = 'Welcome back!';
+                authBtn.textContent = 'Sign In';
+                toggleBtn.textContent = "Don't have an account? Sign up";
             } else {
-                document.body.classList.remove('light-theme', 'gradient-theme'); // Default to dark
+                authTitle.textContent = 'Create Your Account';
+                authSubtitle.textContent = 'Start your journey with us today.';
+                authBtn.textContent = 'Sign Up';
+                toggleBtn.textContent = 'Already have an account? Sign in';
+            }
+            authMessage.textContent = '';
+        }
+
+        // --- Authentication Logic ---
+        function handleAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            authMessage.textContent = '';
+
+            if (!email || !password) {
+                authMessage.textContent = "Please enter both email and password.";
+                return;
+            }
+
+            if (authMode === 'signin') {
+                auth.signInWithEmailAndPassword(email, password)
+                    .then(userCredential => {
+                        // The onAuthStateChanged listener will handle the redirect
+                        // after checking for email verification.
+                    })
+                    .catch(err => {
+                        authMessage.textContent = err.message;
+                    });
+            } else { // signup
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then(userCredential => {
+                        const user = userCredential.user;
+                        return user.sendEmailVerification().then(() => {
+                            auth.signOut();
+                            authMode = 'signin';
+                            updateAuthModalUI();
+                            authMessage.textContent = "Verification email sent! Please check your inbox and verify your email before signing in.";
+                            // Create a user profile document
+                            return db.collection('users').doc(user.uid).set({
+                                email: user.email,
+                                accessLevel: 'restricted', // All new users start with restricted access
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            });
+                        });
+                    })
+                    .catch(err => {
+                        authMessage.textContent = err.message;
+                    });
             }
         }
-        setInitialTheme();
-        // --- End Theme Logic ---
 
-        // --- Admin Specific Functions ---
+        // --- Profile Logic ---
+        function submitProfile() {
+            const user = auth.currentUser;
+            if (!user) return;
 
-        // Function to log out admin (redirects to main login)
-        function adminLogout() {
-            auth.signOut().then(() => {
-                window.location.href = 'index.html'; 
-            }).catch(error => {
-                alert("Error logging out: " + error.message);
-                console.error("Logout error:", error);
+            const profileData = {
+                name: document.getElementById('name').value,
+                dob: document.getElementById('dob').value,
+                sex: document.getElementById('sex').value,
+                position: document.getElementById('position').value,
+                college: document.getElementById('college').value,
+                examPursuing: document.getElementById('exam_pursuing').value,
+            };
+
+            if (Object.values(profileData).some(val => !val)) {
+                alert("Please fill in all profile fields.");
+                return;
+            }
+
+            db.collection('users').doc(user.uid).update(profileData)
+                .then(() => {
+                    currentUserData = { ...currentUserData, ...profileData };
+                    profileFormContainer.classList.add('hidden');
+                    // Check if admin or regular user to load correct dashboard
+                    if (currentUserData.accessLevel === 'admin') {
+                        loadAdminDashboard(currentUserData);
+                    } else {
+                        loadDashboard(currentUserData);
+                    }
+                })
+                .catch(err => alert("Error saving profile: " + err.message));
+        }
+
+        // --- Main Application Flow & State Changes ---
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                if (!user.emailVerified) {
+                    auth.signOut(); // Force sign out if email is not verified
+                    showAuthModal('signin');
+                    authMessage.textContent = "Your email is not verified. Please check your inbox for a verification link before logging in.";
+                    return;
+                }
+                
+                // User is logged in and verified
+                db.collection('users').doc(user.uid).get().then(doc => {
+                    hideAuthModal();
+                    if (doc.exists) {
+                        currentUserData = doc.data();
+                        
+                        // Update Header
+                        loggedOutNav.classList.add('hidden');
+                        loggedInNav.classList.remove('hidden');
+                        mobileLoggedOutNav.classList.add('hidden');
+                        mobileLoggedInNav.classList.remove('hidden');
+                        document.getElementById('user-greeting-header').textContent = currentUserData.name ? currentUserData.name.split(' ')[0] : 'Doctor';
+
+                        // Check if profile is complete
+                        if (currentUserData.name && currentUserData.dob) {
+                             // Check for Admin Role
+                            if (currentUserData.accessLevel === 'admin') {
+                                loadAdminDashboard(currentUserData);
+                            } else {
+                                loadDashboard(currentUserData);
+                            }
+                        } else {
+                            // Show profile completion form
+                            landingPage.classList.add('hidden');
+                            dashboard.classList.add('hidden');
+                            profileFormContainer.classList.remove('hidden');
+                        }
+                    } else {
+                        // This case is unlikely if signup creates the doc, but as a fallback:
+                        landingPage.classList.add('hidden');
+                        dashboard.classList.add('hidden');
+                        profileFormContainer.classList.remove('hidden');
+                    }
+                });
+
+            } else {
+                // User is signed out
+                currentUserData = null;
+                landingPage.classList.remove('hidden');
+                dashboard.classList.add('hidden');
+                profileFormContainer.classList.add('hidden');
+                
+                // Update Header
+                loggedOutNav.classList.remove('hidden');
+                loggedInNav.classList.add('hidden');
+                mobileLoggedOutNav.classList.remove('hidden');
+                mobileLoggedInNav.classList.add('hidden');
+
+                hideAuthModal();
+            }
+        });
+
+        function loadDashboard(userData) {
+            landingPage.classList.add('hidden');
+            dashboard.classList.remove('hidden');
+            document.getElementById('main-nav').classList.add('hidden'); // Hide landing page nav
+            
+            // Display access level notice
+            const noticeDiv = document.getElementById('access-level-notice');
+            if(userData.accessLevel === 'restricted') {
+                noticeDiv.innerHTML = `<div class="mt-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-r-lg">
+                    <p class="font-bold">Restricted Access</p>
+                    <p>Some content is locked. <a href="#" onclick="showDashboardSection('subscription')" class="underline font-semibold">Upgrade to Premium</a> for full access.</p>
+                </div>`;
+            } else if (userData.accessLevel === 'premium') {
+                 noticeDiv.innerHTML = `<div class="mt-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded-r-lg">
+                    <p class="font-bold">Premium Access Granted</p>
+                    <p>You have access to all features. Happy learning!</p>
+                </div>`;
+            }
+            
+            // Initialize dashboard view
+            showDashboardSection('main');
+        }
+
+        function logout() {
+            if (confirm("Are you sure you want to log out?")) {
+                auth.signOut().then(() => {
+                    window.location.reload(); // Reload the page to reset state
+                });
+            }
+        }
+        
+        // --- Dashboard Navigation & Sidebar ---
+        const sidebar = document.getElementById('sidebar');
+        const dashboardMenuButton = document.getElementById('dashboard-menu-button');
+        if (dashboardMenuButton) {
+            dashboardMenuButton.addEventListener('click', () => {
+                sidebar.classList.remove('translate-x-full');
+            });
+        }
+        const closeSidebarButton = document.getElementById('close-sidebar-button');
+        if(closeSidebarButton) {
+            closeSidebarButton.addEventListener('click', () => {
+                sidebar.classList.add('translate-x-full');
             });
         }
 
-        // Function to fetch and display all users
+
+        function showDashboardSection(sectionId) {
+            // Hide all sections first
+            document.querySelectorAll('#dashboard-main-content, #profile-section, #analytics-section, #planner-section, #subscription-section, #settings-section, #admin-section').forEach(el => el.classList.add('hidden'));
+            
+            // Show the selected section
+            const elementToShow = document.getElementById(`${sectionId}-section`) || (sectionId === 'main' ? document.getElementById('dashboard-main-content') : null);
+            if(elementToShow) elementToShow.classList.remove('hidden');
+            
+            // Populate content when shown
+            if (sectionId === 'profile') populateProfileDetails();
+            if (sectionId === 'analytics') populateAnalyticsDetails();
+            if (sectionId === 'planner') populatePlannerDetails();
+            if (sectionId === 'subscription') populateSubscriptionDetails();
+            if (sectionId === 'settings') populateSettingsDetails();
+
+            // Hide sidebar after selection
+            sidebar.classList.add('translate-x-full');
+             // Also hide main landing page content if we are showing a dashboard section
+            landingPage.classList.add('hidden');
+            dashboard.classList.remove('hidden');
+        }
+        
+        function populateProfileDetails() {
+            const section = document.getElementById('profile-section');
+            section.innerHTML = `
+                <h2 class="text-2xl font-bold mb-6">Your Profile</h2>
+                <div class="space-y-4">
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Name:</strong> ${currentUserData.name}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Email:</strong> ${currentUserData.email}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Date of Birth:</strong> ${currentUserData.dob}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Position:</strong> ${currentUserData.position}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>College:</strong> ${currentUserData.college}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Exam Pursuing:</strong> ${currentUserData.examPursuing}</div>
+                </div>
+            `;
+        }
+        
+        function populateAnalyticsDetails() {
+            const section = document.getElementById('analytics-section');
+            section.innerHTML = `<h2 class="text-2xl font-bold mb-6">Performance Analytics</h2><p class="text-gray-600">Your deep analytics dashboard is coming soon!</p>`;
+        }
+
+        function populatePlannerDetails() {
+            const section = document.getElementById('planner-section');
+            section.innerHTML = `<h2 class="text-2xl font-bold mb-6">Study Planner</h2><p class="text-gray-600">Your personalized study planner is coming soon!</p>`;
+        }
+
+        function populateSubscriptionDetails() {
+             const section = document.getElementById('subscription-section');
+             section.innerHTML = `
+                <h2 class="text-2xl font-bold mb-6">Subscription</h2>
+                <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                    <p class="text-lg">Your current plan: <span class="font-bold text-blue-600">${currentUserData.accessLevel.charAt(0).toUpperCase() + currentUserData.accessLevel.slice(1)}</span></p>
+                    ${currentUserData.accessLevel === 'restricted' ? '<p class="mt-4">Upgrade to our Premium plan to unlock all question banks, full mock exams, and in-depth video lectures.</p><button onclick="alert(\'Payment integration coming soon!\')" class="mt-6 rad-gradient text-white font-bold py-3 px-6 rounded-lg hover:shadow-lg transition-shadow">Upgrade to Premium</button>' : '<p class="mt-4">You have full access to all our learning materials. Thank you for being a premium member!</p>'}
+                </div>
+             `;
+        }
+        
+        function populateSettingsDetails() {
+            const section = document.getElementById('settings-section');
+             section.innerHTML = `
+                <h2 class="text-2xl font-bold mb-6">Settings</h2>
+                <p class="text-gray-600">Settings page is under construction.</p>
+             `;
+        }
+
+        // Populate datalist for colleges (from your original file)
+        const collegeDatalist = document.getElementById('colleges');
+        const colleges = ["All India Institute of Medical Sciences, New Delhi", "Postgraduate Institute of Medical Education and Research, Chandigarh", "Christian Medical College, Vellore", "And many more..."]; // Add all colleges here
+        colleges.forEach(college => {
+            const option = document.createElement('option');
+            option.value = college;
+            collegeDatalist.appendChild(option);
+        });
+        
+        // --- ADMIN DASHBOARD FUNCTIONS ---
+        function loadAdminDashboard(adminData) {
+            landingPage.classList.add('hidden');
+            dashboard.classList.remove('hidden');
+            document.getElementById('main-nav').classList.add('hidden'); // Hide landing page nav
+
+            // Add Admin Panel link to user menu if it doesn't exist
+            if (!document.getElementById('admin-menu-link')) {
+                const adminLink = document.createElement('a');
+                adminLink.id = 'admin-menu-link';
+                adminLink.href = "#";
+                adminLink.className = "block px-4 py-2 text-sm text-blue-700 font-bold hover:bg-gray-100";
+                adminLink.textContent = "Admin Panel";
+                adminLink.onclick = () => showDashboardSection('admin');
+                userMenu.insertBefore(adminLink, userMenu.firstChild);
+            }
+
+            showDashboardSection('admin');
+            loadUsers();
+            loadLoginLogs();
+        }
+
         async function loadUsers() {
             const userListBody = document.getElementById('user-list');
-            userListBody.innerHTML = '<tr><td colspan="9" class="no-results">Loading users...</td></tr>';
-
+            userListBody.innerHTML = '<tr><td colspan="4" class="py-3 px-6 text-center">Loading users...</td></tr>';
             try {
                 const usersSnapshot = await db.collection('users').get();
                 if (usersSnapshot.empty) {
-                    userListBody.innerHTML = '<tr><td colspan="9" class="no-results">No users found.</td></tr>';
+                    userListBody.innerHTML = '<tr><td colspan="4" class="py-3 px-6 text-center">No users found.</td></tr>';
                     return;
                 }
-
                 userListBody.innerHTML = ''; // Clear loading message
-                let serialNumber = 1; // Initialize serial number
-
                 usersSnapshot.forEach(doc => {
                     const userData = doc.data();
-                    const userId = doc.id; 
-                    const row = userListBody.insertRow();
-
-                    // Serial Number
-                    row.insertCell().textContent = serialNumber++;
-
-                    // User Name & Email
-                    row.insertCell().textContent = userData.name || 'N/A';
-                    row.insertCell().textContent = userData.email || 'N/A';
-
-                    // Status (Basic: just last online based on login logs for now)
-                    const statusCell = row.insertCell();
-                    statusCell.innerHTML = `<span class="status-dot offline"></span> Offline`; // Default to offline for now
-
-                    // Last Login (Fetch from loginLogs - this is simplified for performance)
-                    // It's better to load all last login data once, then match to users
-                    const lastLoginCell = row.insertCell();
-                    lastLoginCell.textContent = 'Fetching...';
-
-                    // Access Level (Editable)
-                    const accessLevelCell = row.insertCell();
-                    const select = document.createElement('select');
-                    select.innerHTML = `
-                        <option value="restricted" ${userData.accessLevel === 'restricted' ? 'selected' : ''}>Restricted</option>
-                        <option value="subscriber" ${userData.accessLevel === 'subscriber' ? 'selected' : ''}>Subscriber</option>
-                        <option value="admin" ${userData.accessLevel === 'admin' ? 'selected' : ''}>Admin</option>
+                    const userId = doc.id;
+                    const row = document.createElement('tr');
+                    row.className = 'bg-white border-b';
+                    row.innerHTML = `
+                        <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">${userData.name || 'N/A'}</td>
+                        <td class="py-4 px-6">${userData.email}</td>
+                        <td class="py-4 px-6">
+                            <select id="select-${userId}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                <option value="restricted" ${userData.accessLevel === 'restricted' ? 'selected' : ''}>Restricted</option>
+                                <option value="premium" ${userData.accessLevel === 'premium' ? 'selected' : ''}>Premium</option>
+                                <option value="admin" ${userData.accessLevel === 'admin' ? 'selected' : ''}>Admin</option>
+                            </select>
+                        </td>
+                        <td class="py-4 px-6">
+                            <button id="save-${userId}" class="font-medium text-blue-600 hover:underline mr-4">Save</button>
+                            <button id="delete-${userId}" class="font-medium text-red-600 hover:underline">Delete</button>
+                        </td>
                     `;
-                    select.onchange = (e) => updateAccessLevel(userId, e.target.value);
-                    accessLevelCell.appendChild(select);
+                    userListBody.appendChild(row);
 
-                    // Subscription Dates (Editable for admin)
-                    const subStartCell = row.insertCell();
-                    const subEndCell = row.insertCell();
-                    
-                    const subStartDateInput = document.createElement('input');
-                    subStartDateInput.type = 'date';
-                    subStartDateInput.value = userData.subscriptionStart ? userData.subscriptionStart.toDate().toISOString().slice(0, 10) : '';
-                    subStartDateInput.id = `sub-start-${userId}`;
-
-                    const subEndDateInput = document.createElement('input');
-                    subEndDateInput.type = 'date';
-                    subEndDateInput.value = userData.subscriptionEnd ? userData.subscriptionEnd.toDate().toISOString().slice(0, 10) : '';
-                    subEndDateInput.id = `sub-end-${userId}`;
-
-                    const saveSubButton = document.createElement('button');
-                    saveSubButton.textContent = 'Save';
-                    saveSubButton.className = 'admin-table-button save-sub';
-                    saveSubButton.onclick = () => updateSubscriptionDates(userId, subStartDateInput.value, subEndDateInput.value);
-
-                    subStartCell.appendChild(subStartDateInput);
-                    subEndCell.appendChild(subEndDateInput);
-                    
-                    // Actions (e.g., Reset Password, Delete User)
-                    const actionsCell = row.insertCell();
-                    actionsCell.appendChild(saveSubButton);
-                    const deleteUserButton = document.createElement('button');
-                    deleteUserButton.textContent = 'Delete';
-                    deleteUserButton.className = 'admin-table-button delete-user';
-                    deleteUserButton.onclick = () => deleteUser(userId, userData.email);
-                    actionsCell.appendChild(deleteUserButton);
+                    // Add event listeners
+                    document.getElementById(`select-${userId}`).addEventListener('change', (e) => {
+                         updateAccessLevel(userId, e.target.value);
+                    });
+                     document.getElementById(`delete-${userId}`).addEventListener('click', () => {
+                         deleteUser(userId, userData.email);
+                    });
                 });
-
-                // Now fetch and apply last login times after users are rendered
-                const allUserIds = usersSnapshot.docs.map(doc => doc.id);
-                loadLastLoginTimes(allUserIds);
-
             } catch (error) {
                 console.error("Error loading users:", error);
-                userListBody.innerHTML = '<tr><td colspan="9" class="no-results" style="color:red;">Error loading users. Check console.</td></tr>';
+                userListBody.innerHTML = '<tr><td colspan="4" class="py-3 px-6 text-center text-red-500">Error loading users.</td></tr>';
             }
         }
 
-        // Helper function to fetch and apply last login times
-        async function loadLastLoginTimes(userIds) {
-            if (userIds.length === 0) return;
+        async function loadLoginLogs() {
+            const loginLogsBody = document.getElementById('login-logs-list');
+            loginLogsBody.innerHTML = '<tr><td colspan="3" class="py-3 px-6 text-center">Loading logs...</td></tr>';
             try {
-                // Firestore 'in' query limit is 10. For more, need multiple queries or specific pagination.
-                // Assuming max 50 users for simplicity here.
-                const logSnapshot = await db.collection('loginLogs')
-                                            .where('userId', 'in', userIds.slice(0, 10)) // Fetch for a batch of users
-                                            .orderBy('timestamp', 'desc')
-                                            .get();
-                const lastLogins = {};
-                logSnapshot.forEach(doc => {
+                const logsSnapshot = await db.collection('loginLogs').orderBy('timestamp', 'desc').limit(50).get();
+                if (logsSnapshot.empty) {
+                    loginLogsBody.innerHTML = '<tr><td colspan="3" class="py-3 px-6 text-center">No login activity.</td></tr>';
+                    return;
+                }
+                loginLogsBody.innerHTML = '';
+                logsSnapshot.forEach(doc => {
                     const logData = doc.data();
-                    // Only store the latest login for each user
-                    if (!lastLogins[logData.userId] || logData.timestamp.toDate().getTime() > lastLogins[logData.userId].getTime()) {
-                        lastLogins[logData.userId] = logData.timestamp.toDate();
-                    }
+                    const row = document.createElement('tr');
+                    row.className = 'bg-white border-b';
+                    row.innerHTML = `
+                        <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">${logData.email}</td>
+                        <td class="py-4 px-6">${logData.timestamp.toDate().toLocaleString()}</td>
+                        <td class="py-4 px-6">${logData.accessLevel || 'N/A'}</td>
+                    `;
+                    loginLogsBody.appendChild(row);
                 });
-
-                // Update table cells
-                userIds.forEach(userId => {
-                    const row = document.querySelector(`#user-list tr:has(select[onchange*="${userId}"])`); // Find row by userId in select
-                    if (row) {
-                        const lastLoginCell = row.cells[4]; // Assuming Last Login is 5th column (index 4)
-                        const statusCell = row.cells[3];    // Assuming Status is 4th column (index 3)
-
-                        if (lastLogins[userId]) {
-                            const date = lastLogins[userId];
-                            lastLoginCell.textContent = date.toLocaleString();
-                            // Basic online check: if last login was very recent (e.g., last 5 mins)
-                            if (Date.now() - date.getTime() < 5 * 60 * 1000) { 
-                                statusCell.innerHTML = `<span class="status-dot online"></span> Online`;
-                            } else {
-                                statusCell.innerHTML = `<span class="status-dot offline"></span> Offline`;
-                            }
-                        } else {
-                            lastLoginCell.textContent = 'Never logged in';
-                            statusCell.innerHTML = `<span class="status-dot offline"></span> Offline`;
-                        }
-                    }
-                });
-
             } catch (error) {
-                console.error("Error loading last login times:", error);
+                console.error("Error loading login logs:", error);
+                loginLogsBody.innerHTML = '<tr><td colspan="3" class="py-3 px-6 text-center text-red-500">Error loading logs.</td></tr>';
             }
         }
-
-
-        // Function to update a user's access level
+        
         async function updateAccessLevel(userId, newLevel) {
-            if (!confirm(`Are you sure you want to change access level for user ${userId} to ${newLevel}?`)) {
-                // To prevent selected value from changing back immediately, re-set it
-                loadUsers(); // Re-load to revert dropdown state if cancelled
+            if (!confirm(`Change access for this user to ${newLevel}?`)) {
+                loadUsers(); // Revert dropdown if cancelled
                 return;
             }
             try {
                 await db.collection('users').doc(userId).update({ accessLevel: newLevel });
-                alert(`Access level for user ${userId} updated to ${newLevel}.`);
-                // No need to reload all users, this is client-side update
+                alert('Access level updated.');
             } catch (error) {
+                alert('Failed to update access level.');
                 console.error("Error updating access level:", error);
-                alert("Failed to update access level. " + error.message);
             }
         }
 
-        // Function to update subscription dates
-        async function updateSubscriptionDates(userId, startDate, endDate) {
-             if (!confirm(`Are you sure you want to update subscription dates for user ${userId}?`)) {
-                loadUsers(); // Refresh if cancelled
-                return;
-            }
-            try {
-                // Convert date strings to Firestore Timestamps
-                const startTimestamp = startDate ? firebase.firestore.Timestamp.fromDate(new Date(startDate)) : null;
-                const endTimestamp = endDate ? firebase.firestore.Timestamp.fromDate(new Date(endDate)) : null;
-
-                await db.collection('users').doc(userId).update({
-                    subscriptionStart: startTimestamp,
-                    subscriptionEnd: endTimestamp
-                });
-                alert(`Subscription dates for user ${userId} updated.`);
-            } catch (error) {
-                console.error("Error updating subscription dates:", error);
-                alert("Failed to update subscription dates. " + error.message);
-            }
-        }
-
-        // Function to delete a user (Firestore profile and Auth account)
         async function deleteUser(userId, userEmail) {
-            if (!confirm(`WARNING: Are you sure you want to PERMANENTLY DELETE user ${userEmail} and all their data? This cannot be undone.`)) {
+            if (!confirm(`WARNING: Permanently delete user ${userEmail}? This cannot be undone.`)) {
                 return;
             }
             try {
-                // This client-side delete only removes the Firestore document.
-                // Deleting the Firebase Auth user requires a server-side call (e.g., Cloud Function).
-                // For simplicity here, we'll only delete the Firestore profile.
-                // A complete solution would call a Cloud Function to delete the Auth user too.
+                // IMPORTANT: Deleting a user from Firebase Auth requires a backend function (e.g., Cloud Function)
+                // for security reasons. This code will only delete the user's data from Firestore.
                 await db.collection('users').doc(userId).delete();
-                alert(`User profile for ${userEmail} deleted from Firestore.`);
-                // Also delete login logs for this user (optional, but good for cleanup)
-                const loginLogsToDelete = await db.collection('loginLogs').where('userId', '==', userId).get();
-                const batch = db.batch();
-                loginLogsToDelete.forEach(doc => {
-                    batch.delete(doc.ref);
-                });
-                await batch.commit();
-                alert(`Login logs for ${userEmail} deleted.`);
-                loadUsers(); // Refresh the user list
-                loadLoginLogs(); // Refresh the log list
+                alert(`User data for ${userEmail} deleted from Firestore. Note: Auth user must be deleted from the Firebase console.`);
+                loadUsers(); // Refresh list
             } catch (error) {
+                alert('Failed to delete user data.');
                 console.error("Error deleting user:", error);
-                alert("Failed to delete user. " + error.message + "\nNOTE: Deleting the Firebase Authentication user account itself requires server-side code (Cloud Function).");
             }
         }
 
-        // Function to fetch and display login logs
-        async function loadLoginLogs() {
-            const loginLogsBody = document.getElementById('login-logs-list');
-            loginLogsBody.innerHTML = '<tr><td colspan="3" class="no-results">Loading login logs...</td></tr>';
-
-            try {
-                const logsSnapshot = await db.collection('loginLogs').orderBy('timestamp', 'desc').limit(50).get(); 
-                if (logsSnapshot.empty) {
-                    loginLogsBody.innerHTML = '<tr><td colspan="3" class="no-results">No login activity found.</td></tr>';
-                    return;
-                }
-
-                loginLogsBody.innerHTML = ''; 
-
-                logsSnapshot.forEach(doc => {
-                    const logData = doc.data();
-                    const row = loginLogsBody.insertRow();
-
-                    row.insertCell().textContent = logData.email || 'N/A';
-                    row.insertCell().textContent = logData.timestamp ? logData.timestamp.toDate().toLocaleString() : 'N/A';
-                    row.insertCell().textContent = logData.accessLevel ? logData.accessLevel.toUpperCase() : 'N/A';
-                });
-
-            } catch (error) {
-                console.error("Error loading login logs:", error);
-                loginLogsBody.innerHTML = '<tr><td colspan="3" class="no-results" style="color:red;">Error loading login logs. Check console.</td></tr>';
-            }
-        }
-
-
-        // --- Initial Load Admin Page ---
-        auth.onAuthStateChanged(user => {
-            if (!user) {
-                window.location.href = 'index.html'; // Not logged in, redirect
-                return;
-            } 
-            // Check admin role
-            db.collection('users').doc(user.uid).get().then(doc => {
-                if (!doc.exists || doc.data().accessLevel !== 'admin') {
-                    alert("Access Denied: You do not have administrator privileges.");
-                    auth.signOut(); 
-                    window.location.href = 'index.html';
-                    return;
-                }
-                // If admin, load data
-                console.log("Admin user logged in:", user.email);
-                loadUsers(); 
-                loadLoginLogs(); 
-            }).catch(error => {
-                console.error("Error verifying admin access:", error);
-                alert("Error verifying access. Logging out.");
-                auth.signOut();
-                window.location.href = 'index.html';
-            });
-        });
     </script>
+
 </body>
 </html>
