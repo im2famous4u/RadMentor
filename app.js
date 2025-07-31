@@ -1,517 +1,633 @@
-<!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RadMentor - Comprehensive Radiology Learning Source</title>
+// =================================================================
+// RadMentor Application Logic (app.js)
+// =================================================================
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+// --- Firebase Configuration ---
+// This configuration now points to your Firebase project.
+const firebaseConfig = {
+  apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
+  authDomain: "radiology-mcqs.firebaseapp.com",
+  projectId: "radiology-mcqs",
+  storageBucket: "radiology-mcqs.appspot.com", // Corrected storage bucket URL
+  messagingSenderId: "862300415358",
+  appId: "1:862300415358:web:097d5e413f388e30587f2f"
+};
 
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Feather Icons -->
-    <script src="https://unpkg.com/feather-icons"></script>
+// --- Initialize Firebase ---
+// The app uses the compat libraries loaded in the HTML file.
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-    <!-- Custom Stylesheet -->
-    <link rel="stylesheet" href="style.css">
-</head>
-<body class="text-gray-800 pt-16"> <!-- Add padding-top to body to avoid content being hidden by fixed header -->
+// --- Global State ---
+let isSignIn = true; // Tracks if the auth modal is in 'signin' or 'signup' mode
+let currentUserData = null; // To store the logged-in user's profile data
 
-    <!-- =================================================
-    PERSISTENT HEADER
-    This header is now outside the landing page/dashboard divs
-    and will always be visible.
-    ================================================== -->
-    <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
-        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
-            <div class="flex items-center">
-                <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
-                <span class="text-2xl font-bold text-gray-800">RadMentor</span>
+// --- DOM Element Selectors ---
+// General UI
+const landingPage = document.getElementById('landing-page');
+const dashboard = document.getElementById('dashboard');
+
+// Navigation
+const loggedOutNav = document.getElementById('logged-out-nav');
+const loggedInNav = document.getElementById('logged-in-nav');
+const mobileLoggedOutNav = document.getElementById('mobile-logged-out-nav');
+const mobileLoggedInNav = document.getElementById('mobile-logged-in-nav');
+const userGreetingHeader = document.getElementById('user-greeting-header');
+const userMenuButton = document.getElementById('user-menu-button');
+const userMenu = document.getElementById('user-menu');
+const mobileMenuButton = document.getElementById('mobile-menu-button');
+const mobileMenu = document.getElementById('mobile-menu');
+
+// Auth Modal
+const authModal = document.getElementById('auth-modal');
+const authTitle = document.getElementById('auth-title');
+const authSubtitle = document.getElementById('auth-subtitle');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const authBtn = document.getElementById('auth-btn');
+const toggleBtn = document.getElementById('toggle-btn');
+const authMessage = document.getElementById('auth-message');
+
+// Profile Completion Form
+const profileFormContainer = document.getElementById('profile-form-container');
+
+// Dashboard Elements
+const allDashboardSections = document.querySelectorAll('#dashboard > div.pt-16 > div > div[id$="-section"], #dashboard-main-content, #admin-section');
+const profileSection = document.getElementById('profile-section');
+const settingsSection = document.getElementById('settings-section');
+const accessLevelNotice = document.getElementById('access-level-notice');
+
+// Admin Elements
+const adminSection = document.getElementById('admin-section');
+const userList = document.getElementById('user-list');
+const loginLogsList = document.getElementById('login-logs-list');
+
+
+// =================================================================
+// EVENT LISTENERS
+// =================================================================
+
+// Initialize the app when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', initApp);
+
+// Toggle user dropdown menu
+userMenuButton.addEventListener('click', (e) => {
+    e.stopPropagation(); // Prevent the window click listener from closing it immediately
+    userMenu.classList.toggle('hidden');
+});
+
+// Toggle mobile navigation menu
+mobileMenuButton.addEventListener('click', () => {
+    mobileMenu.classList.toggle('hidden');
+});
+
+// Close dropdown/modals when clicking outside
+window.addEventListener('click', (e) => {
+    // Close user menu if clicked outside
+    if (!userMenu.classList.contains('hidden') && !userMenuButton.contains(e.target)) {
+        userMenu.classList.add('hidden');
+    }
+});
+
+// Close sidebar (if it exists and is part of the design)
+const closeSidebarButton = document.getElementById('close-sidebar-button');
+if (closeSidebarButton) {
+    closeSidebarButton.addEventListener('click', () => {
+        document.getElementById('sidebar').classList.add('translate-x-full');
+    });
+}
+
+
+// =================================================================
+// INITIALIZATION
+// =================================================================
+
+/**
+ * Main app initialization function.
+ * Sets up the authentication state listener.
+ */
+function initApp() {
+    feather.replace(); // Initialize Feather Icons
+
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            // User is signed in
+            try {
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                if (userDoc.exists) {
+                    // Profile is complete
+                    currentUserData = { uid: user.uid, ...userDoc.data() };
+                    updateUIAfterLogin(user, currentUserData);
+                } else {
+                    // New user, profile is not complete
+                    showProfileForm();
+                }
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+                authMessage.textContent = "Could not load your profile. Please try again.";
+                logout(); // Log out if profile can't be fetched
+            }
+        } else {
+            // User is signed out
+            currentUserData = null;
+            updateUIAfterLogout();
+        }
+    });
+}
+
+
+// =================================================================
+// UI UPDATE FUNCTIONS
+// =================================================================
+
+/**
+ * Updates the entire UI for a logged-in user.
+ * @param {object} user - The Firebase user object.
+ * @param {object} userData - The user's profile data from Firestore.
+ */
+function updateUIAfterLogin(user, userData) {
+    // Hide landing page, show dashboard
+    landingPage.classList.add('hidden');
+    dashboard.classList.remove('hidden');
+
+    // Update navigation bars
+    loggedOutNav.classList.add('hidden');
+    loggedInNav.classList.remove('hidden');
+    mobileLoggedOutNav.parentElement.classList.add('hidden');
+    mobileLoggedInNav.classList.remove('hidden');
+
+    // Greet the user
+    const firstName = userData.name ? userData.name.split(' ')[0] : 'User';
+    userGreetingHeader.textContent = firstName;
+
+    // Populate dashboard sections with user data
+    populateProfileSection(userData);
+    populateSettingsSection(user, userData);
+    displayAccessLevel(userData.accessLevel);
+
+    // Check for admin privileges
+    if (userData.accessLevel === 'admin') {
+        addAdminLink();
+        loadAdminDashboard();
+    }
+
+    // Hide any open modals
+    hideAuthModal();
+    profileFormContainer.classList.add('hidden');
+    showDashboardSection('main'); // Show the main dashboard content by default
+}
+
+/**
+ * Resets the UI to the logged-out state.
+ */
+function updateUIAfterLogout() {
+    // Show landing page, hide dashboard
+    landingPage.classList.remove('hidden');
+    dashboard.classList.add('hidden');
+
+    // Update navigation bars
+    loggedOutNav.classList.remove('hidden');
+    loggedInNav.classList.add('hidden');
+    mobileLoggedOutNav.parentElement.classList.remove('hidden');
+    mobileLoggedInNav.classList.add('hidden');
+
+    // Reset user-specific elements
+    userGreetingHeader.textContent = '';
+    removeAdminLink();
+}
+
+/**
+ * Displays the user's current access level on the dashboard.
+ * @param {string} accessLevel - The user's access level (e.g., 'free', 'qbank').
+ */
+function displayAccessLevel(accessLevel) {
+    let noticeHTML = '';
+    if (accessLevel) {
+        noticeHTML = `
+            <div class="mt-4 bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-md" role="alert">
+                <p class="font-bold">Access Level: ${accessLevel.charAt(0).toUpperCase() + accessLevel.slice(1)}</p>
+                <p>You currently have access to ${accessLevel}-tier features. <a href="#" onclick="showDashboardSection('subscription')" class="underline">Upgrade your plan</a> for more content.</p>
             </div>
-            <nav id="main-nav" class="hidden md:flex items-center space-x-8">
-                <a href="#courses" class="text-gray-600 hover:text-blue-600">Courses</a>
-                <a href="#features" class="text-gray-600 hover:text-blue-600">Features</a>
-                <a href="#pricing" class="text-gray-600 hover:text-blue-600">Pricing</a>
-                <a href="#about" class="text-gray-600 hover:text-blue-600">About Us</a>
-            </nav>
-            <div class="flex items-center">
-                <!-- Logged Out Navigation (Visible by default) -->
-                <div id="logged-out-nav" class="md:flex items-center">
-                    <button onclick="showAuthModal('signin')" class="text-gray-600 hover:text-blue-600 mr-6">Login</button>
-                    <button onclick="showAuthModal('signup')" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                        Sign Up
-                    </button>
-                </div>
+        `;
+    }
+    accessLevelNotice.innerHTML = noticeHTML;
+}
 
-                <!-- Logged In Navigation (Hidden by default) -->
-                <div id="logged-in-nav" class="hidden relative">
-                    <button id="user-menu-button" class="flex items-center space-x-2">
-                        <span class="font-semibold text-gray-700">Hi, <span id="user-greeting-header"></span></span>
-                        <i data-feather="chevron-down" class="w-4 h-4 text-gray-700"></i>
-                    </button>
-                    <!-- Dropdown Menu -->
-                    <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden">
-                        <!-- Admin link will be injected here by JS if user is admin -->
-                        <a href="#" onclick="showDashboardSection('main')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Dashboard</a>
-                        <a href="#" onclick="alert('Bookmarks page coming soon!')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Bookmarks</a>
-                        <a href="#" onclick="showDashboardSection('settings')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
-                        <div class="border-t border-gray-100"></div>
-                        <a href="#" onclick="logout()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
-                    </div>
-                </div>
 
-                <button id="mobile-menu-button" class="md:hidden ml-4 text-gray-700">
-                    <i data-feather="menu"></i>
+// =================================================================
+// AUTHENTICATION MODAL & LOGIC
+// =================================================================
+
+/**
+ * Shows the authentication modal.
+ * @param {string} mode - 'signin' or 'signup'.
+ */
+window.showAuthModal = (mode) => {
+    isSignIn = (mode === 'signin');
+    authModal.classList.remove('hidden');
+    updateAuthModalUI();
+};
+
+/**
+ * Hides the authentication modal.
+ */
+window.hideAuthModal = () => {
+    authModal.classList.add('hidden');
+    authMessage.textContent = ''; // Clear any previous error messages
+};
+
+/**
+ * Toggles the auth modal between Sign In and Sign Up states.
+ */
+window.toggleAuth = () => {
+    isSignIn = !isSignIn;
+    updateAuthModalUI();
+};
+
+/**
+ * Updates the text and buttons inside the auth modal based on the current mode.
+ */
+function updateAuthModalUI() {
+    authMessage.textContent = ''; // Clear errors on toggle
+    if (isSignIn) {
+        authTitle.textContent = 'Login to RadMentor';
+        authSubtitle.textContent = 'Welcome back!';
+        authBtn.textContent = 'Sign In';
+        toggleBtn.textContent = "Don't have an account? Sign up";
+    } else {
+        authTitle.textContent = 'Create an Account';
+        authSubtitle.textContent = 'Join the future of radiology education.';
+        authBtn.textContent = 'Sign Up';
+        toggleBtn.textContent = 'Already have an account? Sign in';
+    }
+}
+
+/**
+ * Handles the sign-in or sign-up process when the auth button is clicked.
+ */
+window.handleAuth = () => {
+    const email = emailInput.value;
+    const password = passwordInput.value;
+
+    if (!email || !password) {
+        authMessage.textContent = 'Please enter both email and password.';
+        return;
+    }
+
+    authBtn.disabled = true;
+    authBtn.textContent = 'Processing...';
+
+    if (isSignIn) {
+        // --- Sign In Logic ---
+        auth.signInWithEmailAndPassword(email, password)
+            .then(async (userCredential) => {
+                // This will be handled by onAuthStateChanged, but we can log activity here
+                const user = userCredential.user;
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                logUserActivity(user.email, 'login', { accessLevel: userDoc.data()?.accessLevel || 'unknown' });
+            })
+            .catch(handleAuthError)
+            .finally(() => {
+                authBtn.disabled = false;
+                updateAuthModalUI();
+            });
+    } else {
+        // --- Sign Up Logic ---
+        auth.createUserWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                // onAuthStateChanged will detect the new user and trigger the profile form
+            })
+            .catch(handleAuthError)
+            .finally(() => {
+                authBtn.disabled = false;
+                updateAuthModalUI();
+            });
+    }
+};
+
+/**
+ * Handles and displays authentication errors.
+ * @param {object} error - The error object from Firebase Auth.
+ */
+function handleAuthError(error) {
+    console.error("Authentication Error:", error);
+    let message = "An unknown error occurred.";
+    switch (error.code) {
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+            message = 'Invalid email or password.';
+            break;
+        case 'auth/email-already-in-use':
+            message = 'This email address is already in use.';
+            break;
+        case 'auth/weak-password':
+            message = 'Password should be at least 6 characters.';
+            break;
+        case 'auth/invalid-email':
+            message = 'Please enter a valid email address.';
+            break;
+    }
+    authMessage.textContent = message;
+}
+
+/**
+ * Signs the current user out.
+ */
+window.logout = () => {
+    auth.signOut().catch(error => console.error("Logout Error:", error));
+};
+
+
+// =================================================================
+// PROFILE COMPLETION
+// =================================================================
+
+/**
+ * Shows the profile completion form.
+ */
+function showProfileForm() {
+    hideAuthModal();
+    landingPage.classList.add('hidden');
+    dashboard.classList.add('hidden');
+    profileFormContainer.classList.remove('hidden');
+}
+
+/**
+ * Submits the completed profile data to Firestore.
+ */
+window.submitProfile = () => {
+    const user = auth.currentUser;
+    if (!user) {
+        console.error("No user is logged in to submit a profile.");
+        return;
+    }
+
+    // --- Collect form data ---
+    const profileData = {
+        name: document.getElementById('name').value,
+        dob: document.getElementById('dob').value,
+        sex: document.getElementById('sex').value,
+        position: document.getElementById('position').value,
+        exam_pursuing: document.getElementById('exam_pursuing').value,
+        college: document.getElementById('college').value,
+        email: user.email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        accessLevel: 'free' // Default access level for new users
+    };
+
+    // --- Basic Validation ---
+    if (!profileData.name || !profileData.dob || !profileData.position) {
+        alert("Please fill out all required fields: Name, Date of Birth, and Position.");
+        return;
+    }
+
+    // --- Save to Firestore ---
+    db.collection('users').doc(user.uid).set(profileData)
+        .then(() => {
+            console.log("Profile created successfully!");
+            // Log this specific activity
+            logUserActivity(user.email, 'profile_created', { accessLevel: profileData.accessLevel });
+            // The onAuthStateChanged listener will re-fetch and update the UI
+            // We just need to hide the form.
+            profileFormContainer.classList.add('hidden');
+        })
+        .catch(error => {
+            console.error("Error writing profile to Firestore: ", error);
+            alert("There was an error saving your profile. Please try again.");
+        });
+};
+
+
+// =================================================================
+// DASHBOARD NAVIGATION & CONTENT
+// =================================================================
+
+/**
+ * Shows a specific section within the dashboard and hides others.
+ * @param {string} sectionId - The ID of the section to show (e.g., 'main', 'profile').
+ */
+window.showDashboardSection = (sectionId) => {
+    allDashboardSections.forEach(section => {
+        section.classList.add('hidden');
+    });
+
+    let sectionToShow;
+    if (sectionId === 'main') {
+        sectionToShow = document.getElementById('dashboard-main-content');
+    } else {
+        sectionToShow = document.getElementById(`${sectionId}-section`);
+    }
+
+    if (sectionToShow) {
+        sectionToShow.classList.remove('hidden');
+    } else {
+        // Fallback to main dashboard if section not found
+        document.getElementById('dashboard-main-content').classList.remove('hidden');
+    }
+
+    // Close mobile menu if it's open
+    if (!mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.add('hidden');
+    }
+};
+
+/**
+ * Populates the profile section with user data.
+ * @param {object} userData - The user's data from Firestore.
+ */
+function populateProfileSection(userData) {
+    profileSection.innerHTML = `
+        <h2 class="text-2xl font-bold mb-6">My Profile</h2>
+        <div class="space-y-4">
+            <p><strong>Name:</strong> ${userData.name || 'Not set'}</p>
+            <p><strong>Email:</strong> ${userData.email || 'Not set'}</p>
+            <p><strong>Date of Birth:</strong> ${userData.dob || 'Not set'}</p>
+            <p><strong>Sex:</strong> ${userData.sex || 'Not set'}</p>
+            <p><strong>Position:</strong> ${userData.position || 'Not set'}</p>
+            <p><strong>Exam Pursuing:</strong> ${userData.exam_pursuing || 'Not set'}</p>
+            <p><strong>Medical College:</strong> ${userData.college || 'Not set'}</p>
+            <p><strong>Access Level:</strong> <span class="font-semibold capitalize">${userData.accessLevel || 'free'}</span></p>
+        </div>
+    `;
+}
+
+/**
+ * Populates the settings section.
+ * @param {object} user - The Firebase user object.
+ * @param {object} userData - The user's data from Firestore.
+ */
+function populateSettingsSection(user, userData) {
+    settingsSection.innerHTML = `
+        <h2 class="text-2xl font-bold mb-6">Settings</h2>
+        <div class="space-y-6">
+            <div>
+                <h3 class="text-lg font-semibold">Account Information</h3>
+                <p class="text-gray-600">Your email is ${user.email}.</p>
+            </div>
+            <div>
+                <h3 class="text-lg font-semibold">Change Password</h3>
+                <p class="text-gray-600 mb-2">An email will be sent to you to reset your password.</p>
+                <button onclick="sendPasswordReset()" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                    Send Password Reset Email
                 </button>
             </div>
         </div>
-         <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 right-0 bg-white shadow-md px-6 pb-4">
-            <a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a>
-            <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a>
-            <a href="#pricing" class="block py-2 text-gray-600 hover:text-blue-600">Pricing</a>
-            <a href="#about" class="block py-2 text-gray-600 hover:text-blue-600">About Us</a>
-            <div id="mobile-logged-out-nav">
-                <button onclick="showAuthModal('signin')" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Login</button>
-            </div>
-             <div id="mobile-logged-in-nav" class="hidden border-t mt-2 pt-2">
-                 <a href="#" onclick="showDashboardSection('main')" class="block py-2 text-gray-600 hover:text-blue-600">My Dashboard</a>
-                 <a href="#" onclick="alert('Bookmarks page coming soon!')" class="block py-2 text-gray-600 hover:text-blue-600">Bookmarks</a>
-                 <a href="#" onclick="logout()" class="block py-2 text-gray-600 hover:text-blue-600">Logout</a>
-            </div>
-        </div>
-    </header>
+    `;
+}
 
-    <!-- =================================================
-    LANDING PAGE SECTION
-    This is the new public-facing homepage.
-    It will be hidden after successful login.
-    ================================================== -->
-    <div id="landing-page">
-        <main>
-            <!-- Hero Section -->
-            <section class="bg-white pt-16 pb-20">
-                <div class="container mx-auto px-6 text-center">
-                    <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
-                        The World’s Most Comprehensive <br class="hidden md:block" /> <span class="rad-gradient-text">Radiology Learning Source</span>
-                    </h1>
-                    <p class="mt-6 text-lg text-gray-600 max-w-3xl mx-auto">
-                        Master radiology with our expert-curated Q-banks, mock exams, and in-depth content. Built by radiologists, for future radiologists.
-                    </p>
-                    <div class="mt-8 flex justify-center gap-4">
-                        <button onclick="showAuthModal('signup')" class="rad-gradient text-white font-bold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-lg">
-                            Get Started for Free
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Courses Section -->
-            <section id="courses" class="py-20">
-                <div class="container mx-auto px-6">
-                    <div class="text-center mb-12">
-                        <h2 class="text-4xl font-bold text-gray-900">Prepare for Any Exam</h2>
-                        <p class="mt-4 text-lg text-gray-600">Targeted preparation for all major radiology exams.</p>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <!-- Course Items -->
-                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
-                            <h3 class="text-2xl font-bold text-gray-800">FRCR</h3>
-                            <p class="mt-2 text-gray-600">Comprehensive question banks and mock tests for the FRCR exam.</p>
-                        </div>
-                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
-                            <h3 class="text-2xl font-bold text-gray-800">MD / DNB</h3>
-                            <p class="mt-2 text-gray-600">Master your final year exams with our targeted content.</p>
-                        </div>
-                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
-                            <h3 class="text-2xl font-bold text-gray-800">Anatomy</h3>
-                            <p class="mt-2 text-gray-600">Detailed anatomical modules to build a strong foundation.</p>
-                        </div>
-                         <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
-                            <h3 class="text-2xl font-bold text-gray-800">MICR</h3>
-                            <p class="mt-2 text-gray-600">Practice with MCQs tailored for the MICR examination.</p>
-                        </div>
-                         <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
-                            <h3 class="text-2xl font-bold text-gray-800">Superspeciality</h3>
-                            <p class="mt-2 text-gray-600">Prepare for NEET SS & INICET SS with high-yield questions.</p>
-                        </div>
-                         <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
-                            <h3 class="text-2xl font-bold text-gray-800">Fellowship Exams</h3>
-                            <p class="mt-2 text-gray-600">Excel in your fellowship exams with our specialized modules.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Features Section -->
-            <section id="features" class="py-20 bg-white">
-                <div class="container mx-auto px-6">
-                    <div class="text-center mb-12">
-                        <h2 class="text-4xl font-bold text-gray-900">A Smarter Way to Learn</h2>
-                        <p class="mt-4 text-lg text-gray-600">Tools designed for deep understanding and long-term retention.</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <div class="feature-card p-6 rounded-lg">
-                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="award" class="text-white"></i></div>
-                            <h3 class="mt-6 text-xl font-bold">Expert-Curated Content</h3>
-                            <p class="mt-2 text-gray-600">All questions and explanations are created and verified by top radiologists.</p>
-                        </div>
-                        <div class="feature-card p-6 rounded-lg">
-                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="target" class="text-white"></i></div>
-                            <h3 class="mt-6 text-xl font-bold">Realistic Exam Simulation</h3>
-                            <p class="mt-2 text-gray-600">Experience the real exam environment with our timed mock tests.</p>
-                        </div>
-                        <div class="feature-card p-6 rounded-lg">
-                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="bar-chart-2" class="text-white"></i></div>
-                            <h3 class="mt-6 text-xl font-bold">Deep Analytics</h3>
-                            <p class="mt-2 text-gray-600">Track your progress, identify weak areas, and compare with peers.</p>
-                        </div>
-                        <div class="feature-card p-6 rounded-lg">
-                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="copy" class="text-white"></i></div>
-                            <h3 class="mt-6 text-xl font-bold">Digital Flashcards & SRS</h3>
-                            <p class="mt-2 text-gray-600">Master key concepts with our Spaced Repetition System for long-term memory.</p>
-                        </div>
-                        <div class="feature-card p-6 rounded-lg">
-                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="edit" class="text-white"></i></div>
-                            <h3 class="mt-6 text-xl font-bold">Personal Notes</h3>
-                            <p class="mt-2 text-gray-600">Add your own notes to questions and review them anytime.</p>
-                        </div>
-                        <div class="feature-card p-6 rounded-lg">
-                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="calendar" class="text-white"></i></div>
-                            <h3 class="mt-6 text-xl font-bold">Personalized Study Planner</h3>
-                            <p class="mt-2 text-gray-600">Get a custom study schedule based on your exam date and performance.</p>
-                        </div>
-                        <div class="feature-card p-6 rounded-lg">
-                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="image" class="text-white"></i></div>
-                            <h3 class="mt-6 text-xl font-bold">Case of the Week</h3>
-                            <p class="mt-2 text-gray-600">Challenge yourself with interesting cases curated by our experts.</p>
-                        </div>
-                        <div class="feature-card p-6 rounded-lg">
-                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="users" class="text-white"></i></div>
-                            <h3 class="mt-6 text-xl font-bold">Community Leaderboard</h3>
-                            <p class="mt-2 text-gray-600">See how you stack up against peers in a friendly, competitive environment.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Pricing Section -->
-            <section id="pricing" class="py-20">
-                <div class="container mx-auto px-6">
-                    <div class="text-center mb-12">
-                        <h2 class="text-4xl font-bold text-gray-900">Flexible Plans for Every Need</h2>
-                        <p class="mt-4 text-lg text-gray-600">Choose the plan that’s right for your learning journey.</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                        <!-- Free Plan -->
-                        <div class="pricing-card bg-white p-8 rounded-xl shadow-lg border-2 border-transparent w-full flex flex-col">
-                            <h3 class="text-2xl font-bold text-gray-800">Free</h3>
-                            <p class="mt-2 text-gray-600">Get a taste of our platform.</p>
-                            <div class="mt-6 text-4xl font-extrabold">
-                                $0
-                            </div>
-                            <ul class="mt-8 space-y-4 text-left flex-grow">
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Limited MCQs</li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Case of the Week</li>
-                            </ul>
-                            <button onclick="showAuthModal('signup')" class="mt-8 w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-lg hover:bg-gray-300 transition-colors">
-                                Sign Up for Free
-                            </button>
-                        </div>
-                        <!-- Q-Bank Pass -->
-                        <div class="pricing-card bg-white p-8 rounded-xl shadow-lg border-2 border-transparent w-full flex flex-col">
-                            <h3 class="text-2xl font-bold text-gray-800">Q-Bank Pass</h3>
-                            <p class="mt-2 text-gray-600">For focused question practice.</p>
-                            <div class="mt-6 text-4xl font-extrabold">
-                                $29 <span class="text-lg font-medium text-gray-500">/mo</span>
-                            </div>
-                            <ul class="mt-8 space-y-4 text-left flex-grow">
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>All MCQ Banks</b></li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Basic Analytics</li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Personal Notes</li>
-                            </ul>
-                            <button onclick="alert('Payment integration coming soon!')" class="mt-8 w-full rad-gradient text-white font-bold py-3 rounded-lg hover:shadow-lg transition-shadow">
-                                Choose Plan
-                            </button>
-                        </div>
-                        <!-- Smart-Prep Pass -->
-                        <div class="pricing-card bg-white p-8 rounded-xl shadow-2xl border-2 border-blue-500 w-full relative flex flex-col">
-                            <div class="absolute top-0 -translate-y-1/2 bg-blue-500 text-white text-sm font-bold px-4 py-1 rounded-full">POPULAR</div>
-                            <h3 class="text-2xl font-bold text-gray-800">Smart-Prep Pass</h3>
-                            <p class="mt-2 text-blue-600">Learn smarter, not harder.</p>
-                            <div class="mt-6 text-4xl font-extrabold">
-                                $49 <span class="text-lg font-medium text-gray-500">/mo</span>
-                            </div>
-                            <ul class="mt-8 space-y-4 text-left flex-grow">
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Everything in Q-Bank</b></li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Flashcards & SRS</b></li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Deep Analytics</li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Leaderboard Access</li>
-                            </ul>
-                            <button onclick="alert('Payment integration coming soon!')" class="mt-8 w-full rad-gradient text-white font-bold py-3 rounded-lg hover:shadow-lg transition-shadow">
-                                Choose Plan
-                            </button>
-                        </div>
-                         <!-- All-Access Pass -->
-                        <div class="pricing-card bg-white p-8 rounded-xl shadow-lg border-2 border-transparent w-full flex flex-col">
-                            <h3 class="text-2xl font-bold text-gray-800">All-Access Pass</h3>
-                            <p class="mt-2 text-gray-600">The complete package.</p>
-                            <div class="mt-6 text-4xl font-extrabold">
-                                $69 <span class="text-lg font-medium text-gray-500">/mo</span>
-                            </div>
-                            <ul class="mt-8 space-y-4 text-left flex-grow">
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Everything in Smart-Prep</b></li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Full Mock Exams</b></li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Personalized Study Planner</b></li>
-                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Priority Support</li>
-                            </ul>
-                            <button onclick="alert('Payment integration coming soon!')" class="mt-8 w-full rad-gradient text-white font-bold py-3 rounded-lg hover:shadow-lg transition-shadow">
-                                Choose Plan
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- About Us Section -->
-            <section id="about" class="py-20 bg-white">
-                <div class="container mx-auto px-6">
-                     <div class="text-center mb-12">
-                        <h2 class="text-4xl font-bold text-gray-900">Built by Doctors, for Doctors</h2>
-                    </div>
-                    <div class="max-w-4xl mx-auto bg-gray-50 p-10 rounded-xl border border-gray-200 text-center">
-                        <p class="text-lg text-gray-600">
-                            We are two radiologists trained at one of India’s premier medical institutes, united by a shared vision: to make high-quality radiology education accessible, affordable, and reliable for all. Every question, explanation, and update is curated by us, backed by evidence, and rooted in real-world radiology practice.
-                        </p>
-                         <p class="mt-4 text-lg font-semibold text-gray-800">Welcome to a community built with precision and care.</p>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <!-- Footer -->
-        <footer class="bg-gray-900 text-white">
-            <div class="container mx-auto px-6 py-12">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div>
-                        <h3 class="text-xl font-bold">RadMentor</h3>
-                        <p class="mt-2 text-gray-400">The future of radiology education.</p>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold">Quick Links</h3>
-                        <ul class="mt-2 space-y-2">
-                            <li><a href="#courses" class="text-gray-400 hover:text-white">Courses</a></li>
-                            <li><a href="#features" class="text-gray-400 hover:text-white">Features</a></li>
-                            <li><a href="#pricing" class="text-gray-400 hover:text-white">Pricing</a></li>
-                            <li><a href="#" onclick="showAuthModal('signup')" class="text-gray-400 hover:text-white">Sign Up</a></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold">Contact</h3>
-                         <p class="mt-2 text-gray-400">Email: <a href="mailto:support@radmentor.com" class="hover:text-white">support@radmentor.com</a></p>
-                    </div>
-                </div>
-                <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-500">
-                    &copy; 2024 RadMentor. All Rights Reserved.
-                </div>
-            </div>
-        </footer>
-    </div>
-
-    <!-- =================================================
-    AUTHENTICATION MODAL
-    This will pop up for login/signup.
-    ================================================== -->
-    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
-            <button onclick="hideAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
-                <i data-feather="x" class="w-7 h-7"></i>
-            </button>
-
-            <div class="p-8 md:p-12">
-                <div id="auth-container">
-                    <h1 id="auth-title" class="text-3xl font-bold text-gray-900 text-center mb-2">Login to RadMentor</h1>
-                    <p id="auth-subtitle" class="text-gray-600 text-center mb-8">Welcome back!</p>
-                    <div class="space-y-4">
-                        <input type="email" id="email" placeholder="Email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <input type="password" id="password" placeholder="Password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <button onclick="handleAuth()" id="auth-btn" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Sign In</button>
-                    <div class="text-center mt-6">
-                        <button onclick="toggleAuth()" id="toggle-btn" class="text-blue-600 hover:underline">Don't have an account? Sign up</button>
-                    </div>
-                    <p id="auth-message" class="text-red-500 text-center mt-4 font-medium"></p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- =================================================
-    PROFILE COMPLETION FORM
-    Shown after first signup.
-    ================================================== -->
-    <div id="profile-form-container" class="fixed inset-0 bg-gray-100 z-50 p-4 hidden overflow-y-auto">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-auto my-8 p-8 md:p-12">
-             <h1 class="text-3xl font-bold text-gray-900 text-center">Complete Your Profile</h1>
-             <p class="text-gray-600 text-center mb-8">Please provide a few more details to get started.</p>
-             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="md:col-span-2"><input type="text" id="name" placeholder="Full Name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
-                <div>
-                    <label class="font-medium text-gray-700">Date of Birth</label>
-                    <input type="date" id="dob" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="font-medium text-gray-700">Sex</label>
-                    <select id="sex" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="" disabled selected>Select Sex</option>
-                        <option>Male</option><option>Female</option><option>Other</option>
-                    </select>
-                </div>
-                 <div>
-                    <label class="font-medium text-gray-700">Position</label>
-                    <select id="position" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="" disabled selected>Select Position</option>
-                        <option>Intern</option><option>Junior Resident</option><option>Senior Resident</option><option>Consultant</option>
-                    </select>
-                </div>
-                 <div>
-                    <label class="font-medium text-gray-700">Exam Pursuing</label>
-                    <select id="exam_pursuing" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="" disabled selected>Select Exam</option>
-                        <option>Final year exam</option><option>DNB</option><option>FRCR</option><option>NEET SS</option><option>INICET SS</option><option>MICR</option><option>Fellowship exams</option>
-                    </select>
-                </div>
-                <div class="md:col-span-2">
-                     <label class="font-medium text-gray-700">Medical College</label>
-                     <input list="colleges" id="college" placeholder="Type to search your college" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                     <datalist id="colleges">
-                        <!-- Options from your original file are included here -->
-                     </datalist>
-                </div>
-             </div>
-             <button onclick="submitProfile()" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Submit Profile</button>
-        </div>
-    </div>
+/**
+ * Sends a password reset email to the current user.
+ */
+window.sendPasswordReset = () => {
+    const user = auth.currentUser;
+    if (user) {
+        auth.sendPasswordResetEmail(user.email)
+            .then(() => {
+                alert("Password reset email sent! Please check your inbox.");
+            })
+            .catch(error => {
+                console.error("Password Reset Error:", error);
+                alert("Could not send password reset email. Please try again later.");
+            });
+    }
+};
 
 
-    <!-- =================================================
-    DASHBOARD SECTION
-    This is the main app view for logged-in users.
-    It's hidden by default.
-    ================================================== -->
-    <div id="dashboard" class="hidden">
-        <!-- Dashboard Sidebar -->
-        <div id="sidebar" class="fixed top-0 right-0 h-full bg-white shadow-xl z-50 w-72 p-6 transform translate-x-full">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-xl font-bold">Menu</h2>
-                <button id="close-sidebar-button" class="text-gray-600 hover:text-gray-900"><i data-feather="x"></i></button>
-            </div>
-            <nav class="space-y-2">
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 bg-blue-100 font-semibold" onclick="showDashboardSection('main')"><i data-feather="home" class="mr-3 w-5 h-5"></i>Home</a>
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('profile')"><i data-feather="user" class="mr-3 w-5 h-5"></i>Profile</a>
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('analytics')"><i data-feather="bar-chart-2" class="mr-3 w-5 h-5"></i>Analytics</a>
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('planner')"><i data-feather="calendar" class="mr-3 w-5 h-5"></i>Study Planner</a>
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('subscription')"><i data-feather="credit-card" class="mr-3 w-5 h-5"></i>Subscription</a>
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('settings')"><i data-feather="settings" class="mr-3 w-5 h-5"></i>Settings</a>
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="logout()"><i data-feather="log-out" class="mr-3 w-5 h-5"></i>Logout</a>
-            </nav>
-        </div>
-        
-        <!-- Dashboard Main Content -->
-        <div class="pt-16 pb-12 bg-gray-50 min-h-screen">
-            <div class="container mx-auto px-6">
-                <!-- Main Dashboard View -->
-                <div id="dashboard-main-content">
-                    <h1 class="text-3xl font-bold text-gray-900">Welcome to RadMentor</h1>
-                    <p class="mt-2 text-lg text-gray-600">Select a category to start your preparation.</p>
-                    
-                    <div id="access-level-notice"></div>
+// =================================================================
+// ADMIN FUNCTIONALITY
+// =================================================================
 
-                    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="window.location.href='https://raw.githubusercontent.com/im2famous4u/RadMentor/main/frcr/index.html'">
-                            <h3 class="text-xl font-bold text-gray-800">FRCR MCQs</h3>
-                        </div>
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="window.location.href='https://raw.githubusercontent.com/im2famous4u/RadMentor/main/Anatomy.html'">
-                            <h3 class="text-xl font-bold text-gray-800">Anatomy MCQs</h3>
-                        </div>
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Flashcards coming soon!')">
-                            <h3 class="text-xl font-bold text-gray-800">Flashcards (SRS)</h3>
-                        </div>
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Case of the Week coming soon!')">
-                            <h3 class="text-xl font-bold text-gray-800">Case of the Week</h3>
-                        </div>
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Leaderboard coming soon!')">
-                            <h3 class="text-xl font-bold text-gray-800">Leaderboard</h3>
-                        </div>
-                         <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Personal notes coming soon!')">
-                            <h3 class="text-xl font-bold text-gray-800">My Notes</h3>
-                        </div>
-                    </div>
-                </div>
+/**
+ * Adds the 'Admin Dashboard' link to the user menu if not present.
+ */
+function addAdminLink() {
+    if (!document.getElementById('admin-nav-link')) {
+        const adminLink = document.createElement('a');
+        adminLink.href = '#';
+        adminLink.id = 'admin-nav-link';
+        adminLink.className = 'block px-4 py-2 text-sm text-blue-600 font-bold hover:bg-gray-100';
+        adminLink.textContent = 'Admin Dashboard';
+        adminLink.onclick = () => showDashboardSection('admin');
+        // Insert it before the 'My Dashboard' link
+        userMenu.insertBefore(adminLink, userMenu.firstChild);
+    }
+}
 
-                <!-- Other Dashboard Sections (Profile, Settings, etc.) -->
-                <div id="profile-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
-                <div id="analytics-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
-                <div id="planner-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
-                <div id="subscription-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
-                <div id="settings-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
-                
-                <!-- NEW: Admin Dashboard Section -->
-                <div id="admin-section" class="hidden">
-                    <h1 class="text-3xl font-bold text-gray-900 mb-6">Admin Dashboard</h1>
-                    <!-- User Management Table -->
-                    <div class="bg-white p-8 rounded-lg shadow-md">
-                        <h2 class="text-2xl font-bold mb-4">User Management</h2>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm text-left text-gray-500">
-                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="py-3 px-6">User</th>
-                                        <th scope="col" class="py-3 px-6">Email</th>
-                                        <th scope="col" class="py-3 px-6">Access Level</th>
-                                        <th scope="col" class="py-3 px-6">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="user-list">
-                                    <!-- User data will be populated by JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <!-- Login Activity Table -->
-                    <div class="bg-white p-8 rounded-lg shadow-md mt-8">
-                        <h2 class="text-2xl font-bold mb-4">Recent Login Activity</h2>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm text-left text-gray-500">
-                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="py-3 px-6">User Email</th>
-                                        <th scope="col" class="py-3 px-6">Timestamp</th>
-                                        <th scope="col" class="py-3 px-6">Access at Login</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="login-logs-list">
-                                    <!-- Log data will be populated by JS -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+/**
+ * Removes the 'Admin Dashboard' link from the user menu.
+ */
+function removeAdminLink() {
+    const adminLink = document.getElementById('admin-nav-link');
+    if (adminLink) {
+        adminLink.remove();
+    }
+}
 
-            </div>
-        </div>
-    </div>
+/**
+ * Loads all data required for the admin dashboard.
+ */
+async function loadAdminDashboard() {
+    try {
+        // Fetch all users
+        const usersSnapshot = await db.collection('users').get();
+        const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        populateUserList(users);
 
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+        // Fetch recent login logs
+        const logsSnapshot = await db.collection('activityLogs').orderBy('timestamp', 'desc').limit(20).get();
+        const logs = logsSnapshot.docs.map(doc => doc.data());
+        populateLoginLogs(logs);
 
-    <!-- Custom JavaScript -->
-    <script src="app.js" defer></script>
-</body>
-</html>
+    } catch (error) {
+        console.error("Error loading admin dashboard:", error);
+        adminSection.innerHTML = '<p class="text-red-500">Could not load admin data.</p>';
+    }
+}
+
+/**
+ * Populates the user management table in the admin dashboard.
+ * @param {Array<object>} users - An array of user objects.
+ */
+function populateUserList(users) {
+    userList.innerHTML = ''; // Clear previous list
+    users.forEach(user => {
+        const row = document.createElement('tr');
+        row.className = 'bg-white border-b';
+        row.innerHTML = `
+            <td class="py-4 px-6 font-medium text-gray-900">${user.name || 'N/A'}</td>
+            <td class="py-4 px-6">${user.email}</td>
+            <td class="py-4 px-6">
+                <select id="access-${user.id}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                    <option value="free" ${user.accessLevel === 'free' ? 'selected' : ''}>Free</option>
+                    <option value="qbank" ${user.accessLevel === 'qbank' ? 'selected' : ''}>Q-Bank</option>
+                    <option value="smart-prep" ${user.accessLevel === 'smart-prep' ? 'selected' : ''}>Smart-Prep</option>
+                    <option value="all-access" ${user.accessLevel === 'all-access' ? 'selected' : ''}>All-Access</option>
+                    <option value="admin" ${user.accessLevel === 'admin' ? 'selected' : ''}>Admin</option>
+                </select>
+            </td>
+            <td class="py-4 px-6">
+                <button onclick="updateUserAccess('${user.id}')" class="font-medium text-blue-600 hover:underline">Save</button>
+            </td>
+        `;
+        userList.appendChild(row);
+    });
+}
+
+/**
+ * Populates the login activity table.
+ * @param {Array<object>} logs - An array of log objects.
+ */
+function populateLoginLogs(logs) {
+    loginLogsList.innerHTML = ''; // Clear previous list
+    logs.forEach(log => {
+        const row = document.createElement('tr');
+        row.className = 'bg-white border-b';
+        row.innerHTML = `
+            <td class="py-4 px-6">${log.userEmail}</td>
+            <td class="py-4 px-6">${new Date(log.timestamp.seconds * 1000).toLocaleString()}</td>
+            <td class="py-4 px-6 capitalize">${log.details.accessLevel || 'N/A'}</td>
+        `;
+        loginLogsList.appendChild(row);
+    });
+}
+
+/**
+ * Updates a user's access level in Firestore.
+ * @param {string} userId - The UID of the user to update.
+ */
+window.updateUserAccess = (userId) => {
+    const selectElement = document.getElementById(`access-${userId}`);
+    const newLevel = selectElement.value;
+
+    db.collection('users').doc(userId).update({ accessLevel: newLevel })
+        .then(() => {
+            alert(`User access level updated to ${newLevel}.`);
+            logUserActivity(currentUserData.email, 'access_level_change', { targetUser: userId, newLevel: newLevel });
+        })
+        .catch(error => {
+            console.error("Error updating access level:", error);
+            alert("Failed to update access level.");
+        });
+};
+
+
+// =================================================================
+// UTILITY FUNCTIONS
+// =================================================================
+
+/**
+ * Logs user activity to a dedicated collection in Firestore.
+ * @param {string} userEmail - The email of the user performing the action.
+ * @param {string} action - A short description of the action (e.g., 'login', 'update_profile').
+ * @param {object} details - Any additional details about the action.
+ */
+function logUserActivity(userEmail, action, details) {
+    db.collection('activityLogs').add({
+        userEmail: userEmail,
+        action: action,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        details: details
+    }).catch(error => console.error("Error logging activity:", error));
+}
