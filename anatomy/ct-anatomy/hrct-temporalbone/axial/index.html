@@ -67,7 +67,8 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             padding: 20px;
             margin: 20px auto;
-            max-width: 900px; /* Adjust as needed */
+            /* Adjusted max-width to accommodate image + right sidebar for labels */
+            max-width: 1100px; /* 860px (image) + ~200px (labels) + padding */ 
             width: 90%; /* Responsive width */
             box-sizing: border-box;
             display: flex;
@@ -82,10 +83,11 @@
             text-align: center;
         }
 
-        /* Image and Overlay Container - Adjusted for 860x532px images */
+        /* Image and Overlay Container - Adjusted for 860x532px images + label sidebar */
         .image-wrapper {
             position: relative;
-            width: 860px; /* Set to your actual image's pixel width */
+            /* Total width: image width (860px) + space for labels (e.g., 200px) */
+            width: 1060px; /* 860px (image) + 200px (label sidebar) */ 
             height: 532px; /* Set to your actual image's pixel height */
             background-color: #000; /* Black background for imaging studies */
             border-radius: 8px;
@@ -94,16 +96,16 @@
             /* For responsiveness, use padding-bottom to maintain aspect ratio */
             max-width: 100%; /* Ensure it shrinks on smaller screens */
             height: auto; /* Allow height to adjust */
-            padding-bottom: calc(532 / 860 * 100%); /* Maintain 860x532 aspect ratio */
+            padding-bottom: calc(532 / 1060 * 100%); /* Maintain new aspect ratio based on total width */
         }
 
         .image-wrapper img {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: contain; /* Ensures the image fits within the wrapper without cropping */
+            width: 860px; /* Set to the actual width of your image */
+            height: 100%; /* Will scale with wrapper height */
+            object-fit: contain; /* Ensures the image fits within its designated width without cropping */
             display: block;
             user-select: none;
             -webkit-user-drag: none;
@@ -115,18 +117,19 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
+            /* SVG should cover the whole wrapper, including the label sidebar */
+            width: 100%; 
             height: 100%;
             z-index: 9; /* Above image, below labels */
-            pointer-events: none; /* Crucial: allows clicks to pass through to image/labels */
+            pointer-events: none; /* Crucial: allows clicks to pass through to labels */
             overflow: visible; /* Allows SVG elements to go slightly outside if needed */
         }
-        /* Lines are hidden by default, visible on hover */
+        /* Lines are now HIDDEN BY DEFAULT, visible on hover */
         .annotation-svg-overlay line {
             stroke: var(--annotation-line-color);
             stroke-width: 2;
             transition: opacity 0.3s ease;
-            opacity: 0; /* Hidden by default */
+            opacity: 0; /* Changed: Hidden by default */
             stroke-linecap: round;
         }
         .annotation-svg-overlay line.visible-on-hover {
@@ -158,18 +161,21 @@
             z-index: 11; /* Ensure labels are on top */
             cursor: default;
             
-            /* Center the label on its 'top' and 'left' coordinates */
-            transform: translate(-50%, -50%); 
+            /* Align label to the right side of the entire image-wrapper */
+            /* transform will be handled in JS for vertical centering and specific X */
+            transform: translateY(-50%); /* Only center vertically */
 
-            /* Visibility control: hidden by default, shown on hover */
-            opacity: 0; 
+            /* Visibility control: Labels are ALWAYS visible now */
+            opacity: 1; /* Changed: Always visible */
             transition: opacity 0.3s ease; 
             pointer-events: auto; /* Allow hovering on the label */
         }
 
-        .annotation-label.show {
-            opacity: 1; /* Label becomes visible */
-        }
+        /* The .show class is no longer needed for label visibility, 
+           but can be kept for other purposes if desired later. */
+        /* .annotation-label.show {
+            opacity: 1;
+        } */
 
         .controls {
             width: 100%;
@@ -241,11 +247,22 @@
         }
 
         /* Responsive adjustments for image wrapper */
-        @media (max-width: 880px) { /* Adjust breakpoint if needed */
+        /* This media query needs to be carefully adjusted based on your desired layout 
+           when the screen is smaller than the full 1060px width.
+           It's challenging to perfectly accommodate both a fixed image size and a label column
+           while being fully responsive without a more complex layout.
+           For simplicity, this example will shrink the entire image-wrapper. */
+        @media (max-width: 1080px) { /* Adjust breakpoint if needed */
             .image-wrapper {
                 width: 100%; 
                 height: auto;
-                padding-bottom: calc(532 / 860 * 100%); 
+                /* Keep the aspect ratio based on the original 1060px total width */
+                padding-bottom: calc(532 / 1060 * 100%); 
+            }
+            .image-wrapper img {
+                /* When shrinking, the image should also shrink to fit the *available* image portion */
+                width: calc(860 / 1060 * 100%); /* Image takes its proportion of the new 100% width */
+                /* Maintain height:100% */
             }
         }
         @media (max-width: 768px) {
@@ -338,18 +355,25 @@
         const IMAGE_ACTUAL_WIDTH = 860; 
         const IMAGE_ACTUAL_HEIGHT = 532;
 
-        // Annotation positioning on the image itself
-        const ANNOTATION_LABEL_OFFSET_X = 25; // How far label's center is from point horizontally
-        const ANNOTATION_LABEL_OFFSET_Y = 0; // How far label's center is from point vertically (0 means centered vertically with point)
-        const LINE_LENGTH = 15; // Length of the line segment connecting point to label
+        // NEW: Define the width of the dedicated label sidebar
+        const LABEL_SIDEBAR_WIDTH = 200; // Pixels for the right side where labels will be
+
+        // Annotation positioning relative to the RIGHT edge of the IMAGE DATA
+        const LABEL_OFFSET_FROM_IMAGE_RIGHT_EDGE = 15; // Pixels from the right edge of the *image data*
+        const LABEL_VERTICAL_SPACING = 15; // Vertical spacing between stacked labels
+
+        // This is the X-coordinate relative to the *image-wrapper* where the right edge of the label should align.
+        const LABEL_ANCHOR_X_PX = IMAGE_ACTUAL_WIDTH + LABEL_OFFSET_FROM_IMAGE_RIGHT_EDGE; 
+
+        // Length of the line segment connecting point to label (will extend horizontally from point to label anchor)
+        const LINE_HORIZONTAL_OFFSET = 15; 
+
 
         // --- JSON FILENAMES (CRITICAL: LIST ALL YOUR HRCT TEMPORAL BONE AXIAL JSON FILES HERE) ---
-        // These must match the exact filenames (including .mrk.json) in your 'annotations' folder.
-        // --- JSON FILENAMES (CRITICAL: LIST ALL YOUR HRCT TEMPORAL BONE AXIAL JSON FILES HERE) ---
-        // These must match the exact filenames (including .mrk.json) in your 'annotations' folder.
         const jsonFilenames = [
+            // Re-pasting the full list from last time, but please ensure it's exact
             "Aditus.mrk.json", 
-            "Ampulla of Superior SCC.mrk.json", // Corrected extension based on your screenshot
+            "Ampulla of Superior SCC.mrk.json", 
             "Arcuate eminence.mrk.json", 
             "Axis.mrk.json", 
             "Base of Cochlea.mrk.json", 
@@ -381,7 +405,7 @@
             "Mastoid Process.mrk.json",
             "Mastoid part of 7th CN.mrk.json",
             "Mesotympanum.mrk.json",
-            "Modiolous of Cochlea.mrk.json",
+            "Modiolus of Cochlea.mrk.json", 
             "Neck of Malleus.mrk.json",
             "Occipital Bone.mrk.json",
             "Occipitomastoid suture.mrk.json",
@@ -396,7 +420,7 @@
             "Sigmoid sinus.mrk.json",
             "Sphenoid Bone.mrk.json",
             "Sphenosquamous suture.mrk.json",
-            "Squamous part of the Temporal bone.mrk.json", // Assumed full name based on truncation
+            "Squamous part of the Temporal bone.mrk.json", 
             "Stapes foot plate.mrk.json",
             "Styloid Process.mrk.json",
             "Stylomastoid foramen.mrk.json",
@@ -410,8 +434,9 @@
             "Zygomatic bone.mrk.json"
         ];
         // --- END JSON FILENAMES ---
+        // --- END CONFIGURATION ---
 
-        const temporalBoneSliceImage = document.getElementById('temporalBoneSliceImage'); // Renamed ID for clarity
+        const temporalBoneSliceImage = document.getElementById('temporalBoneSliceImage'); 
         const sliceSlider = document.getElementById('sliceSlider');
         const sliceNumberDisplay = document.getElementById('sliceNumberDisplay');
         const annotationOverlay = document.getElementById('annotationOverlay');
@@ -459,7 +484,6 @@
                         .then(response => {
                             clearTimeout(timeoutId);
                             if (!response.ok) {
-                                // Log the actual URL that failed for easier debugging
                                 console.error(`Failed to load ${filename}. URL: ${response.url} Status: ${response.status} ${response.statusText}`);
                                 reject(new Error(`Failed to load ${filename}: ${response.statusText}`));
                             }
@@ -490,14 +514,11 @@
                             markup.controlPoints.forEach(cp => {
                                 if (cp.position && cp.position.length === 3) {
                                     const sliceZ = cp.position[2];
-                                    // Slicer's Z can be float. Round to nearest integer for slice number.
                                     const imageSliceNumber = Math.round(sliceZ); 
 
-                                    // Assuming cp.position[0] and cp.position[1] are directly pixel coordinates (X, Y)
-                                    // relative to the 860x532 image.
                                     allAnnotations.push({
                                         slice: imageSliceNumber,
-                                        text: cp.label.split(/-\d+/)[0].trim(), // Clean label text
+                                        text: cp.label.split(/-\d+/)[0].trim(), 
                                         pointX: cp.position[0], 
                                         pointY: cp.position[1], 
                                     });
@@ -516,7 +537,6 @@
             } finally {
                 loadingOverlay.classList.add('hidden');
             }
-            // Initial slice update after annotations load
             updateSlice();
         }
 
@@ -525,7 +545,7 @@
             console.log("Preloading images initiated.");
             for (let i = 1; i <= imageCount; i++) {
                 const img = new Image();
-                img.src = `${imageFolderPath}${i}${imageExtension}`; // Uses 'i' directly as base name
+                img.src = `${imageFolderPath}${i}${imageExtension}`; 
                 preloadedImages.push(img);
             }
         }
@@ -533,36 +553,31 @@
         // --- Display Logic ---
         function updateSlice() {
             const currentSlice = parseInt(sliceSlider.value);
-            const imageUrl = `${imageFolderPath}${currentSlice}${imageExtension}`; // Uses currentSlice directly for image name
+            const imageUrl = `${imageFolderPath}${currentSlice}${imageExtension}`; 
             
-            // Set the image src. This will trigger onload if image changes.
             temporalBoneSliceImage.src = imageUrl;
-
             sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
 
-            // Clear previous labels and SVG elements
             annotationOverlay.innerHTML = '';
             annotationSvgOverlay.innerHTML = '';
 
-            // This ensures annotations are drawn only after the image is fully loaded and sized
             temporalBoneSliceImage.onload = function() {
-                // Ensure this onload only fires once per image load
                 this.onload = null;
 
-                // Get dynamic dimensions of the image wrapper (which could be scaled by responsive CSS)
-                const imageWrapperWidth = temporalBoneSliceImage.offsetWidth;
-                const imageWrapperHeight = temporalBoneSliceImage.offsetHeight;
+                const imageWrapperWidth = temporalBoneSliceImage.parentElement.offsetWidth; // Get parent's width
+                const imageWrapperHeight = temporalBoneSliceImage.parentElement.offsetHeight; // Get parent's height
                 
-                // Calculate scaling factors if the image is displayed at a different size than its actual pixels
-                const scaleX = imageWrapperWidth / IMAGE_ACTUAL_WIDTH;
-                const scaleY = imageWrapperHeight / IMAGE_ACTUAL_HEIGHT;
+                // Calculate scaling factors for the image data portion (860px wide)
+                const imageDisplayWidth = temporalBoneSliceImage.offsetWidth; // This is the rendered width of the 860px image
+                const imageDisplayHeight = temporalBoneSliceImage.offsetHeight; // This is the rendered height of the 532px image
+
+                const scaleX = imageDisplayWidth / IMAGE_ACTUAL_WIDTH;
+                const scaleY = imageDisplayHeight / IMAGE_ACTUAL_HEIGHT;
 
                 if (annotationsLoaded) {
                     const annotationsForCurrentSlice = allAnnotations.filter(ann => ann.slice === currentSlice);
                     
                     annotationsForCurrentSlice.forEach((annotation, index) => {
-                        // Convert JSON coordinates (which are IMAGE_ACTUAL_WIDTH/HEIGHT pixels)
-                        // to actual displayed pixel coordinates, considering responsive scaling.
                         const pX_px_displayed = annotation.pointX * scaleX;
                         const pY_px_displayed = annotation.pointY * scaleY;
 
@@ -574,18 +589,20 @@
                         
                         annotationOverlay.appendChild(labelDiv);
                         
-                        // Position the label relative to the point + offset.
-                        // transform(-50%, -50%) centers the label on its (left, top) coordinates.
-                        labelDiv.style.left = `${pX_px_displayed + ANNOTATION_LABEL_OFFSET_X}px`;
+                        // Position the label on the right side of the image-wrapper.
+                        // LABEL_ANCHOR_X_PX is the pixel coordinate relative to the image-wrapper's left edge
+                        // where the LEFT edge of the label should begin.
+                        labelDiv.style.left = `${(IMAGE_ACTUAL_WIDTH * scaleX) + LABEL_OFFSET_FROM_IMAGE_RIGHT_EDGE}px`; 
                         labelDiv.style.top = `${pY_px_displayed + ANNOTATION_LABEL_OFFSET_Y}px`;
+                        // No need for labelDiv.classList.add('show') here as opacity is now 1 by default in CSS
 
                         // --- Create SVG Line ---
                         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                         line.setAttribute('x1', pX_px_displayed); // Line starts at the annotation point
                         line.setAttribute('y1', pY_px_displayed);
                         
-                        // Line ends slightly towards the label (horizontal offset)
-                        line.setAttribute('x2', pX_px_displayed + ANNOTATION_LABEL_OFFSET_X - (ANNOTATION_LABEL_OFFSET_X > 0 ? (labelDiv.offsetWidth / 2) - LINE_LENGTH : LINE_LENGTH - (labelDiv.offsetWidth / 2))); // This aims the line towards the edge of the label.
+                        // Line ends at the starting X of the label
+                        line.setAttribute('x2', (IMAGE_ACTUAL_WIDTH * scaleX) + LABEL_OFFSET_FROM_IMAGE_RIGHT_EDGE - 5); // A little space before label starts
                         line.setAttribute('y2', pY_px_displayed + ANNOTATION_LABEL_OFFSET_Y); // Y is the same as label center
                         
                         line.id = `line-${currentSlice}-${index}`;
@@ -599,16 +616,14 @@
                         circle.id = `circle-${currentSlice}-${index}`;
                         annotationSvgOverlay.appendChild(circle);
 
-                        // --- Add Hover Interactivity (on both label and circle) ---
-                        // Show label, line, and highlight circle on hover
+                        // --- Add Hover Interactivity (only for line visibility) ---
+                        // Show line and highlight circle on hover over label or circle
                         const activateAnnotation = () => {
-                            labelDiv.classList.add('show');
                             document.getElementById(`line-${currentSlice}-${index}`)?.classList.add('visible-on-hover');
                             document.getElementById(`circle-${currentSlice}-${index}`)?.classList.add('visible-on-hover-circle');
                         };
-                        // Hide label, line, and de-highlight circle on mouse out
+                        // Hide line and de-highlight circle on mouse out
                         const deactivateAnnotation = () => {
-                            labelDiv.classList.remove('show');
                             document.getElementById(`line-${currentSlice}-${index}`)?.classList.remove('visible-on-hover');
                             document.getElementById(`circle-${currentSlice}-${index}`)?.classList.remove('visible-on-hover-circle');
                         };
@@ -624,30 +639,26 @@
                 }
             };
 
-            // If the image is already loaded (from cache or preloading), trigger the onload manually
-            // This is important for the first slice or if navigating quickly.
             if (temporalBoneSliceImage.complete) {
                 temporalBoneSliceImage.onload(); 
             }
         }
 
-        // --- Initial Setup ---
         document.addEventListener('DOMContentLoaded', () => {
             console.log("DOM content loaded. Initializing viewer.");
             preloadAllImages();
-            loadAnnotations(); // Start loading annotations in the background
+            loadAnnotations(); 
         });
 
-        sliceSlider.addEventListener('input', updateSlice); // 'input' for continuous update, 'change' for final value
+        sliceSlider.addEventListener('input', updateSlice); 
         
-        // Debounced resize event listener (re-renders annotations when window size changes)
         let resizeTimeout;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
                 console.log("Window resized, updating slice.");
                 updateSlice();
-            }, 100); // Wait 100ms after resize stops to update
+            }, 100);
         });
     </script>
 </body>
