@@ -6,7 +6,7 @@
     <title>RadMentor - Admin Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet"/>
     <style>
-        /* General Body Styles - Inherit from main index.html for consistency */
+        /* General Body Styles */
         body {
             font-family: 'Rubik', sans-serif;
             margin: 0;
@@ -15,8 +15,8 @@
             color: var(--text-color);
             transition: background-color 0.3s ease, color 0.3s ease;
             display: flex;
-            justify-content: flex-start; /* Align content to start in admin mode */
-            align-items: center; /* Initial alignment for container */
+            justify-content: flex-start; 
+            align-items: center; 
             min-height: 100vh;
             flex-direction: column;
         }
@@ -37,6 +37,8 @@
             --topbar-text-color: #212121;
             --profile-field-bg: #f8f8f8;
             --section-card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --select-text-color: #212121; /* Specific for dropdown text */
+            --select-background-color: #ffffff; /* Specific for dropdown background */
         }
         body:not(.light-theme):not(.gradient-theme) { 
             --bg-color: #004d5e;
@@ -53,6 +55,8 @@
             --topbar-text-color: #ffffff;
             --profile-field-bg: #095a71;
             --section-card-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            --select-text-color: #ffffff;
+            --select-background-color: #095a71;
         }
         body.gradient-theme {
             --bg-color: linear-gradient(to right, #e0e7f7, #f7e0e0);
@@ -70,6 +74,8 @@
             --profile-field-bg: #f8f8f8;
             --section-card-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             background: var(--bg-color);
+            --select-text-color: #212121;
+            --select-background-color: #e3f2fd;
         }
         /* General apply */
         body {
@@ -80,13 +86,14 @@
         .admin-dashboard-wrapper {
             width: 90%;
             max-width: 1200px;
-            margin: 50px auto 20px auto; /* Top margin for topbar, then auto for center */
+            margin: 50px auto 20px auto; 
             padding: 30px;
             background-color: var(--container-bg-color);
             color: var(--text-color);
             border-radius: 16px;
             box-shadow: var(--section-card-shadow);
             box-sizing: border-box;
+            padding-top: 80px; /* Space for the fixed topbar */
         }
 
         .admin-dashboard-wrapper h1 {
@@ -100,31 +107,33 @@
             margin-top: 40px;
             margin-bottom: 20px;
             color: var(--heading-color);
-            border-bottom: 1px solid var(--sidebar-item-border); /* Subtle separator */
+            border-bottom: 1px solid var(--sidebar-item-border); 
             padding-bottom: 10px;
         }
 
         .admin-topbar {
             position: fixed;
             top: 0;
-            left: 0; /* Changed from right to left to allow logo positioning */
+            left: 0; 
             width: 100%;
-            height: 50px;
+            height: 60px; /* Increased height for better spacing */
             background-color: var(--topbar-bg-color);
             color: var(--topbar-text-color);
             display: flex;
-            justify-content: space-between; /* Space out items */
+            justify-content: space-between; 
             align-items: center;
             padding: 0 20px;
             z-index: 1000;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box; /* Include padding in height */
         }
 
         .admin-topbar .greeting {
-            font-size: 1rem;
+            font-size: 1.1rem; /* Slightly larger */
             font-weight: 500;
-            flex-grow: 1; /* Allows it to take space */
-            text-align: center; /* Center the greeting */
+            flex-grow: 1; 
+            text-align: left; /* Align greeting to left */
+            padding-left: 10px; /* Padding for greeting */
         }
         .admin-topbar .admin-top-controls {
             display: flex;
@@ -135,13 +144,14 @@
         .admin-topbar .admin-top-controls button {
             background: var(--button-bg-color);
             color: white;
-            padding: 8px 12px;
+            padding: 8px 15px; /* Adjusted padding */
             border-radius: 5px;
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 0.95rem; /* Slightly larger font */
             transition: background 0.2s ease;
             border: none;
             cursor: pointer;
+            white-space: nowrap; /* Prevent buttons from wrapping */
         }
         .admin-topbar .admin-top-controls a:hover,
         .admin-topbar .admin-top-controls button:hover {
@@ -149,16 +159,16 @@
         }
 
         .admin-logo {
-            position: absolute; /* Kept absolute for precise positioning */
-            top: 15px;
+            position: absolute; 
+            top: 5px; /* Adjusted top to fit in new topbar height */
             left: 20px;
-            height: 120px;
-            z-index: 100;
+            height: 50px; /* Reduced height to fit in topbar */
+            z-index: 1010; /* Above topbar */
         }
 
         /* --- Admin Specific Tables --- */
         .admin-table-container {
-            overflow-x: auto; /* Allow horizontal scrolling for wide tables */
+            overflow-x: auto; 
             margin-bottom: 30px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             border-radius: 8px;
@@ -173,16 +183,16 @@
         }
         .admin-table th, .admin-table td {
             padding: 12px 15px;
-            border-bottom: 1px solid var(--sidebar-item-border); /* Light separator */
+            border-bottom: 1px solid var(--sidebar-item-border); 
+            white-space: nowrap; /* Prevent content from wrapping unless necessary */
         }
         .admin-table th {
-            background-color: var(--sidebar-item-hover-bg); /* Slightly different header background */
+            background-color: var(--sidebar-item-hover-bg); 
             font-weight: bold;
             color: var(--text-color);
-            white-space: nowrap; /* Prevent headers from wrapping */
         }
         .admin-table tr:hover {
-            background-color: rgba(0, 0, 0, 0.05); /* Subtle row hover effect */
+            background-color: rgba(0, 0, 0, 0.05); 
         }
         body.light-theme .admin-table tr:hover {
             background-color: rgba(0, 0, 0, 0.03); 
@@ -190,20 +200,26 @@
 
         /* Specific styles for Access Level Select */
         .admin-table select {
-            width: 120px;
+            width: 120px; /* Fixed width for consistency */
             padding: 5px;
             border-radius: 4px;
             border: 1px solid var(--toggle-color);
-            background-color: var(--input-bg-color);
-            color: var(--text-color);
+            background-color: var(--select-background-color); /* Use theme variable */
+            color: var(--select-text-color); /* Use theme variable */
             font-size: 0.9rem;
+            -webkit-appearance: none; /* Remove default arrow */
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%2C197.3L159.2%2C69.5c-3.1-3.1-8.2-3.1-11.3%2C0L5.3%2C197.3c-3.1%2C3.1-3.1%2C8.2%2C0%2C11.3l19.7%2C19.7c3.1%2C3.1%2C8.2%2C3.1%2C11.3%2C0l113.8-113.8l113.8%2C113.8c3.1%2C3.1%2C8.2%2C3.1%2C11.3%2C0l19.7-19.7c3.1-3.1%2C3.1-8.2%2C0-11.3z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 8px;
+            padding-right: 25px; /* Space for arrow */
         }
-        body.light-theme .admin-table select {
-            color: #212121;
+        body.dark-theme .admin-table select {
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2C197.3L159.2%2C69.5c-3.1-3.1-8.2-3.1-11.3%2C0L5.3%2C197.3c-3.1%2C3.1-3.1%2C8.2%2C0%2C11.3l19.7%2C19.7c3.1%2C3.1%2C8.2%2C3.1%2C11.3%2C0l113.8-113.8l113.8%2C113.8c3.1%2C3.1%2C8.2%2C3.1%2C11.3%2C0l19.7-19.7c3.1-3.1%2C3.1-8.2%2C0-11.3z%22%2F%3E%3C%2Fsvg%3E'); /* White arrow for dark theme */
         }
-        body.gradient-theme .admin-table select {
-            color: #212121;
-        }
+
         /* Status dot for online/offline */
         .status-dot {
             height: 10px;
@@ -220,12 +236,96 @@
             background-color: #dc3545; /* Red */
         }
 
+        /* Table button styles */
+        .admin-table button {
+            padding: 5px 10px;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 5px; /* Space between buttons if multiple */
+            min-width: 80px; /* Consistent width for buttons */
+        }
+        .admin-table button.manage-sub {
+            background-color: #007bff; /* Blue */
+            color: white;
+            border: none;
+        }
+        .admin-table button.delete-user {
+            background-color: #dc3545; /* Red */
+            color: white;
+            border: none;
+        }
+
         /* No results message */
         .no-results {
             text-align: center;
             padding: 30px;
             font-style: italic;
             color: var(--text-color);
+        }
+
+        /* Media queries for responsiveness */
+        @media (max-width: 768px) {
+            .admin-dashboard-wrapper {
+                padding: 15px;
+                width: 95%;
+                margin-top: 70px; /* Adjust top margin for smaller screens */
+            }
+            .admin-dashboard-wrapper h1 {
+                font-size: 2rem;
+                margin-bottom: 20px;
+            }
+            .admin-dashboard-wrapper h2 {
+                font-size: 1.5rem;
+                margin-top: 30px;
+                margin-bottom: 15px;
+            }
+            .admin-topbar {
+                height: 50px;
+                padding: 0 10px;
+                flex-wrap: wrap; /* Allow wrapping if items are too wide */
+                justify-content: center; /* Center items if wrapped */
+            }
+            .admin-topbar .greeting {
+                text-align: center;
+                width: 100%; /* Take full width if wrapped */
+                padding-left: 0;
+            }
+            .admin-topbar .admin-top-controls {
+                width: 100%;
+                justify-content: center;
+                gap: 5px; /* Smaller gap for buttons */
+            }
+            .admin-logo {
+                top: 5px; /* Adjust position */
+                left: 5px; /* Adjust position */
+                height: 40px; /* Smaller logo */
+            }
+            .admin-table th, .admin-table td {
+                padding: 8px 10px;
+                font-size: 0.85rem;
+            }
+            .admin-table select {
+                width: 100px;
+                font-size: 0.8rem;
+            }
+            .admin-table button {
+                min-width: 60px;
+                font-size: 0.75rem;
+                padding: 4px 8px;
+            }
+        }
+        @media (max-width: 480px) {
+            .admin-dashboard-wrapper {
+                padding: 10px;
+                margin-top: 60px;
+            }
+            .admin-dashboard-wrapper h1 {
+                font-size: 1.8rem;
+            }
+            .admin-topbar .admin-top-controls {
+                flex-direction: column; /* Stack buttons vertically */
+            }
         }
     </style>
 </head>
@@ -249,7 +349,7 @@
             <table class="admin-table">
                 <thead>
                     <tr>
-                        <th>User</th>
+                        <th>#</th> <th>User</th>
                         <th>Email</th>
                         <th>Status</th>
                         <th>Last Login</th>
@@ -260,7 +360,7 @@
                     </tr>
                 </thead>
                 <tbody id="user-list">
-                    <tr><td colspan="8" class="no-results" id="user-list-message">Loading users...</td></tr>
+                    <tr><td colspan="9" class="no-results" id="user-list-message">Loading users...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -327,57 +427,41 @@
             });
         }
 
-        // --- Admin Dashboard Data Loading ---
-
         // Function to fetch and display all users
         async function loadUsers() {
             const userListBody = document.getElementById('user-list');
-            userListBody.innerHTML = '<tr><td colspan="8" class="no-results">Loading users...</td></tr>';
+            userListBody.innerHTML = '<tr><td colspan="9" class="no-results">Loading users...</td></tr>';
 
             try {
                 const usersSnapshot = await db.collection('users').get();
                 if (usersSnapshot.empty) {
-                    userListBody.innerHTML = '<tr><td colspan="8" class="no-results">No users found.</td></tr>';
+                    userListBody.innerHTML = '<tr><td colspan="9" class="no-results">No users found.</td></tr>';
                     return;
                 }
 
                 userListBody.innerHTML = ''; // Clear loading message
+                let serialNumber = 1; // Initialize serial number
 
                 usersSnapshot.forEach(doc => {
                     const userData = doc.data();
-                    const userId = doc.id; // Firebase Auth UID
+                    const userId = doc.id; 
                     const row = userListBody.insertRow();
 
+                    // Serial Number
+                    row.insertCell().textContent = serialNumber++;
+
                     // User Name & Email
-                    const nameCell = row.insertCell();
-                    nameCell.textContent = userData.name || 'N/A';
-                    const emailCell = row.insertCell();
-                    emailCell.textContent = userData.email || 'N/A';
+                    row.insertCell().textContent = userData.name || 'N/A';
+                    row.insertCell().textContent = userData.email || 'N/A';
 
                     // Status (Basic: just last online based on login logs for now)
                     const statusCell = row.insertCell();
                     statusCell.innerHTML = `<span class="status-dot offline"></span> Offline`; // Default to offline for now
-                    // For "online" status, you'd need users to frequently update a 'lastOnline' timestamp in their own user doc.
 
-                    // Last Login (Fetch from loginLogs - this is simplified, full check would be complex)
+                    // Last Login (Fetch from loginLogs - this is simplified for performance)
+                    // It's better to load all last login data once, then match to users
                     const lastLoginCell = row.insertCell();
                     lastLoginCell.textContent = 'Fetching...';
-                    db.collection('loginLogs').where('userId', '==', userId).orderBy('timestamp', 'desc').limit(1).get().then(logSnapshot => {
-                        if (!logSnapshot.empty) {
-                            const lastLoginData = logSnapshot.docs[0].data();
-                            const date = lastLoginData.timestamp.toDate(); // Convert Firestore Timestamp to Date object
-                            lastLoginCell.textContent = date.toLocaleString(); // Format date/time
-                            // Basic online check: if last login was very recent (e.g., last 5 mins)
-                            if (Date.now() - date.getTime() < 5 * 60 * 1000) { // Within last 5 minutes
-                                statusCell.innerHTML = `<span class="status-dot online"></span> Online`;
-                            }
-                        } else {
-                            lastLoginCell.textContent = 'Never logged in';
-                        }
-                    }).catch(err => {
-                        console.error("Error fetching last login:", err);
-                        lastLoginCell.textContent = 'Error';
-                    });
 
                     // Access Level (Editable)
                     const accessLevelCell = row.insertCell();
@@ -390,41 +474,162 @@
                     select.onchange = (e) => updateAccessLevel(userId, e.target.value);
                     accessLevelCell.appendChild(select);
 
-                    // Subscription Dates (Placeholder for now)
+                    // Subscription Dates (Editable for admin)
                     const subStartCell = row.insertCell();
-                    subStartCell.textContent = userData.subscriptionStart ? userData.subscriptionStart.toDate().toLocaleDateString() : 'N/A';
                     const subEndCell = row.insertCell();
-                    subEndCell.textContent = userData.subscriptionEnd ? userData.subscriptionEnd.toDate().toLocaleDateString() : 'N/A';
+                    
+                    const subStartDateInput = document.createElement('input');
+                    subStartDateInput.type = 'date';
+                    subStartDateInput.value = userData.subscriptionStart ? userData.subscriptionStart.toDate().toISOString().slice(0, 10) : '';
+                    subStartDateInput.id = `sub-start-${userId}`;
 
-                    // Actions (e.g., Reset Password, Delete User - will be complex for now)
+                    const subEndDateInput = document.createElement('input');
+                    subEndDateInput.type = 'date';
+                    subEndDateInput.value = userData.subscriptionEnd ? userData.subscriptionEnd.toDate().toISOString().slice(0, 10) : '';
+                    subEndDateInput.id = `sub-end-${userId}`;
+
+                    const saveSubButton = document.createElement('button');
+                    saveSubButton.textContent = 'Save';
+                    saveSubButton.className = 'admin-table-button save-sub';
+                    saveSubButton.onclick = () => updateSubscriptionDates(userId, subStartDateInput.value, subEndDateInput.value);
+
+                    subStartCell.appendChild(subStartDateInput);
+                    subEndCell.appendChild(subEndDateInput);
+                    
+                    // Actions (e.g., Reset Password, Delete User)
                     const actionsCell = row.insertCell();
-                    actionsCell.innerHTML = `<button onclick="alert('Manage subscription for ${userData.name}')">Manage Sub</button>`; 
-                    // Add more admin actions here (e.g., "Delete User" button)
+                    actionsCell.appendChild(saveSubButton);
+                    const deleteUserButton = document.createElement('button');
+                    deleteUserButton.textContent = 'Delete';
+                    deleteUserButton.className = 'admin-table-button delete-user';
+                    deleteUserButton.onclick = () => deleteUser(userId, userData.email);
+                    actionsCell.appendChild(deleteUserButton);
                 });
+
+                // Now fetch and apply last login times after users are rendered
+                const allUserIds = usersSnapshot.docs.map(doc => doc.id);
+                loadLastLoginTimes(allUserIds);
 
             } catch (error) {
                 console.error("Error loading users:", error);
-                userListBody.innerHTML = '<tr><td colspan="8" class="no-results" style="color:red;">Error loading users. Check console.</td></tr>';
+                userListBody.innerHTML = '<tr><td colspan="9" class="no-results" style="color:red;">Error loading users. Check console.</td></tr>';
             }
         }
+
+        // Helper function to fetch and apply last login times
+        async function loadLastLoginTimes(userIds) {
+            if (userIds.length === 0) return;
+            try {
+                // Firestore 'in' query limit is 10. For more, need multiple queries or specific pagination.
+                // Assuming max 50 users for simplicity here.
+                const logSnapshot = await db.collection('loginLogs')
+                                            .where('userId', 'in', userIds.slice(0, 10)) // Fetch for a batch of users
+                                            .orderBy('timestamp', 'desc')
+                                            .get();
+                const lastLogins = {};
+                logSnapshot.forEach(doc => {
+                    const logData = doc.data();
+                    // Only store the latest login for each user
+                    if (!lastLogins[logData.userId] || logData.timestamp.toDate().getTime() > lastLogins[logData.userId].getTime()) {
+                        lastLogins[logData.userId] = logData.timestamp.toDate();
+                    }
+                });
+
+                // Update table cells
+                userIds.forEach(userId => {
+                    const row = document.querySelector(`#user-list tr:has(select[onchange*="${userId}"])`); // Find row by userId in select
+                    if (row) {
+                        const lastLoginCell = row.cells[4]; // Assuming Last Login is 5th column (index 4)
+                        const statusCell = row.cells[3];    // Assuming Status is 4th column (index 3)
+
+                        if (lastLogins[userId]) {
+                            const date = lastLogins[userId];
+                            lastLoginCell.textContent = date.toLocaleString();
+                            // Basic online check: if last login was very recent (e.g., last 5 mins)
+                            if (Date.now() - date.getTime() < 5 * 60 * 1000) { 
+                                statusCell.innerHTML = `<span class="status-dot online"></span> Online`;
+                            } else {
+                                statusCell.innerHTML = `<span class="status-dot offline"></span> Offline`;
+                            }
+                        } else {
+                            lastLoginCell.textContent = 'Never logged in';
+                            statusCell.innerHTML = `<span class="status-dot offline"></span> Offline`;
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error loading last login times:", error);
+            }
+        }
+
 
         // Function to update a user's access level
         async function updateAccessLevel(userId, newLevel) {
             if (!confirm(`Are you sure you want to change access level for user ${userId} to ${newLevel}?`)) {
-                loadUsers(); // Refresh if cancelled
+                // To prevent selected value from changing back immediately, re-set it
+                loadUsers(); // Re-load to revert dropdown state if cancelled
                 return;
             }
             try {
                 await db.collection('users').doc(userId).update({ accessLevel: newLevel });
-                alert(`Access level for ${userId} updated to ${newLevel}.`);
-                // No need to reload all users, but good for confirmation
-                // loadUsers();
+                alert(`Access level for user ${userId} updated to ${newLevel}.`);
+                // No need to reload all users, this is client-side update
             } catch (error) {
                 console.error("Error updating access level:", error);
                 alert("Failed to update access level. " + error.message);
             }
         }
 
+        // Function to update subscription dates
+        async function updateSubscriptionDates(userId, startDate, endDate) {
+             if (!confirm(`Are you sure you want to update subscription dates for user ${userId}?`)) {
+                loadUsers(); // Refresh if cancelled
+                return;
+            }
+            try {
+                // Convert date strings to Firestore Timestamps
+                const startTimestamp = startDate ? firebase.firestore.Timestamp.fromDate(new Date(startDate)) : null;
+                const endTimestamp = endDate ? firebase.firestore.Timestamp.fromDate(new Date(endDate)) : null;
+
+                await db.collection('users').doc(userId).update({
+                    subscriptionStart: startTimestamp,
+                    subscriptionEnd: endTimestamp
+                });
+                alert(`Subscription dates for user ${userId} updated.`);
+            } catch (error) {
+                console.error("Error updating subscription dates:", error);
+                alert("Failed to update subscription dates. " + error.message);
+            }
+        }
+
+        // Function to delete a user (Firestore profile and Auth account)
+        async function deleteUser(userId, userEmail) {
+            if (!confirm(`WARNING: Are you sure you want to PERMANENTLY DELETE user ${userEmail} and all their data? This cannot be undone.`)) {
+                return;
+            }
+            try {
+                // This client-side delete only removes the Firestore document.
+                // Deleting the Firebase Auth user requires a server-side call (e.g., Cloud Function).
+                // For simplicity here, we'll only delete the Firestore profile.
+                // A complete solution would call a Cloud Function to delete the Auth user too.
+                await db.collection('users').doc(userId).delete();
+                alert(`User profile for ${userEmail} deleted from Firestore.`);
+                // Also delete login logs for this user (optional, but good for cleanup)
+                const loginLogsToDelete = await db.collection('loginLogs').where('userId', '==', userId).get();
+                const batch = db.batch();
+                loginLogsToDelete.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                alert(`Login logs for ${userEmail} deleted.`);
+                loadUsers(); // Refresh the user list
+                loadLoginLogs(); // Refresh the log list
+            } catch (error) {
+                console.error("Error deleting user:", error);
+                alert("Failed to delete user. " + error.message + "\nNOTE: Deleting the Firebase Authentication user account itself requires server-side code (Cloud Function).");
+            }
+        }
 
         // Function to fetch and display login logs
         async function loadLoginLogs() {
@@ -432,13 +637,13 @@
             loginLogsBody.innerHTML = '<tr><td colspan="3" class="no-results">Loading login logs...</td></tr>';
 
             try {
-                const logsSnapshot = await db.collection('loginLogs').orderBy('timestamp', 'desc').limit(50).get(); // Limit to last 50 logs
+                const logsSnapshot = await db.collection('loginLogs').orderBy('timestamp', 'desc').limit(50).get(); 
                 if (logsSnapshot.empty) {
                     loginLogsBody.innerHTML = '<tr><td colspan="3" class="no-results">No login activity found.</td></tr>';
                     return;
                 }
 
-                loginLogsBody.innerHTML = ''; // Clear loading message
+                loginLogsBody.innerHTML = ''; 
 
                 logsSnapshot.forEach(doc => {
                     const logData = doc.data();
@@ -447,7 +652,6 @@
                     row.insertCell().textContent = logData.email || 'N/A';
                     row.insertCell().textContent = logData.timestamp ? logData.timestamp.toDate().toLocaleString() : 'N/A';
                     row.insertCell().textContent = logData.accessLevel ? logData.accessLevel.toUpperCase() : 'N/A';
-                    // IP Location is highly advanced and needs backend logic.
                 });
 
             } catch (error) {
@@ -460,22 +664,21 @@
         // --- Initial Load Admin Page ---
         auth.onAuthStateChanged(user => {
             if (!user) {
-                // Not logged in, redirect to main login
-                window.location.href = 'index.html';
+                window.location.href = 'index.html'; // Not logged in, redirect
                 return;
             } 
             // Check admin role
             db.collection('users').doc(user.uid).get().then(doc => {
                 if (!doc.exists || doc.data().accessLevel !== 'admin') {
                     alert("Access Denied: You do not have administrator privileges.");
-                    auth.signOut(); // Log out non-admin users
+                    auth.signOut(); 
                     window.location.href = 'index.html';
                     return;
                 }
                 // If admin, load data
                 console.log("Admin user logged in:", user.email);
-                loadUsers(); // Load user data
-                loadLoginLogs(); // Load login logs
+                loadUsers(); 
+                loadLoginLogs(); 
             }).catch(error => {
                 console.error("Error verifying admin access:", error);
                 alert("Error verifying access. Logging out.");
