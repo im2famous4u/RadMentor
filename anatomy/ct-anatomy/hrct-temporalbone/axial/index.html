@@ -345,9 +345,11 @@
 
         // --- JSON FILENAMES (CRITICAL: LIST ALL YOUR HRCT TEMPORAL BONE AXIAL JSON FILES HERE) ---
         // These must match the exact filenames (including .mrk.json) in your 'annotations' folder.
+        // --- JSON FILENAMES (CRITICAL: LIST ALL YOUR HRCT TEMPORAL BONE AXIAL JSON FILES HERE) ---
+        // These must match the exact filenames (including .mrk.json) in your 'annotations' folder.
         const jsonFilenames = [
             "Aditus.mrk.json", 
-            "Ampulla of Superior SCC.json", 
+            "Ampulla of Superior SCC.mrk.json", // Corrected extension based on your screenshot
             "Arcuate eminence.mrk.json", 
             "Axis.mrk.json", 
             "Base of Cochlea.mrk.json", 
@@ -355,18 +357,59 @@
             "Chorda tympani nerve.mrk.json", 
             "Cochlear aqueduct.mrk.json", 
             "Condylar Process.mrk.json",
-            // IMPORTANT: Add the rest of your .mrk.json filenames here!
-            // Example:
-            // "Cochlea.mrk.json",
-            // "Internal Auditory Canal.mrk.json",
-            // "Malleus.mrk.json",
-            // "Mastoid Air Cells.mrk.json",
-            // "Semicircular Canal.mrk.json",
-            // "Stapes.mrk.json",
-            // ... (continue listing all 100+ files)
+            "Cupula of Cochlea.mrk.json",
+            "Epitympanum.mrk.json",
+            "Eustachian tube.mrk.json",
+            "External Auditory canal.mrk.json",
+            "Foramen Lacerum.mrk.json",
+            "Foramen Ovale.mrk.json",
+            "Foramen Spinosum.mrk.json",
+            "Greater Petrosal Nerve.mrk.json",
+            "Handle of Malleus.mrk.json",
+            "Head of Malleus.mrk.json",
+            "Hypoglossal Canal.mrk.json",
+            "Hypotympanum.mrk.json",
+            "Internal Acoustic Meatus.mrk.json",
+            "Internal Carotid Canal.mrk.json",
+            "Internal Genu.mrk.json",
+            "Jugular fossa.mrk.json",
+            "Labyrinthine part of 7th CN.mrk.json",
+            "Lateral SCC.mrk.json",
+            "Lenticular Process.mrk.json",
+            "Long of process of Incus.mrk.json",
+            "Mastoid Air cells.mrk.json",
+            "Mastoid Process.mrk.json",
+            "Mastoid part of 7th CN.mrk.json",
+            "Mesotympanum.mrk.json",
+            "Modiolus of Cochlea.mrk.json",
+            "Neck of Malleus.mrk.json",
+            "Occipital Bone.mrk.json",
+            "Occipitomastoid suture.mrk.json",
+            "Odontoid Process.mrk.json",
+            "Oval Window.mrk.json",
+            "Petromastoid canal.mrk.json",
+            "Pinna.mrk.json",
+            "Posterior Condylar Canal.mrk.json",
+            "Posterior SCC.mrk.json",
+            "Ramus of Mandible.mrk.json",
+            "Round Window.mrk.json",
+            "Sigmoid sinus.mrk.json",
+            "Sphenoid Bone.mrk.json",
+            "Sphenosquamous suture.mrk.json",
+            "Squamous part of the Temporal bone.mrk.json", // Assumed full name based on truncation
+            "Stapes foot plate.mrk.json",
+            "Styloid Process.mrk.json",
+            "Stylomastoid foramen.mrk.json",
+            "Superior SCC.mrk.json",
+            "TMJ.mrk.json",
+            "Tegmen.mrk.json",
+            "Tympanic Membrane.mrk.json",
+            "Tympanic part of 7th CN.mrk.json",
+            "Vestibular Aqueduct.mrk.json",
+            "Vestibule.mrk.json",
+            "Zygomatic bone.mrk.json"
         ];
         // --- END JSON FILENAMES ---
-        // --- END CONFIGURATION ---
 
         const temporalBoneSliceImage = document.getElementById('temporalBoneSliceImage'); // Renamed ID for clarity
         const sliceSlider = document.getElementById('sliceSlider');
