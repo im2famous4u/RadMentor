@@ -1,1 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RadMentor - Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet"/>
+    <style>
+        /* General Body Styles - Inherit from main index.html for consistency */
+        body {
+            font-family: 'Rubik', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
 
+        /* --- Theme Variables (Copied from index.html for consistency) --- */
+        body.light-theme {
+            --bg-color: #e3f2fd;
+            --container-bg-color: #ffffff;
+            --text-color: #212121;
+            --input-bg-color: #f5f5f5;
+            --button-bg-color: #1e88e5;
+            --button-hover-bg-color: #1565c0;
+            --toggle-color: #1e88e5;
+            --sidebar-bg-color: #ffffff;
+            --sidebar-item-border: 1px solid #e0e0e0;
+            --sidebar-item-hover-bg: #bbdefb;
+            --topbar-bg-color: #e3f2fd;
+            --topbar-text-color: #212121;
+            --profile-field-bg: #f8f8f8;
+            --section-card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        body:not(.light-theme):not(.gradient-theme) { 
+            --bg-color: #004d5e;
+            --container-bg-color: #043f4e;
+            --text-color: #ffffff;
+            --input-bg-color: #e0f2f1;
+            --button-bg-color: #00bcd4;
+            --button-hover-bg-color: #0097a7;
+            --toggle-color: #81d4fa;
+            --sidebar-bg-color: #043f4e;
+            --sidebar-item-border: 1px solid #095a71;
+            --sidebar-item-hover-bg: #065a73;
+            --topbar-bg-color: #002b36;
+            --topbar-text-color: #ffffff;
+            --profile-field-bg: #095a71;
+            --section-card-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        body.gradient-theme {
+            --bg-color: linear-gradient(to right, #e0e7f7, #f7e0e0);
+            --container-bg-color: rgba(255, 255, 255, 0.95);
+            --text-color: #333333;
+            --input-bg-color: #f0f0f0;
+            --button-bg-color: #6a0dad;
+            --button-hover-bg-color: #4b0082;
+            --toggle-color: #6a0dad;
+            --sidebar-bg-color: #ffffff;
+            --sidebar-item-border: 1px solid #e0e0e0;
+            --sidebar-item-hover-bg: #f0f8ff;
+            --topbar-bg-color: rgba(255, 255, 255, 0.9);
+            --topbar-text-color: #212121;
+            --profile-field-bg: #f8f8f8;
+            --section-card-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            background: var(--bg-color);
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .admin-container {
+            max-width: 800px;
+            width: 90%;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: var(--container-bg-color);
+            color: var(--text-color);
+            border-radius: 16px;
+            box-shadow: var(--section-card-shadow);
+            text-align: center;
+        }
+
+        .admin-container h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--heading-color);
+        }
+
+        .admin-container p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+
+        .admin-button {
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            background: var(--button-bg-color);
+            color: #fff;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            text-decoration: none; /* For link styling */
+            display: inline-block; /* For link styling */
+            margin-top: 20px;
+        }
+
+        .admin-button:hover {
+            background: var(--button-hover-bg-color);
+        }
+
+        .admin-logo {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            height: 120px;
+            z-index: 100;
+        }
+
+        /* Responsive adjustments (similar to main page) */
+        @media (max-width: 768px) {
+            .admin-container {
+                padding: 20px;
+                width: 95%;
+            }
+            .admin-container h1 {
+                font-size: 2rem;
+            }
+            .admin-button {
+                font-size: 1rem;
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <img src="logo.png" alt="Rad Mentor Logo" class="admin-logo" />
+
+    <div class="admin-container">
+        <h1>Admin Dashboard</h1>
+        <p>Welcome, Administrator! You have special privileges here.</p>
+        <p>This is where you will manage users, content, and settings.</p>
+        <a href="#" class="admin-button" onclick="adminLogout()">Log Out</a>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Your Firebase Configuration (copy from your index.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw", 
+            authDomain: "radiology-mcqs.firebaseapp.com",
+            projectId: "radiology-mcqs",
+            storageBucket: "radiology-mcqs.appspot.com",
+            messagingSenderId: "862300415358",
+            appId: "1:862300415358:web:097d5e413f388e30587f2f",
+            measurementId: "G-0V1SD1H95V"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // Theme logic for admin.html
+        function setInitialTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+            } else if (savedTheme === 'gradient') {
+                document.body.classList.add('gradient-theme');
+            } else {
+                document.body.classList.remove('light-theme', 'gradient-theme'); // Default to dark
+            }
+        }
+        setInitialTheme();
+
+        // Admin logout function
+        function adminLogout() {
+            auth.signOut().then(() => {
+                // Redirect back to the main login page after logout
+                window.location.href = 'index.html'; 
+            }).catch(error => {
+                alert("Error logging out: " + error.message);
+            });
+        }
+
+        // Optional: Basic admin check on page load (more robust checks involve Firebase Security Rules)
+        auth.onAuthStateChanged(user => {
+            if (!user) {
+                // Not logged in, redirect to main login
+                window.location.href = 'index.html';
+            } else {
+                // Check if user has admin role from Firestore
+                // This is a basic client-side check. Server-side security rules are essential too.
+                firebase.firestore().collection('users').doc(user.uid).get().then(doc => {
+                    if (!doc.exists || doc.data().accessLevel !== 'admin') {
+                        alert("Access Denied: You do not have administrator privileges.");
+                        auth.signOut(); // Log out non-admin users
+                        window.location.href = 'index.html';
+                    }
+                    // Else: User is admin, stay on this page
+                }).catch(error => {
+                    console.error("Error verifying admin access:", error);
+                    alert("Error verifying access. Logging out.");
+                    auth.signOut();
+                    window.location.href = 'index.html';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
