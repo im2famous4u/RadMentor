@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>RadMentor Portal</title> 
-    <link href="https://fonts.googleapis.com/css2?family=Rubik&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet"/>
     <style>
         /* General Body Styles */
         body {
@@ -15,34 +15,34 @@
             color: var(--text-color); /* Default dark theme text color */
             transition: background-color 0.3s ease, color 0.3s ease; /* Smooth theme transition */
             
-            /* Ensure body is a flex container for centering its main content */
+            /* Default for login/profile forms: centered flexbox */
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh; /* Take full viewport height */
-            flex-direction: column; /* Stack children vertically if needed */
+            flex-direction: column; /* Stack children vertically */
         }
 
-        /* Light Theme Variables - Adjusted to resemble PrepLadder */
+        /* --- Theme Variables --- */
+        /* Light Theme */
         body.light-theme {
-            --bg-color: #e3f2fd; /* Light blue background */
-            --container-bg-color: #ffffff; /* White containers */
-            --text-color: #212121; /* Dark grey/black text */
-            --input-bg-color: #f5f5f5; /* Light grey input background */
-            --button-bg-color: #1e88e5; /* Blue button */
-            --button-hover-bg-color: #1565c0; /* Darker blue button hover */
-            --toggle-color: #1e88e5; /* Blue toggle */
-            --sidebar-bg-color: #ffffff; /* White sidebar */
-            --sidebar-item-border: 1px solid #e0e0e0; /* Light grey sidebar border */
-            --sidebar-item-hover-bg: #bbdefb; /* Light blue sidebar hover */
-            --topbar-bg-color: #e3f2fd; /* Light blue topbar */
-            --topbar-text-color: #212121; /* Dark text on topbar */
-            --profile-field-bg: #f8f8f8; /* Very light grey for profile fields */
+            --bg-color: #e3f2fd;
+            --container-bg-color: #ffffff;
+            --text-color: #212121;
+            --input-bg-color: #f5f5f5;
+            --button-bg-color: #1e88e5;
+            --button-hover-bg-color: #1565c0;
+            --toggle-color: #1e88e5;
+            --sidebar-bg-color: #ffffff;
+            --sidebar-item-border: 1px solid #e0e0e0;
+            --sidebar-item-hover-bg: #bbdefb;
+            --topbar-bg-color: #e3f2fd;
+            --topbar-text-color: #212121;
+            --profile-field-bg: #f8f8f8;
             --section-card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-
-        /* Dark Theme Variables */
-        body:not(.light-theme) { /* Default to dark if light-theme class is not present */
+        /* Dark Theme */
+        body:not(.light-theme):not(.gradient-theme) { 
             --bg-color: #004d5e;
             --container-bg-color: #043f4e;
             --text-color: #ffffff;
@@ -58,59 +58,58 @@
             --profile-field-bg: #095a71;
             --section-card-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
         }
-
-        /* New Gradient Theme Variables (Subtle Pink to Subtle Blue) */
+        /* Gradient Theme */
         body.gradient-theme {
-            --bg-color: linear-gradient(to right, #e0e7f7, #f7e0e0); /* Subtle blue to subtle pink gradient */
-            --container-bg-color: rgba(255, 255, 255, 0.95); /* Slightly translucent white container */
-            --text-color: #333333; /* Dark grey for general text */
-            --input-bg-color: #f0f0f0; /* Light grey input */
-            --button-bg-color: #6a0dad; /* A purplish blue that looks good on gradient */
-            --button-hover-bg-color: #4b0082; /* Darker purple */
-            --toggle-color: #6a0dad; /* Purplish blue toggle */
-            --sidebar-bg-color: #ffffff; /* White sidebar */
+            --bg-color: linear-gradient(to right, #e0e7f7, #f7e0e0);
+            --container-bg-color: rgba(255, 255, 255, 0.95);
+            --text-color: #333333;
+            --input-bg-color: #f0f0f0;
+            --button-bg-color: #6a0dad;
+            --button-hover-bg-color: #4b0082;
+            --toggle-color: #6a0dad;
+            --sidebar-bg-color: #ffffff;
             --sidebar-item-border: 1px solid #e0e0e0;
-            --sidebar-item-hover-bg: #f0f8ff; /* Very light blue hover */
-            --topbar-bg-color: rgba(255, 255, 255, 0.9); /* Slightly translucent topbar */
+            --sidebar-item-hover-bg: #f0f8ff;
+            --topbar-bg-color: rgba(255, 255, 255, 0.9);
             --topbar-text-color: #212121;
             --profile-field-bg: #f8f8f8;
             --section-card-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            /* Applying gradient to body background */
-            background: var(--bg-color);
+            background: var(--bg-color); /* Apply gradient to body */
         }
-
-        /* Apply theme variables to elements */
+        /* Apply theme variables globally */
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
         }
-        /* Crucial: Ensure base container styles are maintained for login/profile forms */
+
+        /* --- Global Layout and Components --- */
+        /* Login/Profile Forms Container - Specific for centering login page */
         .container {
-            max-width: 500px; /* Fixed width for auth/profile forms */
-            margin: 30px auto; /* Reduced margin top for login/profile forms */
+            max-width: 500px; 
+            margin: auto; /* Vertically and horizontally center if body is flex */
             padding: 30px;
-            background-color: var(--container-bg-color); /* Apply theme variable */
-            color: var(--text-color); /* Apply theme variable */
-            border-radius: 16px; /* Retain original rounding for login forms */
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); /* Retain original shadow */
-            /* Flex for its internal content: h1, input groups, etc. */
-            display: flex; 
+            background-color: var(--container-bg-color); 
+            color: var(--text-color); 
+            border-radius: 16px; 
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); 
+            display: flex; /* Make it a flex container for its own content */
             flex-direction: column;
             align-items: center; /* Center horizontally within itself */
         }
-        /* Override body's flex for dashboard when dashboard is active */
-        .dashboard-active { /* Class added to body when dashboard is visible */
-            display: block; /* Revert body to block display */
-            justify-content: flex-start; /* Remove centering */
-            align-items: flex-start; /* Remove centering */
+        /* Override body's flex properties when dashboard is active */
+        body.dashboard-active { 
+            display: block; /* Revert body to block display to allow normal document flow */
+            min-height: 0; /* Reset min-height for body when dashboard is active */
+            /* Margin Auto on dashboard-content-wrapper will center dashboard */
         }
-        .dashboard-active .container { /* Containers within dashboard should not be flex-centered on body */
-            margin: 60px auto; /* Restore dashboard container margin */
-            max-width: 1200px; /* Dashboard wrapper max-width */
-            display: flex; /* Make it flex again for its internal content */
-            flex-direction: column;
-            align-items: center;
+        body.dashboard-active .container { /* Adjust containers if they appear within dashboard for specific sections */
+            margin: 25px auto; /* Standard margin for content sections in dashboard */
+            max-width: 900px; /* Wider content section max-width */
+            border-radius: 8px; /* Slightly less rounded for consistency with inner cards */
+            box-shadow: var(--section-card-shadow); /* Use theme shadow */
+            padding: 20px; /* Adjusted padding */
         }
+
 
         h1 {
             color: var(--text-color);
@@ -132,6 +131,9 @@
             font-size: 16px;
             border-radius: 4px;
             box-sizing: border-box;
+            background-color: var(--input-bg-color);
+            color: #000; /* Input text usually black */
+            border: 1px solid #ced4da;
         }
         button {
             width: 100%;
@@ -142,16 +144,107 @@
             border-radius: 4px;
             cursor: pointer;
             margin-top: 20px;
+            background: var(--button-bg-color);
+            color: #fff;
             transition: background 0.2s ease-in-out;
         }
-        /* Dashboard container will NOT have a fixed max-width, it will adapt */
-        .dashboard {
-            display: none;
+        button:hover {
+            background: var(--button-hover-bg-color);
+        }
+        .toggle {
             text-align: center;
-            min-height: 300px;
-            padding-top: 50px;
-            margin: 0 auto; /* Allow full width, but center its children */
-            width: 100%; /* Take full available width */
+            margin-top: 15px;
+            cursor: pointer;
+            color: var(--toggle-color);
+            text-decoration: underline;
+        }
+        .toggle:hover {
+            color: var(--text-color); 
+        }
+        .topbar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 50px;
+            background-color: var(--topbar-bg-color);
+            color: var(--topbar-text-color);
+            display: none; 
+            justify-content: flex-end;
+            align-items: center;
+            padding-right: 20px;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .menu-icon {
+            cursor: pointer;
+            font-size: 1.5rem;
+            margin-left: 15px; 
+            display: flex; 
+            align-items: center;
+            height: 100%; 
+        }
+        .user-greeting {
+            font-size: 1.0rem; 
+            margin-left: auto; 
+            padding-right: 15px; 
+            display: flex;
+            align-items: center;
+            height: 100%; 
+            white-space: nowrap; 
+        }
+        .sidebar {
+            position: fixed;
+            top: 50px;
+            right: -270px; 
+            width: 250px;
+            height: calc(100% - 50px);
+            padding: 20px 0; 
+            transition: right 0.2s ease-in-out;
+            z-index: 1001;
+            overflow-y: auto;
+            background-color: var(--sidebar-bg-color);
+            color: var(--text-color);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-start; 
+        }
+        .sidebar.show {
+            right: 0;
+        }
+        .sidebar-item {
+            padding: 12px 20px; 
+            cursor: pointer;
+            text-align: left;
+            font-size: 1.0rem;
+            width: 100%; 
+            box-sizing: border-box; 
+            border-bottom: 1px solid var(--sidebar-item-border); 
+            display: flex; 
+            align-items: center;
+            gap: 10px; 
+        }
+        .sidebar-item:last-child {
+            border-bottom: none;
+        }
+        .sidebar-item svg { 
+            width: 20px;
+            height: 20px;
+            fill: currentColor; 
+        }
+
+        /* Dashboard main content area wrapper */
+        .dashboard-content-wrapper {
+            margin: 0 auto; /* Center the wrapper */
+            padding: 20px; /* Internal padding for the content */
+            width: 90%; /* Start wide on larger screens */
+            max-width: 1200px; /* Maximum width for very large screens */
+            box-sizing: border-box; /* Include padding in width */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
         }
         .welcome-title {
             text-align: center;
@@ -167,59 +260,6 @@
             font-weight: 300;
             color: var(--text-color);
             margin-bottom: 30px;
-        }
-        .sidebar {
-            position: fixed;
-            top: 50px;
-            right: -270px; /* Correctly hidden off-screen */
-            width: 250px;
-            height: calc(100% - 50px);
-            padding: 20px 0; /* Adjusted padding, horizontal managed by item */
-            transition: right 0.2s ease-in-out;
-            z-index: 1001;
-            overflow-y: auto;
-            background-color: var(--sidebar-bg-color);
-            color: var(--text-color);
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-            display: flex; /* Flex container for items */
-            flex-direction: column; /* Stack items vertically */
-            align-items: flex-start; /* Align items to the left */
-        }
-        .sidebar.show {
-            right: 0;
-        }
-        .sidebar-item {
-            padding: 12px 20px; /* Consistent horizontal padding for items */
-            cursor: pointer;
-            text-align: left;
-            font-size: 1.0rem;
-            width: 100%; /* Make item take full width of sidebar */
-            box-sizing: border-box; /* Include padding in width */
-            border-bottom: 1px solid var(--sidebar-item-border); /* Use var for border */
-            display: flex; /* For icon-text alignment */
-            align-items: center;
-            gap: 10px; /* Space between icon and text */
-        }
-        .sidebar-item:last-child {
-            border-bottom: none;
-        }
-        .sidebar-item svg { /* Styling for icons in sidebar */
-            width: 20px;
-            height: 20px;
-            fill: currentColor; /* Inherit color from text */
-        }
-
-        /* Dashboard main content area wrapper */
-        .dashboard-content-wrapper {
-            margin: 0 auto;
-            padding: 20px;
-            width: 90%;
-            max-width: 1200px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
         }
         .content-section {
             display: none;
@@ -340,23 +380,23 @@
             color: var(--text-color);
             font-weight: 500;
         }
-        .profile-field-display, .profile-field.editable, .settings-option { /* Combined for common styles */
+        .profile-field-display, .profile-field.editable, .settings-option { 
             background-color: var(--profile-field-bg);
             color: var(--text-color);
             border: 1px solid #ced4da;
             border-radius: 4px;
-            padding: 12px 15px; /* Increased padding */
-            margin-bottom: 12px; /* Consistent spacing */
-            display: flex; /* Use flex for alignment */
+            padding: 12px 15px; 
+            margin-bottom: 12px; 
+            display: flex; 
             justify-content: space-between;
             align-items: center;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05); /* Subtle inner shadow */
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05); 
         }
         .profile-field-display strong, .profile-field.editable strong, .settings-option label { 
             font-weight: bold;
             color: var(--text-color); 
             flex-shrink: 0; 
-            margin-right: 15px; /* Space between label and value */
+            margin-right: 15px; 
         }
         .profile-field-display span {
             text-align: right; 
@@ -366,10 +406,9 @@
         .profile-field.editable {
             background-color: var(--input-bg-color);
             border-color: var(--toggle-color); 
-            /* Ensure values are left aligned within the editable field */
             justify-content: flex-start;
         }
-        .profile-field.editable span { /* Hide span when in editable mode */
+        .profile-field.editable span { 
             display: none;
         }
         .profile-field.editable input, .profile-field.editable select {
@@ -378,12 +417,11 @@
             width: auto; 
             flex-grow: 1; 
             padding: 5px;
-            margin-left: 0; /* Remove extra margin if flex handles spacing */
+            margin-left: 0; 
             color: var(--text-color); 
             box-sizing: border-box; 
             border-radius: 4px;
         }
-        /* Specific input adjustments for visibility */
         body.light-theme .profile-field.editable input,
         body.light-theme .profile-field.editable select {
             color: #212121; 
@@ -474,7 +512,9 @@
     <img src="logo.png" alt="Rad Mentor Logo" />
 
     <div class="container" id="auth-container" style="display: none;">
-        <h1 class="welcome-title" style="font-size: 2.5rem; margin-bottom: 10px;">Welcome to RadMentor</h1> <p class="welcome-subtitle" style="font-size: 1.2rem; margin-bottom: 25px;">The World’s Most Comprehensive Radiology Learning Source</p> <h1>🔬 Login</h1> <div class="input-group"><input type="email" id="email" placeholder="Email" /></div>
+        <h1 class="welcome-title" style="font-size: 2.5rem; margin-bottom: 10px;">Welcome to RadMentor</h1>
+        <p class="welcome-subtitle" style="font-size: 1.2rem; margin-bottom: 25px;">The World’s Most Comprehensive Radiology Learning Source</p>
+        <h1 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 20px;">🔬 Login</h1> <div class="input-group"><input type="email" id="email" placeholder="Email" /></div>
         <div class="input-group"><input type="password" id="password" placeholder="Password" /></div>
         <button onclick="handleAuth()" id="auth-btn">Sign In</button>
         <div class="toggle" onclick="toggleAuth()">Don't have an account? Sign up</div>
@@ -689,7 +729,7 @@
             <div class="profile-field-display"><strong>Date of Birth:</strong> <span id="display-dob"></span></div>
             <div class="profile-field-display"><strong>Sex:</strong> <span id="display-sex"></span></div>
             <div class="profile-field-display"><strong>Position:</strong> <span id="display-position"></span></div>
-            <div class="profile-field-display"><strong>Medical College:</strong> <span id="display-college"></span></div>
+            <div class="profile-field-display"><strong>Medical College:</b> <span id="display-college"></span></div>
             <div class="profile-field-display"><strong>Exam Pursuing:</strong> <span id="display-exam"></span></div>
             <button onclick="toggleProfileEditMode(true)">Edit Profile</button>
         </div>
@@ -961,15 +1001,15 @@
         }
 
         auth.onAuthStateChanged(user => {
-            // Check if current user has 'admin' accessLevel to redirect
+            // Remove 'dashboard-active' class on body when auth state changes (e.g., logout or initial load)
+            document.body.classList.remove('dashboard-active'); 
+
             if (user) {
                 db.collection('users').doc(user.uid).get().then(doc => {
                     if (doc.exists && doc.data().accessLevel === 'admin') {
-                        // Redirect to admin dashboard
-                        window.location.href = 'admin.html'; // Assuming admin.html is in the root
-                        return; // Stop further execution for admin
+                        window.location.href = 'admin.html'; 
+                        return; 
                     }
-                    // If not admin, proceed with regular user flow
                     document.getElementById('auth-container').style.display = 'none';
                     document.getElementById('profile-form').style.display = 'none';
                     document.getElementById('dashboard').style.display = 'none';
@@ -985,11 +1025,9 @@
                     checkUserProfileAndLog(user);
                 }).catch(error => {
                     console.error("Error checking user role:", error);
-                    // Fallback to regular login/signup if role check fails
                     document.getElementById('auth-container').style.display = 'block';
                 });
             } else {
-                // No user is logged in -> show authentication container
                 document.getElementById('auth-container').style.display = 'block';
             }
         });
@@ -1030,6 +1068,9 @@
             document.getElementById('dashboard').style.display = 'block';
             document.querySelector('.topbar').style.display = 'flex';
             
+            // Add 'dashboard-active' class to body when dashboard loads
+            document.body.classList.add('dashboard-active'); 
+
             document.getElementById('user-greeting-name').textContent = userName;
 
             showDashboardSection('main'); 
@@ -1095,9 +1136,9 @@
                 document.getElementById('dashboard-main-content').style.display = 'flex'; 
             } else if (sectionId === 'profile') {
                 populateProfileDetails(); 
-                toggleProfileEditMode(false); // Ensure view mode
+                toggleProfileEditMode(false); 
                 document.getElementById('profile-section').style.display = 'block';
-            } else if (sectionId === 'edit-profile') { // Removed this from sidebar
+            } else if (sectionId === 'edit-profile') { 
                 populateEditProfileForm(); 
                 document.getElementById('edit-profile-section').style.display = 'block';
             } else if (sectionId === 'subscription') {
@@ -1128,7 +1169,6 @@
                 populateProfileDetails(); 
             }
         }
-
 
         function populateProfileDetails() {
             if (currentUserData) {
