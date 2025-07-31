@@ -48,41 +48,62 @@
 </head>
 <body class="text-gray-800">
 
-    <!-- =================================================
-    LANDING PAGE SECTION
-    ================================================== -->
-    <div id="landing-page">
-        <!-- Header -->
-        <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
-            <div class="container mx-auto px-6 py-3 flex justify-between items-center">
-                <div class="flex items-center">
-                    <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
-                    <span class="text-2xl font-bold text-gray-800">RadMentor</span>
-                </div>
-                <nav class="hidden md:flex items-center space-x-8">
-                    <a href="#courses" class="text-gray-600 hover:text-blue-600">Courses</a>
-                    <a href="#features" class="text-gray-600 hover:text-blue-600">Features</a>
-                    <a href="#about" class="text-gray-600 hover:text-blue-600">About Us</a>
-                </nav>
-                <div class="flex items-center">
+    <!-- This header is now persistent and changes based on login state -->
+    <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
+                <span class="text-2xl font-bold text-gray-800">RadMentor</span>
+            </div>
+            <nav id="main-nav" class="hidden md:flex items-center space-x-8">
+                <a href="#courses" class="text-gray-600 hover:text-blue-600">Courses</a>
+                <a href="#features" class="text-gray-600 hover:text-blue-600">Features</a>
+                <a href="#about" class="text-gray-600 hover:text-blue-600">About Us</a>
+            </nav>
+            <div class="flex items-center">
+                <!-- Logged Out Buttons -->
+                <div id="header-logged-out" class="flex items-center">
                     <button onclick="showAuthModal('signin')" class="hidden md:block text-gray-600 hover:text-blue-600 mr-6">Login</button>
                     <button onclick="showAuthModal('signup')" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                         Sign Up
                     </button>
-                    <button id="mobile-menu-button" class="md:hidden ml-4 text-gray-700">
-                        <i data-feather="menu"></i>
+                </div>
+                <!-- Logged In Buttons -->
+                <div id="header-logged-in" class="hidden items-center">
+                     <span class="hidden sm:block text-gray-700 mr-4">Hi, <span id="user-greeting-header"></span>!</span>
+                     <button onclick="showDashboard()" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                        Dashboard
+                    </button>
+                    <button onclick="logout()" class="ml-4 text-gray-600 hover:text-blue-600" title="Logout">
+                        <i data-feather="log-out"></i>
                     </button>
                 </div>
+                <button id="mobile-menu-button" class="md:hidden ml-4 text-gray-700">
+                    <i data-feather="menu"></i>
+                </button>
             </div>
-              <!-- Mobile Menu -->
-            <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
-                <a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a>
-                <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a>
-                <a href="#about" class="block py-2 text-gray-600 hover:text-blue-600">About Us</a>
+        </div>
+          <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+            <a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a>
+            <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a>
+            <a href="#about" class="block py-2 text-gray-600 hover:text-blue-600">About Us</a>
+            <!-- Mobile Logged Out -->
+            <div id="mobile-logged-out">
                 <button onclick="showAuthModal('signin')" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Login</button>
             </div>
-        </header>
+             <!-- Mobile Logged In -->
+            <div id="mobile-logged-in" class="hidden">
+                <button onclick="showDashboard()" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Dashboard</button>
+                <button onclick="logout()" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Logout</button>
+            </div>
+        </div>
+    </header>
 
+    <!-- =================================================
+    LANDING PAGE SECTION
+    ================================================== -->
+    <div id="landing-page">
         <main>
             <!-- Hero Section -->
             <section class="bg-white pt-32 pb-20">
@@ -109,7 +130,6 @@
                         <p class="mt-4 text-lg text-gray-600">Targeted preparation for all major radiology exams.</p>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <!-- Course Items -->
                         <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
                             <h3 class="text-2xl font-bold text-gray-800">FRCR</h3>
                             <p class="mt-2 text-gray-600">Comprehensive question banks and mock tests for the FRCR exam.</p>
@@ -215,15 +235,13 @@
         </footer>
     </div>
 
-    <!-- =================================================
-    AUTHENTICATION MODAL
-    ================================================== -->
+    <!-- AUTHENTICATION MODAL, PROFILE FORM, DASHBOARD... -->
+    <!-- These sections are the same as before -->
     <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
             <button onclick="hideAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
                 <i data-feather="x" class="w-7 h-7"></i>
             </button>
-
             <div class="p-8 md:p-12">
                 <div id="auth-container">
                     <h1 id="auth-title" class="text-3xl font-bold text-gray-900 text-center mb-2">Login to RadMentor</h1>
@@ -241,10 +259,6 @@
             </div>
         </div>
     </div>
-
-    <!-- =================================================
-    PROFILE COMPLETION FORM
-    ================================================== -->
     <div id="profile-form-container" class="fixed inset-0 bg-gray-100 z-50 p-4 hidden overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-auto my-8 p-8 md:p-12">
              <h1 class="text-3xl font-bold text-gray-900 text-center">Complete Your Profile</h1>
@@ -280,23 +294,17 @@
                       <label class="font-medium text-gray-700">Medical College</label>
                       <input list="colleges" id="college" placeholder="Type to search your college" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                       <datalist id="colleges">
-                        <!-- College options will be populated by JS -->
                       </datalist>
                 </div>
              </div>
              <button onclick="submitProfile()" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Submit Profile</button>
         </div>
     </div>
-
-
-    <!-- =================================================
-    DASHBOARD SECTION
-    ================================================== -->
     <div id="dashboard" class="hidden">
         <!-- Dashboard Topbar -->
         <div class="fixed top-0 left-0 right-0 bg-white shadow-md z-40">
             <div class="container mx-auto px-6 h-16 flex justify-between items-center">
-                <div class="flex items-center">
+                <div class="flex items-center cursor-pointer" onclick="showLandingPage()">
                     <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-8"/>
                     <span class="text-xl font-bold text-gray-800 ml-2">RadMentor</span>
                 </div>
@@ -308,7 +316,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Dashboard Sidebar -->
         <div id="sidebar" class="fixed top-0 right-0 h-full bg-white shadow-xl z-50 w-72 p-6 transform translate-x-full">
             <div class="flex justify-between items-center mb-8">
@@ -323,17 +330,13 @@
                 <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="logout()"><i data-feather="log-out" class="mr-3 w-5 h-5"></i>Logout</a>
             </nav>
         </div>
-        
         <!-- Dashboard Main Content -->
         <div class="pt-24 pb-12 bg-gray-50 min-h-screen">
             <div class="container mx-auto px-6">
-                <!-- Main Dashboard View -->
                 <div id="dashboard-main-content">
                     <h1 class="text-3xl font-bold text-gray-900">Welcome to RadMentor</h1>
                     <p class="mt-2 text-lg text-gray-600">Select a category to start your preparation.</p>
-                    
                     <div id="access-level-notice"></div>
-
                     <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="window.location.href='frcr/'">
                             <h3 class="text-xl font-bold text-gray-800">FRCR</h3>
@@ -355,20 +358,9 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Other Dashboard Sections (Profile, Settings, etc.) -->
-                <div id="profile-section" class="hidden bg-white p-8 rounded-lg shadow-md">
-                      <h2 class="text-2xl font-bold mb-6">Your Profile</h2>
-                      <!-- Profile content will be populated by JS -->
-                </div>
-                <div id="subscription-section" class="hidden bg-white p-8 rounded-lg shadow-md">
-                      <h2 class="text-2xl font-bold mb-6">Subscription</h2>
-                      <!-- Subscription content will be populated by JS -->
-                </div>
-                <div id="settings-section" class="hidden bg-white p-8 rounded-lg shadow-md">
-                      <h2 class="text-2xl font-bold mb-6">Settings</h2>
-                      <!-- Settings content will be populated by JS -->
-                </div>
+                <div id="profile-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
+                <div id="subscription-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
+                <div id="settings-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
             </div>
         </div>
     </div>
@@ -412,10 +404,16 @@
         const landingPage = document.getElementById('landing-page');
         const dashboard = document.getElementById('dashboard');
         const profileFormContainer = document.getElementById('profile-form-container');
-
-        // --- Mobile Menu Toggle ---
+        const headerLoggedOut = document.getElementById('header-logged-out');
+        const headerLoggedIn = document.getElementById('header-logged-in');
+        const userGreetingHeader = document.getElementById('user-greeting-header');
         const mobileMenuButton = document.getElementById('mobile-menu-button');
         const mobileMenu = document.getElementById('mobile-menu');
+        const mobileLoggedOut = document.getElementById('mobile-logged-out');
+        const mobileLoggedIn = document.getElementById('mobile-logged-in');
+
+
+        // --- Event Listeners ---
         mobileMenuButton.addEventListener('click', () => {
             mobileMenu.classList.toggle('hidden');
         });
@@ -477,7 +475,6 @@
                             authMode = 'signin';
                             updateAuthModalUI();
                             authMessage.textContent = "Verification email sent! Please check your inbox and verify your email before signing in.";
-                            // Create a user profile document
                             return db.collection('users').doc(user.uid).set({
                                 email: user.email,
                                 accessLevel: 'restricted',
@@ -514,7 +511,7 @@
                 .then(() => {
                     currentUserData = { ...currentUserData, ...profileData };
                     profileFormContainer.classList.add('hidden');
-                    loadDashboard(currentUserData);
+                    setupLoggedInState(currentUserData); // Go back to landing page with logged-in header
                 })
                 .catch(err => alert("Error saving profile: " + err.message));
         }
@@ -529,46 +526,58 @@
                     return;
                 }
                 
-                // User is logged in and verified
                 db.collection('users').doc(user.uid).get().then(doc => {
                     hideAuthModal();
                     if (doc.exists) {
                         currentUserData = doc.data();
-                        // Check if profile is complete
                         if (currentUserData.name && currentUserData.dob) {
-                            loadDashboard(currentUserData);
+                            setupLoggedInState(currentUserData);
                         } else {
-                            // Show profile completion form
+                            profileFormContainer.classList.remove('hidden');
                             landingPage.classList.add('hidden');
                             dashboard.classList.add('hidden');
-                            profileFormContainer.classList.remove('hidden');
                         }
-                    } else {
-                        // This case is unlikely if signup creates the doc, but as a fallback:
-                        landingPage.classList.add('hidden');
-                        dashboard.classList.add('hidden');
-                        profileFormContainer.classList.remove('hidden');
                     }
                 });
 
             } else {
                 // User is signed out
                 currentUserData = null;
-                landingPage.classList.remove('hidden');
-                dashboard.classList.add('hidden');
-                profileFormContainer.classList.add('hidden');
-                hideAuthModal();
+                setupLoggedOutState();
             }
         });
 
-        function loadDashboard(userData) {
+        function setupLoggedInState(userData) {
+            headerLoggedOut.classList.add('hidden');
+            headerLoggedIn.classList.remove('hidden');
+            mobileLoggedOut.classList.add('hidden');
+            mobileLoggedIn.classList.remove('hidden');
+            userGreetingHeader.textContent = userData.name.split(' ')[0];
+            
+            landingPage.classList.remove('hidden');
+            dashboard.classList.add('hidden');
+            feather.replace();
+        }
+
+        function setupLoggedOutState() {
+            headerLoggedOut.classList.remove('hidden');
+            headerLoggedIn.classList.add('hidden');
+            mobileLoggedOut.classList.remove('hidden');
+            mobileLoggedIn.classList.add('hidden');
+
+            landingPage.classList.remove('hidden');
+            dashboard.classList.add('hidden');
+            profileFormContainer.classList.add('hidden');
+            hideAuthModal();
+        }
+        
+        function showDashboard() {
             landingPage.classList.add('hidden');
             dashboard.classList.remove('hidden');
-            document.getElementById('user-greeting-name').textContent = userData.name.split(' ')[0];
+            document.getElementById('user-greeting-name').textContent = currentUserData.name.split(' ')[0];
             
-            // Display access level notice
             const noticeDiv = document.getElementById('access-level-notice');
-            if(userData.accessLevel === 'restricted') {
+            if(currentUserData.accessLevel === 'restricted') {
                 noticeDiv.innerHTML = `<div class="mt-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-r-lg">
                     <p class="font-bold">Restricted Access</p>
                     <p>Some content is locked. <a href="#" onclick="showDashboardSection('subscription')" class="underline">Subscribe</a> for full access.</p>
@@ -579,13 +588,15 @@
                     <p>You have access to all features. Happy learning!</p>
                 </div>`;
             }
-            
-            // Initialize dashboard view
             showDashboardSection('main');
+        }
+        
+        function showLandingPage() {
+            dashboard.classList.add('hidden');
+            landingPage.classList.remove('hidden');
         }
 
         function logout() {
-            // UPDATED: Removed the confirm() dialog for a smoother user experience.
             auth.signOut();
         }
         
@@ -599,27 +610,17 @@
         });
 
         function showDashboardSection(sectionId) {
-            // Hide all sections first
-            document.getElementById('dashboard-main-content').classList.add('hidden');
-            document.getElementById('profile-section').classList.add('hidden');
-            document.getElementById('subscription-section').classList.add('hidden');
-            document.getElementById('settings-section').classList.add('hidden');
+            ['dashboard-main-content', 'profile-section', 'subscription-section', 'settings-section'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
             
-            // Show the selected section
-            const sectionToShow = document.getElementById(`${sectionId}-section`);
-            if (sectionToShow) {
-                sectionToShow.classList.remove('hidden');
-            }
-            if (sectionId === 'main') {
-                 document.getElementById('dashboard-main-content').classList.remove('hidden');
-            }
+            const sectionToShow = document.getElementById(`${sectionId}-section`) || document.getElementById('dashboard-main-content');
+            sectionToShow.classList.remove('hidden');
             
-            // Populate content when shown
             if (sectionId === 'profile') populateProfileDetails();
             if (sectionId === 'subscription') populateSubscriptionDetails();
             if (sectionId === 'settings') populateSettingsDetails();
 
-            // Hide sidebar after selection
             sidebar.classList.add('translate-x-full');
         }
         
@@ -668,7 +669,6 @@
             "Banaras Hindu University, Varanasi",
             "Kasturba Medical College, Manipal",
             "King George's Medical University, Lucknow"
-            // Add more colleges here to expand the list
         ];
         colleges.forEach(college => {
             const option = document.createElement('option');
