@@ -1,203 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>CT Anatomy - RadMentor</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
     <style>
-        /* Base styles for all themes */
         body {
-            font-family: 'Rubik', sans-serif;
-            margin: 0;
-            transition: background-color 0.3s ease, color 0.3s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            flex-direction: column;
-            overflow: hidden; /* Prevent body scroll */
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
         }
-
-        /* Light Theme Variables */
-        body.light-theme {
-            --bg-color: #f0f8ff; /* Very light blue/off-white background */
-            --container-bg-color: #ffffff; /* Pure white container background */
-            --text-color: #333333; /* Dark grey for general text */
-            --heading-color: #0d47a1; /* Darker blue for headings */
-            --box-bg-color: #e3f2fd; /* Light blue for boxes */
-            --box-hover-bg-color: #bbdefb; /* Slightly darker light blue on hover */
-            --box-border-color: #90caf9; /* Medium blue for box borders */
-            --back-button-bg: #1e88e5; /* Standard blue button */
-            --back-button-hover-bg: #1565c0; /* Darker blue button on hover */
+        .nav-button {
+            transition: all 0.2s ease-in-out;
+            border: 1px solid #e5e7eb;
         }
-
-        /* Dark Theme Variables */
-        body:not(.light-theme) {
-            --bg-color: #004d5e;
-            --container-bg-color: #043f4e;
-            --text-color: #ffffff;
-            --heading-color: #ffffff;
-            --box-bg-color: #095a71;
-            --box-hover-bg-color: #064a5c;
-            --box-border-color: #043f4e;
-            --back-button-bg: #00bcd4;
-            --back-button-hover-bg: #0097a7;
-        }
-
-        .container {
-            background-color: var(--container-bg-color);
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            padding: 30px;
-            margin: 20px;
-            max-width: 900px; /* Wider to accommodate more boxes */
-            width: 90%;
-            text-align: center;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .container h1 {
-            color: var(--heading-color);
-            font-size: 2.5rem;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-
-        .boxes-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Responsive grid */
-            gap: 20px;
-            width: 100%;
-            justify-content: center; /* Center boxes in the grid */
-            margin-bottom: 30px;
-        }
-
-        .box {
-            background-color: var(--box-bg-color);
-            color: var(--text-color);
-            padding: 25px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 1.2rem;
-            font-weight: 500;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
-            cursor: pointer;
-            border: 1px solid var(--box-border-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100px; /* Ensure consistent box height */
-            text-align: center;
-        }
-
-        .box:hover {
-            background-color: var(--box-hover-bg-color);
+        .nav-button:hover {
             transform: translateY(-5px);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-color: #3b82f6;
         }
-
-        .back-button {
-            display: block;
-            width: 200px;
-            padding: 15px 25px;
-            background-color: var(--back-button-bg);
-            color: white;
-            text-align: center;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1.1rem;
-            transition: background-color 0.3s ease;
-        }
-        .back-button:hover {
-            background-color: var(--back-button-hover-bg);
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-                margin: 15px;
-            }
-            .container h1 {
-                font-size: 2.2rem;
-                margin-bottom: 25px;
-            }
-            .box {
-                font-size: 1.1rem;
-                padding: 20px;
-            }
-            .boxes-grid {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-                gap: 15px;
-            }
-            .back-button {
-                width: 180px;
-                font-size: 1rem;
-            }
-        }
-        @media (max-width: 480px) {
-            .container h1 {
-                font-size: 1.8rem;
-                margin-bottom: 20px;
-            }
-            .box {
-                font-size: 1rem;
-                min-height: 80px;
-            }
-            .boxes-grid {
-                grid-template-columns: 1fr; /* Single column on very small screens */
-            }
-            .back-button {
-                    width: 100%;
-                    font-size: 0.95rem;
-                }
-            }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>CT Anatomy</h1>
+<body class="text-gray-800">
 
-        <div class="boxes-grid">
-            <a href="#" class="box">Head CT</a>
-            <a href="hrct-temporalbone/index.html" class="box">HRCT Temporal Bone</a>
-            <a href="#" class="box">Neck</a>
-            <a href="#" class="box">Thorax</a>
-            <a href="#" class="box">Chest Lymph Node Stations</a>
-            <a href="#" class="box">Abdomen - Pelvis CT</a>
+    <div class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
+        <div class="w-full max-w-5xl">
+            <!-- Header -->
+            <div class="text-center mb-10">
+                <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900">CT Anatomy</h1>
+                <p class="mt-3 text-lg text-gray-600">Select a region to explore.</p>
+            </div>
+
+            <!-- Navigation Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Head CT Button -->
+                <a href="head-ct/" class="nav-button bg-white p-8 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer">
+                    <i data-feather="cpu" class="w-10 h-10 text-blue-600 mb-4"></i>
+                    <h3 class="text-2xl font-bold text-gray-800">Head CT</h3>
+                </a>
+                <!-- HRCT Temporal Bone Button -->
+                <a href="hrct-temporalbone/" class="nav-button bg-white p-8 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer">
+                    <i data-feather="headphones" class="w-10 h-10 text-blue-600 mb-4"></i>
+                    <h3 class="text-2xl font-bold text-gray-800">HRCT Temporal Bone</h3>
+                </a>
+                <!-- Neck Button -->
+                <a href="neck/" class="nav-button bg-white p-8 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer">
+                    <i data-feather="user" class="w-10 h-10 text-blue-600 mb-4"></i>
+                    <h3 class="text-2xl font-bold text-gray-800">Neck</h3>
+                </a>
+                <!-- Thorax Button -->
+                <a href="thorax/" class="nav-button bg-white p-8 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer">
+                    <i data-feather="shield" class="w-10 h-10 text-blue-600 mb-4"></i>
+                    <h3 class="text-2xl font-bold text-gray-800">Thorax</h3>
+                </a>
+                <!-- Chest - Lymph Node Stations Button -->
+                <a href="chest-lymph-nodes/" class="nav-button bg-white p-8 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer">
+                    <i data-feather="git-merge" class="w-10 h-10 text-blue-600 mb-4"></i>
+                    <h3 class="text-2xl font-bold text-gray-800">Chest Lymph Nodes</h3>
+                </a>
+                <!-- Abdomen-Pelvis Button -->
+                <a href="abdomen-pelvis/" class="nav-button bg-white p-8 rounded-xl flex flex-col items-center justify-center text-center cursor-pointer">
+                    <i data-feather="layout" class="w-10 h-10 text-blue-600 mb-4"></i>
+                    <h3 class="text-2xl font-bold text-gray-800">Abdomen-Pelvis</h3>
+                </a>
+            </div>
+
+            <!-- Back Button -->
+            <div class="mt-12 text-center">
+                <button onclick="history.back()" class="flex items-center text-gray-600 hover:text-blue-600 mx-auto">
+                    <i data-feather="arrow-left" class="mr-2"></i>
+                    <span>Back to Anatomy Modules</span>
+                </button>
+            </div>
         </div>
-
-        <a href="../anatomy.html" class="back-button">Back to Anatomy</a>
     </div>
 
     <script>
-        // Theme logic (copied from your previous files to ensure consistency)
-        function setTheme(theme) {
-            if (theme === 'light') {
-                document.body.classList.add('light-theme');
-                localStorage.setItem('theme', 'light');
-            } else {
-                document.body.classList.remove('light-theme');
-                localStorage.setItem('theme', 'dark');
-            }
-        }
-
-        function setInitialTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'light') {
-                document.body.classList.add('light-theme');
-            } else {
-                document.body.classList.remove('light-theme');
-            }
-        }
-        setInitialTheme();
+        feather.replace();
     </script>
+
 </body>
 </html>
