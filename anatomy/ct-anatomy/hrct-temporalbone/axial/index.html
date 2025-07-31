@@ -72,15 +72,6 @@
             margin-bottom: 20px;
             text-align: center;
         }
-        
-        /* NEW: Main content area to hold image and vertical slider */
-        .main-content {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            width: 100%;
-            justify-content: center;
-        }
 
         .image-wrapper {
             position: relative;
@@ -92,7 +83,6 @@
             box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
             height: auto;
             padding-bottom: calc(600 / 1250 * 100%);
-            flex-shrink: 1;
         }
 
         .image-wrapper img {
@@ -158,28 +148,25 @@
             r: 6;
         }
         
-        /* NEW: Styles for the vertical slider */
-        .controls-wrapper {
+        /* RESTORED: Horizontal controls below the image */
+        .controls {
+            width: 100%;
+            margin-top: 25px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 500px; /* Adjust height as needed */
+            gap: 15px;
         }
 
         #sliceSlider {
+            width: 90%;
             -webkit-appearance: none;
             appearance: none;
-            width: 400px; /* This becomes the height of the vertical slider */
-            height: 8px; /* This becomes the width */
+            height: 8px;
             background: var(--slider-track-bg);
             outline: none;
             border-radius: 5px;
-            margin: 0;
-            transform-origin: center;
-            transform: rotate(-90deg); /* Rotate the slider to be vertical */
         }
-        
         #sliceSlider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
@@ -187,22 +174,19 @@
             height: 20px;
             border-radius: 50%;
             background: var(--slider-thumb-bg);
-            cursor: ns-resize;
+            cursor: grab;
         }
-
         #sliceSlider::-moz-range-thumb {
             width: 20px;
             height: 20px;
             border-radius: 50%;
             background: var(--slider-thumb-bg);
-            cursor: ns-resize;
+            cursor: grab;
         }
-
         #sliceNumberDisplay {
             font-size: 1.1rem;
             color: var(--text-color);
             font-weight: 500;
-            margin-top: 20px;
         }
         .back-button {
             display: block;
@@ -226,18 +210,15 @@
 <body>
     <div class="viewer-container">
         <h1>HRCT Temporal Bone - Axial Section</h1>
+        <div class="image-wrapper">
+            <img id="temporalBoneSliceImage" src="" alt="HRCT Temporal Bone Axial Slice">
+            <svg class="annotation-svg-overlay" id="annotationSvgOverlay"></svg>
+            <div id="annotationOverlay"></div>
+        </div>
         
-        <div class="main-content">
-            <div class="image-wrapper">
-                <img id="temporalBoneSliceImage" src="" alt="HRCT Temporal Bone Axial Slice">
-                <svg class="annotation-svg-overlay" id="annotationSvgOverlay"></svg>
-                <div id="annotationOverlay"></div>
-            </div>
-            
-            <div class="controls-wrapper">
-                <input type="range" id="sliceSlider" min="1" max="131" value="1" orient="vertical">
-                <div id="sliceNumberDisplay">Slice: 1 / 131</div>
-            </div>
+        <div class="controls">
+            <input type="range" id="sliceSlider" min="1" max="131" value="1">
+            <div id="sliceNumberDisplay">Slice: 1 / 131</div>
         </div>
 
         <a href="../index.html" class="back-button">Back to HRCT Temporal Bone Menu</a>
@@ -270,7 +251,6 @@
         let allAnnotations = [];
 
         async function loadAnnotations() {
-            // **FIXED**: Load one consolidated file instead of many.
             try {
                 const response = await fetch(`${annotationJsonPath}all_annotations.json`);
                 const data = await response.json();
@@ -290,10 +270,10 @@
         }
         
         function updateSlice() {
-            // Invert slider value because it's rotated. Max value should be at the top.
-            const sliderValue = sliceSlider.max - parseInt(sliceSlider.value) + parseInt(sliceSlider.min);
-            temporalBoneSliceImage.src = `${imageFolderPath}${sliderValue}${imageExtension}`;
-            sliceNumberDisplay.textContent = `Slice: ${sliderValue} / ${imageCount}`;
+            // **FIXED**: No longer need to invert the slider value.
+            const currentSlice = parseInt(sliceSlider.value);
+            temporalBoneSliceImage.src = `${imageFolderPath}${currentSlice}${imageExtension}`;
+            sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
 
             annotationOverlay.innerHTML = '';
             annotationSvgOverlay.innerHTML = '';
@@ -319,7 +299,7 @@
                 const scaleY = imageDisplayHeight / IMAGE_FILE_HEIGHT;
 
                 const annotationsForCurrentSlice = allAnnotations
-                    .filter(ann => ann.slice === sliderValue)
+                    .filter(ann => ann.slice === currentSlice)
                     .sort((a, b) => a.pointY_mm - b.pointY_mm);
 
                 let placedLabels = [];
@@ -399,16 +379,17 @@
         
         sliceSlider.addEventListener('input', updateSlice);
 
-        // NEW: Mouse wheel event listener for scrolling
+        // **UPDATED**: Mouse wheel logic for horizontal slider
         imageWrapper.addEventListener('wheel', (event) => {
-            event.preventDefault(); // Prevent the whole page from scrolling
+            event.preventDefault(); 
             
             let currentValue = parseInt(sliceSlider.value);
-            // Scrolling down (deltaY > 0) should decrease the slider value (move up the anatomy)
+            // Scrolling down (deltaY > 0) should increment the slice number (move right)
             if (event.deltaY > 0) {
-                currentValue = Math.max(parseInt(sliceSlider.min), currentValue - 1);
-            } else {
                 currentValue = Math.min(parseInt(sliceSlider.max), currentValue + 1);
+            } else {
+                // Scrolling up (deltaY < 0) should decrement the slice number (move left)
+                currentValue = Math.max(parseInt(sliceSlider.min), currentValue - 1);
             }
             sliceSlider.value = currentValue;
             updateSlice();
