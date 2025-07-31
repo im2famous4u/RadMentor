@@ -80,7 +80,7 @@
             </nav>
             <div class="flex items-center">
                 <!-- Logged Out Navigation (Visible by default) -->
-                <div id="logged-out-nav" class="md:flex items-center">
+                <div id="logged-out-nav" class="hidden md:flex items-center">
                     <button onclick="showAuthModal('signin')" class="text-gray-600 hover:text-blue-600 mr-6">Login</button>
                     <button onclick="showAuthModal('signup')" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                         Sign Up
@@ -110,7 +110,7 @@
             </div>
         </div>
          <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+        <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 right-0 bg-white shadow-md px-6 pb-4">
             <a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a>
             <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a>
             <a href="#pricing" class="block py-2 text-gray-600 hover:text-blue-600">Pricing</a>
@@ -472,10 +472,10 @@
                     <div id="access-level-notice"></div>
 
                     <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="window.location.href='https://im2famous4u.github.io/RadMentor/frcr.html'">
+                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="window.location.href='https://raw.githubusercontent.com/im2famous4u/RadMentor/main/frcr/index.html'">
                             <h3 class="text-xl font-bold text-gray-800">FRCR MCQs</h3>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="window.location.href='https://im2famous4u.github.io/RadMentor/Anatomy.html'">
+                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="window.location.href='https://raw.githubusercontent.com/im2famous4u/RadMentor/main/Anatomy.html'">
                             <h3 class="text-xl font-bold text-gray-800">Anatomy MCQs</h3>
                         </div>
                         <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Flashcards coming soon!')">
