@@ -80,3 +80,344 @@
             gap: 20px;
             width: 100%;
             justify-content: center;
+        }
+
+        .image-wrapper {
+            position: relative;
+            width: 1250px;
+            max-width: 100%;
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+            height: auto;
+            padding-bottom: calc(600 / 1250 * 100%);
+            flex-shrink: 1;
+        }
+
+        .image-wrapper img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            user-select: none;
+            -webkit-user-drag: none;
+            z-index: 8;
+        }
+
+        .annotation-svg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9;
+            pointer-events: none;
+            overflow: visible;
+        }
+
+        .annotation-label {
+            position: absolute;
+            background-color: var(--annotation-bg-color);
+            color: var(--annotation-text-color);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border: 1px solid var(--annotation-border-color);
+            z-index: 11;
+            cursor: default;
+            transform: translate(-100%, -50%);
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            pointer-events: auto;
+        }
+        
+        .annotation-svg-overlay line {
+            stroke: var(--annotation-line-color);
+            stroke-width: 2;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+            stroke-linecap: round;
+        }
+        .annotation-svg-overlay line.visible-on-hover {
+            opacity: 0.7;
+        }
+        .annotation-svg-overlay circle {
+            fill: var(--annotation-point-color);
+            transition: all 0.1s ease;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .annotation-svg-overlay circle.visible-on-hover-circle {
+            r: 6;
+        }
+        
+        /* NEW: Styles for the vertical slider */
+        .controls-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 500px; /* Adjust height as needed */
+        }
+
+        #sliceSlider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 400px; /* This becomes the height of the vertical slider */
+            height: 8px; /* This becomes the width */
+            background: var(--slider-track-bg);
+            outline: none;
+            border-radius: 5px;
+            margin: 0;
+            transform-origin: center;
+            transform: rotate(-90deg); /* Rotate the slider to be vertical */
+        }
+        
+        #sliceSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--slider-thumb-bg);
+            cursor: ns-resize;
+        }
+
+        #sliceSlider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--slider-thumb-bg);
+            cursor: ns-resize;
+        }
+
+        #sliceNumberDisplay {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-weight: 500;
+            margin-top: 20px;
+        }
+        .back-button {
+            display: block;
+            width: 200px;
+            margin: 40px auto 0;
+            padding: 15px 25px;
+            background-color: var(--back-button-bg);
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover {
+            background-color: var(--back-button-hover-bg);
+        }
+    </style>
+</head>
+<body>
+    <div class="viewer-container">
+        <h1>HRCT Temporal Bone - Axial Section</h1>
+        
+        <div class="main-content">
+            <div class="image-wrapper">
+                <img id="temporalBoneSliceImage" src="" alt="HRCT Temporal Bone Axial Slice">
+                <svg class="annotation-svg-overlay" id="annotationSvgOverlay"></svg>
+                <div id="annotationOverlay"></div>
+            </div>
+            
+            <div class="controls-wrapper">
+                <input type="range" id="sliceSlider" min="1" max="131" value="1" orient="vertical">
+                <div id="sliceNumberDisplay">Slice: 1 / 131</div>
+            </div>
+        </div>
+
+        <a href="../index.html" class="back-button">Back to HRCT Temporal Bone Menu</a>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const imageCount = 131;
+        const imageExtension = '.jpg';
+        const imageFolderPath = './images/';
+        const annotationJsonPath = './annotations/';
+        
+        const ANATOMY_DATA_WIDTH = 850;
+        const ANATOMY_DATA_HEIGHT = 532;
+        const PADDING_TOP = 34;
+        const PADDING_LEFT = 400;
+        const IMAGE_FILE_WIDTH = 1250;
+        const IMAGE_FILE_HEIGHT = 600;
+        const LABEL_OFFSET_FROM_ANATOMY_EDGE = 20;
+        const LABEL_VERTICAL_SPACING = 10;
+        
+        // --- DOM Elements ---
+        const imageWrapper = document.querySelector('.image-wrapper');
+        const temporalBoneSliceImage = document.getElementById('temporalBoneSliceImage'); 
+        const sliceSlider = document.getElementById('sliceSlider');
+        const sliceNumberDisplay = document.getElementById('sliceNumberDisplay');
+        const annotationOverlay = document.getElementById('annotationOverlay');
+        const annotationSvgOverlay = document.getElementById('annotationSvgOverlay');
+
+        let allAnnotations = [];
+
+        async function loadAnnotations() {
+            // **FIXED**: Load one consolidated file instead of many.
+            try {
+                const response = await fetch(`${annotationJsonPath}all_annotations.json`);
+                const data = await response.json();
+                allAnnotations = data.markups.flatMap(markup => 
+                    markup.controlPoints?.map(cp => ({
+                        slice: Math.round(cp.position[2]),
+                        text: cp.label.split(/-\d+/)[0].trim(),
+                        pointX_mm: cp.position[0],
+                        pointY_mm: cp.position[1],
+                    })) ?? []
+                );
+                updateSlice();
+            } catch (e) {
+                console.error("Error loading consolidated annotations:", e);
+                alert("Could not load all_annotations.json. Please ensure the file is created correctly.");
+            }
+        }
+        
+        function updateSlice() {
+            // Invert slider value because it's rotated. Max value should be at the top.
+            const sliderValue = sliceSlider.max - parseInt(sliceSlider.value) + parseInt(sliceSlider.min);
+            temporalBoneSliceImage.src = `${imageFolderPath}${sliderValue}${imageExtension}`;
+            sliceNumberDisplay.textContent = `Slice: ${sliderValue} / ${imageCount}`;
+
+            annotationOverlay.innerHTML = '';
+            annotationSvgOverlay.innerHTML = '';
+
+            const checkOverlap = (testY, height, placedLabels) => {
+                const top1 = testY - height / 2;
+                const bottom1 = testY + height / 2;
+                for (const label of placedLabels) {
+                    if (top1 < (label.bottom + LABEL_VERTICAL_SPACING) && bottom1 > (label.top - LABEL_VERTICAL_SPACING)) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            temporalBoneSliceImage.onload = function() {
+                this.onload = null;
+
+                const imageDisplayWidth = this.offsetWidth;
+                const imageDisplayHeight = this.offsetHeight;
+
+                const scaleX = imageDisplayWidth / IMAGE_FILE_WIDTH;
+                const scaleY = imageDisplayHeight / IMAGE_FILE_HEIGHT;
+
+                const annotationsForCurrentSlice = allAnnotations
+                    .filter(ann => ann.slice === sliderValue)
+                    .sort((a, b) => a.pointY_mm - b.pointY_mm);
+
+                let placedLabels = [];
+
+                annotationsForCurrentSlice.forEach((annotation, index) => {
+                    const x_in_anatomy = annotation.pointX_mm;
+                    const y_in_anatomy = annotation.pointY_mm;
+                    const x_in_file = x_in_anatomy + PADDING_LEFT;
+                    const y_in_file = y_in_anatomy + PADDING_TOP;
+                    const pX_px_displayed = x_in_file * scaleX;
+                    const pY_px_displayed = y_in_file * scaleY;
+
+                    const labelDiv = document.createElement('div');
+                    labelDiv.className = 'annotation-label';
+                    labelDiv.textContent = annotation.text;
+                    annotationOverlay.appendChild(labelDiv);
+
+                    const labelHeight = labelDiv.offsetHeight;
+                    
+                    let bestY = pY_px_displayed;
+                    let foundFit = false;
+
+                    if (bestY - labelHeight / 2 >= 0 && bestY + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(bestY, labelHeight, placedLabels)) {
+                        foundFit = true;
+                    }
+                    if (!foundFit) {
+                        for (let offset = 10; offset < imageDisplayHeight / 2; offset += 5) {
+                            let tryUp = pY_px_displayed - offset;
+                            if (tryUp - labelHeight / 2 >= 0 && !checkOverlap(tryUp, labelHeight, placedLabels)) { bestY = tryUp; foundFit = true; break; }
+                            let tryDown = pY_px_displayed + offset;
+                            if (tryDown + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(tryDown, labelHeight, placedLabels)) { bestY = tryDown; foundFit = true; break; }
+                        }
+                    }
+                    if (!foundFit) {
+                        for (let scanY = (labelHeight / 2) + 5; scanY < imageDisplayHeight - (labelHeight / 2); scanY += 5) {
+                            if (!checkOverlap(scanY, labelHeight, placedLabels)) { bestY = scanY; break; }
+                        }
+                    }
+                    bestY = Math.max(bestY, labelHeight / 2);
+                    bestY = Math.min(bestY, imageDisplayHeight - labelHeight / 2);
+                    
+                    const anatomyEdgeX = PADDING_LEFT * scaleX;
+                    const labelTargetX_px = anatomyEdgeX - LABEL_OFFSET_FROM_ANATOMY_EDGE;
+                    const lineEndX = labelTargetX_px;
+
+                    labelDiv.style.left = `${labelTargetX_px}px`;
+                    labelDiv.style.top = `${bestY}px`;
+                    placedLabels.push({ top: bestY - labelHeight / 2, bottom: bestY + labelHeight / 2 });
+
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', pX_px_displayed);
+                    line.setAttribute('y1', pY_px_displayed);
+                    line.setAttribute('x2', lineEndX);
+                    line.setAttribute('y2', bestY);
+                    annotationSvgOverlay.appendChild(line);
+
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', pX_px_displayed);
+                    circle.setAttribute('cy', pY_px_displayed);
+                    circle.setAttribute('r', 4);
+                    annotationSvgOverlay.appendChild(circle);
+
+                    const activate = () => { line.classList.add('visible-on-hover'); circle.classList.add('visible-on-hover-circle'); };
+                    const deactivate = () => { line.classList.remove('visible-on-hover'); circle.classList.remove('visible-on-hover-circle'); };
+                    labelDiv.onmouseover = circle.onmouseover = activate;
+                    labelDiv.onmouseout = circle.onmouseout = deactivate;
+                });
+            };
+
+            if (temporalBoneSliceImage.complete) {
+                temporalBoneSliceImage.onload();
+            }
+        }
+        
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', loadAnnotations);
+        
+        sliceSlider.addEventListener('input', updateSlice);
+
+        // NEW: Mouse wheel event listener for scrolling
+        imageWrapper.addEventListener('wheel', (event) => {
+            event.preventDefault(); // Prevent the whole page from scrolling
+            
+            let currentValue = parseInt(sliceSlider.value);
+            // Scrolling down (deltaY > 0) should decrease the slider value (move up the anatomy)
+            if (event.deltaY > 0) {
+                currentValue = Math.max(parseInt(sliceSlider.min), currentValue - 1);
+            } else {
+                currentValue = Math.min(parseInt(sliceSlider.max), currentValue + 1);
+            }
+            sliceSlider.value = currentValue;
+            updateSlice();
+        });
+
+        window.addEventListener('resize', () => {
+            clearTimeout(window.resizeTimeout);
+            window.resizeTimeout = setTimeout(updateSlice, 100);
+        });
+    </script>
+</body>
+</html>
