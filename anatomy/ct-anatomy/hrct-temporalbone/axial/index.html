@@ -58,8 +58,7 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             padding: 20px;
             margin: 20px auto;
-            /* NEW: Wider max-width for two sidebars */
-            max-width: 1550px; 
+            max-width: 1300px;
             width: 95%;
             box-sizing: border-box;
             display: flex;
@@ -76,44 +75,30 @@
 
         .image-wrapper {
             position: relative;
-            /* NEW: Width to accommodate the image file + a right sidebar */
-            width: 1500px;
+            width: 1250px;
             max-width: 100%;
             background-color: #000;
             border-radius: 8px;
-            overflow: hidden;
             box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
-            height: auto;
-            /* NEW: Aspect ratio of the wider container */
-            padding-bottom: calc(600 / 1500 * 100%);
         }
 
         .image-wrapper img {
-            position: absolute;
-            top: 0;
-            left: 0;
-            /* Image is no longer 100% width of the wrapper */
-            width: 1250px;
-            height: 600px;
-            object-fit: contain;
             display: block;
+            width: 100%;
+            height: auto;
             user-select: none;
             -webkit-user-drag: none;
-            z-index: 8;
         }
 
-        .annotation-svg-overlay {
+        .annotation-svg-overlay, .annotation-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 9;
             pointer-events: none;
-            overflow: visible;
         }
-        
-        /* Default label style (left-aligned) */
+
         .annotation-label {
             position: absolute;
             background-color: var(--annotation-bg-color);
@@ -127,15 +112,17 @@
             border: 1px solid var(--annotation-border-color);
             z-index: 11;
             cursor: default;
-            transform: translate(0, -50%); /* For left-aligned text */
-            opacity: 1;
-            transition: opacity 0.3s ease;
             pointer-events: auto;
         }
         
-        /* Special class for labels on the left sidebar */
         .annotation-label.align-right {
-            transform: translate(-100%, -50%); /* For right-aligned text */
+             /* Aligns the label's right edge to its 'left' position */
+            transform: translate(-100%, -50%);
+        }
+
+        .annotation-label.align-left {
+            /* Aligns the label's left edge to its 'left' position */
+            transform: translate(0, -50%);
         }
         
         .annotation-svg-overlay line {
@@ -186,9 +173,6 @@
             font-size: 1.1rem;
             transition: background-color 0.3s ease;
         }
-        .back-button:hover {
-            background-color: var(--back-button-hover-bg);
-        }
     </style>
 </head>
 <body>
@@ -221,7 +205,6 @@
         const PADDING_LEFT = 400;
         const IMAGE_FILE_WIDTH = 1250;
         const IMAGE_FILE_HEIGHT = 600;
-        const RIGHT_SIDEBAR_WIDTH = 250; // Virtual space for right-side labels
         
         const LABEL_OFFSET_FROM_ANATOMY_EDGE = 20;
         const LABEL_VERTICAL_SPACING = 10;
@@ -274,109 +257,94 @@
                 return false;
             };
 
-            temporalBoneSliceImage.onload = function() {
-                this.onload = null;
+            const imageDisplayWidth = imageWrapper.offsetWidth;
+            const imageDisplayHeight = imageDisplayWidth * (IMAGE_FILE_HEIGHT / IMAGE_FILE_WIDTH);
+            
+            const annotationsForCurrentSlice = allAnnotations
+                .filter(ann => ann.slice === currentSlice)
+                .sort((a, b) => a.pointY_mm - b.pointY_mm);
 
-                const imageDisplayWidth = this.offsetWidth;
-                const imageDisplayHeight = this.offsetHeight;
+            let placedLabelsLeft = [];
+            let placedLabelsRight = [];
 
-                const scaleX = imageDisplayWidth / (IMAGE_FILE_WIDTH + RIGHT_SIDEBAR_WIDTH);
-                const scaleY = imageDisplayHeight / IMAGE_FILE_HEIGHT;
+            annotationsForCurrentSlice.forEach((annotation, index) => {
+                const x_in_anatomy = annotation.pointX_mm;
+                const y_in_anatomy = annotation.pointY_mm;
                 
-                // Adjust scale for the image tag itself if its container is wider
-                const imgTagScaleX = imageDisplayWidth / (IMAGE_FILE_WIDTH + RIGHT_SIDEBAR_WIDTH);
+                const pX_percentage = ((x_in_anatomy + PADDING_LEFT) / IMAGE_FILE_WIDTH) * 100;
+                const pY_percentage = ((y_in_anatomy + PADDING_TOP) / IMAGE_FILE_HEIGHT) * 100;
 
-                const annotationsForCurrentSlice = allAnnotations
-                    .filter(ann => ann.slice === currentSlice)
-                    .sort((a, b) => a.pointY_mm - b.pointY_mm);
+                const labelDiv = document.createElement('div');
+                labelDiv.className = 'annotation-label';
+                labelDiv.textContent = annotation.text;
+                annotationOverlay.appendChild(labelDiv);
 
-                let placedLabelsLeft = [];
-                let placedLabelsRight = [];
+                const labelHeight = labelDiv.offsetHeight;
 
-                annotationsForCurrentSlice.forEach((annotation, index) => {
-                    const x_in_anatomy = annotation.pointX_mm;
-                    const y_in_anatomy = annotation.pointY_mm;
-                    const x_in_file = x_in_anatomy + PADDING_LEFT;
-                    const y_in_file = y_in_anatomy + PADDING_TOP;
-                    
-                    const pX_px_displayed = x_in_file * imgTagScaleX;
-                    const pY_px_displayed = y_in_file * scaleY;
+                const pointIsOnLeftSideOfAnatomy = x_in_anatomy < (ANATOMY_DATA_WIDTH / 2);
+                const targetColumn = pointIsOnLeftSideOfAnatomy ? placedLabelsLeft : placedLabelsRight;
+                
+                let bestY = (pY_percentage / 100) * imageDisplayHeight;
+                let foundFit = false;
 
-                    const labelDiv = document.createElement('div');
-                    labelDiv.className = 'annotation-label';
-                    labelDiv.textContent = annotation.text;
-                    annotationOverlay.appendChild(labelDiv);
-
-                    const labelHeight = labelDiv.offsetHeight;
-                    const labelWidth = labelDiv.offsetWidth;
-
-                    const pointIsOnLeftSide = x_in_anatomy < (ANATOMY_DATA_WIDTH / 2);
-                    const targetColumn = pointIsOnLeftSide ? placedLabelsLeft : placedLabelsRight;
-                    
-                    let bestY = pY_px_displayed;
-                    let foundFit = false;
-
-                    // Stacking Logic
-                    if (bestY - labelHeight / 2 >= 0 && bestY + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(bestY, labelHeight, targetColumn)) {
-                        foundFit = true;
+                // Stacking Logic
+                if (bestY - labelHeight / 2 >= 0 && bestY + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(bestY, labelHeight, targetColumn)) {
+                    foundFit = true;
+                }
+                if (!foundFit) {
+                    for (let offset = 10; offset < imageDisplayHeight / 2; offset += 5) {
+                        let tryUp = bestY - offset;
+                        if (tryUp - labelHeight / 2 >= 0 && !checkOverlap(tryUp, labelHeight, targetColumn)) { bestY = tryUp; foundFit = true; break; }
+                        let tryDown = bestY + offset;
+                        if (tryDown + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(tryDown, labelHeight, targetColumn)) { bestY = tryDown; foundFit = true; break; }
                     }
-                    if (!foundFit) {
-                        for (let offset = 10; offset < imageDisplayHeight / 2; offset += 5) {
-                            let tryUp = pY_px_displayed - offset;
-                            if (tryUp - labelHeight / 2 >= 0 && !checkOverlap(tryUp, labelHeight, targetColumn)) { bestY = tryUp; foundFit = true; break; }
-                            let tryDown = pY_px_displayed + offset;
-                            if (tryDown + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(tryDown, labelHeight, targetColumn)) { bestY = tryDown; foundFit = true; break; }
-                        }
+                }
+                if (!foundFit) {
+                    for (let scanY = (labelHeight / 2) + 5; scanY < imageDisplayHeight - (labelHeight / 2); scanY += 5) {
+                        if (!checkOverlap(scanY, labelHeight, targetColumn)) { bestY = scanY; break; }
                     }
-                    if (!foundFit) {
-                        for (let scanY = (labelHeight / 2) + 5; scanY < imageDisplayHeight - (labelHeight / 2); scanY += 5) {
-                            if (!checkOverlap(scanY, labelHeight, targetColumn)) { bestY = scanY; break; }
-                        }
-                    }
-                    
-                    bestY = Math.max(bestY, labelHeight / 2);
-                    bestY = Math.min(bestY, imageDisplayHeight - labelHeight / 2);
-                    
-                    let labelTargetX_px, lineEndX;
+                }
+                bestY = Math.max(bestY, labelHeight / 2);
+                bestY = Math.min(bestY, imageDisplayHeight - labelHeight / 2);
 
-                    if (pointIsOnLeftSide) {
-                        labelDiv.classList.add('align-right');
-                        const anatomyEdgeX = PADDING_LEFT * imgTagScaleX;
-                        labelTargetX_px = anatomyEdgeX - LABEL_OFFSET_FROM_ANATOMY_EDGE;
-                        lineEndX = labelTargetX_px;
-                    } else {
-                        const anatomyEdgeX = (PADDING_LEFT + ANATOMY_DATA_WIDTH) * imgTagScaleX;
-                        labelTargetX_px = anatomyEdgeX + LABEL_OFFSET_FROM_ANATOMY_EDGE;
-                        lineEndX = labelTargetX_px;
-                    }
+                let labelTargetX_percentage, lineEndX_percentage;
 
-                    labelDiv.style.left = `${labelTargetX_px}px`;
-                    labelDiv.style.top = `${bestY}px`;
-                    targetColumn.push({ top: bestY - labelHeight / 2, bottom: bestY + labelHeight / 2 });
+                if (pointIsOnLeftSideOfAnatomy) {
+                    labelDiv.classList.add('align-right');
+                    const anatomyEdgeX_percentage = (PADDING_LEFT / IMAGE_FILE_WIDTH) * 100;
+                    const offset_percentage = (LABEL_OFFSET_FROM_ANATOMY_EDGE / IMAGE_FILE_WIDTH) * 100;
+                    labelTargetX_percentage = anatomyEdgeX_percentage - offset_percentage;
+                    lineEndX_percentage = labelTargetX_percentage;
+                } else {
+                    labelDiv.classList.add('align-left');
+                    const anatomyEdgeX_percentage = ((PADDING_LEFT + ANATOMY_DATA_WIDTH) / IMAGE_FILE_WIDTH) * 100;
+                    const offset_percentage = (LABEL_OFFSET_FROM_ANATOMY_EDGE / IMAGE_FILE_WIDTH) * 100;
+                    labelTargetX_percentage = anatomyEdgeX_percentage + offset_percentage;
+                    lineEndX_percentage = labelTargetX_percentage;
+                }
 
-                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    line.setAttribute('x1', pX_px_displayed);
-                    line.setAttribute('y1', pY_px_displayed);
-                    line.setAttribute('x2', lineEndX);
-                    line.setAttribute('y2', bestY);
-                    annotationSvgOverlay.appendChild(line);
+                labelDiv.style.left = `${labelTargetX_percentage}%`;
+                labelDiv.style.top = `${bestY}px`;
+                targetColumn.push({ top: bestY - labelHeight / 2, bottom: bestY + labelHeight / 2 });
 
-                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                    circle.setAttribute('cx', pX_px_displayed);
-                    circle.setAttribute('cy', pY_px_displayed);
-                    circle.setAttribute('r', 4);
-                    annotationSvgOverlay.appendChild(circle);
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', `${pX_percentage}%`);
+                line.setAttribute('y1', `${pY_percentage}%`);
+                line.setAttribute('x2', `${lineEndX_percentage}%`);
+                line.setAttribute('y2', `${bestY}px`);
+                annotationSvgOverlay.appendChild(line);
 
-                    const activate = () => { line.classList.add('visible-on-hover'); circle.classList.add('visible-on-hover-circle'); };
-                    const deactivate = () => { line.classList.remove('visible-on-hover'); circle.classList.remove('visible-on-hover-circle'); };
-                    labelDiv.onmouseover = circle.onmouseover = activate;
-                    labelDiv.onmouseout = circle.onmouseout = deactivate;
-                });
-            };
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', `${pX_percentage}%`);
+                circle.setAttribute('cy', `${pY_percentage}%`);
+                circle.setAttribute('r', 4);
+                annotationSvgOverlay.appendChild(circle);
 
-            if (temporalBoneSliceImage.complete) {
-                temporalBoneSliceImage.onload();
-            }
+                const activate = () => { line.classList.add('visible-on-hover'); circle.classList.add('visible-on-hover-circle'); };
+                const deactivate = () => { line.classList.remove('visible-on-hover'); circle.classList.remove('visible-on-hover-circle'); };
+                labelDiv.onmouseover = circle.onmouseover = activate;
+                labelDiv.onmouseout = circle.onmouseout = deactivate;
+            });
         }
         
         document.addEventListener('DOMContentLoaded', loadAnnotations);
@@ -392,10 +360,7 @@
             sliceSlider.value = currentValue;
             updateSlice();
         });
-        window.addEventListener('resize', () => {
-            clearTimeout(window.resizeTimeout);
-            window.resizeTimeout = setTimeout(updateSlice, 100);
-        });
+        window.addEventListener('resize', updateSlice);
     </script>
 </body>
 </html>
