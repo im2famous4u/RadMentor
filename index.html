@@ -44,6 +44,19 @@
         .sidebar {
             transition: transform 0.3s ease-in-out;
         }
+        .pricing-card {
+            transition: all 0.3s ease;
+        }
+        .pricing-card:hover {
+            transform: scale(1.05);
+            border-color: #3b82f6;
+        }
+        .feature-card {
+            transition: all 0.2s ease;
+        }
+        .feature-card:hover {
+             background-color: #f3f4f6;
+        }
     </style>
 </head>
 <body class="text-gray-800">
@@ -64,6 +77,7 @@
                 <nav class="hidden md:flex items-center space-x-8">
                     <a href="#courses" class="text-gray-600 hover:text-blue-600">Courses</a>
                     <a href="#features" class="text-gray-600 hover:text-blue-600">Features</a>
+                    <a href="#pricing" class="text-gray-600 hover:text-blue-600">Pricing</a>
                     <a href="#about" class="text-gray-600 hover:text-blue-600">About Us</a>
                 </nav>
                 <div class="flex items-center">
@@ -80,6 +94,7 @@
             <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
                 <a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a>
                 <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a>
+                <a href="#pricing" class="block py-2 text-gray-600 hover:text-blue-600">Pricing</a>
                 <a href="#about" class="block py-2 text-gray-600 hover:text-blue-600">About Us</a>
                 <button onclick="showAuthModal('signin')" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Login</button>
             </div>
@@ -144,42 +159,139 @@
             <section id="features" class="py-20 bg-white">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
-                        <h2 class="text-4xl font-bold text-gray-900">Why RadMentor?</h2>
-                        <p class="mt-4 text-lg text-gray-600">Everything you need to succeed, all in one place.</p>
+                        <h2 class="text-4xl font-bold text-gray-900">A Smarter Way to Learn</h2>
+                        <p class="mt-4 text-lg text-gray-600">Tools designed for deep understanding and long-term retention.</p>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
-                        <div class="p-6">
-                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg">
-                                <i data-feather="award" class="text-white"></i>
-                            </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="feature-card p-6 rounded-lg">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="award" class="text-white"></i></div>
                             <h3 class="mt-6 text-xl font-bold">Expert-Curated Content</h3>
                             <p class="mt-2 text-gray-600">All questions and explanations are created and verified by top radiologists.</p>
                         </div>
-                        <div class="p-6">
-                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg">
-                                <i data-feather="target" class="text-white"></i>
-                            </div>
+                        <div class="feature-card p-6 rounded-lg">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="target" class="text-white"></i></div>
                             <h3 class="mt-6 text-xl font-bold">Realistic Exam Simulation</h3>
                             <p class="mt-2 text-gray-600">Experience the real exam environment with our timed mock tests.</p>
                         </div>
-                        <div class="p-6">
-                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg">
-                                <i data-feather="bar-chart-2" class="text-white"></i>
+                        <div class="feature-card p-6 rounded-lg">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="bar-chart-2" class="text-white"></i></div>
+                            <h3 class="mt-6 text-xl font-bold">Deep Analytics</h3>
+                            <p class="mt-2 text-gray-600">Track your progress, identify weak areas, and compare with peers.</p>
+                        </div>
+                        <div class="feature-card p-6 rounded-lg">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="copy" class="text-white"></i></div>
+                            <h3 class="mt-6 text-xl font-bold">Digital Flashcards & SRS</h3>
+                            <p class="mt-2 text-gray-600">Master key concepts with our Spaced Repetition System for long-term memory.</p>
+                        </div>
+                        <div class="feature-card p-6 rounded-lg">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="edit" class="text-white"></i></div>
+                            <h3 class="mt-6 text-xl font-bold">Personal Notes</h3>
+                            <p class="mt-2 text-gray-600">Add your own notes to questions and review them anytime.</p>
+                        </div>
+                        <div class="feature-card p-6 rounded-lg">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="calendar" class="text-white"></i></div>
+                            <h3 class="mt-6 text-xl font-bold">Personalized Study Planner</h3>
+                            <p class="mt-2 text-gray-600">Get a custom study schedule based on your exam date and performance.</p>
+                        </div>
+                        <div class="feature-card p-6 rounded-lg">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="image" class="text-white"></i></div>
+                            <h3 class="mt-6 text-xl font-bold">Case of the Week</h3>
+                            <p class="mt-2 text-gray-600">Challenge yourself with interesting cases curated by our experts.</p>
+                        </div>
+                        <div class="feature-card p-6 rounded-lg">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="users" class="text-white"></i></div>
+                            <h3 class="mt-6 text-xl font-bold">Community Leaderboard</h3>
+                            <p class="mt-2 text-gray-600">See how you stack up against peers in a friendly, competitive environment.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pricing Section -->
+            <section id="pricing" class="py-20">
+                <div class="container mx-auto px-6">
+                    <div class="text-center mb-12">
+                        <h2 class="text-4xl font-bold text-gray-900">Flexible Plans for Every Need</h2>
+                        <p class="mt-4 text-lg text-gray-600">Choose the plan that’s right for your learning journey.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <!-- Free Plan -->
+                        <div class="pricing-card bg-white p-8 rounded-xl shadow-lg border-2 border-transparent w-full flex flex-col">
+                            <h3 class="text-2xl font-bold text-gray-800">Free</h3>
+                            <p class="mt-2 text-gray-600">Get a taste of our platform.</p>
+                            <div class="mt-6 text-4xl font-extrabold">
+                                $0
                             </div>
-                            <h3 class="mt-6 text-xl font-bold">Performance Analytics</h3>
-                            <p class="mt-2 text-gray-600">Track your progress, identify weak areas, and improve your scores.</p>
+                            <ul class="mt-8 space-y-4 text-left flex-grow">
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Limited MCQs</li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Case of the Week</li>
+                            </ul>
+                            <button onclick="showAuthModal('signup')" class="mt-8 w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-lg hover:bg-gray-300 transition-colors">
+                                Sign Up for Free
+                            </button>
+                        </div>
+                        <!-- Q-Bank Pass -->
+                        <div class="pricing-card bg-white p-8 rounded-xl shadow-lg border-2 border-transparent w-full flex flex-col">
+                            <h3 class="text-2xl font-bold text-gray-800">Q-Bank Pass</h3>
+                            <p class="mt-2 text-gray-600">For focused question practice.</p>
+                            <div class="mt-6 text-4xl font-extrabold">
+                                $29 <span class="text-lg font-medium text-gray-500">/mo</span>
+                            </div>
+                            <ul class="mt-8 space-y-4 text-left flex-grow">
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>All MCQ Banks</b></li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Basic Analytics</li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Personal Notes</li>
+                            </ul>
+                            <button onclick="alert('Payment integration coming soon!')" class="mt-8 w-full rad-gradient text-white font-bold py-3 rounded-lg hover:shadow-lg transition-shadow">
+                                Choose Plan
+                            </button>
+                        </div>
+                        <!-- Smart-Prep Pass -->
+                        <div class="pricing-card bg-white p-8 rounded-xl shadow-2xl border-2 border-blue-500 w-full relative flex flex-col">
+                            <div class="absolute top-0 -translate-y-1/2 bg-blue-500 text-white text-sm font-bold px-4 py-1 rounded-full">POPULAR</div>
+                            <h3 class="text-2xl font-bold text-gray-800">Smart-Prep Pass</h3>
+                            <p class="mt-2 text-blue-600">Learn smarter, not harder.</p>
+                            <div class="mt-6 text-4xl font-extrabold">
+                                $49 <span class="text-lg font-medium text-gray-500">/mo</span>
+                            </div>
+                            <ul class="mt-8 space-y-4 text-left flex-grow">
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Everything in Q-Bank</b></li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Flashcards & SRS</b></li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Deep Analytics</li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Leaderboard Access</li>
+                            </ul>
+                            <button onclick="alert('Payment integration coming soon!')" class="mt-8 w-full rad-gradient text-white font-bold py-3 rounded-lg hover:shadow-lg transition-shadow">
+                                Choose Plan
+                            </button>
+                        </div>
+                         <!-- All-Access Pass -->
+                        <div class="pricing-card bg-white p-8 rounded-xl shadow-lg border-2 border-transparent w-full flex flex-col">
+                            <h3 class="text-2xl font-bold text-gray-800">All-Access Pass</h3>
+                            <p class="mt-2 text-gray-600">The complete package.</p>
+                            <div class="mt-6 text-4xl font-extrabold">
+                                $69 <span class="text-lg font-medium text-gray-500">/mo</span>
+                            </div>
+                            <ul class="mt-8 space-y-4 text-left flex-grow">
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Everything in Smart-Prep</b></li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Full Mock Exams</b></li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i><b>Personalized Study Planner</b></li>
+                                <li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Priority Support</li>
+                            </ul>
+                            <button onclick="alert('Payment integration coming soon!')" class="mt-8 w-full rad-gradient text-white font-bold py-3 rounded-lg hover:shadow-lg transition-shadow">
+                                Choose Plan
+                            </button>
                         </div>
                     </div>
                 </div>
             </section>
 
             <!-- About Us Section -->
-            <section id="about" class="py-20">
+            <section id="about" class="py-20 bg-white">
                 <div class="container mx-auto px-6">
                      <div class="text-center mb-12">
                         <h2 class="text-4xl font-bold text-gray-900">Built by Doctors, for Doctors</h2>
                     </div>
-                    <div class="max-w-4xl mx-auto bg-white p-10 rounded-xl shadow-lg text-center">
+                    <div class="max-w-4xl mx-auto bg-gray-50 p-10 rounded-xl border border-gray-200 text-center">
                         <p class="text-lg text-gray-600">
                             We are two radiologists trained at one of India’s premier medical institutes, united by a shared vision: to make high-quality radiology education accessible, affordable, and reliable for all. Every question, explanation, and update is curated by us, backed by evidence, and rooted in real-world radiology practice.
                         </p>
@@ -202,6 +314,7 @@
                         <ul class="mt-2 space-y-2">
                             <li><a href="#courses" class="text-gray-400 hover:text-white">Courses</a></li>
                             <li><a href="#features" class="text-gray-400 hover:text-white">Features</a></li>
+                            <li><a href="#pricing" class="text-gray-400 hover:text-white">Pricing</a></li>
                             <li><a href="#" onclick="showAuthModal('signup')" class="text-gray-400 hover:text-white">Sign Up</a></li>
                         </ul>
                     </div>
@@ -324,6 +437,8 @@
             <nav class="space-y-2">
                 <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 bg-blue-100 font-semibold" onclick="showDashboardSection('main')"><i data-feather="home" class="mr-3 w-5 h-5"></i>Home</a>
                 <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('profile')"><i data-feather="user" class="mr-3 w-5 h-5"></i>Profile</a>
+                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('analytics')"><i data-feather="bar-chart-2" class="mr-3 w-5 h-5"></i>Analytics</a>
+                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('planner')"><i data-feather="calendar" class="mr-3 w-5 h-5"></i>Study Planner</a>
                 <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('subscription')"><i data-feather="credit-card" class="mr-3 w-5 h-5"></i>Subscription</a>
                 <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('settings')"><i data-feather="settings" class="mr-3 w-5 h-5"></i>Settings</a>
                 <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="logout()"><i data-feather="log-out" class="mr-3 w-5 h-5"></i>Logout</a>
@@ -342,39 +457,32 @@
 
                     <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="window.location.href='frcr/'">
-                            <h3 class="text-xl font-bold text-gray-800">FRCR</h3>
-                        </div>
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('MICR MCQs coming soon!')">
-                            <h3 class="text-xl font-bold text-gray-800">MICR</h3>
+                            <h3 class="text-xl font-bold text-gray-800">FRCR MCQs</h3>
                         </div>
                         <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="window.location.href='anatomy/'">
-                            <h3 class="text-xl font-bold text-gray-800">Anatomy</h3>
+                            <h3 class="text-xl font-bold text-gray-800">Anatomy MCQs</h3>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('MD / DNB MCQs coming soon!')">
-                            <h3 class="text-xl font-bold text-gray-800">MD / DNB</h3>
+                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Flashcards coming soon!')">
+                            <h3 class="text-xl font-bold text-gray-800">Flashcards (SRS)</h3>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Superspeciality MCQs coming soon!')">
-                            <h3 class="text-xl font-bold text-gray-800">Superspeciality</h3>
+                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Case of the Week coming soon!')">
+                            <h3 class="text-xl font-bold text-gray-800">Case of the Week</h3>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Fellowship Exams MCQs coming soon!')">
-                            <h3 class="text-xl font-bold text-gray-800">Fellowship Exams</h3>
+                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Leaderboard coming soon!')">
+                            <h3 class="text-xl font-bold text-gray-800">Leaderboard</h3>
+                        </div>
+                         <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Personal notes coming soon!')">
+                            <h3 class="text-xl font-bold text-gray-800">My Notes</h3>
                         </div>
                     </div>
                 </div>
 
                 <!-- Other Dashboard Sections (Profile, Settings, etc.) -->
-                <div id="profile-section" class="hidden bg-white p-8 rounded-lg shadow-md">
-                     <h2 class="text-2xl font-bold mb-6">Your Profile</h2>
-                     <!-- Profile content will be populated by JS -->
-                </div>
-                <div id="subscription-section" class="hidden bg-white p-8 rounded-lg shadow-md">
-                     <h2 class="text-2xl font-bold mb-6">Subscription</h2>
-                     <!-- Subscription content will be populated by JS -->
-                </div>
-                <div id="settings-section" class="hidden bg-white p-8 rounded-lg shadow-md">
-                     <h2 class="text-2xl font-bold mb-6">Settings</h2>
-                     <!-- Settings content will be populated by JS -->
-                </div>
+                <div id="profile-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
+                <div id="analytics-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
+                <div id="planner-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
+                <div id="subscription-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
+                <div id="settings-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
             </div>
         </div>
     </div>
@@ -422,4 +530,266 @@
         // --- Mobile Menu Toggle ---
         const mobileMenuButton = document.getElementById('mobile-menu-button');
         const mobileMenu = document.getElementById('mobile-menu');
-        mobileMenuButton.addEventListener('click', 
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // --- Auth Modal Logic ---
+        function showAuthModal(mode = 'signin') {
+            authMode = mode;
+            updateAuthModalUI();
+            authModal.classList.remove('hidden');
+        }
+
+        function hideAuthModal() {
+            authModal.classList.add('hidden');
+            authMessage.textContent = '';
+        }
+
+        function toggleAuth() {
+            authMode = authMode === 'signin' ? 'signup' : 'signin';
+            updateAuthModalUI();
+        }
+
+        function updateAuthModalUI() {
+            if (authMode === 'signin') {
+                authTitle.textContent = 'Login to RadMentor';
+                authSubtitle.textContent = 'Welcome back!';
+                authBtn.textContent = 'Sign In';
+                toggleBtn.textContent = "Don't have an account? Sign up";
+            } else {
+                authTitle.textContent = 'Create Your Account';
+                authSubtitle.textContent = 'Start your journey with us today.';
+                authBtn.textContent = 'Sign Up';
+                toggleBtn.textContent = 'Already have an account? Sign in';
+            }
+            authMessage.textContent = '';
+        }
+
+        // --- Authentication Logic ---
+        function handleAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            authMessage.textContent = '';
+
+            if (!email || !password) {
+                authMessage.textContent = "Please enter both email and password.";
+                return;
+            }
+
+            if (authMode === 'signin') {
+                auth.signInWithEmailAndPassword(email, password)
+                    .then(userCredential => {
+                        // The onAuthStateChanged listener will handle the redirect
+                        // after checking for email verification.
+                    })
+                    .catch(err => {
+                        authMessage.textContent = err.message;
+                    });
+            } else { // signup
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then(userCredential => {
+                        const user = userCredential.user;
+                        return user.sendEmailVerification().then(() => {
+                            auth.signOut();
+                            authMode = 'signin';
+                            updateAuthModalUI();
+                            authMessage.textContent = "Verification email sent! Please check your inbox and verify your email before signing in.";
+                            // Create a user profile document
+                            return db.collection('users').doc(user.uid).set({
+                                email: user.email,
+                                accessLevel: 'restricted', // All new users start with restricted access
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            });
+                        });
+                    })
+                    .catch(err => {
+                        authMessage.textContent = err.message;
+                    });
+            }
+        }
+
+        // --- Profile Logic ---
+        function submitProfile() {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const profileData = {
+                name: document.getElementById('name').value,
+                dob: document.getElementById('dob').value,
+                sex: document.getElementById('sex').value,
+                position: document.getElementById('position').value,
+                college: document.getElementById('college').value,
+                examPursuing: document.getElementById('exam_pursuing').value,
+            };
+
+            if (Object.values(profileData).some(val => !val)) {
+                alert("Please fill in all profile fields.");
+                return;
+            }
+
+            db.collection('users').doc(user.uid).update(profileData)
+                .then(() => {
+                    currentUserData = { ...currentUserData, ...profileData };
+                    profileFormContainer.classList.add('hidden');
+                    loadDashboard(currentUserData);
+                })
+                .catch(err => alert("Error saving profile: " + err.message));
+        }
+
+        // --- Main Application Flow & State Changes ---
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                if (!user.emailVerified) {
+                    auth.signOut(); // Force sign out if email is not verified
+                    showAuthModal('signin');
+                    authMessage.textContent = "Your email is not verified. Please check your inbox for a verification link before logging in.";
+                    return;
+                }
+                
+                // User is logged in and verified
+                db.collection('users').doc(user.uid).get().then(doc => {
+                    hideAuthModal();
+                    if (doc.exists) {
+                        currentUserData = doc.data();
+                        // Check if profile is complete
+                        if (currentUserData.name && currentUserData.dob) {
+                            loadDashboard(currentUserData);
+                        } else {
+                            // Show profile completion form
+                            landingPage.classList.add('hidden');
+                            dashboard.classList.add('hidden');
+                            profileFormContainer.classList.remove('hidden');
+                        }
+                    } else {
+                        // This case is unlikely if signup creates the doc, but as a fallback:
+                        landingPage.classList.add('hidden');
+                        dashboard.classList.add('hidden');
+                        profileFormContainer.classList.remove('hidden');
+                    }
+                });
+
+            } else {
+                // User is signed out
+                currentUserData = null;
+                landingPage.classList.remove('hidden');
+                dashboard.classList.add('hidden');
+                profileFormContainer.classList.add('hidden');
+                hideAuthModal();
+            }
+        });
+
+        function loadDashboard(userData) {
+            landingPage.classList.add('hidden');
+            dashboard.classList.remove('hidden');
+            document.getElementById('user-greeting-name').textContent = userData.name.split(' ')[0];
+            
+            // Display access level notice
+            const noticeDiv = document.getElementById('access-level-notice');
+            if(userData.accessLevel === 'restricted') {
+                noticeDiv.innerHTML = `<div class="mt-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-r-lg">
+                    <p class="font-bold">Restricted Access</p>
+                    <p>Some content is locked. <a href="#" onclick="showDashboardSection('subscription')" class="underline font-semibold">Upgrade to Premium</a> for full access.</p>
+                </div>`;
+            } else if (userData.accessLevel === 'premium') {
+                 noticeDiv.innerHTML = `<div class="mt-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded-r-lg">
+                    <p class="font-bold">Premium Access Granted</p>
+                    <p>You have access to all features. Happy learning!</p>
+                </div>`;
+            }
+            
+            // Initialize dashboard view
+            showDashboardSection('main');
+        }
+
+        function logout() {
+            if (confirm("Are you sure you want to log out?")) {
+                auth.signOut();
+            }
+        }
+        
+        // --- Dashboard Navigation & Sidebar ---
+        const sidebar = document.getElementById('sidebar');
+        document.getElementById('dashboard-menu-button').addEventListener('click', () => {
+            sidebar.classList.remove('translate-x-full');
+        });
+        document.getElementById('close-sidebar-button').addEventListener('click', () => {
+            sidebar.classList.add('translate-x-full');
+        });
+
+        function showDashboardSection(sectionId) {
+            // Hide all sections first
+            document.querySelectorAll('#dashboard-main-content, #profile-section, #analytics-section, #planner-section, #subscription-section, #settings-section').forEach(el => el.classList.add('hidden'));
+            
+            // Show the selected section
+            const elementToShow = document.getElementById(`${sectionId}-section`) || (sectionId === 'main' ? document.getElementById('dashboard-main-content') : null);
+            if(elementToShow) elementToShow.classList.remove('hidden');
+            
+            // Populate content when shown
+            if (sectionId === 'profile') populateProfileDetails();
+            if (sectionId === 'analytics') populateAnalyticsDetails();
+            if (sectionId === 'planner') populatePlannerDetails();
+            if (sectionId === 'subscription') populateSubscriptionDetails();
+            if (sectionId === 'settings') populateSettingsDetails();
+
+            // Hide sidebar after selection
+            sidebar.classList.add('translate-x-full');
+        }
+        
+        function populateProfileDetails() {
+            const section = document.getElementById('profile-section');
+            section.innerHTML = `
+                <h2 class="text-2xl font-bold mb-6">Your Profile</h2>
+                <div class="space-y-4">
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Name:</strong> ${currentUserData.name}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Email:</strong> ${currentUserData.email}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Date of Birth:</strong> ${currentUserData.dob}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Position:</strong> ${currentUserData.position}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>College:</strong> ${currentUserData.college}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Exam Pursuing:</strong> ${currentUserData.examPursuing}</div>
+                </div>
+            `;
+        }
+        
+        function populateAnalyticsDetails() {
+            const section = document.getElementById('analytics-section');
+            section.innerHTML = `<h2 class="text-2xl font-bold mb-6">Performance Analytics</h2><p class="text-gray-600">Your deep analytics dashboard is coming soon!</p>`;
+        }
+
+        function populatePlannerDetails() {
+            const section = document.getElementById('planner-section');
+            section.innerHTML = `<h2 class="text-2xl font-bold mb-6">Study Planner</h2><p class="text-gray-600">Your personalized study planner is coming soon!</p>`;
+        }
+
+        function populateSubscriptionDetails() {
+             const section = document.getElementById('subscription-section');
+             section.innerHTML = `
+                <h2 class="text-2xl font-bold mb-6">Subscription</h2>
+                <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                    <p class="text-lg">Your current plan: <span class="font-bold text-blue-600">${currentUserData.accessLevel.charAt(0).toUpperCase() + currentUserData.accessLevel.slice(1)}</span></p>
+                    ${currentUserData.accessLevel === 'restricted' ? '<p class="mt-4">Upgrade to our Premium plan to unlock all question banks, full mock exams, and in-depth video lectures.</p><button onclick="alert(\'Payment integration coming soon!\')" class="mt-6 rad-gradient text-white font-bold py-3 px-6 rounded-lg hover:shadow-lg transition-shadow">Upgrade to Premium</button>' : '<p class="mt-4">You have full access to all our learning materials. Thank you for being a premium member!</p>'}
+                </div>
+             `;
+        }
+        
+        function populateSettingsDetails() {
+            const section = document.getElementById('settings-section');
+             section.innerHTML = `
+                <h2 class="text-2xl font-bold mb-6">Settings</h2>
+                <p class="text-gray-600">Settings page is under construction.</p>
+             `;
+        }
+
+        // Populate datalist for colleges (from your original file)
+        const collegeDatalist = document.getElementById('colleges');
+        const colleges = ["All India Institute of Medical Sciences, New Delhi", "Postgraduate Institute of Medical Education and Research, Chandigarh", "Christian Medical College, Vellore", "And many more..."]; // Add all colleges here
+        colleges.forEach(college => {
+            const option = document.createElement('option');
+            option.value = college;
+            collegeDatalist.appendChild(option);
+        });
+
+    </script>
+
+</body>
+</ht
