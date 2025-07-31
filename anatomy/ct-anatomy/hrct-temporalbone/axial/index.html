@@ -122,7 +122,8 @@
             border: 1px solid var(--annotation-border-color);
             z-index: 11;
             cursor: default;
-            transform: translate(-50%, -50%);
+            /* Now aligning to the right edge via transform */
+            transform: translate(-100%, -50%);
             opacity: 1;
             transition: opacity 0.3s ease;
             pointer-events: auto;
@@ -228,17 +229,17 @@
         const ANATOMY_DATA_HEIGHT = 532;
 
         const PADDING_TOP = 34;
-        // **FIXED**: Using your specified left padding of 400px.
         const PADDING_LEFT = 400;
 
         const IMAGE_FILE_WIDTH = 1250;
         const IMAGE_FILE_HEIGHT = 600;
 
+        const LABEL_OFFSET_FROM_ANATOMY_EDGE = 20;
         const LABEL_VERTICAL_SPACING = 10;
 
         // --- JSON FILENAMES ---
         const jsonFilenames = [
-            "Aditus.mrk.json", "Ampulla of Superior SCC.mrk.json", "Ampulla of Superior SCC.mrk.json", "Arcuate eminence.mrk.json", "Axis.mrk.json", "Base of Cochlea.mrk.json", "Body of Incus.mrk.json", "Chorda tympani nerve.mrk.json", "Cochlear aqueduct.mrk.json", "Condylar Process.mrk.json", "Cupula of Cochlea.mrk.json", "Epitympanum.mrk.json", "Eustachian tube.mrk.json", "External Auditory canal.mrk.json", "Foramen Lacerum.mrk.json", "Foramen Ovale.mrk.json", "Foramen Spinosum.mrk.json", "Greater Petrosal Nerve.mrk.json", "Handle of Malleus.mrk.json", "Head of Malleus.mrk.json", "Hypoglossal Canal.mrk.json", "Hypotympanum.mrk.json", "Internal Acoustic Meatus.mrk.json", "Internal Carotid Canal.mrk.json", "Internal Genu.mrk.json", "Jugular fossa.mrk.json", "Labyrinthine part of 7th CN.mrk.json", "Lateral SCC.mrk.json", "Lenticular Process.mrk.json", "Long of process of Incus.mrk.json", "Mastoid Air cells.mrk.json", "Mastoid Process.mrk.json", "Mastoid part of 7th CN.mrk.json", "Mesotympanum.mrk.json", "Modiolous of Cochlea.mrk.json", "Neck of Malleus.mrk.json", "Occipital Bone.mrk.json", "Occipitomastoid suture.mrk.json", "Odontoid Process.mrk.json", "Oval Window.mrk.json", "Petromastoid canal.mrk.json", "Pinna.mrk.json", "Posterior Condylar Canal.mrk.json", "Posterior SCC.mrk.json", "Ramus of Mandible.mrk.json", "Round Window.mrk.json", "Sigmoid sinus.mrk.json", "Sphenoid Bone.mrk.json", "Sphenosquamous suture.mrk.json", "Squamous part of the Temporal bone.mrk.json", "Stapes foot plate.mrk.json", "Styloid Process.mrk.json", "Stylomastoid foramen.mrk.json", "Superior SCC.mrk.json", "TMJ.mrk.json", "Tegmen.mrk.json", "Tympanic Membrane.mrk.json", "Tympanic part of 7th CN.mrk.json", "Vestibular Aqueduct.mrk.json", "Vestibule.mrk.json", "Zygomatic bone.mrk.json"
+            "Aditus.mrk.json", "Ampulla of Superior SCC.mrk.json", "Arcuate eminence.mrk.json", "Axis.mrk.json", "Base of Cochlea.mrk.json", "Body of Incus.mrk.json", "Chorda tympani nerve.mrk.json", "Cochlear aqueduct.mrk.json", "Condylar Process.mrk.json", "Cupula of Cochlea.mrk.json", "Epitympanum.mrk.json", "Eustachian tube.mrk.json", "External Auditory canal.mrk.json", "Foramen Lacerum.mrk.json", "Foramen Ovale.mrk.json", "Foramen Spinosum.mrk.json", "Greater Petrosal Nerve.mrk.json", "Handle of Malleus.mrk.json", "Head of Malleus.mrk.json", "Hypoglossal Canal.mrk.json", "Hypotympanum.mrk.json", "Internal Acoustic Meatus.mrk.json", "Internal Carotid Canal.mrk.json", "Internal Genu.mrk.json", "Jugular fossa.mrk.json", "Labyrinthine part of 7th CN.mrk.json", "Lateral SCC.mrk.json", "Lenticular Process.mrk.json", "Long of process of Incus.mrk.json", "Mastoid Air cells.mrk.json", "Mastoid Process.mrk.json", "Mastoid part of 7th CN.mrk.json", "Mesotympanum.mrk.json", "Modiolous of Cochlea.mrk.json", "Neck of Malleus.mrk.json", "Occipital Bone.mrk.json", "Occipitomastoid suture.mrk.json", "Odontoid Process.mrk.json", "Oval Window.mrk.json", "Petromastoid canal.mrk.json", "Pinna.mrk.json", "Posterior Condylar Canal.mrk.json", "Posterior SCC.mrk.json", "Ramus of Mandible.mrk.json", "Round Window.mrk.json", "Sigmoid sinus.mrk.json", "Sphenoid Bone.mrk.json", "Sphenosquamous suture.mrk.json", "Squamous part of the Temporal bone.mrk.json", "Stapes foot plate.mrk.json", "Styloid Process.mrk.json", "Stylomastoid foramen.mrk.json", "Superior SCC.mrk.json", "TMJ.mrk.json", "Tegmen.mrk.json", "Tympanic Membrane.mrk.json", "Tympanic part of 7th CN.mrk.json", "Vestibular Aqueduct.mrk.json", "Vestibule.mrk.json", "Zygomatic bone.mrk.json"
         ];
         // --- END CONFIGURATION ---
 
@@ -319,8 +320,7 @@
                     annotationOverlay.appendChild(labelDiv);
 
                     const labelHeight = labelDiv.offsetHeight;
-                    const labelWidth = labelDiv.offsetWidth;
-
+                    
                     let bestY = pY_px_displayed;
                     let foundFit = false;
 
@@ -342,10 +342,11 @@
                     }
                     bestY = Math.max(bestY, labelHeight / 2);
                     bestY = Math.min(bestY, imageDisplayHeight - labelHeight / 2);
-
-                    // **FIXED**: Center the label within the 400px left sidebar.
-                    const labelTargetX_px = (PADDING_LEFT / 2) * scaleX;
-                    const lineEndX = PADDING_LEFT * scaleX;
+                    
+                    // **FIXED**: Right-align the label and the line endpoint.
+                    const anatomyEdgeX = PADDING_LEFT * scaleX;
+                    const labelTargetX_px = anatomyEdgeX - LABEL_OFFSET_FROM_ANATOMY_EDGE;
+                    const lineEndX = labelTargetX_px; // Line now goes all the way to the label's edge.
 
                     labelDiv.style.left = `${labelTargetX_px}px`;
                     labelDiv.style.top = `${bestY}px`;
