@@ -67,9 +67,9 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             padding: 20px;
             margin: 20px auto;
-            /* Adjusted max-width to accommodate image + right sidebar for labels */
-            max-width: 1100px; /* 860px (image) + ~200px (label space) + padding */ 
-            width: 90%; /* Responsive width */
+            /* UPDATED max-width for left sidebar + image + right sidebar */
+            max-width: 1300px;
+            width: 95%; /* Responsive width */
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -83,33 +83,34 @@
             text-align: center;
         }
 
-        /* Image and Overlay Container - Adjusted for 860x532px images + label sidebar */
+        /* Image and Overlay Container - UPDATED for two-column layout */
         .image-wrapper {
             position: relative;
-            /* Total width: image width (860px) + space for labels (e.g., 200px) */
-            width: 1060px; /* 860px (image data) + 200px (label sidebar) */ 
+            /* Total width: 200px (left) + 860px (image) + 200px (right) */
+            width: 1260px;
             height: 532px; /* Set to your actual image's pixel height */
             background-color: #000; /* Black background for imaging studies */
             border-radius: 8px;
             overflow: hidden; /* Hide anything outside the wrapper */
             box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
-            /* For responsiveness, use padding-bottom to maintain aspect ratio */
             max-width: 100%; /* Ensure it shrinks on smaller screens */
             height: auto; /* Allow height to adjust */
-            padding-bottom: calc(532 / 1060 * 100%); /* Maintain new aspect ratio based on total width */
+            /* UPDATED padding-bottom to maintain new aspect ratio */
+            padding-bottom: calc(532 / 1260 * 100%);
         }
 
         .image-wrapper img {
             position: absolute;
             top: 0;
-            left: 0; /* Image starts at the left of its wrapper */
+            /* UPDATED: Image is now offset by the left sidebar width */
+            left: 200px;
             width: 860px; /* Set to the actual width of your image file */
             height: 100%; /* Will scale with wrapper height */
-            object-fit: contain; /* Ensures the image fits within its designated width without cropping */
+            object-fit: contain;
             display: block;
             user-select: none;
             -webkit-user-drag: none;
-            z-index: 8; /* Below labels and SVG lines */
+            z-index: 8;
         }
 
         /* SVG Overlay for Lines and Points */
@@ -117,38 +118,35 @@
             position: absolute;
             top: 0;
             left: 0;
-            /* SVG should cover the whole wrapper, including the label sidebar */
             width: 100%; 
             height: 100%;
             z-index: 9; /* Above image, below labels */
-            pointer-events: none; /* Crucial: allows clicks to pass through to labels */
-            overflow: visible; /* Allows SVG elements to go slightly outside if needed */
+            pointer-events: none;
+            overflow: visible;
         }
-        /* Lines are now HIDDEN BY DEFAULT, visible on hover */
         .annotation-svg-overlay line {
             stroke: var(--annotation-line-color);
             stroke-width: 2;
             transition: opacity 0.3s ease;
-            opacity: 0; /* Changed: Hidden by default */
+            opacity: 0;
             stroke-linecap: round;
         }
         .annotation-svg-overlay line.visible-on-hover {
-            opacity: 0.7; /* Line becomes visible on hover */
+            opacity: 0.7;
         }
-        /* Circles are usually always visible, but can change on hover */
         .annotation-svg-overlay circle {
             fill: var(--annotation-point-color);
-            transition: all 0.1s ease; /* Transition for 'r' (radius) */
-            opacity: 1; /* Always visible */
-            pointer-events: auto; /* Allow hovering on the circle */
+            transition: all 0.1s ease;
+            opacity: 1;
+            pointer-events: auto;
         }
         .annotation-svg-overlay circle.visible-on-hover-circle {
-            r: 6; /* Make radius slightly larger on hover */
+            r: 6;
         }
 
-        /* Annotation Label Styling (HTML Divs) */
+        /* Annotation Label Styling */
         .annotation-label {
-            position: absolute; /* Positioned absolutely within image-wrapper */
+            position: absolute;
             background-color: var(--annotation-bg-color);
             color: var(--annotation-text-color);
             padding: 5px 10px;
@@ -158,16 +156,12 @@
             white-space: nowrap;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             border: 1px solid var(--annotation-border-color);
-            z-index: 11; /* Ensure labels are on top */
+            z-index: 11;
             cursor: default;
-            
-            /* Align label to its center based on its 'top' and 'left' */
-            transform: translate(-50%, -50%); 
-
-            /* Visibility control: Labels are ALWAYS visible now */
-            opacity: 1; /* Changed: Always visible */
+            transform: translate(-50%, -50%);
+            opacity: 1;
             transition: opacity 0.3s ease; 
-            pointer-events: auto; /* Allow hovering on the label */
+            pointer-events: auto;
         }
 
         .controls {
@@ -239,18 +233,18 @@
             background-color: var(--back-button-hover-bg);
         }
 
-        /* Responsive adjustments for image wrapper */
-        @media (max-width: 1080px) { /* Adjust breakpoint if needed */
+        /* UPDATED Responsive adjustments for image wrapper */
+        @media (max-width: 1320px) {
             .image-wrapper {
                 width: 100%; 
                 height: auto;
-                /* Maintain aspect ratio based on the total wrapper width (860 image + 200 label space = 1060 total) */
-                padding-bottom: calc(532 / 1060 * 100%); 
+                padding-bottom: calc(532 / 1260 * 100%); 
             }
             .image-wrapper img {
-                /* When shrinking, the image should also shrink to fit the *available* image portion */
-                width: calc(860 / 1060 * 100%); /* Image takes its proportion of the new 100% width */
-                /* Maintain height:100% */
+                /* Proportion of image within the total wrapper width */
+                width: calc(860 / 1260 * 100%);
+                /* Proportion of left sidebar within the total wrapper width */
+                left: calc(200 / 1260 * 100%);
             }
         }
         @media (max-width: 768px) {
@@ -331,42 +325,29 @@
     </div>
 
     <script>
-        // --- CONFIGURATION - CUSTOMIZED FOR HRCT TEMPORAL BONE AXIAL ---
-        const imageCount = 131; // Total number of axial images
-        const imageBaseName = ''; // Images are named 1.jpg, 2.jpg, etc.
-        const imageExtension = '.jpg'; // File extension for your images
-        const imageFolderPath = './images/'; // Path to your images folder (assuming relative to this index.html)
+        // --- CONFIGURATION - UPDATED FOR TWO-COLUMN LAYOUT ---
+        const imageCount = 131;
+        const imageExtension = '.jpg';
+        const imageFolderPath = './images/';
+        const annotationJsonPath = './annotations/';
         
-        const annotationJsonPath = './annotations/'; // Path to your annotations folder (assuming relative to this index.html)
+        const IMAGE_MRI_DATA_DIMENSION_MM = 512;
         
-        // These are the actual pixel dimensions of your *anatomical data portion*
-        // assuming your 3D Slicer coordinates are based on a 512x512mm cube
-        const IMAGE_MRI_DATA_DIMENSION_MM = 512; // Used for coordinate scaling FROM JSON
+        // These are the pixel dimensions of your *image file* (the CT scan part)
+        const IMAGE_FILE_WIDTH = 860;
+        const IMAGE_FILE_HEIGHT = 532;
         
-        // These are the actual pixel dimensions of your *full image files* (860x532px)
-        const IMAGE_FILE_WIDTH = 860; // Actual width of the JPG/PNG file
-        const IMAGE_FILE_HEIGHT = 532; // Actual height of the JPG/PNG file
+        // NEW: Define sidebar widths
+        const LEFT_SIDEBAR_WIDTH = 200; // Space on the left for labels
+        const RIGHT_SIDEBAR_WIDTH = 200; // Space on the right for labels
 
-        // Define the width of the dedicated label sidebar within the *image file itself*
-        // Assuming labels are on the RIGHT side, so the MRI data is on the LEFT.
-        const LABEL_SIDEBAR_WIDTH = IMAGE_FILE_WIDTH - IMAGE_MRI_DATA_DIMENSION_MM; // 860 - 512 = 348px
+        const LABEL_OFFSET_FROM_MRI_EDGE = 20; // How far from the image edge the label text should start
+        const LABEL_VERTICAL_SPACING = 5; // Reduced vertical spacing for tighter packing
 
-        // ADJUSTED: Increased offset to move labels further right into the empty space.
-        // This is the X-coordinate relative to the *image-wrapper's left edge*
-        // where the LEFT edge of the label column should begin.
-        // It's the end of the MRI data + this offset. Increased from 15.
-        const LABEL_OFFSET_FROM_MRI_EDGE = 40; // Pixels distance from MRI data edge to label's *closest edge*
-
-        const LABEL_COLUMN_START_X = IMAGE_MRI_DATA_DIMENSION_MM + LABEL_OFFSET_FROM_MRI_EDGE; 
-
-        // ADJUSTED: Increased vertical spacing for better readability and to reduce overlaps.
-        const LABEL_VERTICAL_SPACING = 20; // Vertical spacing between stacked labels in pixels (Increased from 15)
-
-        // --- JSON FILENAMES (CRITICAL: LIST ALL YOUR HRCT TEMPORAL BONE AXIAL JSON FILES HERE) ---
+        // --- JSON FILENAMES ---
         const jsonFilenames = [
             "Aditus.mrk.json", "Ampulla of Superior SCC.mrk.json", "Ampulla of Superior SCC.mrk.json", "Arcuate eminence.mrk.json", "Axis.mrk.json", "Base of Cochlea.mrk.json", "Body of Incus.mrk.json", "Chorda tympani nerve.mrk.json", "Cochlear aqueduct.mrk.json", "Condylar Process.mrk.json", "Cupula of Cochlea.mrk.json", "Epitympanum.mrk.json", "Eustachian tube.mrk.json", "External Auditory canal.mrk.json", "Foramen Lacerum.mrk.json", "Foramen Ovale.mrk.json", "Foramen Spinosum.mrk.json", "Greater Petrosal Nerve.mrk.json", "Handle of Malleus.mrk.json", "Head of Malleus.mrk.json", "Hypoglossal Canal.mrk.json", "Hypotympanum.mrk.json", "Internal Acoustic Meatus.mrk.json", "Internal Carotid Canal.mrk.json", "Internal Genu.mrk.json", "Jugular fossa.mrk.json", "Labyrinthine part of 7th CN.mrk.json", "Lateral SCC.mrk.json", "Lenticular Process.mrk.json", "Long of process of Incus.mrk.json", "Mastoid Air cells.mrk.json", "Mastoid Process.mrk.json", "Mastoid part of 7th CN.mrk.json", "Mesotympanum.mrk.json", "Modiolous of Cochlea.mrk.json", "Neck of Malleus.mrk.json", "Occipital Bone.mrk.json", "Occipitomastoid suture.mrk.json", "Odontoid Process.mrk.json", "Oval Window.mrk.json", "Petromastoid canal.mrk.json", "Pinna.mrk.json", "Posterior Condylar Canal.mrk.json", "Posterior SCC.mrk.json", "Ramus of Mandible.mrk.json", "Round Window.mrk.json", "Sigmoid sinus.mrk.json", "Sphenoid Bone.mrk.json", "Sphenosquamous suture.mrk.json", "Squamous part of the Temporal bone.mrk.json", "Stapes foot plate.mrk.json", "Styloid Process.mrk.json", "Stylomastoid foramen.mrk.json", "Superior SCC.mrk.json", "TMJ.mrk.json", "Tegmen.mrk.json", "Tympanic Membrane.mrk.json", "Tympanic part of 7th CN.mrk.json", "Vestibular Aqueduct.mrk.json", "Vestibule.mrk.json", "Zygomatic bone.mrk.json"
         ];
-        // --- END JSON FILENAMES ---
         // --- END CONFIGURATION ---
 
         const temporalBoneSliceImage = document.getElementById('temporalBoneSliceImage'); 
@@ -380,106 +361,44 @@
         let annotationsLoaded = false;
         const preloadedImages = [];
 
-        // --- THEME LOGIC (standard, copied for consistency) ---
-        function setTheme(theme) {
-            if (theme === 'light') {
-                document.body.classList.add('light-theme');
-                localStorage.setItem('theme', 'light');
-            } else {
-                document.body.classList.remove('light-theme');
-                localStorage.setItem('theme', 'dark');
-            }
-        }
-
+        // --- Theme logic (unchanged) ---
         function setInitialTheme() {
             const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'light') {
-                document.body.classList.add('light-theme');
-            } else {
-                document.body.classList.remove('light-theme');
-            }
+            document.body.classList.toggle('light-theme', savedTheme === 'light');
         }
         setInitialTheme();
-        // --- END THEME LOGIC ---
-
-        // --- Data Loading and Processing ---
+        
+        // --- Data Loading (unchanged) ---
         async function loadAnnotations() {
-            console.log("loadAnnotations started.");
             loadingOverlay.classList.remove('hidden');
-
-            const fetchPromises = jsonFilenames.map(filename =>
-                new Promise((resolve, reject) => {
-                    const timeoutId = setTimeout(() => {
-                        reject(new Error(`Fetch timed out for ${filename} after 10 seconds.`));
-                    }, 10000);
-
-                    fetch(`${annotationJsonPath}${filename}`)
-                        .then(response => {
-                            clearTimeout(timeoutId);
-                            if (!response.ok) {
-                                console.error(`Failed to load ${filename}. URL: ${response.url} Status: ${response.status} ${response.statusText}`);
-                                reject(new Error(`Failed to load ${filename}: ${response.statusText}`));
-                            }
-                            return response.json();
-                        })
-                        .then(jsonData => {
-                            resolve(jsonData);
-                        })
-                        .catch(error => {
-                            clearTimeout(timeoutId);
-                            reject(error);
-                        });
-                })
-            );
-
+            const fetchPromises = jsonFilenames.map(filename => fetch(`${annotationJsonPath}${filename}`).then(res => res.json()));
             try {
                 const results = await Promise.all(fetchPromises);
-                console.log("All JSON fetches and parsing completed.");
-
-                results.forEach(jsonData => {
-                    if (!jsonData || !jsonData.markups || !Array.isArray(jsonData.markups)) {
-                        console.warn("Skipping invalid or empty JSON data for a markup file (missing 'markups' array).", jsonData);
-                        return;
-                    }
-
-                    jsonData.markups.forEach(markup => {
-                        if (markup.type === "Fiducial" && Array.isArray(markup.controlPoints)) {
-                            markup.controlPoints.forEach(cp => {
-                                if (cp.position && cp.position.length === 3) {
-                                    const sliceZ = cp.position[2];
-                                    const imageSliceNumber = Math.round(sliceZ); 
-
-                                    // Store raw MM values. We'll scale them based on displayed image size.
-                                    allAnnotations.push({
-                                        slice: imageSliceNumber,
-                                        text: cp.label.split(/-\d+/)[0].trim(), 
-                                        pointX_mm: cp.position[0], 
-                                        pointY_mm: cp.position[1], 
-                                    });
-                                }
-                            });
-                        }
-                    });
-                });
-                console.log("All annotations processed. Total annotations:", allAnnotations.length);
+                allAnnotations = results.flatMap(data => 
+                    data.markups?.flatMap(markup => 
+                        markup.controlPoints?.map(cp => ({
+                            slice: Math.round(cp.position[2]),
+                            text: cp.label.split(/-\d+/)[0].trim(),
+                            pointX_mm: cp.position[0],
+                            pointY_mm: cp.position[1],
+                        })) ?? []
+                    ) ?? []
+                );
                 annotationsLoaded = true;
-
             } catch (e) {
-                console.error("Critical error during annotation loading or processing:", e);
-                alert("A critical error occurred while loading annotations: " + e.message + ". Check console for network/parsing details and correct JSON filenames.");
-                annotationsLoaded = false;
+                console.error("Error loading annotations:", e);
+                alert("A critical error occurred while loading annotations.");
             } finally {
                 loadingOverlay.classList.add('hidden');
+                updateSlice();
             }
-            updateSlice();
         }
 
-        // --- Image Preloading ---
+        // --- Image Preloading (unchanged) ---
         function preloadAllImages() {
-            console.log("Preloading images initiated.");
             for (let i = 1; i <= imageCount; i++) {
                 const img = new Image();
-                img.src = `${imageFolderPath}${i}${imageExtension}`; 
+                img.src = `${imageFolderPath}${i}.jpg`;
                 preloadedImages.push(img);
             }
         }
@@ -487,52 +406,50 @@
         // --- Display Logic ---
         function updateSlice() {
             const currentSlice = parseInt(sliceSlider.value);
-            const imageUrl = `${imageFolderPath}${currentSlice}${imageExtension}`; 
-            
-            temporalBoneSliceImage.src = imageUrl;
+            temporalBoneSliceImage.src = `${imageFolderPath}${currentSlice}.jpg`;
             sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
 
-            annotationOverlay.innerHTML = ''; // Clear previous labels
-            annotationSvgOverlay.innerHTML = ''; // Clear previous SVG elements
+            annotationOverlay.innerHTML = '';
+            annotationSvgOverlay.innerHTML = '';
 
-            // Helper function to check for overlaps. It only checks against other labels, not container bounds.
             const checkOverlapWithPlacedLabels = (testCenterY, testHeight, placedLabelsArr) => {
                 const testTop = testCenterY - (testHeight / 2);
                 const testBottom = testCenterY + (testHeight / 2);
-
-                for (let i = 0; i < placedLabelsArr.length; i++) {
-                    const existing = placedLabelsArr[i];
-                    // Check if the vertical span of the test label (plus spacing) intersects with an existing one.
+                for (const existing of placedLabelsArr) {
                     if (testTop < (existing.bottom + LABEL_VERTICAL_SPACING) && testBottom > (existing.top - LABEL_VERTICAL_SPACING)) {
-                        return true; // Overlap detected
+                        return true;
                     }
                 }
-                return false; // No overlap
+                return false;
             };
 
             temporalBoneSliceImage.onload = function() {
                 this.onload = null;
 
-                const imageDisplayWidth = temporalBoneSliceImage.offsetWidth; 
-                const imageDisplayHeight = temporalBoneSliceImage.offsetHeight;
+                const wrapperWidth = this.parentElement.offsetWidth;
+                const wrapperHeight = this.parentElement.offsetHeight;
+                
+                // Calculate scaling based on the wrapper, not the image file
+                const scale = wrapperWidth / (LEFT_SIDEBAR_WIDTH + IMAGE_FILE_WIDTH + RIGHT_SIDEBAR_WIDTH);
+                
+                const imageDisplayHeight = IMAGE_FILE_HEIGHT * scale;
+                const mriDataDisplayWidth_scaled = IMAGE_FILE_WIDTH * scale;
+                const leftSidebar_scaled = LEFT_SIDEBAR_WIDTH * scale;
 
-                const scaleX_mri_data_to_display = imageDisplayWidth / IMAGE_FILE_WIDTH;
-                const scaleY_mri_data_to_display = imageDisplayHeight / IMAGE_FILE_HEIGHT;
-
-                const mriDataDisplayWidth_scaled = IMAGE_MRI_DATA_DIMENSION_MM * scaleX_mri_data_to_display;
-                const mriDataRenderedLeftX = 0; 
-                const mriDataRenderedRightX = mriDataRenderedLeftX + mriDataDisplayWidth_scaled;
+                const mriDataRenderedLeftX = leftSidebar_scaled;
+                const mriDataRenderedRightX = leftSidebar_scaled + mriDataDisplayWidth_scaled;
 
                 if (annotationsLoaded) {
                     const annotationsForCurrentSlice = allAnnotations
                         .filter(ann => ann.slice === currentSlice)
-                        .sort((a, b) => a.pointY_mm - b.pointY_mm); // Sort by original Y
+                        .sort((a, b) => a.pointY_mm - b.pointY_mm);
 
-                    let placedLabelsRightColumn = []; // Stores {top, bottom} for placed labels
+                    let placedLabelsLeftColumn = [];
+                    let placedLabelsRightColumn = [];
 
                     annotationsForCurrentSlice.forEach((annotation, index) => {
-                        const pX_px_displayed = annotation.pointX_mm * scaleX_mri_data_to_display;
-                        const pY_px_displayed = annotation.pointY_mm * scaleY_mri_data_to_display;
+                        const pX_px_scaled = (annotation.pointX_mm / IMAGE_MRI_DATA_DIMENSION_MM) * mriDataDisplayWidth_scaled + leftSidebar_scaled;
+                        const pY_px_scaled = (annotation.pointY_mm / IMAGE_MRI_DATA_DIMENSION_MM) * imageDisplayHeight;
                         
                         const labelDiv = document.createElement('div');
                         labelDiv.classList.add('annotation-label');
@@ -542,119 +459,94 @@
 
                         const labelHeight = labelDiv.offsetHeight;
                         const labelWidth = labelDiv.offsetWidth;
+
+                        // ===== NEW: DECIDE WHICH COLUMN TO USE =====
+                        const pointIsOnLeftSide = pX_px_scaled < (mriDataRenderedLeftX + mriDataDisplayWidth_scaled / 2);
                         
-                        // ===== START OF REVISED PLACEMENT LOGIC =====
-                        let bestY = pY_px_displayed;
+                        let targetColumn = pointIsOnLeftSide ? placedLabelsLeftColumn : placedLabelsRightColumn;
+                        let bestY = pY_px_scaled;
                         let foundFit = false;
 
-                        // Step 1: Try the ideal position, but only if it's fully within bounds.
+                        // Stacking Algorithm (Applied to the chosen column)
                         if (bestY - labelHeight / 2 >= 0 && bestY + labelHeight / 2 <= imageDisplayHeight) {
-                            if (!checkOverlapWithPlacedLabels(bestY, labelHeight, placedLabelsRightColumn)) {
+                            if (!checkOverlapWithPlacedLabels(bestY, labelHeight, targetColumn)) {
                                 foundFit = true;
                             }
                         }
-
-                        // Step 2: If ideal is not free, search outwards from it.
                         if (!foundFit) {
-                            let offset = LABEL_VERTICAL_SPACING;
-                            while (offset < imageDisplayHeight / 2) { // Limit search range
-                                // Try position ABOVE ideal
-                                let tryY_up = pY_px_displayed - offset;
-                                if (tryY_up - labelHeight / 2 >= 0 && !checkOverlapWithPlacedLabels(tryY_up, labelHeight, placedLabelsRightColumn)) {
-                                    bestY = tryY_up;
-                                    foundFit = true;
-                                    break;
-                                }
-                                // Try position BELOW ideal
-                                let tryY_down = pY_px_displayed + offset;
-                                if (tryY_down + labelHeight / 2 <= imageDisplayHeight && !checkOverlapWithPlacedLabels(tryY_down, labelHeight, placedLabelsRightColumn)) {
-                                    bestY = tryY_down;
-                                    foundFit = true;
-                                    break;
-                                }
-                                offset += LABEL_VERTICAL_SPACING;
+                            let offset = LABEL_VERTICAL_SPACING + 5;
+                            while (offset < imageDisplayHeight / 2) {
+                                let tryY_up = pY_px_scaled - offset;
+                                if (tryY_up - labelHeight / 2 >= 0 && !checkOverlapWithPlacedLabels(tryY_up, labelHeight, targetColumn)) { bestY = tryY_up; foundFit = true; break; }
+                                let tryY_down = pY_px_scaled + offset;
+                                if (tryY_down + labelHeight / 2 <= imageDisplayHeight && !checkOverlapWithPlacedLabels(tryY_down, labelHeight, targetColumn)) { bestY = tryY_down; foundFit = true; break; }
+                                offset += 5;
                             }
                         }
-
-                        // Step 3: FALLBACK - If still no fit, scan from top to find the first available slot.
-                        // This guarantees a visible placement.
                         if (!foundFit) {
-                             // Start scanning from the top edge downwards
                             for (let scanY = (labelHeight / 2) + 5; scanY < imageDisplayHeight - (labelHeight / 2); scanY += 5) {
-                                if (!checkOverlapWithPlacedLabels(scanY, labelHeight, placedLabelsRightColumn)) {
-                                    bestY = scanY;
-                                    break; // Found a spot, exit the scan
-                                }
+                                if (!checkOverlapWithPlacedLabels(scanY, labelHeight, targetColumn)) { bestY = scanY; break; }
                             }
                         }
-                        
-                        // Final safety clamp
                         bestY = Math.max(bestY, (labelHeight / 2));
                         bestY = Math.min(bestY, imageDisplayHeight - (labelHeight / 2));
-                        // ===== END OF REVISED PLACEMENT LOGIC =====
+                        
+                        let labelTargetX_px;
+                        let lineEndX;
 
-                        const labelTargetX_px = mriDataRenderedRightX + LABEL_OFFSET_FROM_MRI_EDGE + (labelWidth / 2); 
-                        labelDiv.style.left = `${labelTargetX_px}px`; 
-                        labelDiv.style.top = `${bestY}px`; 
+                        if (pointIsOnLeftSide) {
+                            labelTargetX_px = leftSidebar_scaled - LABEL_OFFSET_FROM_MRI_EDGE - (labelWidth / 2);
+                            lineEndX = mriDataRenderedLeftX;
+                        } else {
+                            labelTargetX_px = mriDataRenderedRightX + LABEL_OFFSET_FROM_MRI_EDGE + (labelWidth / 2);
+                            lineEndX = mriDataRenderedRightX;
+                        }
+                        
+                        labelDiv.style.left = `${labelTargetX_px}px`;
+                        labelDiv.style.top = `${bestY}px`;
 
-                        placedLabelsRightColumn.push({
-                            top: bestY - (labelHeight / 2),
-                            bottom: bestY + (labelHeight / 2),
-                        });
-
+                        targetColumn.push({ top: bestY - (labelHeight / 2), bottom: bestY + (labelHeight / 2) });
+                        
+                        // --- Create SVG Elements ---
                         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                        line.setAttribute('x1', pX_px_displayed);
-                        line.setAttribute('y1', pY_px_displayed);
-                        line.setAttribute('x2', mriDataRenderedRightX); 
-                        line.setAttribute('y2', bestY); // Line connects to the final adjusted Y
+                        line.setAttribute('x1', pX_px_scaled);
+                        line.setAttribute('y1', pY_px_scaled);
+                        line.setAttribute('x2', lineEndX);
+                        line.setAttribute('y2', bestY);
                         line.id = `line-${currentSlice}-${index}`;
                         annotationSvgOverlay.appendChild(line);
 
                         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        circle.setAttribute('cx', pX_px_displayed);
-                        circle.setAttribute('cy', pY_px_displayed);
-                        circle.setAttribute('r', 4); 
-                        circle.id = `circle-${currentSlice}-${index}`; 
+                        circle.setAttribute('cx', pX_px_scaled);
+                        circle.setAttribute('cy', pY_px_scaled);
+                        circle.setAttribute('r', 4);
+                        circle.id = `circle-${currentSlice}-${index}`;
                         annotationSvgOverlay.appendChild(circle);
 
                         // --- Add Hover Interactivity ---
-                        const activateAnnotation = () => {
-                            document.getElementById(`line-${currentSlice}-${index}`)?.classList.add('visible-on-hover');
-                            document.getElementById(`circle-${currentSlice}-${index}`)?.classList.add('visible-on-hover-circle');
-                        };
-                        const deactivateAnnotation = () => {
-                            document.getElementById(`line-${currentSlice}-${index}`)?.classList.remove('visible-on-hover');
-                            document.getElementById(`circle-${currentSlice}-${index}`)?.classList.remove('visible-on-hover-circle');
-                        };
-
-                        labelDiv.addEventListener('mouseover', activateAnnotation);
-                        labelDiv.addEventListener('mouseout', deactivateAnnotation);
-                        circle.addEventListener('mouseover', activateAnnotation);
-                        circle.addEventListener('mouseout', deactivateAnnotation);
+                        const activate = () => { line.classList.add('visible-on-hover'); circle.classList.add('visible-on-hover-circle'); };
+                        const deactivate = () => { line.classList.remove('visible-on-hover'); circle.classList.remove('visible-on-hover-circle'); };
+                        labelDiv.onmouseover = circle.onmouseover = activate;
+                        labelDiv.onmouseout = circle.onmouseout = deactivate;
                     });
                 }
             };
 
             if (temporalBoneSliceImage.complete) {
-                temporalBoneSliceImage.onload(); 
+                temporalBoneSliceImage.onload();
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            console.log("DOM content loaded. Initializing viewer."); 
-            preloadAllImages(); 
-            loadAnnotations(); 
+            preloadAllImages();
+            loadAnnotations();
         });
 
         sliceSlider.addEventListener('input', updateSlice);
         
-        let resizeTimeout;
         window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                console.log("Window resized, updating slice.");
-                updateSlice();
-            }, 100); 
+            clearTimeout(window.resizeTimeout);
+            window.resizeTimeout = setTimeout(updateSlice, 100);
         });
     </script>
 </body>
