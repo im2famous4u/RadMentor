@@ -6,7 +6,6 @@
     <title>HRCT Temporal Bone - Axial - RadMentor</title>
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet"/>
     <style>
-        /* Base styles for all themes */
         body {
             font-family: 'Rubik', sans-serif;
             margin: 0;
@@ -17,48 +16,40 @@
             min-height: 100vh;
             background-color: var(--bg-color);
             color: var(--text-color);
-            flex-direction: column; /* Arrange items vertically */
-            overflow: hidden; /* Prevent body scroll if content overflows slightly */
+            flex-direction: column;
+            overflow: hidden;
         }
 
-        /* Light Theme Variables */
         body.light-theme {
-            --bg-color: #f0f8ff; /* Very light blue/off-white background */
-            --container-bg-color: #ffffff; /* Pure white container background */
-            --text-color: #333333; /* Dark grey for general text */
-            --heading-color: #0d47a1; /* Darker blue for headings */
-            --box-bg-color: #e3f2fd; /* Light blue for boxes */
-            --box-hover-bg-color: #bbdefb; /* Slightly darker light blue on hover */
-            --box-border-color: #90caf9; /* Medium blue for box borders */
-            --back-button-bg: #1e88e5; /* Standard blue button */
-            --back-button-hover-bg: #1565c0; /* Darker blue button on hover */
-            --slider-track-bg: #c5d9e8; /* Light blue for slider track */
-            --slider-thumb-bg: #1e88e5; /* Blue for slider thumb */
-            --annotation-text-color: #1a237e; /* Darker blue for annotation text */
-            --annotation-bg-color: rgba(255, 255, 255, 0.95); /* More opaque white background */
-            --annotation-border-color: #64b5f6; /* Light blue border */
-            --annotation-line-color: #42a5f5; /* Medium blue for lines */
-            --annotation-point-color: #f44336; /* Red dot for point */
+            --bg-color: #f0f8ff;
+            --container-bg-color: #ffffff;
+            --text-color: #333333;
+            --heading-color: #0d47a1;
+            --back-button-bg: #1e88e5;
+            --back-button-hover-bg: #1565c0;
+            --slider-track-bg: #c5d9e8;
+            --slider-thumb-bg: #1e88e5;
+            --annotation-text-color: #1a237e;
+            --annotation-bg-color: rgba(255, 255, 255, 0.95);
+            --annotation-border-color: #64b5f6;
+            --annotation-line-color: #42a5f5;
+            --annotation-point-color: #f44336;
         }
 
-        /* Dark Theme Variables */
         body:not(.light-theme) {
             --bg-color: #004d5e;
             --container-bg-color: #043f4e;
             --text-color: #ffffff;
             --heading-color: #ffffff;
-            --box-bg-color: #095a71;
-            --box-hover-bg-color: #064a5c;
-            --box-border-color: #043f4e;
             --back-button-bg: #00bcd4;
             --back-button-hover-bg: #0097a7;
-            --slider-track-bg: #032b36; /* Darker track for dark theme */
-            --slider-thumb-bg: #00bcd4; /* Brighter thumb for dark theme */
-            --annotation-text-color: #e0f2f1; /* Light text for annotations */
-            --annotation-bg-color: rgba(0, 0, 0, 0.85); /* More opaque black background */
-            --annotation-border-color: #00bcd4; /* Accent color border */
-            --annotation-line-color: #00bcd4; /* Accent color for lines */
-            --annotation-point-color: #f44336; /* Red dot for point */
+            --slider-track-bg: #032b36;
+            --slider-thumb-bg: #00bcd4;
+            --annotation-text-color: #e0f2f1;
+            --annotation-bg-color: rgba(0, 0, 0, 0.85);
+            --annotation-border-color: #00bcd4;
+            --annotation-line-color: #00bcd4;
+            --annotation-point-color: #f44336;
         }
 
         .viewer-container {
@@ -67,13 +58,12 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             padding: 20px;
             margin: 20px auto;
-            /* UPDATED max-width for left sidebar + image + right sidebar */
             max-width: 1300px;
-            width: 95%; /* Responsive width */
+            width: 95%;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Center items horizontally */
+            align-items: center;
         }
 
         .viewer-container h1 {
@@ -83,29 +73,26 @@
             text-align: center;
         }
 
-        /* Image and Overlay Container - UPDATED for two-column layout */
         .image-wrapper {
             position: relative;
-            /* Total width: 200px (left) + 860px (image) + 200px (right) */
-            width: 1260px;
-            height: 532px; /* Set to your actual image's pixel height */
-            background-color: #000; /* Black background for imaging studies */
+            /* Set width to the new image file width */
+            width: 1250px;
+            max-width: 100%;
+            background-color: #000;
             border-radius: 8px;
-            overflow: hidden; /* Hide anything outside the wrapper */
+            overflow: hidden;
             box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
-            max-width: 100%; /* Ensure it shrinks on smaller screens */
-            height: auto; /* Allow height to adjust */
-            /* UPDATED padding-bottom to maintain new aspect ratio */
-            padding-bottom: calc(532 / 1260 * 100%);
+            height: auto;
+            /* Maintain aspect ratio of the new 1250x600 image */
+            padding-bottom: calc(600 / 1250 * 100%);
         }
 
         .image-wrapper img {
             position: absolute;
             top: 0;
-            /* UPDATED: Image is now offset by the left sidebar width */
-            left: 200px;
-            width: 860px; /* Set to the actual width of your image file */
-            height: 100%; /* Will scale with wrapper height */
+            left: 0;
+            width: 100%;
+            height: 100%;
             object-fit: contain;
             display: block;
             user-select: none;
@@ -113,17 +100,36 @@
             z-index: 8;
         }
 
-        /* SVG Overlay for Lines and Points */
         .annotation-svg-overlay {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%; 
+            width: 100%;
             height: 100%;
-            z-index: 9; /* Above image, below labels */
+            z-index: 9;
             pointer-events: none;
             overflow: visible;
         }
+
+        .annotation-label {
+            position: absolute;
+            background-color: var(--annotation-bg-color);
+            color: var(--annotation-text-color);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border: 1px solid var(--annotation-border-color);
+            z-index: 11;
+            cursor: default;
+            transform: translate(-50%, -50%);
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            pointer-events: auto;
+        }
+        
         .annotation-svg-overlay line {
             stroke: var(--annotation-line-color);
             stroke-width: 2;
@@ -144,26 +150,6 @@
             r: 6;
         }
 
-        /* Annotation Label Styling */
-        .annotation-label {
-            position: absolute;
-            background-color: var(--annotation-bg-color);
-            color: var(--annotation-text-color);
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            white-space: nowrap;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            border: 1px solid var(--annotation-border-color);
-            z-index: 11;
-            cursor: default;
-            transform: translate(-50%, -50%);
-            opacity: 1;
-            transition: opacity 0.3s ease; 
-            pointer-events: auto;
-        }
-
         .controls {
             width: 100%;
             margin-top: 25px;
@@ -175,46 +161,30 @@
 
         #sliceSlider {
             width: 90%;
-            -webkit-appearance: none;
-            appearance: none;
+            -webkit-appearance: none; appearance: none;
             height: 8px;
             background: var(--slider-track-bg);
             outline: none;
-            opacity: 0.9;
-            transition: opacity .2s;
             border-radius: 5px;
         }
-
-        #sliceSlider:hover {
-            opacity: 1;
-        }
-
         #sliceSlider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
+            -webkit-appearance: none; appearance: none;
+            width: 20px; height: 20px;
             border-radius: 50%;
             background: var(--slider-thumb-bg);
             cursor: grab;
-            box-shadow: 0 0 5px rgba(0,0,0,0.3);
         }
-
         #sliceSlider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
+            width: 20px; height: 20px;
             border-radius: 50%;
             background: var(--slider-thumb-bg);
             cursor: grab;
-            box-shadow: 0 0 5px rgba(0,0,0,0.3);
         }
-
         #sliceNumberDisplay {
             font-size: 1.1rem;
             color: var(--text-color);
             font-weight: 500;
         }
-
         .back-button {
             display: block;
             width: 200px;
@@ -232,117 +202,48 @@
         .back-button:hover {
             background-color: var(--back-button-hover-bg);
         }
-
-        /* UPDATED Responsive adjustments for image wrapper */
-        @media (max-width: 1320px) {
-            .image-wrapper {
-                width: 100%; 
-                height: auto;
-                padding-bottom: calc(532 / 1260 * 100%); 
-            }
-            .image-wrapper img {
-                /* Proportion of image within the total wrapper width */
-                width: calc(860 / 1260 * 100%);
-                /* Proportion of left sidebar within the total wrapper width */
-                left: calc(200 / 1260 * 100%);
-            }
-        }
-        @media (max-width: 768px) {
-            .viewer-container {
-                padding: 15px;
-                width: 95%;
-            }
-            h1 {
-                font-size: 2rem;
-            }
-        }
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 1.8rem;
-            }
-            .back-button {
-                width: 100%;
-                font-size: 1rem;
-            }
-        }
-        /* Loading spinner CSS */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.85);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.5rem;
-            z-index: 1000;
-            transition: opacity 0.5s ease;
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .loading-overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid #fff;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 10px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
     <div class="viewer-container">
-        <h1>HRCT Temporal Bone - Axial Section</h1> 
-
+        <h1>HRCT Temporal Bone - Axial Section</h1>
         <div class="image-wrapper">
             <img id="temporalBoneSliceImage" src="" alt="HRCT Temporal Bone Axial Slice">
             <svg class="annotation-svg-overlay" id="annotationSvgOverlay"></svg>
             <div id="annotationOverlay"></div>
-            <div class="loading-overlay" id="loadingOverlay">
-                <div class="spinner"></div>&nbsp;Loading Annotations...
-            </div>
         </div>
-
         <div class="controls">
-            <input type="range" id="sliceSlider" min="1" max="131" value="1"> 
+            <input type="range" id="sliceSlider" min="1" max="131" value="1">
             <div id="sliceNumberDisplay">Slice: 1 / 131</div>
         </div>
-
-        <a href="../index.html" class="back-button">Back to HRCT Temporal Bone Menu</a> 
+        <a href="../index.html" class="back-button">Back to HRCT Temporal Bone Menu</a>
     </div>
 
     <script>
-        // --- CONFIGURATION - UPDATED FOR TWO-COLUMN LAYOUT ---
+        // --- CONFIGURATION - UPDATED FOR PADDED IMAGES ---
         const imageCount = 131;
         const imageExtension = '.jpg';
         const imageFolderPath = './images/';
         const annotationJsonPath = './annotations/';
         
+        // The dimension of the source medical data cube
         const IMAGE_MRI_DATA_DIMENSION_MM = 512;
         
-        // These are the pixel dimensions of your *image file* (the CT scan part)
-        const IMAGE_FILE_WIDTH = 860;
-        const IMAGE_FILE_HEIGHT = 532;
-        
-        // NEW: Define sidebar widths
-        const LEFT_SIDEBAR_WIDTH = 200; // Space on the left for labels
-        const RIGHT_SIDEBAR_WIDTH = 200; // Space on the right for labels
+        // **NEW**: Dimensions of the actual anatomy scan (the original 850x532 part)
+        const ANATOMY_DATA_WIDTH = 850;
+        const ANATOMY_DATA_HEIGHT = 532;
 
-        const LABEL_OFFSET_FROM_MRI_EDGE = 20; // How far from the image edge the label text should start
-        const LABEL_VERTICAL_SPACING = 5; // Reduced vertical spacing for tighter packing
+        // **NEW**: Padding added to the anatomy scan
+        const PADDING_TOP = 34;
+        const PADDING_LEFT = 400;
+
+        // **NEW**: Final dimensions of your image files (e.g., 1250x600)
+        const IMAGE_FILE_WIDTH = 1250;
+        const IMAGE_FILE_HEIGHT = 600;
+
+        // Label placement settings
+        const LABEL_OFFSET_FROM_EDGE = 40;
+        const LABEL_VERTICAL_SPACING = 10;
 
         // --- JSON FILENAMES ---
         const jsonFilenames = [
@@ -355,22 +256,10 @@
         const sliceNumberDisplay = document.getElementById('sliceNumberDisplay');
         const annotationOverlay = document.getElementById('annotationOverlay');
         const annotationSvgOverlay = document.getElementById('annotationSvgOverlay');
-        const loadingOverlay = document.getElementById('loadingOverlay');
 
         let allAnnotations = [];
-        let annotationsLoaded = false;
-        const preloadedImages = [];
 
-        // --- Theme logic (unchanged) ---
-        function setInitialTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            document.body.classList.toggle('light-theme', savedTheme === 'light');
-        }
-        setInitialTheme();
-        
-        // --- Data Loading (unchanged) ---
         async function loadAnnotations() {
-            loadingOverlay.classList.remove('hidden');
             const fetchPromises = jsonFilenames.map(filename => fetch(`${annotationJsonPath}${filename}`).then(res => res.json()));
             try {
                 const results = await Promise.all(fetchPromises);
@@ -384,39 +273,26 @@
                         })) ?? []
                     ) ?? []
                 );
-                annotationsLoaded = true;
+                updateSlice();
             } catch (e) {
                 console.error("Error loading annotations:", e);
-                alert("A critical error occurred while loading annotations.");
-            } finally {
-                loadingOverlay.classList.add('hidden');
-                updateSlice();
-            }
-        }
-
-        // --- Image Preloading (unchanged) ---
-        function preloadAllImages() {
-            for (let i = 1; i <= imageCount; i++) {
-                const img = new Image();
-                img.src = `${imageFolderPath}${i}.jpg`;
-                preloadedImages.push(img);
+                alert("A critical error occurred loading annotations.");
             }
         }
         
-        // --- Display Logic ---
         function updateSlice() {
             const currentSlice = parseInt(sliceSlider.value);
-            temporalBoneSliceImage.src = `${imageFolderPath}${currentSlice}.jpg`;
+            temporalBoneSliceImage.src = `${imageFolderPath}${currentSlice}${imageExtension}`;
             sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
 
             annotationOverlay.innerHTML = '';
             annotationSvgOverlay.innerHTML = '';
 
-            const checkOverlapWithPlacedLabels = (testCenterY, testHeight, placedLabelsArr) => {
-                const testTop = testCenterY - (testHeight / 2);
-                const testBottom = testCenterY + (testHeight / 2);
-                for (const existing of placedLabelsArr) {
-                    if (testTop < (existing.bottom + LABEL_VERTICAL_SPACING) && testBottom > (existing.top - LABEL_VERTICAL_SPACING)) {
+            const checkOverlap = (testY, height, placedLabels) => {
+                const top1 = testY - height / 2;
+                const bottom1 = testY + height / 2;
+                for (const label of placedLabels) {
+                    if (top1 < (label.bottom + LABEL_VERTICAL_SPACING) && bottom1 > (label.top - LABEL_VERTICAL_SPACING)) {
                         return true;
                     }
                 }
@@ -426,124 +302,100 @@
             temporalBoneSliceImage.onload = function() {
                 this.onload = null;
 
-                const wrapperWidth = this.parentElement.offsetWidth;
-                const wrapperHeight = this.parentElement.offsetHeight;
-                
-                // Calculate scaling based on the wrapper, not the image file
-                const scale = wrapperWidth / (LEFT_SIDEBAR_WIDTH + IMAGE_FILE_WIDTH + RIGHT_SIDEBAR_WIDTH);
-                
-                const imageDisplayHeight = IMAGE_FILE_HEIGHT * scale;
-                const mriDataDisplayWidth_scaled = IMAGE_FILE_WIDTH * scale;
-                const leftSidebar_scaled = LEFT_SIDEBAR_WIDTH * scale;
+                const imageDisplayWidth = this.offsetWidth;
+                const imageDisplayHeight = this.offsetHeight;
 
-                const mriDataRenderedLeftX = leftSidebar_scaled;
-                const mriDataRenderedRightX = leftSidebar_scaled + mriDataDisplayWidth_scaled;
+                // Overall scale factor of the displayed image vs the file
+                const scaleX = imageDisplayWidth / IMAGE_FILE_WIDTH;
+                const scaleY = imageDisplayHeight / IMAGE_FILE_HEIGHT;
 
-                if (annotationsLoaded) {
-                    const annotationsForCurrentSlice = allAnnotations
-                        .filter(ann => ann.slice === currentSlice)
-                        .sort((a, b) => a.pointY_mm - b.pointY_mm);
+                const annotationsForCurrentSlice = allAnnotations
+                    .filter(ann => ann.slice === currentSlice)
+                    .sort((a, b) => a.pointY_mm - b.pointY_mm);
 
-                    let placedLabelsLeftColumn = [];
-                    let placedLabelsRightColumn = [];
+                let placedLabels = [];
 
-                    annotationsForCurrentSlice.forEach((annotation, index) => {
-                        const pX_px_scaled = (annotation.pointX_mm / IMAGE_MRI_DATA_DIMENSION_MM) * mriDataDisplayWidth_scaled + leftSidebar_scaled;
-                        const pY_px_scaled = (annotation.pointY_mm / IMAGE_MRI_DATA_DIMENSION_MM) * imageDisplayHeight;
-                        
-                        const labelDiv = document.createElement('div');
-                        labelDiv.classList.add('annotation-label');
-                        labelDiv.textContent = annotation.text;
-                        labelDiv.id = `label-${currentSlice}-${index}`;
-                        annotationOverlay.appendChild(labelDiv); 
+                annotationsForCurrentSlice.forEach((annotation, index) => {
+                    // --- REVISED COORDINATE CALCULATION ---
+                    // 1. Scale mm coordinate to the anatomy's pixel size (850x532)
+                    const x_in_anatomy = (annotation.pointX_mm / IMAGE_MRI_DATA_DIMENSION_MM) * ANATOMY_DATA_WIDTH;
+                    const y_in_anatomy = (annotation.pointY_mm / IMAGE_MRI_DATA_DIMENSION_MM) * ANATOMY_DATA_HEIGHT;
 
-                        const labelHeight = labelDiv.offsetHeight;
-                        const labelWidth = labelDiv.offsetWidth;
+                    // 2. Add padding to get position in the final file (1250x600)
+                    const x_in_file = x_in_anatomy + PADDING_LEFT;
+                    const y_in_file = y_in_anatomy + PADDING_TOP;
 
-                        // ===== NEW: DECIDE WHICH COLUMN TO USE =====
-                        const pointIsOnLeftSide = pX_px_scaled < (mriDataRenderedLeftX + mriDataDisplayWidth_scaled / 2);
-                        
-                        let targetColumn = pointIsOnLeftSide ? placedLabelsLeftColumn : placedLabelsRightColumn;
-                        let bestY = pY_px_scaled;
-                        let foundFit = false;
+                    // 3. Scale file position to the final displayed size
+                    const pX_px_displayed = x_in_file * scaleX;
+                    const pY_px_displayed = y_in_file * scaleY;
 
-                        // Stacking Algorithm (Applied to the chosen column)
-                        if (bestY - labelHeight / 2 >= 0 && bestY + labelHeight / 2 <= imageDisplayHeight) {
-                            if (!checkOverlapWithPlacedLabels(bestY, labelHeight, targetColumn)) {
-                                foundFit = true;
-                            }
+                    // --- Label and SVG Element Creation ---
+                    const labelDiv = document.createElement('div');
+                    labelDiv.className = 'annotation-label';
+                    labelDiv.textContent = annotation.text;
+                    annotationOverlay.appendChild(labelDiv);
+
+                    const labelHeight = labelDiv.offsetHeight;
+                    const labelWidth = labelDiv.offsetWidth;
+
+                    let bestY = pY_px_displayed;
+                    let foundFit = false;
+
+                    // Stacking logic (same robust algorithm, now for the left column)
+                    if (bestY - labelHeight / 2 >= 0 && bestY + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(bestY, labelHeight, placedLabels)) {
+                        foundFit = true;
+                    }
+                    if (!foundFit) {
+                        for (let offset = 10; offset < imageDisplayHeight / 2; offset += 5) {
+                            let tryUp = pY_px_displayed - offset;
+                            if (tryUp - labelHeight / 2 >= 0 && !checkOverlap(tryUp, labelHeight, placedLabels)) { bestY = tryUp; foundFit = true; break; }
+                            let tryDown = pY_px_displayed + offset;
+                            if (tryDown + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(tryDown, labelHeight, placedLabels)) { bestY = tryDown; foundFit = true; break; }
                         }
-                        if (!foundFit) {
-                            let offset = LABEL_VERTICAL_SPACING + 5;
-                            while (offset < imageDisplayHeight / 2) {
-                                let tryY_up = pY_px_scaled - offset;
-                                if (tryY_up - labelHeight / 2 >= 0 && !checkOverlapWithPlacedLabels(tryY_up, labelHeight, targetColumn)) { bestY = tryY_up; foundFit = true; break; }
-                                let tryY_down = pY_px_scaled + offset;
-                                if (tryY_down + labelHeight / 2 <= imageDisplayHeight && !checkOverlapWithPlacedLabels(tryY_down, labelHeight, targetColumn)) { bestY = tryY_down; foundFit = true; break; }
-                                offset += 5;
-                            }
+                    }
+                    if (!foundFit) {
+                        for (let scanY = (labelHeight / 2) + 5; scanY < imageDisplayHeight - (labelHeight / 2); scanY += 5) {
+                            if (!checkOverlap(scanY, labelHeight, placedLabels)) { bestY = scanY; break; }
                         }
-                        if (!foundFit) {
-                            for (let scanY = (labelHeight / 2) + 5; scanY < imageDisplayHeight - (labelHeight / 2); scanY += 5) {
-                                if (!checkOverlapWithPlacedLabels(scanY, labelHeight, targetColumn)) { bestY = scanY; break; }
-                            }
-                        }
-                        bestY = Math.max(bestY, (labelHeight / 2));
-                        bestY = Math.min(bestY, imageDisplayHeight - (labelHeight / 2));
-                        
-                        let labelTargetX_px;
-                        let lineEndX;
+                    }
+                    bestY = Math.max(bestY, labelHeight / 2);
+                    bestY = Math.min(bestY, imageDisplayHeight - labelHeight / 2);
 
-                        if (pointIsOnLeftSide) {
-                            labelTargetX_px = leftSidebar_scaled - LABEL_OFFSET_FROM_MRI_EDGE - (labelWidth / 2);
-                            lineEndX = mriDataRenderedLeftX;
-                        } else {
-                            labelTargetX_px = mriDataRenderedRightX + LABEL_OFFSET_FROM_MRI_EDGE + (labelWidth / 2);
-                            lineEndX = mriDataRenderedRightX;
-                        }
-                        
-                        labelDiv.style.left = `${labelTargetX_px}px`;
-                        labelDiv.style.top = `${bestY}px`;
+                    // Place label in the left sidebar
+                    const labelTargetX_px = (PADDING_LEFT - LABEL_OFFSET_FROM_EDGE) * scaleX - (labelWidth / 2);
+                    const lineEndX = PADDING_LEFT * scaleX;
 
-                        targetColumn.push({ top: bestY - (labelHeight / 2), bottom: bestY + (labelHeight / 2) });
-                        
-                        // --- Create SVG Elements ---
-                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                        line.setAttribute('x1', pX_px_scaled);
-                        line.setAttribute('y1', pY_px_scaled);
-                        line.setAttribute('x2', lineEndX);
-                        line.setAttribute('y2', bestY);
-                        line.id = `line-${currentSlice}-${index}`;
-                        annotationSvgOverlay.appendChild(line);
+                    labelDiv.style.left = `${labelTargetX_px}px`;
+                    labelDiv.style.top = `${bestY}px`;
+                    placedLabels.push({ top: bestY - labelHeight / 2, bottom: bestY + labelHeight / 2 });
 
-                        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                        circle.setAttribute('cx', pX_px_scaled);
-                        circle.setAttribute('cy', pY_px_scaled);
-                        circle.setAttribute('r', 4);
-                        circle.id = `circle-${currentSlice}-${index}`;
-                        annotationSvgOverlay.appendChild(circle);
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', pX_px_displayed);
+                    line.setAttribute('y1', pY_px_displayed);
+                    line.setAttribute('x2', lineEndX);
+                    line.setAttribute('y2', bestY);
+                    annotationSvgOverlay.appendChild(line);
 
-                        // --- Add Hover Interactivity ---
-                        const activate = () => { line.classList.add('visible-on-hover'); circle.classList.add('visible-on-hover-circle'); };
-                        const deactivate = () => { line.classList.remove('visible-on-hover'); circle.classList.remove('visible-on-hover-circle'); };
-                        labelDiv.onmouseover = circle.onmouseover = activate;
-                        labelDiv.onmouseout = circle.onmouseout = deactivate;
-                    });
-                }
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', pX_px_displayed);
+                    circle.setAttribute('cy', pY_px_displayed);
+                    circle.setAttribute('r', 4);
+                    annotationSvgOverlay.appendChild(circle);
+
+                    const activate = () => { line.classList.add('visible-on-hover'); circle.classList.add('visible-on-hover-circle'); };
+                    const deactivate = () => { line.classList.remove('visible-on-hover'); circle.classList.remove('visible-on-hover-circle'); };
+                    labelDiv.onmouseover = circle.onmouseover = activate;
+                    labelDiv.onmouseout = circle.onmouseout = deactivate;
+                });
             };
 
             if (temporalBoneSliceImage.complete) {
                 temporalBoneSliceImage.onload();
             }
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            preloadAllImages();
-            loadAnnotations();
-        });
-
-        sliceSlider.addEventListener('input', updateSlice);
         
+        document.addEventListener('DOMContentLoaded', loadAnnotations);
+        sliceSlider.addEventListener('input', updateSlice);
         window.addEventListener('resize', () => {
             clearTimeout(window.resizeTimeout);
             window.resizeTimeout = setTimeout(updateSlice, 100);
