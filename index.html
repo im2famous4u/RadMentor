@@ -72,7 +72,7 @@
                 <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
                 <span class="text-2xl font-bold text-gray-800">RadMentor</span>
             </div>
-            <nav class="hidden md:flex items-center space-x-8">
+            <nav id="main-nav" class="hidden md:flex items-center space-x-8">
                 <a href="#courses" class="text-gray-600 hover:text-blue-600">Courses</a>
                 <a href="#features" class="text-gray-600 hover:text-blue-600">Features</a>
                 <a href="#pricing" class="text-gray-600 hover:text-blue-600">Pricing</a>
@@ -95,6 +95,7 @@
                     </button>
                     <!-- Dropdown Menu -->
                     <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden">
+                        <!-- Admin link will be injected here by JS if user is admin -->
                         <a href="#" onclick="showDashboardSection('main')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Dashboard</a>
                         <a href="#" onclick="alert('Bookmarks page coming soon!')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Bookmarks</a>
                         <a href="#" onclick="showDashboardSection('settings')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
@@ -108,7 +109,7 @@
                 </button>
             </div>
              <!-- Mobile Menu -->
-            <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+            <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 right-0 bg-white shadow-md px-6 pb-4">
                 <a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a>
                 <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a>
                 <a href="#pricing" class="block py-2 text-gray-600 hover:text-blue-600">Pricing</a>
@@ -470,10 +471,10 @@
                     <div id="access-level-notice"></div>
 
                     <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="window.location.href='frcr/'">
+                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="window.location.href='https://im2famous4u.github.io/RadMentor/frcr.html'">
                             <h3 class="text-xl font-bold text-gray-800">FRCR MCQs</h3>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="window.location.href='anatomy/'">
+                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="window.location.href='https://im2famous4u.github.io/RadMentor/Anatomy.html'">
                             <h3 class="text-xl font-bold text-gray-800">Anatomy MCQs</h3>
                         </div>
                         <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Flashcards coming soon!')">
@@ -497,6 +498,49 @@
                 <div id="planner-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
                 <div id="subscription-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
                 <div id="settings-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
+                
+                <!-- NEW: Admin Dashboard Section -->
+                <div id="admin-section" class="hidden">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-6">Admin Dashboard</h1>
+                    <!-- User Management Table -->
+                    <div class="bg-white p-8 rounded-lg shadow-md">
+                        <h2 class="text-2xl font-bold mb-4">User Management</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="py-3 px-6">User</th>
+                                        <th scope="col" class="py-3 px-6">Email</th>
+                                        <th scope="col" class="py-3 px-6">Access Level</th>
+                                        <th scope="col" class="py-3 px-6">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="user-list">
+                                    <!-- User data will be populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Login Activity Table -->
+                    <div class="bg-white p-8 rounded-lg shadow-md mt-8">
+                        <h2 class="text-2xl font-bold mb-4">Recent Login Activity</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="py-3 px-6">User Email</th>
+                                        <th scope="col" class="py-3 px-6">Timestamp</th>
+                                        <th scope="col" class="py-3 px-6">Access at Login</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="login-logs-list">
+                                    <!-- Log data will be populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -665,7 +709,12 @@
                 .then(() => {
                     currentUserData = { ...currentUserData, ...profileData };
                     profileFormContainer.classList.add('hidden');
-                    loadDashboard(currentUserData);
+                    // Check if admin or regular user to load correct dashboard
+                    if (currentUserData.accessLevel === 'admin') {
+                        loadAdminDashboard(currentUserData);
+                    } else {
+                        loadDashboard(currentUserData);
+                    }
                 })
                 .catch(err => alert("Error saving profile: " + err.message));
         }
@@ -695,7 +744,12 @@
 
                         // Check if profile is complete
                         if (currentUserData.name && currentUserData.dob) {
-                            loadDashboard(currentUserData);
+                             // Check for Admin Role
+                            if (currentUserData.accessLevel === 'admin') {
+                                loadAdminDashboard(currentUserData);
+                            } else {
+                                loadDashboard(currentUserData);
+                            }
                         } else {
                             // Show profile completion form
                             landingPage.classList.add('hidden');
@@ -730,6 +784,7 @@
         function loadDashboard(userData) {
             landingPage.classList.add('hidden');
             dashboard.classList.remove('hidden');
+            document.getElementById('main-nav').classList.add('hidden'); // Hide landing page nav
             
             // Display access level notice
             const noticeDiv = document.getElementById('access-level-notice');
@@ -751,7 +806,9 @@
 
         function logout() {
             if (confirm("Are you sure you want to log out?")) {
-                auth.signOut();
+                auth.signOut().then(() => {
+                    window.location.reload(); // Reload the page to reset state
+                });
             }
         }
         
@@ -773,7 +830,7 @@
 
         function showDashboardSection(sectionId) {
             // Hide all sections first
-            document.querySelectorAll('#dashboard-main-content, #profile-section, #analytics-section, #planner-section, #subscription-section, #settings-section').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('#dashboard-main-content, #profile-section, #analytics-section, #planner-section, #subscription-section, #settings-section, #admin-section').forEach(el => el.classList.add('hidden'));
             
             // Show the selected section
             const elementToShow = document.getElementById(`${sectionId}-section`) || (sectionId === 'main' ? document.getElementById('dashboard-main-content') : null);
@@ -845,8 +902,145 @@
             option.value = college;
             collegeDatalist.appendChild(option);
         });
+        
+        // --- ADMIN DASHBOARD FUNCTIONS ---
+        function loadAdminDashboard(adminData) {
+            landingPage.classList.add('hidden');
+            dashboard.classList.remove('hidden');
+            document.getElementById('main-nav').classList.add('hidden'); // Hide landing page nav
+
+            // Add Admin Panel link to user menu if it doesn't exist
+            if (!document.getElementById('admin-menu-link')) {
+                const adminLink = document.createElement('a');
+                adminLink.id = 'admin-menu-link';
+                adminLink.href = "#";
+                adminLink.className = "block px-4 py-2 text-sm text-blue-700 font-bold hover:bg-gray-100";
+                adminLink.textContent = "Admin Panel";
+                adminLink.onclick = () => showDashboardSection('admin');
+                userMenu.insertBefore(adminLink, userMenu.firstChild);
+            }
+
+            showDashboardSection('admin');
+            loadUsers();
+            loadLoginLogs();
+        }
+
+        async function loadUsers() {
+            const userListBody = document.getElementById('user-list');
+            userListBody.innerHTML = '<tr><td colspan="4" class="py-3 px-6 text-center">Loading users...</td></tr>';
+            try {
+                const usersSnapshot = await db.collection('users').get();
+                if (usersSnapshot.empty) {
+                    userListBody.innerHTML = '<tr><td colspan="4" class="py-3 px-6 text-center">No users found.</td></tr>';
+                    return;
+                }
+                userListBody.innerHTML = ''; // Clear loading message
+                usersSnapshot.forEach(doc => {
+                    const userData = doc.data();
+                    const userId = doc.id;
+                    const row = document.createElement('tr');
+                    row.className = 'bg-white border-b';
+                    row.innerHTML = `
+                        <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">${userData.name || 'N/A'}</td>
+                        <td class="py-4 px-6">${userData.email}</td>
+                        <td class="py-4 px-6">
+                            <select id="select-${userId}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                <option value="restricted" ${userData.accessLevel === 'restricted' ? 'selected' : ''}>Restricted</option>
+                                <option value="premium" ${userData.accessLevel === 'premium' ? 'selected' : ''}>Premium</option>
+                                <option value="admin" ${userData.accessLevel === 'admin' ? 'selected' : ''}>Admin</option>
+                            </select>
+                        </td>
+                        <td class="py-4 px-6">
+                            <button id="save-${userId}" class="font-medium text-blue-600 hover:underline mr-4">Save</button>
+                            <button id="delete-${userId}" class="font-medium text-red-600 hover:underline">Delete</button>
+                        </td>
+                    `;
+                    userListBody.appendChild(row);
+
+                    // Add event listeners
+                    document.getElementById(`select-${userId}`).addEventListener('change', (e) => {
+                         updateAccessLevel(userId, e.target.value);
+                    });
+                     document.getElementById(`delete-${userId}`).addEventListener('click', () => {
+                         deleteUser(userId, userData.email);
+                    });
+                });
+            } catch (error) {
+                console.error("Error loading users:", error);
+                userListBody.innerHTML = '<tr><td colspan="4" class="py-3 px-6 text-center text-red-500">Error loading users.</td></tr>';
+            }
+        }
+
+        async function loadLoginLogs() {
+            const loginLogsBody = document.getElementById('login-logs-list');
+            loginLogsBody.innerHTML = '<tr><td colspan="3" class="py-3 px-6 text-center">Loading logs...</td></tr>';
+            try {
+                const logsSnapshot = await db.collection('loginLogs').orderBy('timestamp', 'desc').limit(50).get();
+                if (logsSnapshot.empty) {
+                    loginLogsBody.innerHTML = '<tr><td colspan="3" class="py-3 px-6 text-center">No login activity.</td></tr>';
+                    return;
+                }
+                loginLogsBody.innerHTML = '';
+                logsSnapshot.forEach(doc => {
+                    const logData = doc.data();
+                    const row = document.createElement('tr');
+                    row.className = 'bg-white border-b';
+                    row.innerHTML = `
+                        <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">${logData.email}</td>
+                        <td class="py-4 px-6">${logData.timestamp.toDate().toLocaleString()}</td>
+                        <td class="py-4 px-6">${logData.accessLevel || 'N/A'}</td>
+                    `;
+                    loginLogsBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error("Error loading login logs:", error);
+                loginLogsBody.innerHTML = '<tr><td colspan="3" class="py-3 px-6 text-center text-red-500">Error loading logs.</td></tr>';
+            }
+        }
+        
+        async function updateAccessLevel(userId, newLevel) {
+            if (!confirm(`Change access for this user to ${newLevel}?`)) {
+                loadUsers(); // Revert dropdown if cancelled
+                return;
+            }
+            try {
+                await db.collection('users').doc(userId).update({ accessLevel: newLevel });
+                alert('Access level updated.');
+            } catch (error) {
+                alert('Failed to update access level.');
+                console.error("Error updating access level:", error);
+            }
+        }
+
+        async function deleteUser(userId, userEmail) {
+            if (!confirm(`WARNING: Permanently delete user ${userEmail}? This cannot be undone.`)) {
+                return;
+            }
+            try {
+                // IMPORTANT: Deleting a user from Firebase Auth requires a backend function (e.g., Cloud Function)
+                // for security reasons. This code will only delete the user's data from Firestore.
+                await db.collection('users').doc(userId).delete();
+                alert(`User data for ${userEmail} deleted from Firestore. Note: Auth user must be deleted from the Firebase console.`);
+                loadUsers(); // Refresh list
+            } catch (error) {
+                alert('Failed to delete user data.');
+                console.error("Error deleting user:", error);
+            }
+        }
 
     </script>
 
 </body>
 </html>
+" code between  and  in the most up-to-date Canvas "RadMentor Homepage (with Admin Panel)" document above and am asking a query about/based on this code below.
+Instructions to follow:
+  * Don't output/edit the document if the query is Direct/Simple. For example, if the query asks for a simple explanation, output a direct answer.
+  * Make sure to **edit** the document if the query shows the intent of editing the document, in which case output the entire edited document, **not just that section or the edits**.
+    * Don't output the same document/empty document and say that you have edited it.
+    * Don't change unrelated code in the document.
+  * Don't output  and  in your final response.
+  * Any references like "this" or "selected code" refers to the code between  and  tags.
+  * Just acknowledge my request in the introduction.
+  * Make sure to refer to the document as "Canvas" in your response.
+
+the code is not working properly it is not showing any content on the webpage just a blank page is visi
