@@ -13,15 +13,17 @@
 
     <script src="https://unpkg.com/feather-icons"></script>
 
+    <link rel="stylesheet" href="style.css">
+
     <style>
         body { font-family: 'Inter', sans-serif; }
 
-        /* --- Landing Page Styles (from image_b2327e.png) --- */
+        /* --- Landing Page Styles --- */
         .hero-gradient-text {
             background-image: linear-gradient(to right, #3b82f6, #60a5fa); /* Blue-500 to Blue-400 */
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            font-weight: 900; /* Extra bold */
+            font-weight: 900;
         }
         .hero-button {
             background-color: #2563eb; /* Solid Blue-600 */
@@ -37,15 +39,19 @@
         .header-signup-btn:hover {
             background-color: #1d4ed8;
         }
+        /* Keep the original .rad-gradient for other buttons if needed */
+        .rad-gradient {
+            background: linear-gradient(90deg, #1e40af, #3b82f6);
+        }
 
-        /* --- Dashboard Styles (from image_b232fe.png) --- */
+        /* --- Dashboard Styles --- */
         .dashboard-theme {
-            background-color: #111827; /* Tailwind Gray-900 - a very dark charcoal blue */
-            color: #f9fafb; /* Off-white text */
+            background-color: #111827; /* Dark Gray-900 */
+            color: #f9fafb;
         }
         .dashboard-card {
-            background-color: #1F2937; /* Tailwind Gray-800 */
-            border: 1px solid #374151; /* Tailwind Gray-700 */
+            background-color: #1F2937; /* Gray-800 */
+            border: 1px solid #374151; /* Gray-700 */
             color: #ffffff;
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -61,10 +67,10 @@
         .dashboard-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.25);
-            border-color: #4b5563; /* Tailwind Gray-600 */
+            border-color: #4b5563; /* Gray-600 */
         }
         .dashboard-greeting { color: #ffffff; font-weight: 700;}
-        .dashboard-sub-greeting { color: #9ca3af; } /* Tailwind Gray-400 */
+        .dashboard-sub-greeting { color: #9ca3af; }
     </style>
 </head>
 <body class="text-gray-800 pt-16">
@@ -72,7 +78,7 @@
     <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
         <div class="container mx-auto px-6 py-3 flex justify-between items-center">
             <a href="/" class="flex items-center"><img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/><span class="text-2xl font-bold text-gray-800">RadMentor</span></a>
-            <nav id="main-nav" class="hidden md:flex items-center space-x-8"><a href="#courses" class="text-gray-600 hover:text-blue-600">Courses</a><a href="#features" class="text-gray-600 hover:text-blue-600">Features</a><a href="#pricing" class="text-gray-600 hover:text-blue-600">Pricing</a></nav>
+            <nav id="main-nav" class="hidden md:flex items-center space-x-8"><a href="#courses" class="text-gray-600 hover:text-blue-600">Courses</a><a href="#features" class="text-gray-600 hover:text-blue-600">Features</a><a href="#pricing" class="text-gray-600 hover:text-blue-600">Pricing</a><a href="#about" class="text-gray-600 hover:text-blue-600">About Us</a></nav>
             <div class="flex items-center">
                 <div id="logged-out-nav" class="hidden md:flex items-center">
                     <button onclick="showAuthModal('signin')" class="text-gray-600 hover:text-blue-600 mr-6 font-medium">Login</button>
@@ -80,12 +86,12 @@
                 </div>
                 <div id="logged-in-nav" class="hidden relative">
                     <button id="user-menu-button" class="flex items-center space-x-2"><span class="font-semibold text-gray-700">Hi, <span id="user-greeting-header"></span></span><i data-feather="chevron-down" class="w-4 h-4 text-gray-700"></i></button>
-                    <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden"><a href="#" onclick="showDashboardSection('main')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Dashboard</a><a href="#" onclick="showDashboardSection('profile')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Profile</a><div class="border-t border-gray-100"></div><a href="#" onclick="logout()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a></div>
+                    <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden"><a href="#" onclick="showDashboardSection('main')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Dashboard</a><a href="#" onclick="showDashboardSection('profile')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Profile</a><a href="#" onclick="showDashboardSection('settings')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a><div class="border-t border-gray-100"></div><a href="#" onclick="logout()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a></div>
                 </div>
                 <button id="mobile-menu-button" class="md:hidden ml-4 text-gray-700"><i data-feather="menu"></i></button>
             </div>
         </div>
-        <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 right-0 bg-white shadow-md px-6 pb-4"><div id="mobile-logged-out-nav"><a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a><a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a><div class="border-t mt-2 pt-2"><button onclick="showAuthModal('signin')" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Login</button></div></div></div>
+        <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 right-0 bg-white shadow-md px-6 pb-4"><div id="mobile-logged-out-nav"><a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a><a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a><a href="#pricing" class="block py-2 text-gray-600 hover:text-blue-600">Pricing</a><a href="#about" class="block py-2 text-gray-600 hover:text-blue-600">About Us</a><div class="border-t mt-2 pt-2"><button onclick="showAuthModal('signin')" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Login</button></div></div></div>
     </header>
 
     <div id="landing-page">
@@ -106,8 +112,16 @@
                     </div>
                 </div>
             </section>
-            </main>
-        <footer class="bg-gray-800 text-white"><div class="container mx-auto px-6 py-12 text-center"><p>&copy; 2025 RadMentor. All Rights Reserved.</p></div></footer>
+            
+            <section id="courses" class="py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold text-gray-900">Prepare for Any Exam</h2><p class="mt-4 text-lg text-gray-600">Targeted preparation for all major radiology exams.</p></div><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"><div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100"><h3 class="text-2xl font-bold text-gray-800">FRCR</h3><p class="mt-2 text-gray-600">Comprehensive question banks and mock tests for the FRCR exam.</p></div><div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100"><h3 class="text-2xl font-bold text-gray-800">MD / DNB</h3><p class="mt-2 text-gray-600">Master your final year exams with our targeted content.</p></div><div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100"><h3 class="text-2xl font-bold text-gray-800">Anatomy</h3><p class="mt-2 text-gray-600">Detailed anatomical modules to build a strong foundation.</p></div><div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100"><h3 class="text-2xl font-bold text-gray-800">MICR</h3><p class="mt-2 text-gray-600">Practice with MCQs tailored for the MICR examination.</p></div><div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100"><h3 class="text-2xl font-bold text-gray-800">Superspeciality</h3><p class="mt-2 text-gray-600">Prepare for NEET SS & INICET SS with high-yield questions.</p></div><div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100"><h3 class="text-2xl font-bold text-gray-800">Fellowship Exams</h3><p class="mt-2 text-gray-600">Excel in your fellowship exams with our specialized modules.</p></div></div></div></section>
+            
+            <section id="features" class="py-20 bg-white"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold text-gray-900">A Smarter Way to Learn</h2><p class="mt-4 text-lg text-gray-600">Tools designed for deep understanding and long-term retention.</p></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 text-center"><div class="feature-card p-6 rounded-lg"><div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="award" class="text-white"></i></div><h3 class="mt-6 text-xl font-bold">Expert-Curated Content</h3><p class="mt-2 text-gray-600">All questions and explanations are created and verified by top radiologists.</p></div><div class="feature-card p-6 rounded-lg"><div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="target" class="text-white"></i></div><h3 class="mt-6 text-xl font-bold">Realistic Exam Simulation</h3><p class="mt-2 text-gray-600">Experience the real exam environment with our timed mock tests.</p></div><div class="feature-card p-6 rounded-lg"><div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg"><i data-feather="bar-chart-2" class="text-white"></i></div><h3 class="mt-6 text-xl font-bold">Deep Analytics</h3><p class="mt-2 text-gray-600">Track your progress, identify weak areas, and compare with peers.</p></div></div></div></section>
+
+            <section id="pricing" class="py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold text-gray-900">Flexible Plans for Every Need</h2><p class="mt-4 text-lg text-gray-600">Choose the plan that’s right for your learning journey.</p></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 justify-items-center"><div class="pricing-card bg-white p-8 rounded-xl shadow-lg w-full flex flex-col"><h3 class="text-2xl font-bold">Free</h3><p class="mt-2">Get a taste of our platform.</p><div class="mt-6 text-4xl font-extrabold">$0</div><ul class="mt-8 space-y-4 text-left flex-grow"><li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>Limited MCQs</li></ul><button onclick="showAuthModal('signup')" class="mt-8 w-full bg-gray-200 font-bold py-3 rounded-lg">Sign Up</button></div><div class="pricing-card bg-white p-8 rounded-xl shadow-lg w-full flex flex-col"><h3 class="text-2xl font-bold">Q-Bank Pass</h3><p class="mt-2">For focused practice.</p><div class="mt-6 text-4xl font-extrabold">$29 <span class="text-lg">/mo</span></div><ul class="mt-8 space-y-4 text-left flex-grow"><li class="flex items-center"><i data-feather="check" class="text-green-500 mr-3"></i>All MCQ Banks</li></ul><button class="mt-8 w-full rad-gradient text-white font-bold py-3 rounded-lg">Choose Plan</button></div></div></div></section>
+            
+            <section id="about" class="py-20 bg-white"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold text-gray-900">Built by Doctors, for Doctors</h2></div><div class="max-w-4xl mx-auto bg-gray-50 p-10 rounded-xl border text-center"><p class="text-lg text-gray-600">We are two radiologists... united by a shared vision...</p></div></div></section>
+        </main>
+        <footer class="bg-gray-900 text-white"><div class="container mx-auto px-6 py-12"><div class="grid grid-cols-1 md:grid-cols-3 gap-8"><div><h3 class="text-xl font-bold">RadMentor</h3><p class="mt-2 text-gray-400">The future of radiology education.</p></div><div><h3 class="text-lg font-semibold">Links</h3><ul class="mt-2 space-y-2"><li><a href="#courses" class="text-gray-400 hover:text-white">Courses</a></li><li><a href="#pricing" class="text-gray-400 hover:text-white">Pricing</a></li></ul></div><div><h3 class="text-lg font-semibold">Contact</h3><p class="mt-2 text-gray-400">Email: <a href="mailto:support@radmentor.com" class="hover:text-white">support@radmentor.com</a></p></div></div><div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-500">&copy; 2025 RadMentor. All Rights Reserved.</div></div></footer>
     </div>
     
     <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[100] flex items-center justify-center p-4 hidden"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative"><button onclick="hideAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800"><i data-feather="x" class="w-7 h-7"></i></button><div class="p-8 md:p-12"><div id="auth-container"><h1 id="auth-title" class="text-3xl font-bold text-gray-900 text-center mb-2">Login</h1><p id="auth-subtitle" class="text-gray-600 text-center mb-8">Welcome back!</p><div class="space-y-4"><input type="email" id="email" placeholder="Email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"><input type="password" id="password" placeholder="Password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div><button onclick="handleAuth()" id="auth-btn" class="w-full hero-button text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Sign In</button><div class="text-center mt-6"><button onclick="toggleAuth()" id="toggle-btn" class="text-blue-600 hover:underline">Don't have an account? Sign up</button></div><p id="auth-message" class="text-red-500 text-center mt-4 font-medium"></p></div></div></div></div>
@@ -124,6 +138,7 @@
                 <div id="dashboard-main-content" class="hidden"><h1 class="text-4xl dashboard-greeting">Welcome to RadMentor</h1><p class="mt-2 text-xl dashboard-sub-greeting">The World’s Most Comprehensive Radiology Learning Source</p><div id="access-level-notice" class="text-white mt-6"></div><div class="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"><div class="dashboard-card" onclick="alert('FRCR page coming soon!')">FRCR</div><div class="dashboard-card" onclick="alert('MICR page coming soon!')">MICR</div><div class="dashboard-card" onclick="alert('Anatomy page coming soon!')">Anatomy</div><div class="dashboard-card" onclick="alert('MD / DNB page coming soon!')">MD / DNB</div><div class="dashboard-card" onclick="alert('Superspeciality page coming soon!')">Superspeciality MCQs</div><div class="dashboard-card" onclick="alert('Fellowship page coming soon!')">Fellowship Exams</div></div></div>
                 <div id="admin-section" class="hidden bg-gray-100 p-4 sm:p-8 rounded-xl text-gray-800"><h1 class="text-3xl font-bold text-gray-900 mb-6">Admin Dashboard</h1><div class="bg-white p-6 rounded-lg shadow-md"><h2 class="text-2xl font-bold mb-4 text-gray-800">User Management</h2><div class="overflow-x-auto"><table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" class="py-3 px-6">User</th><th scope="col" class="py-3 px-6">Email</th><th scope="col" class="py-3 px-6">Access Level</th><th scope="col" class="py-3 px-6">Actions</th></tr></thead><tbody id="user-list"></tbody></table></div></div></div>
                 <div id="profile-section" class="hidden bg-white p-8 rounded-lg shadow-md text-gray-800"></div>
+                <div id="settings-section" class="hidden bg-white p-8 rounded-lg shadow-md text-gray-800"></div>
             </div>
         </div>
     </div>
@@ -132,45 +147,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-    <script>
-        // --- Feather Icons Initialization ---
-        feather.replace();
-        // --- Firebase Configuration ---
-        const firebaseConfig = { /* PASTE YOUR FIREBASE CONFIG HERE */ };
-        // --- Firebase Initialization ---
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        // --- Global State & UI Elements ---
-        let currentUserData = null;
-        const ui = { authModal: document.getElementById('auth-modal'), authTitle: document.getElementById('auth-title'), authSubtitle: document.getElementById('auth-subtitle'), authBtn: document.getElementById('auth-btn'), toggleBtn: document.getElementById('toggle-btn'), authMessage: document.getElementById('auth-message'), landingPage: document.getElementById('landing-page'), dashboard: document.getElementById('dashboard'), profileForm: document.getElementById('profile-form-container'), loggedOutNav: document.getElementById('logged-out-nav'), loggedInNav: document.getElementById('logged-in-nav'), mobileLoggedOutNav: document.getElementById('mobile-logged-out-nav'), mainNav: document.getElementById('main-nav'), userMenuButton: document.getElementById('user-menu-button'), userMenu: document.getElementById('user-menu'), mobileMenuButton: document.getElementById('mobile-menu-button'), mobileMenu: document.getElementById('mobile-menu'), sidebar: document.getElementById('sidebar'), closeSidebarBtn: document.getElementById('close-sidebar-button'), mainDashboard: document.getElementById('dashboard-main-content'), adminDashboard: document.getElementById('admin-section') };
-        // --- Event Listeners ---
-        ui.userMenuButton.addEventListener('click', (e) => { e.stopPropagation(); ui.userMenu.classList.toggle('hidden'); });
-        ui.mobileMenuButton.addEventListener('click', () => { if (currentUserData) { ui.sidebar.classList.remove('translate-x-full'); } else { ui.mobileMenu.classList.toggle('hidden'); } });
-        ui.closeSidebarBtn.addEventListener('click', () => ui.sidebar.classList.add('translate-x-full'));
-        window.addEventListener('click', (e) => { if (!ui.loggedInNav.contains(e.target)) ui.userMenu.classList.add('hidden'); });
-        // --- Auth Modal Logic ---
-        function showAuthModal(mode) { authMode = mode; updateAuthModalUI(); ui.authModal.classList.remove('hidden'); }
-        function hideAuthModal() { ui.authModal.classList.add('hidden'); }
-        function toggleAuth() { authMode = authMode === 'signin' ? 'signup' : 'signin'; updateAuthModalUI(); }
-        function updateAuthModalUI() { const isSignin = authMode === 'signin'; ui.authTitle.textContent = isSignin ? 'Login' : 'Create Your Account'; ui.authSubtitle.textContent = isSignin ? 'Welcome back!' : 'Start your journey.'; ui.authBtn.textContent = isSignin ? 'Sign In' : 'Sign Up'; ui.toggleBtn.textContent = isSignin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'; ui.authMessage.textContent = ''; }
-        // --- Authentication Core ---
-        function handleAuth() { const email = document.getElementById('email').value; const password = document.getElementById('password').value; if (!email || !password) { ui.authMessage.textContent = "Please enter email and password."; return; } ui.authBtn.disabled = true; if (authMode === 'signin') { auth.signInWithEmailAndPassword(email, password).catch(err => ui.authMessage.textContent = err.message).finally(() => ui.authBtn.disabled = false); } else { auth.createUserWithEmailAndPassword(email, password).then(cred => { db.collection('users').doc(cred.user.uid).set({ email: cred.user.email, accessLevel: 'Restricted', createdAt: firebase.firestore.FieldValue.serverTimestamp() }); return cred.user.sendEmailVerification(); }).then(() => { auth.signOut(); showAuthModal('signin'); ui.authMessage.textContent = "Verification email sent!"; }).catch(err => ui.authMessage.textContent = err.message).finally(() => ui.authBtn.disabled = false); } }
-        function logout() { auth.signOut(); }
-        // --- Main App State Controller ---
-        auth.onAuthStateChanged(user => { if (user && user.emailVerified) { db.collection('users').doc(user.uid).get().then(doc => { if (doc.exists) { currentUserData = { uid: user.uid, ...doc.data() }; setupUIForLoggedInUser(currentUserData); } }); } else { currentUserData = null; setupUIForLoggedOutUser(); if (user && !user.emailVerified) { showAuthModal('signin'); ui.authMessage.textContent = "Please verify your email."; } } });
-        function setupUIForLoggedInUser(userData) { hideAuthModal(); ui.landingPage.classList.add('hidden'); ui.dashboard.classList.remove('hidden'); ui.loggedOutNav.classList.add('hidden'); ui.loggedInNav.classList.remove('hidden'); ui.mobileLoggedOutNav.classList.add('hidden'); ui.mainNav.classList.add('hidden'); document.getElementById('user-greeting-header').textContent = userData.name ? userData.name.split(' ')[0] : 'User'; if (!userData.name) { ui.profileForm.classList.remove('hidden'); ui.dashboard.classList.add('hidden'); } else { updateDashboardView(userData); } }
-        function setupUIForLoggedOutUser() { ui.landingPage.classList.remove('hidden'); ui.dashboard.classList.add('hidden'); ui.profileForm.classList.add('hidden'); ui.loggedOutNav.classList.remove('hidden'); ui.loggedInNav.classList.add('hidden'); ui.mobileLoggedOutNav.classList.remove('hidden'); ui.mainNav.classList.remove('hidden'); }
-        // --- Dashboard View Controller ---
-        function updateDashboardView(userData) { const isAdmin = userData.accessLevel === 'Admin'; const adminMenuLink = document.getElementById('admin-menu-link'); if (isAdmin) { if (!adminMenuLink) { const link = document.createElement('a'); link.id = 'admin-menu-link'; link.href = "#"; link.className = "block px-4 py-2 text-sm text-blue-700 font-bold hover:bg-gray-100"; link.textContent = "Admin Panel"; link.onclick = () => showDashboardSection('admin'); ui.userMenu.insertBefore(link, ui.userMenu.firstChild); } showDashboardSection('admin'); } else { if (adminMenuLink) adminMenuLink.remove(); updateAccessLevelNotice(userData.accessLevel); showDashboardSection('main'); } }
-        function showDashboardSection(sectionId) { [ui.mainDashboard, ui.adminDashboard, document.getElementById('profile-section')].forEach(el => { if(el) el.classList.add('hidden'); }); const elementToShow = document.getElementById(sectionId === 'main' ? 'dashboard-main-content' : `${sectionId}-section`); if (elementToShow) elementToShow.classList.remove('hidden'); if (sectionId === 'admin') loadUsersForAdmin(); if (sectionId === 'profile') populateProfileDetails(); ui.sidebar.classList.add('translate-x-full'); }
-        // --- Profile & Content Population ---
-        function submitProfile() { const profileData = { name: document.getElementById('name').value.trim(), dob: document.getElementById('dob').value, sex: document.getElementById('sex').value, }; if (!profileData.name || !profileData.dob || !profileData.sex) { alert("Please fill all fields."); return; } db.collection('users').doc(currentUserData.uid).update(profileData).then(() => { ui.profileForm.classList.add('hidden'); currentUserData = { ...currentUserData, ...profileData }; setupUIForLoggedInUser(currentUserData); }); }
-        function populateProfileDetails() { document.getElementById('profile-section').innerHTML = `<h2 class="text-2xl font-bold mb-6">Your Profile</h2><p><strong>Name:</strong> ${currentUserData.name}</p>`; }
-        function updateAccessLevelNotice(level) { const noticeDiv = document.getElementById('access-level-notice'); if (level === 'Restricted') { noticeDiv.innerHTML = `<div class="p-3 bg-yellow-500/20 text-yellow-300 rounded-lg border border-yellow-500/30"><p><span class="font-bold">Restricted Access.</span> Some features are locked.</p></div>`; } else if (level === 'Premium') { noticeDiv.innerHTML = `<div class="p-3 bg-green-500/20 text-green-300 rounded-lg border border-green-500/30"><p class="font-bold">Full Subscriber Access!</p></div>`; } else { noticeDiv.innerHTML = ''; } }
-        // --- Admin Functions ---
-        async function loadUsersForAdmin() { const userListBody = document.getElementById('user-list'); userListBody.innerHTML = `<tr><td colspan="4" class="text-center p-4">Loading...</td></tr>`; const snapshot = await db.collection('users').get(); userListBody.innerHTML = ''; snapshot.forEach(doc => { const user = doc.data(); const row = document.createElement('tr'); row.className = 'bg-white border-b'; row.innerHTML = `<td class="py-4 px-6">${user.name || 'N/A'}</td><td class="py-4 px-6">${user.email}</td><td class="py-4 px-6"><select id="select-${doc.id}" class="bg-gray-50 border border-gray-300 text-sm rounded-lg block w-full p-2.5"><option value="Restricted" ${user.accessLevel === 'Restricted' ? 'selected' : ''}>Restricted</option><option value="Premium" ${user.accessLevel === 'Premium' ? 'selected' : ''}>Premium</option><option value="Admin" ${user.accessLevel === 'Admin' ? 'selected' : ''}>Admin</option></select></td><td class="py-4 px-6"><button onclick="updateUserAccessLevel('${doc.id}')" class="font-medium text-blue-600 hover:underline">Save</button></td>`; userListBody.appendChild(row); }); }
-        function updateUserAccessLevel(userId) { const newLevel = document.getElementById(`select-${userId}`).value; if (confirm(`Change this user's access to ${newLevel}?`)) { db.collection('users').doc(userId).update({ accessLevel: newLevel }).then(() => alert('User updated successfully.')).catch(err => alert('Error: ' + err.message)); } }
-    </script>
+    <script src="app.js" defer></script>
 </body>
 </html>
