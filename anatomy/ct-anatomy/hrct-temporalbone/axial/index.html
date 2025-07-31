@@ -1,1 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRCT Temporal Bone - Axial - RadMentor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+    <style>
+        /* Base styles for all themes */
+        body {
+            font-family: 'Rubik', sans-serif;
+            margin: 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            flex-direction: column; /* Arrange items vertically */
+            overflow: hidden; /* Prevent body scroll if content overflows slightly */
+        }
 
+        /* Light Theme Variables */
+        body.light-theme {
+            --bg-color: #f0f8ff; /* Very light blue/off-white background */
+            --container-bg-color: #ffffff; /* Pure white container background */
+            --text-color: #333333; /* Dark grey for general text */
+            --heading-color: #0d47a1; /* Darker blue for headings */
+            --box-bg-color: #e3f2fd; /* Light blue for boxes */
+            --box-hover-bg-color: #bbdefb; /* Slightly darker light blue on hover */
+            --box-border-color: #90caf9; /* Medium blue for box borders */
+            --back-button-bg: #1e88e5; /* Standard blue button */
+            --back-button-hover-bg: #1565c0; /* Darker blue button on hover */
+            --slider-track-bg: #c5d9e8; /* Light blue for slider track */
+            --slider-thumb-bg: #1e88e5; /* Blue for slider thumb */
+            --annotation-text-color: #1a237e; /* Darker blue for annotation text */
+            --annotation-bg-color: rgba(255, 255, 255, 0.95); /* More opaque white background */
+            --annotation-border-color: #64b5f6; /* Light blue border */
+            --annotation-line-color: #42a5f5; /* Medium blue for lines */
+            --annotation-point-color: #f44336; /* Red dot for point */
+        }
+
+        /* Dark Theme Variables */
+        body:not(.light-theme) {
+            --bg-color: #004d5e;
+            --container-bg-color: #043f4e;
+            --text-color: #ffffff;
+            --heading-color: #ffffff;
+            --box-bg-color: #095a71;
+            --box-hover-bg-color: #064a5c;
+            --box-border-color: #043f4e;
+            --back-button-bg: #00bcd4;
+            --back-button-hover-bg: #0097a7;
+            --slider-track-bg: #032b36; /* Darker track for dark theme */
+            --slider-thumb-bg: #00bcd4; /* Brighter thumb for dark theme */
+            --annotation-text-color: #e0f2f1; /* Light text for annotations */
+            --annotation-bg-color: rgba(0, 0, 0, 0.85); /* More opaque black background */
+            --annotation-border-color: #00bcd4; /* Accent color border */
+            --annotation-line-color: #00bcd4; /* Accent color for lines */
+            --annotation-point-color: #f44336; /* Red dot for point */
+        }
+
+        .viewer-container {
+            background-color: var(--container-bg-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 900px; /* Adjust as needed */
+            width: 90%; /* Responsive width */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center items horizontally */
+        }
+
+        .viewer-container h1 {
+            color: var(--heading-color);
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Image and Overlay Container - Adjusted for 860x532px images */
+        .image-wrapper {
+            position: relative;
+            width: 860px; /* Set to your actual image's pixel width */
+            height: 532px; /* Set to your actual image's pixel height */
+            background-color: #000; /* Black background for imaging studies */
+            border-radius: 8px;
+            overflow: hidden; /* Hide anything outside the wrapper */
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+            /* For responsiveness, use padding-bottom to maintain aspect ratio */
+            max-width: 100%; /* Ensure it shrinks on smaller screens */
+            height: auto; /* Allow height to adjust */
+            padding-bottom: calc(532 / 860 * 100%); /* Maintain 860x532 aspect ratio */
+        }
+
+        .image-wrapper img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Ensures the image fits within the wrapper without cropping */
+            display: block;
+            user-select: none;
+            -webkit-user-drag: none;
+            z-index: 8; /* Below labels and SVG lines */
+        }
+
+        /* SVG Overlay for Lines and Points */
+        .annotation-svg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9; /* Above image, below labels */
+            pointer-events: none; /* Crucial: allows clicks to pass through to image/labels */
+            overflow: visible; /* Allows SVG elements to go slightly outside if needed */
+        }
+        /* Lines are hidden by default, visible on hover */
+        .annotation-svg-overlay line {
+            stroke: var(--annotation-line-color);
+            stroke-width: 2;
+            transition: opacity 0.3s ease;
+            opacity: 0; /* Hidden by default */
+            stroke-linecap: round;
+        }
+        .annotation-svg-overlay line.visible-on-hover {
+            opacity: 0.7; /* Line becomes visible on hover */
+        }
+        /* Circles are usually always visible, but can change on hover */
+        .annotation-svg-overlay circle {
+            fill: var(--annotation-point-color);
+            transition: all 0.1s ease; /* Transition for 'r' (radius) */
+            opacity: 1; /* Always visible */
+            pointer-events: auto; /* Allow hovering on the circle */
+        }
+        .annotation-svg-overlay circle.visible-on-hover-circle {
+            r: 6; /* Make radius slightly larger on hover */
+        }
+
+        /* Annotation Label Styling (HTML Divs) */
+        .annotation-label {
+            position: absolute; /* Positioned absolutely within image-wrapper */
+            background-color: var(--annotation-bg-color);
+            color: var(--annotation-text-color);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border: 1px solid var(--annotation-border-color);
+            z-index: 11; /* Ensure labels are on top */
+            cursor: default;
+            
+            /* Center the label on its 'top' and 'left' coordinates */
+            transform: translate(-50%, -50%); 
+
+            /* Visibility control: hidden by default, shown on hover */
+            opacity: 0; 
+            transition: opacity 0.3s ease; 
+            pointer-events: auto; /* Allow hovering on the label */
+        }
+
+        .annotation-label.show {
+            opacity: 1; /* Label becomes visible */
+        }
+
+        .controls {
+            width: 100%;
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        #sliceSlider {
+            width: 90%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            background: var(--slider-track-bg);
+            outline: none;
+            opacity: 0.9;
+            transition: opacity .2s;
+            border-radius: 5px;
+        }
+
+        #sliceSlider:hover {
+            opacity: 1;
+        }
+
+        #sliceSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--slider-thumb-bg);
+            cursor: grab;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+
+        #sliceSlider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--slider-thumb-bg);
+            cursor: grab;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+
+        #sliceNumberDisplay {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .back-button {
+            display: block;
+            width: 200px;
+            margin: 40px auto 0;
+            padding: 15px 25px;
+            background-color: var(--back-button-bg);
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover {
+            background-color: var(--back-button-hover-bg);
+        }
+
+        /* Responsive adjustments for image wrapper */
+        @media (max-width: 880px) { /* Adjust breakpoint if needed */
+            .image-wrapper {
+                width: 100%; 
+                height: auto;
+                padding-bottom: calc(532 / 860 * 100%); 
+            }
+        }
+        @media (max-width: 768px) {
+            .viewer-container {
+                padding: 15px;
+                width: 95%;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+        }
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            .back-button {
+                width: 100%;
+                font-size: 1rem;
+            }
+        }
+        /* Loading spinner CSS */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="viewer-container">
+        <h1>HRCT Temporal Bone - Axial Section</h1> 
+
+        <div class="image-wrapper">
+            <img id="temporalBoneSliceImage" src="" alt="HRCT Temporal Bone Axial Slice">
+            <svg class="annotation-svg-overlay" id="annotationSvgOverlay"></svg>
+            <div id="annotationOverlay"></div>
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="spinner"></div>&nbsp;Loading Annotations...
+            </div>
+        </div>
+
+        <div class="controls">
+            <input type="range" id="sliceSlider" min="1" max="131" value="1"> 
+            <div id="sliceNumberDisplay">Slice: 1 / 131</div>
+        </div>
+
+        <a href="../index.html" class="back-button">Back to HRCT Temporal Bone Menu</a>
+    </div>
+
+    <script>
+        // --- CONFIGURATION - CUSTOMIZED FOR HRCT TEMPORAL BONE AXIAL ---
+        const imageCount = 131; // Total number of axial images
+        const imageBaseName = ''; // Images are named 1.jpg, 2.jpg, etc.
+        const imageExtension = '.jpg'; // File extension for your images
+        const imageFolderPath = './images/'; // Path to your images folder
+        
+        const annotationJsonPath = './annotations/'; // Path to your annotations folder
+        
+        // These are the actual pixel dimensions of your source images (860x532px)
+        const IMAGE_ACTUAL_WIDTH = 860; 
+        const IMAGE_ACTUAL_HEIGHT = 532;
+
+        // Annotation positioning on the image itself
+        const ANNOTATION_LABEL_OFFSET_X = 25; // How far label's center is from point horizontally
+        const ANNOTATION_LABEL_OFFSET_Y = 0; // How far label's center is from point vertically (0 means centered vertically with point)
+        const LINE_LENGTH = 15; // Length of the line segment connecting point to label
+
+        // --- JSON FILENAMES (CRITICAL: LIST ALL YOUR HRCT TEMPORAL BONE AXIAL JSON FILES HERE) ---
+        // These must match the exact filenames (including .mrk.json) in your 'annotations' folder.
+        const jsonFilenames = [
+            "Aditus.mrk.json", 
+            "Ampulla of Superior SCC.json", 
+            "Arcuate eminence.mrk.json", 
+            "Axis.mrk.json", 
+            "Base of Cochlea.mrk.json", 
+            "Body of Incus.mrk.json", 
+            "Chorda tympani nerve.mrk.json", 
+            "Cochlear aqueduct.mrk.json", 
+            "Condylar Process.mrk.json",
+            // IMPORTANT: Add the rest of your .mrk.json filenames here!
+            // Example:
+            // "Cochlea.mrk.json",
+            // "Internal Auditory Canal.mrk.json",
+            // "Malleus.mrk.json",
+            // "Mastoid Air Cells.mrk.json",
+            // "Semicircular Canal.mrk.json",
+            // "Stapes.mrk.json",
+            // ... (continue listing all 100+ files)
+        ];
+        // --- END JSON FILENAMES ---
+        // --- END CONFIGURATION ---
+
+        const temporalBoneSliceImage = document.getElementById('temporalBoneSliceImage'); // Renamed ID for clarity
+        const sliceSlider = document.getElementById('sliceSlider');
+        const sliceNumberDisplay = document.getElementById('sliceNumberDisplay');
+        const annotationOverlay = document.getElementById('annotationOverlay');
+        const annotationSvgOverlay = document.getElementById('annotationSvgOverlay');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        let allAnnotations = [];
+        let annotationsLoaded = false;
+        const preloadedImages = [];
+
+        // --- THEME LOGIC (standard, copied for consistency) ---
+        function setTheme(theme) {
+            if (theme === 'light') {
+                document.body.classList.add('light-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.body.classList.remove('light-theme');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        function setInitialTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+            } else {
+                document.body.classList.remove('light-theme');
+            }
+        }
+        setInitialTheme();
+        // --- END THEME LOGIC ---
+
+        // --- Data Loading and Processing ---
+        async function loadAnnotations() {
+            console.log("loadAnnotations started.");
+            loadingOverlay.classList.remove('hidden');
+
+            const fetchPromises = jsonFilenames.map(filename =>
+                new Promise((resolve, reject) => {
+                    const timeoutId = setTimeout(() => {
+                        reject(new Error(`Fetch timed out for ${filename} after 10 seconds.`));
+                    }, 10000);
+
+                    fetch(`${annotationJsonPath}${filename}`)
+                        .then(response => {
+                            clearTimeout(timeoutId);
+                            if (!response.ok) {
+                                // Log the actual URL that failed for easier debugging
+                                console.error(`Failed to load ${filename}. URL: ${response.url} Status: ${response.status} ${response.statusText}`);
+                                reject(new Error(`Failed to load ${filename}: ${response.statusText}`));
+                            }
+                            return response.json();
+                        })
+                        .then(jsonData => {
+                            resolve(jsonData);
+                        })
+                        .catch(error => {
+                            clearTimeout(timeoutId);
+                            reject(error);
+                        });
+                })
+            );
+
+            try {
+                const results = await Promise.all(fetchPromises);
+                console.log("All JSON fetches and parsing completed.");
+
+                results.forEach(jsonData => {
+                    if (!jsonData || !jsonData.markups || !Array.isArray(jsonData.markups)) {
+                        console.warn("Skipping invalid or empty JSON data for a markup file (missing 'markups' array).", jsonData);
+                        return;
+                    }
+
+                    jsonData.markups.forEach(markup => {
+                        if (markup.type === "Fiducial" && Array.isArray(markup.controlPoints)) {
+                            markup.controlPoints.forEach(cp => {
+                                if (cp.position && cp.position.length === 3) {
+                                    const sliceZ = cp.position[2];
+                                    // Slicer's Z can be float. Round to nearest integer for slice number.
+                                    const imageSliceNumber = Math.round(sliceZ); 
+
+                                    // Assuming cp.position[0] and cp.position[1] are directly pixel coordinates (X, Y)
+                                    // relative to the 860x532 image.
+                                    allAnnotations.push({
+                                        slice: imageSliceNumber,
+                                        text: cp.label.split(/-\d+/)[0].trim(), // Clean label text
+                                        pointX: cp.position[0], 
+                                        pointY: cp.position[1], 
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
+                console.log("All annotations processed. Total annotations:", allAnnotations.length);
+                annotationsLoaded = true;
+
+            } catch (e) {
+                console.error("Critical error during annotation loading or processing:", e);
+                alert("A critical error occurred while loading annotations: " + e.message + ". Check console for network/parsing details and correct JSON filenames.");
+                annotationsLoaded = false;
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+            // Initial slice update after annotations load
+            updateSlice();
+        }
+
+        // --- Image Preloading ---
+        function preloadAllImages() {
+            console.log("Preloading images initiated.");
+            for (let i = 1; i <= imageCount; i++) {
+                const img = new Image();
+                img.src = `${imageFolderPath}${i}${imageExtension}`; // Uses 'i' directly as base name
+                preloadedImages.push(img);
+            }
+        }
+
+        // --- Display Logic ---
+        function updateSlice() {
+            const currentSlice = parseInt(sliceSlider.value);
+            const imageUrl = `${imageFolderPath}${currentSlice}${imageExtension}`; // Uses currentSlice directly for image name
+            
+            // Set the image src. This will trigger onload if image changes.
+            temporalBoneSliceImage.src = imageUrl;
+
+            sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
+
+            // Clear previous labels and SVG elements
+            annotationOverlay.innerHTML = '';
+            annotationSvgOverlay.innerHTML = '';
+
+            // This ensures annotations are drawn only after the image is fully loaded and sized
+            temporalBoneSliceImage.onload = function() {
+                // Ensure this onload only fires once per image load
+                this.onload = null;
+
+                // Get dynamic dimensions of the image wrapper (which could be scaled by responsive CSS)
+                const imageWrapperWidth = temporalBoneSliceImage.offsetWidth;
+                const imageWrapperHeight = temporalBoneSliceImage.offsetHeight;
+                
+                // Calculate scaling factors if the image is displayed at a different size than its actual pixels
+                const scaleX = imageWrapperWidth / IMAGE_ACTUAL_WIDTH;
+                const scaleY = imageWrapperHeight / IMAGE_ACTUAL_HEIGHT;
+
+                if (annotationsLoaded) {
+                    const annotationsForCurrentSlice = allAnnotations.filter(ann => ann.slice === currentSlice);
+                    
+                    annotationsForCurrentSlice.forEach((annotation, index) => {
+                        // Convert JSON coordinates (which are IMAGE_ACTUAL_WIDTH/HEIGHT pixels)
+                        // to actual displayed pixel coordinates, considering responsive scaling.
+                        const pX_px_displayed = annotation.pointX * scaleX;
+                        const pY_px_displayed = annotation.pointY * scaleY;
+
+                        // --- Create HTML Label div ---
+                        const labelDiv = document.createElement('div');
+                        labelDiv.classList.add('annotation-label');
+                        labelDiv.textContent = annotation.text;
+                        labelDiv.id = `label-${currentSlice}-${index}`;
+                        
+                        annotationOverlay.appendChild(labelDiv);
+                        
+                        // Position the label relative to the point + offset.
+                        // transform(-50%, -50%) centers the label on its (left, top) coordinates.
+                        labelDiv.style.left = `${pX_px_displayed + ANNOTATION_LABEL_OFFSET_X}px`;
+                        labelDiv.style.top = `${pY_px_displayed + ANNOTATION_LABEL_OFFSET_Y}px`;
+
+                        // --- Create SVG Line ---
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', pX_px_displayed); // Line starts at the annotation point
+                        line.setAttribute('y1', pY_px_displayed);
+                        
+                        // Line ends slightly towards the label (horizontal offset)
+                        line.setAttribute('x2', pX_px_displayed + ANNOTATION_LABEL_OFFSET_X - (ANNOTATION_LABEL_OFFSET_X > 0 ? (labelDiv.offsetWidth / 2) - LINE_LENGTH : LINE_LENGTH - (labelDiv.offsetWidth / 2))); // This aims the line towards the edge of the label.
+                        line.setAttribute('y2', pY_px_displayed + ANNOTATION_LABEL_OFFSET_Y); // Y is the same as label center
+                        
+                        line.id = `line-${currentSlice}-${index}`;
+                        annotationSvgOverlay.appendChild(line);
+
+                        // Create SVG Circle for the point
+                        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        circle.setAttribute('cx', pX_px_displayed);
+                        circle.setAttribute('cy', pY_px_displayed);
+                        circle.setAttribute('r', 4); // Default radius
+                        circle.id = `circle-${currentSlice}-${index}`;
+                        annotationSvgOverlay.appendChild(circle);
+
+                        // --- Add Hover Interactivity (on both label and circle) ---
+                        // Show label, line, and highlight circle on hover
+                        const activateAnnotation = () => {
+                            labelDiv.classList.add('show');
+                            document.getElementById(`line-${currentSlice}-${index}`)?.classList.add('visible-on-hover');
+                            document.getElementById(`circle-${currentSlice}-${index}`)?.classList.add('visible-on-hover-circle');
+                        };
+                        // Hide label, line, and de-highlight circle on mouse out
+                        const deactivateAnnotation = () => {
+                            labelDiv.classList.remove('show');
+                            document.getElementById(`line-${currentSlice}-${index}`)?.classList.remove('visible-on-hover');
+                            document.getElementById(`circle-${currentSlice}-${index}`)?.classList.remove('visible-on-hover-circle');
+                        };
+
+                        labelDiv.addEventListener('mouseover', activateAnnotation);
+                        labelDiv.addEventListener('mouseout', deactivateAnnotation);
+                        circle.addEventListener('mouseover', activateAnnotation);
+                        circle.addEventListener('mouseout', deactivateAnnotation);
+                        // --- End Hover Interactivity ---
+                    });
+                } else {
+                    console.warn("Annotations not yet loaded or failed to load. Skipping rendering of annotations for this slice.");
+                }
+            };
+
+            // If the image is already loaded (from cache or preloading), trigger the onload manually
+            // This is important for the first slice or if navigating quickly.
+            if (temporalBoneSliceImage.complete) {
+                temporalBoneSliceImage.onload(); 
+            }
+        }
+
+        // --- Initial Setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM content loaded. Initializing viewer.");
+            preloadAllImages();
+            loadAnnotations(); // Start loading annotations in the background
+        });
+
+        sliceSlider.addEventListener('input', updateSlice); // 'input' for continuous update, 'change' for final value
+        
+        // Debounced resize event listener (re-renders annotations when window size changes)
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                console.log("Window resized, updating slice.");
+                updateSlice();
+            }, 100); // Wait 100ms after resize stops to update
+        });
+    </script>
+</body>
+</html>
