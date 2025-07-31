@@ -100,7 +100,7 @@
         body.dashboard-active { 
             display: block; /* Revert body to block display to allow normal document flow */
             min-height: 0; /* Reset min-height for body when dashboard is active */
-            /* Margin Auto on dashboard-content-wrapper will center dashboard */
+            padding-top: 50px; /* Space for fixed topbar */
         }
         body.dashboard-active .container { /* Adjust containers if they appear within dashboard for specific sections */
             margin: 25px auto; /* Standard margin for content sections in dashboard */
@@ -164,34 +164,50 @@
         .topbar {
             position: fixed;
             top: 0;
-            right: 0;
+            left: 0; /* Fixed to left, spans width */
             width: 100%;
             height: 50px;
             background-color: var(--topbar-bg-color);
             color: var(--topbar-text-color);
             display: none; 
-            justify-content: flex-end;
+            justify-content: space-between; /* Space out items (logo and right-side controls) */
             align-items: center;
-            padding-right: 20px;
+            padding: 0 20px; /* Padding on sides */
+            box-sizing: border-box; /* Include padding in width */
             z-index: 1000;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .topbar .logo-container { /* New container for logo on left */
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }
+        .topbar .logo-container img { /* Adjust logo within topbar */
+            position: static; /* Remove absolute positioning */
+            height: 40px; /* Fit within topbar height */
+            width: auto;
+            margin-right: 15px;
+            top: auto; /* Reset top */
+            left: auto; /* Reset left */
+            z-index: auto; /* Reset z-index */
+        }
+        .topbar .user-greeting-wrapper { /* Wrapper for greeting and menu icon */
+            display: flex;
+            align-items: center;
+            gap: 15px; /* Space between greeting and menu icon */
+        }
+        .user-greeting {
+            font-size: 1.0rem; 
+            white-space: nowrap; /* Prevent wrapping */
+            display: flex; /* Inherit flex from wrapper */
+            align-items: center;
         }
         .menu-icon {
             cursor: pointer;
             font-size: 1.5rem;
-            margin-left: 15px; 
             display: flex; 
             align-items: center;
             height: 100%; 
-        }
-        .user-greeting {
-            font-size: 1.0rem; 
-            margin-left: auto; 
-            padding-right: 15px; 
-            display: flex;
-            align-items: center;
-            height: 100%; 
-            white-space: nowrap; 
         }
         .sidebar {
             position: fixed;
@@ -236,11 +252,11 @@
 
         /* Dashboard main content area wrapper */
         .dashboard-content-wrapper {
-            margin: 0 auto; /* Center the wrapper */
-            padding: 20px; /* Internal padding for the content */
-            width: 90%; /* Start wide on larger screens */
-            max-width: 1200px; /* Maximum width for very large screens */
-            box-sizing: border-box; /* Include padding in width */
+            margin: 0 auto;
+            padding: 20px;
+            width: 90%;
+            max-width: 1200px;
+            box-sizing: border-box;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -380,7 +396,7 @@
             color: var(--text-color);
             font-weight: 500;
         }
-        .profile-field-display, .profile-field.editable, .settings-option { 
+        .profile-field-display, .profile-field.editable, .settings-option { /* Combined for common styles */
             background-color: var(--profile-field-bg);
             color: var(--text-color);
             border: 1px solid #ced4da;
@@ -512,9 +528,10 @@
     <img src="logo.png" alt="Rad Mentor Logo" />
 
     <div class="container" id="auth-container" style="display: none;">
-        <h1 class="welcome-title" style="font-size: 2.5rem; margin-bottom: 10px;">Welcome to RadMentor</h1>
+        <h1 class="welcome-title" style="font-size: 2.5rem; margin-bottom: 10px;">Welcome to RadMentor</h1> 
         <p class="welcome-subtitle" style="font-size: 1.2rem; margin-bottom: 25px;">The World’s Most Comprehensive Radiology Learning Source</p>
-        <h1 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 20px;">🔬 Login</h1> <div class="input-group"><input type="email" id="email" placeholder="Email" /></div>
+        <h1 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 20px;">🔬 Login</h1> 
+        <div class="input-group"><input type="email" id="email" placeholder="Email" /></div>
         <div class="input-group"><input type="password" id="password" placeholder="Password" /></div>
         <button onclick="handleAuth()" id="auth-btn">Sign In</button>
         <div class="toggle" onclick="toggleAuth()">Don't have an account? Sign up</div>
@@ -729,7 +746,7 @@
             <div class="profile-field-display"><strong>Date of Birth:</strong> <span id="display-dob"></span></div>
             <div class="profile-field-display"><strong>Sex:</strong> <span id="display-sex"></span></div>
             <div class="profile-field-display"><strong>Position:</strong> <span id="display-position"></span></div>
-            <div class="profile-field-display"><strong>Medical College:</b> <span id="display-college"></span></div>
+            <div class="profile-field-display"><strong>Medical College:</strong> <span id="display-college"></span></div>
             <div class="profile-field-display"><strong>Exam Pursuing:</strong> <span id="display-exam"></span></div>
             <button onclick="toggleProfileEditMode(true)">Edit Profile</button>
         </div>
@@ -833,7 +850,7 @@
         <div class="content-section" id="contact-us-section">
             <h2>Contact Us</h2>
             <p>Have questions or feedback? We'd love to hear from you!</p>
-            <p>Email: <a href="mailto:RadMentor@outlook.com" style="color: var(--toggle-color);">RadMentor@outlook.com</a></p>
+            <p>Email: <a href="mailto:support@radmentor.com" style="color: var(--toggle-color);">support@radmentor.com</a></p>
             <p>Our team will get back to you as soon as possible.</p>
         </div>
 
@@ -1138,9 +1155,6 @@
                 populateProfileDetails(); 
                 toggleProfileEditMode(false); 
                 document.getElementById('profile-section').style.display = 'block';
-            } else if (sectionId === 'edit-profile') { 
-                populateEditProfileForm(); 
-                document.getElementById('edit-profile-section').style.display = 'block';
             } else if (sectionId === 'subscription') {
                 document.getElementById('subscription-section').style.display = 'block';
             } else if (sectionId === 'settings') {
@@ -1169,6 +1183,7 @@
                 populateProfileDetails(); 
             }
         }
+
 
         function populateProfileDetails() {
             if (currentUserData) {
