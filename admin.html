@@ -15,8 +15,8 @@
             color: var(--text-color);
             transition: background-color 0.3s ease, color 0.3s ease;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            justify-content: flex-start; /* Align content to start in admin mode */
+            align-items: center; /* Initial alignment for container */
             min-height: 100vh;
             flex-direction: column;
         }
@@ -71,74 +71,161 @@
             --section-card-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             background: var(--bg-color);
         }
+        /* General apply */
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
         }
 
-        .admin-container {
-            max-width: 800px;
+        .admin-dashboard-wrapper {
             width: 90%;
-            margin: 50px auto;
+            max-width: 1200px;
+            margin: 50px auto 20px auto; /* Top margin for topbar, then auto for center */
             padding: 30px;
             background-color: var(--container-bg-color);
             color: var(--text-color);
             border-radius: 16px;
             box-shadow: var(--section-card-shadow);
-            text-align: center;
+            box-sizing: border-box;
         }
 
-        .admin-container h1 {
+        .admin-dashboard-wrapper h1 {
+            text-align: center;
             font-size: 2.5rem;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             color: var(--heading-color);
         }
-
-        .admin-container p {
-            font-size: 1.1rem;
-            margin-bottom: 30px;
+        .admin-dashboard-wrapper h2 {
+            font-size: 1.8rem;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            color: var(--heading-color);
+            border-bottom: 1px solid var(--sidebar-item-border); /* Subtle separator */
+            padding-bottom: 10px;
         }
 
-        .admin-button {
-            padding: 12px 25px;
-            font-size: 1.1rem;
+        .admin-topbar {
+            position: fixed;
+            top: 0;
+            left: 0; /* Changed from right to left to allow logo positioning */
+            width: 100%;
+            height: 50px;
+            background-color: var(--topbar-bg-color);
+            color: var(--topbar-text-color);
+            display: flex;
+            justify-content: space-between; /* Space out items */
+            align-items: center;
+            padding: 0 20px;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .admin-topbar .greeting {
+            font-size: 1rem;
+            font-weight: 500;
+            flex-grow: 1; /* Allows it to take space */
+            text-align: center; /* Center the greeting */
+        }
+        .admin-topbar .admin-top-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .admin-topbar .admin-top-controls a,
+        .admin-topbar .admin-top-controls button {
             background: var(--button-bg-color);
-            color: #fff;
-            font-weight: bold;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: background 0.2s ease;
             border: none;
-            border-radius: 8px;
             cursor: pointer;
-            transition: background 0.3s ease;
-            text-decoration: none; /* For link styling */
-            display: inline-block; /* For link styling */
-            margin-top: 20px;
         }
-
-        .admin-button:hover {
+        .admin-topbar .admin-top-controls a:hover,
+        .admin-topbar .admin-top-controls button:hover {
             background: var(--button-hover-bg-color);
         }
 
         .admin-logo {
-            position: absolute;
+            position: absolute; /* Kept absolute for precise positioning */
             top: 15px;
             left: 20px;
             height: 120px;
             z-index: 100;
         }
 
-        /* Responsive adjustments (similar to main page) */
-        @media (max-width: 768px) {
-            .admin-container {
-                padding: 20px;
-                width: 95%;
-            }
-            .admin-container h1 {
-                font-size: 2rem;
-            }
-            .admin-button {
-                font-size: 1rem;
-                padding: 10px 20px;
-            }
+        /* --- Admin Specific Tables --- */
+        .admin-table-container {
+            overflow-x: auto; /* Allow horizontal scrolling for wide tables */
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            text-align: left;
+            background-color: var(--profile-field-bg); /* Use a light background for table */
+            color: var(--text-color);
+        }
+        .admin-table th, .admin-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--sidebar-item-border); /* Light separator */
+        }
+        .admin-table th {
+            background-color: var(--sidebar-item-hover-bg); /* Slightly different header background */
+            font-weight: bold;
+            color: var(--text-color);
+            white-space: nowrap; /* Prevent headers from wrapping */
+        }
+        .admin-table tr:hover {
+            background-color: rgba(0, 0, 0, 0.05); /* Subtle row hover effect */
+        }
+        body.light-theme .admin-table tr:hover {
+            background-color: rgba(0, 0, 0, 0.03); 
+        }
+
+        /* Specific styles for Access Level Select */
+        .admin-table select {
+            width: 120px;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid var(--toggle-color);
+            background-color: var(--input-bg-color);
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+        body.light-theme .admin-table select {
+            color: #212121;
+        }
+        body.gradient-theme .admin-table select {
+            color: #212121;
+        }
+        /* Status dot for online/offline */
+        .status-dot {
+            height: 10px;
+            width: 10px;
+            background-color: #bbb; /* Default grey */
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-dot.online {
+            background-color: #28a745; /* Green */
+        }
+        .status-dot.offline {
+            background-color: #dc3545; /* Red */
+        }
+
+        /* No results message */
+        .no-results {
+            text-align: center;
+            padding: 30px;
+            font-style: italic;
+            color: var(--text-color);
         }
     </style>
 </head>
@@ -146,11 +233,53 @@
 
     <img src="logo.png" alt="Rad Mentor Logo" class="admin-logo" />
 
-    <div class="admin-container">
+    <div class="admin-topbar">
+        <div class="greeting">Hi, Administrator!</div>
+        <div class="admin-top-controls">
+            <a href="index.html" class="admin-button">User Portal</a>
+            <button onclick="adminLogout()">Log Out</button>
+        </div>
+    </div>
+
+    <div class="admin-dashboard-wrapper">
         <h1>Admin Dashboard</h1>
-        <p>Welcome, Administrator! You have special privileges here.</p>
-        <p>This is where you will manage users, content, and settings.</p>
-        <a href="#" class="admin-button" onclick="adminLogout()">Log Out</a>
+
+        <h2>User Management</h2>
+        <div class="admin-table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Last Login</th>
+                        <th>Access Level</th>
+                        <th>Subscription Start</th>
+                        <th>Subscription End</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="user-list">
+                    <tr><td colspan="8" class="no-results" id="user-list-message">Loading users...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2>Login Activity Log</h2>
+        <div class="admin-table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>User Email</th>
+                        <th>Timestamp</th>
+                        <th>Access Level at Login</th>
+                        </tr>
+                </thead>
+                <tbody id="login-logs-list">
+                    <tr><td colspan="3" class="no-results" id="login-logs-message">Loading logs...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -158,7 +287,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
     <script>
-        // Your Firebase Configuration (copy from your index.html)
         const firebaseConfig = {
             apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw", 
             authDomain: "radiology-mcqs.firebaseapp.com",
@@ -171,8 +299,9 @@
 
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        const db = firebase.firestore();
 
-        // Theme logic for admin.html
+        // --- Theme Logic (Copied for consistency) ---
         function setInitialTheme() {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'light') {
@@ -184,39 +313,175 @@
             }
         }
         setInitialTheme();
+        // --- End Theme Logic ---
 
-        // Admin logout function
+        // --- Admin Specific Functions ---
+
+        // Function to log out admin (redirects to main login)
         function adminLogout() {
             auth.signOut().then(() => {
-                // Redirect back to the main login page after logout
                 window.location.href = 'index.html'; 
             }).catch(error => {
                 alert("Error logging out: " + error.message);
+                console.error("Logout error:", error);
             });
         }
 
-        // Optional: Basic admin check on page load (more robust checks involve Firebase Security Rules)
+        // --- Admin Dashboard Data Loading ---
+
+        // Function to fetch and display all users
+        async function loadUsers() {
+            const userListBody = document.getElementById('user-list');
+            userListBody.innerHTML = '<tr><td colspan="8" class="no-results">Loading users...</td></tr>';
+
+            try {
+                const usersSnapshot = await db.collection('users').get();
+                if (usersSnapshot.empty) {
+                    userListBody.innerHTML = '<tr><td colspan="8" class="no-results">No users found.</td></tr>';
+                    return;
+                }
+
+                userListBody.innerHTML = ''; // Clear loading message
+
+                usersSnapshot.forEach(doc => {
+                    const userData = doc.data();
+                    const userId = doc.id; // Firebase Auth UID
+                    const row = userListBody.insertRow();
+
+                    // User Name & Email
+                    const nameCell = row.insertCell();
+                    nameCell.textContent = userData.name || 'N/A';
+                    const emailCell = row.insertCell();
+                    emailCell.textContent = userData.email || 'N/A';
+
+                    // Status (Basic: just last online based on login logs for now)
+                    const statusCell = row.insertCell();
+                    statusCell.innerHTML = `<span class="status-dot offline"></span> Offline`; // Default to offline for now
+                    // For "online" status, you'd need users to frequently update a 'lastOnline' timestamp in their own user doc.
+
+                    // Last Login (Fetch from loginLogs - this is simplified, full check would be complex)
+                    const lastLoginCell = row.insertCell();
+                    lastLoginCell.textContent = 'Fetching...';
+                    db.collection('loginLogs').where('userId', '==', userId).orderBy('timestamp', 'desc').limit(1).get().then(logSnapshot => {
+                        if (!logSnapshot.empty) {
+                            const lastLoginData = logSnapshot.docs[0].data();
+                            const date = lastLoginData.timestamp.toDate(); // Convert Firestore Timestamp to Date object
+                            lastLoginCell.textContent = date.toLocaleString(); // Format date/time
+                            // Basic online check: if last login was very recent (e.g., last 5 mins)
+                            if (Date.now() - date.getTime() < 5 * 60 * 1000) { // Within last 5 minutes
+                                statusCell.innerHTML = `<span class="status-dot online"></span> Online`;
+                            }
+                        } else {
+                            lastLoginCell.textContent = 'Never logged in';
+                        }
+                    }).catch(err => {
+                        console.error("Error fetching last login:", err);
+                        lastLoginCell.textContent = 'Error';
+                    });
+
+                    // Access Level (Editable)
+                    const accessLevelCell = row.insertCell();
+                    const select = document.createElement('select');
+                    select.innerHTML = `
+                        <option value="restricted" ${userData.accessLevel === 'restricted' ? 'selected' : ''}>Restricted</option>
+                        <option value="subscriber" ${userData.accessLevel === 'subscriber' ? 'selected' : ''}>Subscriber</option>
+                        <option value="admin" ${userData.accessLevel === 'admin' ? 'selected' : ''}>Admin</option>
+                    `;
+                    select.onchange = (e) => updateAccessLevel(userId, e.target.value);
+                    accessLevelCell.appendChild(select);
+
+                    // Subscription Dates (Placeholder for now)
+                    const subStartCell = row.insertCell();
+                    subStartCell.textContent = userData.subscriptionStart ? userData.subscriptionStart.toDate().toLocaleDateString() : 'N/A';
+                    const subEndCell = row.insertCell();
+                    subEndCell.textContent = userData.subscriptionEnd ? userData.subscriptionEnd.toDate().toLocaleDateString() : 'N/A';
+
+                    // Actions (e.g., Reset Password, Delete User - will be complex for now)
+                    const actionsCell = row.insertCell();
+                    actionsCell.innerHTML = `<button onclick="alert('Manage subscription for ${userData.name}')">Manage Sub</button>`; 
+                    // Add more admin actions here (e.g., "Delete User" button)
+                });
+
+            } catch (error) {
+                console.error("Error loading users:", error);
+                userListBody.innerHTML = '<tr><td colspan="8" class="no-results" style="color:red;">Error loading users. Check console.</td></tr>';
+            }
+        }
+
+        // Function to update a user's access level
+        async function updateAccessLevel(userId, newLevel) {
+            if (!confirm(`Are you sure you want to change access level for user ${userId} to ${newLevel}?`)) {
+                loadUsers(); // Refresh if cancelled
+                return;
+            }
+            try {
+                await db.collection('users').doc(userId).update({ accessLevel: newLevel });
+                alert(`Access level for ${userId} updated to ${newLevel}.`);
+                // No need to reload all users, but good for confirmation
+                // loadUsers();
+            } catch (error) {
+                console.error("Error updating access level:", error);
+                alert("Failed to update access level. " + error.message);
+            }
+        }
+
+
+        // Function to fetch and display login logs
+        async function loadLoginLogs() {
+            const loginLogsBody = document.getElementById('login-logs-list');
+            loginLogsBody.innerHTML = '<tr><td colspan="3" class="no-results">Loading login logs...</td></tr>';
+
+            try {
+                const logsSnapshot = await db.collection('loginLogs').orderBy('timestamp', 'desc').limit(50).get(); // Limit to last 50 logs
+                if (logsSnapshot.empty) {
+                    loginLogsBody.innerHTML = '<tr><td colspan="3" class="no-results">No login activity found.</td></tr>';
+                    return;
+                }
+
+                loginLogsBody.innerHTML = ''; // Clear loading message
+
+                logsSnapshot.forEach(doc => {
+                    const logData = doc.data();
+                    const row = loginLogsBody.insertRow();
+
+                    row.insertCell().textContent = logData.email || 'N/A';
+                    row.insertCell().textContent = logData.timestamp ? logData.timestamp.toDate().toLocaleString() : 'N/A';
+                    row.insertCell().textContent = logData.accessLevel ? logData.accessLevel.toUpperCase() : 'N/A';
+                    // IP Location is highly advanced and needs backend logic.
+                });
+
+            } catch (error) {
+                console.error("Error loading login logs:", error);
+                loginLogsBody.innerHTML = '<tr><td colspan="3" class="no-results" style="color:red;">Error loading login logs. Check console.</td></tr>';
+            }
+        }
+
+
+        // --- Initial Load Admin Page ---
         auth.onAuthStateChanged(user => {
             if (!user) {
                 // Not logged in, redirect to main login
                 window.location.href = 'index.html';
-            } else {
-                // Check if user has admin role from Firestore
-                // This is a basic client-side check. Server-side security rules are essential too.
-                firebase.firestore().collection('users').doc(user.uid).get().then(doc => {
-                    if (!doc.exists || doc.data().accessLevel !== 'admin') {
-                        alert("Access Denied: You do not have administrator privileges.");
-                        auth.signOut(); // Log out non-admin users
-                        window.location.href = 'index.html';
-                    }
-                    // Else: User is admin, stay on this page
-                }).catch(error => {
-                    console.error("Error verifying admin access:", error);
-                    alert("Error verifying access. Logging out.");
-                    auth.signOut();
+                return;
+            } 
+            // Check admin role
+            db.collection('users').doc(user.uid).get().then(doc => {
+                if (!doc.exists || doc.data().accessLevel !== 'admin') {
+                    alert("Access Denied: You do not have administrator privileges.");
+                    auth.signOut(); // Log out non-admin users
                     window.location.href = 'index.html';
-                });
-            }
+                    return;
+                }
+                // If admin, load data
+                console.log("Admin user logged in:", user.email);
+                loadUsers(); // Load user data
+                loadLoginLogs(); // Load login logs
+            }).catch(error => {
+                console.error("Error verifying admin access:", error);
+                alert("Error verifying access. Logging out.");
+                auth.signOut();
+                window.location.href = 'index.html';
+            });
         });
     </script>
 </body>
