@@ -35,11 +35,13 @@
 
         /* Styles for the dashboard part */
         .dashboard-grid-item {
-            transition: all 0.2s;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid #e5e7eb;
         }
         .dashboard-grid-item:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-color: #3b82f6;
         }
         .sidebar {
             transition: transform 0.3s ease-in-out;
@@ -235,7 +237,7 @@
         </footer>
     </div>
 
-    <!-- AUTHENTICATION MODAL, PROFILE FORM, DASHBOARD... -->
+    <!-- AUTHENTICATION MODAL, PROFILE FORM -->
     <!-- These sections are the same as before -->
     <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
@@ -300,6 +302,10 @@
              <button onclick="submitProfile()" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Submit Profile</button>
         </div>
     </div>
+
+    <!-- =================================================
+    DASHBOARD SECTION
+    ================================================== -->
     <div id="dashboard" class="hidden">
         <!-- Dashboard Topbar -->
         <div class="fixed top-0 left-0 right-0 bg-white shadow-md z-40">
@@ -333,31 +339,77 @@
         <!-- Dashboard Main Content -->
         <div class="pt-24 pb-12 bg-gray-50 min-h-screen">
             <div class="container mx-auto px-6">
+                <!-- Main Dashboard View -->
                 <div id="dashboard-main-content">
                     <h1 class="text-3xl font-bold text-gray-900">Welcome to RadMentor</h1>
                     <p class="mt-2 text-lg text-gray-600">Select a category to start your preparation.</p>
                     <div id="access-level-notice"></div>
-                    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="window.location.href='frcr/'">
-                            <h3 class="text-xl font-bold text-gray-800">FRCR</h3>
+                    <div id="main-dashboard-grid" class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Items are now larger and more stylish -->
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="showFrcrParts()">
+                            <i data-feather="award" class="w-10 h-10 text-blue-600 mb-4"></i>
+                            <h3 class="text-2xl font-bold text-gray-800">FRCR</h3>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('MICR MCQs coming soon!')">
-                            <h3 class="text-xl font-bold text-gray-800">MICR</h3>
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('MICR MCQs coming soon!')">
+                             <i data-feather="file-text" class="w-10 h-10 text-blue-600 mb-4"></i>
+                            <h3 class="text-2xl font-bold text-gray-800">MICR</h3>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="window.location.href='anatomy/'">
-                            <h3 class="text-xl font-bold text-gray-800">Anatomy</h3>
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='anatomy/'">
+                             <i data-feather="activity" class="w-10 h-10 text-blue-600 mb-4"></i>
+                            <h3 class="text-2xl font-bold text-gray-800">Anatomy</h3>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('MD / DNB MCQs coming soon!')">
-                            <h3 class="text-xl font-bold text-gray-800">MD / DNB</h3>
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('MD / DNB MCQs coming soon!')">
+                             <i data-feather="book-open" class="w-10 h-10 text-blue-600 mb-4"></i>
+                            <h3 class="text-2xl font-bold text-gray-800">MD / DNB</h3>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Superspeciality MCQs coming soon!')">
-                            <h3 class="text-xl font-bold text-gray-800">Superspeciality</h3>
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('Superspeciality MCQs coming soon!')">
+                             <i data-feather="star" class="w-10 h-10 text-blue-600 mb-4"></i>
+                            <h3 class="text-2xl font-bold text-gray-800">Superspeciality</h3>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-6 rounded-lg shadow-sm border" onclick="alert('Fellowship Exams MCQs coming soon!')">
-                            <h3 class="text-xl font-bold text-gray-800">Fellowship Exams</h3>
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('Fellowship Exams MCQs coming soon!')">
+                             <i data-feather="award" class="w-10 h-10 text-blue-600 mb-4"></i>
+                            <h3 class="text-2xl font-bold text-gray-800">Fellowship Exams</h3>
                         </div>
                     </div>
                 </div>
+
+                <!-- FRCR Parts View (hidden by default) -->
+                <div id="frcr-parts-view" class="hidden">
+                    <button onclick="showMainDashboard()" class="flex items-center text-gray-600 hover:text-blue-600 mb-6">
+                        <i data-feather="arrow-left" class="mr-2"></i> Back to Dashboard
+                    </button>
+                    <h1 class="text-3xl font-bold text-gray-900">FRCR Preparation</h1>
+                    <p class="mt-2 text-lg text-gray-600">Select which part of the exam you want to practice.</p>
+                    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="showFrcrPart1Subjects()">
+                            <h3 class="text-2xl font-bold text-gray-800">Part 1</h3>
+                        </div>
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('Part 2A is coming soon!')">
+                            <h3 class="text-2xl font-bold text-gray-800">Part 2A</h3>
+                        </div>
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('Part 2B is coming soon!')">
+                            <h3 class="text-2xl font-bold text-gray-800">Part 2B</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FRCR Part 1 Subjects View (hidden by default) -->
+                <div id="frcr-part1-subjects-view" class="hidden">
+                     <button onclick="showFrcrParts()" class="flex items-center text-gray-600 hover:text-blue-600 mb-6">
+                        <i data-feather="arrow-left" class="mr-2"></i> Back to FRCR Parts
+                    </button>
+                    <h1 class="text-3xl font-bold text-gray-900">FRCR Part 1</h1>
+                    <p class="mt-2 text-lg text-gray-600">Select a subject to begin.</p>
+                    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='frcr/Part 1/Anatomy/'">
+                            <h3 class="text-2xl font-bold text-gray-800">FRCR Anatomy</h3>
+                        </div>
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='frcr/Part 1/Physics/'">
+                            <h3 class="text-2xl font-bold text-gray-800">FRCR Physics</h3>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="profile-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
                 <div id="subscription-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
                 <div id="settings-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
@@ -411,6 +463,9 @@
         const mobileMenu = document.getElementById('mobile-menu');
         const mobileLoggedOut = document.getElementById('mobile-logged-out');
         const mobileLoggedIn = document.getElementById('mobile-logged-in');
+        const mainDashboardContent = document.getElementById('dashboard-main-content');
+        const frcrPartsView = document.getElementById('frcr-parts-view');
+        const frcrPart1SubjectsView = document.getElementById('frcr-part1-subjects-view');
 
 
         // --- Event Listeners ---
@@ -588,7 +643,7 @@
                     <p>You have access to all features. Happy learning!</p>
                 </div>`;
             }
-            showDashboardSection('main');
+            showMainDashboard();
         }
         
         function showLandingPage() {
@@ -610,18 +665,47 @@
         });
 
         function showDashboardSection(sectionId) {
-            ['dashboard-main-content', 'profile-section', 'subscription-section', 'settings-section'].forEach(id => {
+            // Hide all dashboard views
+            mainDashboardContent.classList.add('hidden');
+            frcrPartsView.classList.add('hidden');
+            frcrPart1SubjectsView.classList.add('hidden');
+
+            ['profile-section', 'subscription-section', 'settings-section'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             
-            const sectionToShow = document.getElementById(`${sectionId}-section`) || document.getElementById('dashboard-main-content');
+            const sectionToShow = document.getElementById(`${sectionId}-section`) || mainDashboardContent;
             sectionToShow.classList.remove('hidden');
             
+            if (sectionId === 'main') showMainDashboard();
             if (sectionId === 'profile') populateProfileDetails();
             if (sectionId === 'subscription') populateSubscriptionDetails();
             if (sectionId === 'settings') populateSettingsDetails();
 
             sidebar.classList.add('translate-x-full');
+            feather.replace();
+        }
+
+        // --- NEW Dashboard View Functions ---
+        function showMainDashboard() {
+            mainDashboardContent.classList.remove('hidden');
+            frcrPartsView.classList.add('hidden');
+            frcrPart1SubjectsView.classList.add('hidden');
+            feather.replace();
+        }
+
+        function showFrcrParts() {
+            mainDashboardContent.classList.add('hidden');
+            frcrPartsView.classList.remove('hidden');
+            frcrPart1SubjectsView.classList.add('hidden');
+            feather.replace();
+        }
+
+        function showFrcrPart1Subjects() {
+            mainDashboardContent.classList.add('hidden');
+            frcrPartsView.classList.add('hidden');
+            frcrPart1SubjectsView.classList.remove('hidden');
+            feather.replace();
         }
         
         function populateProfileDetails() {
