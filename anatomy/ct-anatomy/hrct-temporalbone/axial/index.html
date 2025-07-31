@@ -356,18 +356,19 @@
         // Define the width of the dedicated label sidebar within the *image file itself*
         // Assuming labels are on the RIGHT side, so the MRI data is on the LEFT.
         const LABEL_SIDEBAR_WIDTH = IMAGE_FILE_WIDTH - IMAGE_MRI_DATA_DIMENSION_MM; // 860 - 512 = 348px
-        const LABEL_OFFSET_FROM_MRI_EDGE = 15; // Pixels distance from MRI data edge to label's *closest edge*
 
-        // This is the X-coordinate relative to the *image-wrapper's left edge*
+        // ADJUSTED: Increased offset to move labels further right into the empty space.
+        const LABEL_OFFSET_FROM_MRI_EDGE = 40; // Pixels distance from MRI data edge to label's *closest edge* // This is the X-coordinate relative to the *image-wrapper's left edge*
         // where the LEFT edge of the label column should begin.
         // It's the end of the MRI data + offset
         const LABEL_COLUMN_START_X = IMAGE_MRI_DATA_DIMENSION_MM + LABEL_OFFSET_FROM_MRI_EDGE; 
 
-        const LABEL_VERTICAL_SPACING = 15; // Vertical spacing between stacked labels
+        // ADJUSTED: Increased vertical spacing for better readability and to reduce overlaps.
+        const LABEL_VERTICAL_SPACING = 20; // Vertical spacing between stacked labels in pixels
 
         // --- JSON FILENAMES (CRITICAL: LIST ALL YOUR HRCT TEMPORAL BONE AXIAL JSON FILES HERE) ---
         const jsonFilenames = [
-            // List your .mrk.json files here. Example:
+            // Re-pasting the full list from last time, but please ensure it's exact
             "Aditus.mrk.json", 
             "Ampulla of Superior SCC.mrk.json", 
             "Arcuate eminence.mrk.json", 
@@ -512,13 +513,12 @@
                                     const sliceZ = cp.position[2];
                                     const imageSliceNumber = Math.round(sliceZ); 
 
-                                    // Annotations are typically defined relative to the original MRI data (e.g., 512x512mm)
-                                    // We store the raw X, Y from JSON to scale it later based on actual image display size
+                                    // Store raw MM values. We'll scale them based on displayed image size.
                                     allAnnotations.push({
                                         slice: imageSliceNumber,
                                         text: cp.label.split(/-\d+/)[0].trim(), 
-                                        pointX_mm: cp.position[0], // Store raw MM value
-                                        pointY_mm: cp.position[1], // Store raw MM value
+                                        pointX_mm: cp.position[0], 
+                                        pointY_mm: cp.position[1], 
                                     });
                                 }
                             });
@@ -553,7 +553,6 @@
             const currentSlice = parseInt(sliceSlider.value);
             const imageUrl = `${imageFolderPath}${currentSlice}${imageExtension}`; 
             
-            // Set the image src. This will trigger onload if image changes.
             temporalBoneSliceImage.src = imageUrl;
             sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
 
@@ -567,18 +566,14 @@
                 const imageDisplayWidth = temporalBoneSliceImage.offsetWidth; 
                 const imageDisplayHeight = temporalBoneSliceImage.offsetHeight;
 
-                // Calculate scaling factors for annotation points from MM to displayed pixels
-                // The X scaling maps 512mm to the IMAGE_MRI_DATA_DIMENSION_MM pixels of actual MRI data.
-                const scaleX_mri_to_display = imageDisplayWidth / IMAGE_FILE_WIDTH; // Scale for total width of image file
-                const scaleY_mri_to_display = imageDisplayHeight / IMAGE_FILE_HEIGHT; // Scale for total height of image file
+                // Calculate scaling factors for annotation points from MM (512x512) to displayed pixels (860x532)
+                // This scales the 512mm anatomical data to fit within the 860px width or 532px height of the image file.
+                const scaleX_mri_data_to_file_width = imageDisplayWidth / IMAGE_FILE_WIDTH;
+                const scaleY_mri_data_to_file_height = imageDisplayHeight / IMAGE_FILE_HEIGHT;
 
-                // Calculate the actual pixel width of the MRI data portion as it's currently displayed
-                const mriDataDisplayWidth = IMAGE_MRI_DATA_DIMENSION_MM * scaleX_mri_to_display;
-
-                // Calculate the starting X-pixel of the MRI data portion on the displayed image (relative to image-wrapper's left edge)
-                // Assuming MRI data starts at X=0 in the 3D Slicer coordinate system and the black strip is on the RIGHT.
-                const mriDataRenderedLeftX = 0; // MRI data starts at the left edge of the displayed image for this HRCT
-                const mriDataRenderedRightX = mriDataRenderedLeftX + mriDataDisplayWidth;
+                // Determine the starting X pixel of the MRI data block within the 860px image.
+                // Assuming MRI data is 512px wide and is at the LEFT of the 860px image.
+                const mriDataRenderedRightX = IMAGE_MRI_DATA_DIMENSION_MM * scaleX_mri_data_to_file_width; 
 
                 if (annotationsLoaded) {
                     const annotationsForCurrentSlice = allAnnotations.filter(ann => ann.slice === currentSlice)
@@ -587,9 +582,9 @@
                     let placedLabelsRightColumn = []; // Stores {top, bottom, element} for stacking
 
                     annotationsForCurrentSlice.forEach((annotation, index) => {
-                        // Convert point coordinates from MM to pixels relative to the displayed image
-                        const pX_px_displayed = annotation.pointX_mm * scaleX_mri_to_display;
-                        const pY_px_displayed = annotation.pointY_mm * scaleY_mri_to_display;
+                        // Convert point coordinates from MM to pixels relative to the displayed image (860x532)
+                        const pX_px_displayed = annotation.pointX_mm * scaleX_mri_data_to_file_width;
+                        const pY_px_displayed = annotation.pointY_mm * scaleY_mri_data_to_file_height;
 
                         // --- Create HTML Label div ---
                         const labelDiv = document.createElement('div');
@@ -597,14 +592,14 @@
                         labelDiv.textContent = annotation.text;
                         labelDiv.id = `label-${currentSlice}-${index}`;
                         
-                        annotationOverlay.appendChild(labelDiv); // Append labels to annotationOverlay
+                        annotationOverlay.appendChild(labelDiv); 
 
                         // --- Calculate Label Position (including stacking) ---
                         const labelHeight = labelDiv.offsetHeight; // Get height after appending
                         const labelWidth = labelDiv.offsetWidth; // Get width after appending
 
-                        // Label's center X. It's aligned to the LEFT edge of the right black strip.
-                        // Since transform(-50%, -50%) makes 'left' the center, calculate:
+                        // Label's target X (center of label)
+                        // It's aligned to the LEFT edge of the right black strip, plus offset, plus half its width.
                         const labelTargetX_px = mriDataRenderedRightX + LABEL_OFFSET_FROM_MRI_EDGE + (labelWidth / 2); 
                         
                         const lineX2_px_at_mri_edge = mriDataRenderedRightX; // Line ends at the right edge of MRI data
@@ -612,36 +607,68 @@
                         // Initial desired Y (center of label) based on point's Y
                         let desiredLabelCenterY_px = pY_px_displayed; 
 
-                        // Ensure label doesn't go off the top edge (considering label height)
+                        // Ensure label doesn't go off the top edge of the image wrapper
                         desiredLabelCenterY_px = Math.max(desiredLabelCenterY_px, (labelHeight / 2)); 
 
                         // Check for overlaps within the right column
-                        for (let i = 0; i < placedLabelsRightColumn.length; i++) {
-                            const existingLabel = placedLabelsRightColumn[i];
-                            // If current label's potential top collides with an existing label's bottom
-                            if ( (desiredLabelCenterY_px - (labelHeight / 2)) < (existingLabel.bottom + LABEL_VERTICAL_SPACING) ) {
-                                // Overlap detected. Adjust current label's Y to be below the existing one.
-                                desiredLabelCenterY_px = existingLabel.bottom + LABEL_VERTICAL_SPACING + (labelHeight / 2);
+                        // This loop tries to find the best non-overlapping vertical spot
+                        let bestY = desiredLabelCenterY_px;
+                        let foundFit = false;
+
+                        // Try original Y first
+                        if (!checkOverlap(desiredLabelCenterY_px, labelHeight, placedLabelsRightColumn)) {
+                            foundFit = true;
+                        } else {
+                            // If overlaps, try moving up or down iteratively
+                            let offset = LABEL_VERTICAL_SPACING;
+                            const maxSearchOffset = imageDisplayHeight; // Don't search beyond image height
+
+                            while (!foundFit && offset <= maxSearchOffset) {
+                                // Try moving up
+                                if ((desiredLabelCenterY_px - offset) >= (labelHeight / 2) && 
+                                    !checkOverlap(desiredLabelCenterY_px - offset, labelHeight, placedLabelsRightColumn)) {
+                                    bestY = desiredLabelCenterY_px - offset;
+                                    foundFit = true;
+                                    break;
+                                }
+                                // Try moving down
+                                if ((desiredLabelCenterY_px + offset) <= (imageDisplayHeight - (labelHeight / 2)) && 
+                                    !checkOverlap(desiredLabelCenterY_px + offset, labelHeight, placedLabelsRightColumn)) {
+                                    bestY = desiredLabelCenterY_px + offset;
+                                    foundFit = true;
+                                    break;
+                                }
+                                offset += LABEL_VERTICAL_SPACING; // Increase offset for next iteration
                             }
                         }
+                        
+                        // Fallback if no ideal spot found (e.g., extremely dense labels, or not enough space)
+                        if (!foundFit) {
+                           // If still no fit after iterative search, just stack downwards from the last one.
+                           // This ensures labels are always rendered, even if overlapping or off-screen.
+                           if (placedLabelsRightColumn.length > 0) {
+                               bestY = placedLabelsRightColumn[placedLabelsRightColumn.length - 1].bottom + LABEL_VERTICAL_SPACING + (labelHeight / 2);
+                           }
+                        }
 
-                        // Ensure label doesn't go off the bottom edge (considering label height)
-                        desiredLabelCenterY_px = Math.min(desiredLabelCenterY_px, imageDisplayHeight - (labelHeight / 2));
+                        // Ensure final Y is within image bounds after all adjustments
+                        bestY = Math.max(bestY, (labelHeight / 2)); 
+                        bestY = Math.min(bestY, imageDisplayHeight - (labelHeight / 2));
 
 
                         // Apply the final positions (these are for the label's CENTER due to transform: translate(-50%,-50%))
                         labelDiv.style.left = `${labelTargetX_px}px`; 
-                        labelDiv.style.top = `${desiredLabelCenterY_px}px`; 
+                        labelDiv.style.top = `${bestY}px`; 
                         labelDiv.style.pointerEvents = 'auto'; // Ensure hover works on labels
 
                         // Store this label's final actual (top, bottom) positions for future overlap checks
                         placedLabelsRightColumn.push({
-                            top: desiredLabelCenterY_px - (labelHeight / 2), // Actual top edge of the label
-                            bottom: desiredLabelCenterY_px + (labelHeight / 2), // Actual bottom edge of the label
+                            top: bestY - (labelHeight / 2), // Actual top edge of the label
+                            bottom: bestY + (labelHeight / 2), // Actual bottom edge of the label
                             element: labelDiv 
                         });
 
-                        // --- Create SVG Line (slanting) ---
+                        // --- Create SVG Line (slanted) ---
                         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                         
                         // Line starts at the point on the MRI data
@@ -650,7 +677,7 @@
                         
                         // Line's X-endpoint is at the edge of the MRI data (transition to black strip)
                         line.setAttribute('x2', lineX2_px_at_mri_edge); 
-                        line.setAttribute('y2', desiredLabelCenterY_px); // Line ends at label's vertical center
+                        line.setAttribute('y2', bestY); // Line ends at label's vertical center (adjusted Y)
 
                         line.id = `line-${currentSlice}-${index}`;
                         annotationSvgOverlay.appendChild(line);
@@ -665,20 +692,43 @@
                         annotationSvgOverlay.appendChild(circle);
 
                         // --- Add Hover Interactivity ---
-                        labelDiv.addEventListener('mouseover', () => {
+                        // Show line and highlight circle on hover over label or circle
+                        const activateAnnotation = () => {
                             document.getElementById(`line-${currentSlice}-${index}`)?.classList.add('visible-on-hover');
                             document.getElementById(`circle-${currentSlice}-${index}`)?.classList.add('visible-on-hover-circle');
-                        });
-                        labelDiv.addEventListener('mouseout', () => {
+                        };
+                        // Hide line and de-highlight circle on mouse out
+                        const deactivateAnnotation = () => {
                             document.getElementById(`line-${currentSlice}-${index}`)?.classList.remove('visible-on-hover');
                             document.getElementById(`circle-${currentSlice}-${index}`)?.classList.remove('visible-on-hover-circle');
-                        });
+                        };
+
+                        labelDiv.addEventListener('mouseover', activateAnnotation);
+                        labelDiv.addEventListener('mouseout', deactivateAnnotation);
+                        circle.addEventListener('mouseover', activateAnnotation);
+                        circle.addEventListener('mouseout', deactivateAnnotation);
                         // --- End Hover Interactivity ---
                     });
                 } else {
                     console.warn("Annotations not yet loaded or failed to load. Skipping rendering of annotations for this slice.");
                 }
             };
+
+            // Helper function to check if a potential label position overlaps with any already placed labels
+            function checkOverlap(testCenterY, testHeight, placedLabelsArr) {
+                const testTop = testCenterY - (testHeight / 2);
+                const testBottom = testCenterY + (testHeight / 2);
+                for (let i = 0; i < placedLabelsArr.length; i++) {
+                    const existing = placedLabelsArr[i];
+                    // Overlap if (testTop < existing.bottom AND testBottom > existing.top)
+                    // Add a small buffer for spacing
+                    if (testTop < (existing.bottom + LABEL_VERTICAL_SPACING) && testBottom > (existing.top - LABEL_VERTICAL_SPACING)) {
+                        return true; // Overlaps
+                    }
+                }
+                return false; // No overlap
+            }
+
 
             // If the image is already loaded (from cache or preloading), trigger the onload manually
             if (temporalBoneSliceImage.complete) {
