@@ -1,867 +1,99 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>RadMentor Portal</title> 
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RadMentor - Comprehensive Radiology Learning Source</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script src="https://unpkg.com/feather-icons"></script>
+
     <style>
-        /* General Body Styles */
-        body {
-            font-family: 'Rubik', sans-serif;
-            margin: 0;
-            overflow-x: hidden; /* Prevent horizontal scrollbar from sidebar */
-            background-color: var(--bg-color); /* Default dark theme background */
-            color: var(--text-color); /* Default dark theme text color */
-            transition: background-color 0.3s ease, color 0.3s ease; /* Smooth theme transition */
-            
-            /* Default for login/profile forms: centered flexbox */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh; /* Take full viewport height */
-            flex-direction: column; /* Stack children vertically */
-        }
-
-        /* --- Theme Variables --- */
-        /* Light Theme */
-        body.light-theme {
-            --bg-color: #e3f2fd;
-            --container-bg-color: #ffffff;
-            --text-color: #212121;
-            --input-bg-color: #f5f5f5;
-            --button-bg-color: #1e88e5;
-            --button-hover-bg-color: #1565c0;
-            --toggle-color: #1e88e5;
-            --sidebar-bg-color: #ffffff;
-            --sidebar-item-border: 1px solid #e0e0e0;
-            --sidebar-item-hover-bg: #bbdefb;
-            --topbar-bg-color: #e3f2fd;
-            --topbar-text-color: #212121;
-            --profile-field-bg: #f8f8f8;
-            --section-card-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        /* Dark Theme */
-        body:not(.light-theme):not(.gradient-theme) { 
-            --bg-color: #004d5e;
-            --container-bg-color: #043f4e;
-            --text-color: #ffffff;
-            --input-bg-color: #e0f2f1;
-            --button-bg-color: #00bcd4;
-            --button-hover-bg-color: #0097a7;
-            --toggle-color: #81d4fa;
-            --sidebar-bg-color: #043f4e;
-            --sidebar-item-border: 1px solid #095a71;
-            --sidebar-item-hover-bg: #065a73;
-            --topbar-bg-color: #002b36;
-            --topbar-text-color: #ffffff;
-            --profile-field-bg: #095a71;
-            --section-card-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-        }
-        /* Gradient Theme */
-        body.gradient-theme {
-            --bg-color: linear-gradient(to right, #e0e7f7, #f7e0e0);
-            --container-bg-color: rgba(255, 255, 255, 0.95);
-            --text-color: #333333;
-            --input-bg-color: #f0f0f0;
-            --button-bg-color: #6a0dad;
-            --button-hover-bg-color: #4b0082;
-            --toggle-color: #6a0dad;
-            --sidebar-bg-color: #ffffff;
-            --sidebar-item-border: 1px solid #e0e0e0;
-            --sidebar-item-hover-bg: #f0f8ff;
-            --topbar-bg-color: rgba(255, 255, 255, 0.9);
-            --topbar-text-color: #212121;
-            --profile-field-bg: #f8f8f8;
-            --section-card-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            background: var(--bg-color); /* Apply gradient to body */
-        }
-        /* Apply theme variables globally */
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-        }
-
-        /* --- Global Layout and Components --- */
-        /* Login/Profile Forms Container - Specific for centering login page */
-        .container {
-            max-width: 500px; 
-            margin: auto; /* Vertically and horizontally center if body is flex */
-            padding: 30px;
-            background-color: var(--container-bg-color); 
-            color: var(--text-color); 
-            border-radius: 16px; 
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); 
-            display: flex; /* Make it a flex container for its own content */
-            flex-direction: column;
-            align-items: center; /* Center horizontally within itself */
-        }
-        /* Override body's flex properties when dashboard is active */
-        body.dashboard-active { 
-            display: block; /* Revert body to block display to allow normal document flow */
-            min-height: 0; /* Reset min-height for body when dashboard is active */
-            padding-top: 50px; /* Space for fixed topbar */
-        }
-        body.dashboard-active .container { /* Adjust containers if they appear within dashboard for specific sections */
-            margin: 25px auto; /* Standard margin for content sections in dashboard */
-            max-width: 900px; /* Wider content section max-width */
-            border-radius: 8px; /* Slightly less rounded for consistency with inner cards */
-            box-shadow: var(--section-card-shadow); /* Use theme shadow */
-            padding: 20px; /* Adjusted padding */
-        }
-
-
-        h1 {
-            color: var(--text-color);
-            text-align: center; /* Ensure all h1s are centered */
-        }
-        .container h1 { /* Specific styling for h1 within login/profile forms */
-            font-size: 1.6rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
-
-        .input-group {
-            width: 100%; /* Ensure input groups take full width */
-            margin: 15px 0;
-        }
-        input, select {
-            width: 100%;
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 4px;
-            box-sizing: border-box;
-            background-color: var(--input-bg-color);
-            color: #000; /* Input text usually black */
-            border: 1px solid #ced4da;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 20px;
-            background: var(--button-bg-color);
-            color: #fff;
-            transition: background 0.2s ease-in-out;
-        }
-        button:hover {
-            background: var(--button-hover-bg-color);
-        }
-        .toggle {
-            text-align: center;
-            margin-top: 15px;
-            cursor: pointer;
-            color: var(--toggle-color);
-            text-decoration: underline;
-        }
-        .toggle:hover {
-            color: var(--text-color); 
-        }
-        .topbar {
-            position: fixed;
-            top: 0;
-            left: 0; /* Fixed to left, spans width */
-            width: 100%;
-            height: 50px;
-            background-color: var(--topbar-bg-color);
-            color: var(--topbar-text-color);
-            display: none; 
-            justify-content: space-between; /* Space out items (logo and right-side controls) */
-            align-items: center;
-            padding: 0 20px; /* Padding on sides */
-            box-sizing: border-box; /* Include padding in width */
-            z-index: 1000;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-        .topbar .logo-container { /* New container for logo on left */
-            display: flex;
-            align-items: center;
-            height: 100%;
-        }
-        .topbar .logo-container img { /* Adjust logo within topbar */
-            position: static; /* Remove absolute positioning */
-            height: 40px; /* Fit within topbar height */
-            width: auto;
-            margin-right: 15px;
-            top: auto; /* Reset top */
-            left: auto; /* Reset left */
-            z-index: auto; /* Reset z-index */
-        }
-        .topbar .user-greeting-wrapper { /* Wrapper for greeting and menu icon */
-            display: flex;
-            align-items: center;
-            gap: 15px; /* Space between greeting and menu icon */
-        }
-        .user-greeting {
-            font-size: 1.0rem; 
-            white-space: nowrap; /* Prevent wrapping */
-            display: flex; /* Inherit flex from wrapper */
-            align-items: center;
-        }
-        .menu-icon {
-            cursor: pointer;
-            font-size: 1.5rem;
-            display: flex; 
-            align-items: center;
-            height: 100%; 
-        }
-        .sidebar {
-            position: fixed;
-            top: 50px;
-            right: -270px; 
-            width: 250px;
-            height: calc(100% - 50px);
-            padding: 20px 0; 
-            transition: right 0.2s ease-in-out;
-            z-index: 1001;
-            overflow-y: auto;
-            background-color: var(--sidebar-bg-color);
-            color: var(--text-color);
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-            display: flex; 
-            flex-direction: column; 
-            align-items: flex-start; 
-        }
-        .sidebar.show {
-            right: 0;
-        }
-        .sidebar-item {
-            padding: 12px 20px; 
-            cursor: pointer;
-            text-align: left;
-            font-size: 1.0rem;
-            width: 100%; 
-            box-sizing: border-box; 
-            border-bottom: 1px solid var(--sidebar-item-border); 
-            display: flex; 
-            align-items: center;
-            gap: 10px; 
-        }
-        .sidebar-item:last-child {
-            border-bottom: none;
-        }
-        .sidebar-item svg { 
-            width: 20px;
-            height: 20px;
-            fill: currentColor; 
-        }
-
-        /* Dashboard main content area wrapper */
-        .dashboard-content-wrapper {
-            margin: 0 auto;
-            padding: 20px;
-            width: 90%;
-            max-width: 1200px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-        }
-        .welcome-title {
-            text-align: center;
-            margin-top: 30px;
-            font-size: 2.2rem;
-            font-weight: 400;
-            color: var(--text-color);
-        }
-        .welcome-subtitle {
-            text-align: center;
-            margin-top: 10px;
-            font-size: 1.2rem;
-            font-weight: 300;
-            color: var(--text-color);
-            margin-bottom: 30px;
-        }
-        .content-section {
-            display: none;
-            width: 100%;
-            max-width: 900px;
-            margin: 25px auto;
-            text-align: left;
-            line-height: 1.7;
-            padding: 20px;
-            background-color: var(--container-bg-color);
-            border-radius: 8px;
-            box-shadow: var(--section-card-shadow); 
-        }
-        .mcq-grid {
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
-            gap: 20px; 
-            margin-top: 30px;
-            width: 100%;
-        }
-        @media (min-width: 768px) { 
-            .mcq-grid {
-                grid-template-columns: repeat(2, 1fr); 
-            }
-            .dashboard-grid-item {
-                font-size: 1.2rem;
-            }
-        }
-        @media (min-width: 1024px) { 
-            .mcq-grid {
-                grid-template-columns: repeat(3, 1fr); 
-            }
-             .dashboard-grid-item {
-                font-size: 1.3rem;
-            }
-        }
-        @media (max-width: 599px) { 
-            .mcq-grid {
-                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
-            }
-            .dashboard-grid-item {
-                font-size: 1.0rem;
-            }
-             .welcome-title {
-                font-size: 1.8rem;
-            }
-            .welcome-subtitle {
-                font-size: 1.0rem;
-            }
-        }
-        .dashboard-grid-item {
-            padding: 20px;
-            border-radius: 8px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-            font-size: 1.1rem;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-            min-height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            word-break: break-word;
-            line-height: 1.3;
-        }
-        body:not(.light-theme) .dashboard-grid-item { 
-            background: #095a71;
-            color: #e0f2f1;
-        }
-        body:not(.light-theme) .dashboard-grid-item:hover { 
-            background: #064a5c;
-        }
-        body.light-theme .dashboard-grid-item { 
-            background: #fff;
-            color: #495057;
-            border: 1px solid #e0e0e0;
-        }
-        body.light-theme .dashboard-grid-item:hover { 
-            background: #f8f9fa;
-        }
-        /* Gradient theme specific dashboard items */
-        body.gradient-theme .dashboard-grid-item {
-            background-color: rgba(255, 255, 255, 0.8); /* Slightly translucent white */
-            color: #333333;
-            border: 1px solid #e0e0e0;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-        }
-        body.gradient-theme .dashboard-grid-item:hover {
-            background-color: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-        }
-
-        .restricted-content, .subscriber-content {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid; 
-            text-align: center;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            display: block !important; 
-        }
-        .restricted-content {
-            background-color: var(--container-bg-color); 
-            color: #c0392b; 
-            border-color: #c0392b;
-        }
-        .subscriber-content {
-            background-color: var(--container-bg-color); 
-            color: #27ae60; 
-            border-color: #27ae60;
-        }
-
-        /* Profile & Settings Common Card Styles */
-        .content-section h2 {
-            font-size: 1.8rem; 
-            margin-bottom: 25px;
-            color: var(--text-color);
-            font-weight: 500;
-        }
-        .profile-field-display, .profile-field.editable, .settings-option { /* Combined for common styles */
-            background-color: var(--profile-field-bg);
-            color: var(--text-color);
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-            padding: 12px 15px; 
-            margin-bottom: 12px; 
-            display: flex; 
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05); 
-        }
-        .profile-field-display strong, .profile-field.editable strong, .settings-option label { 
-            font-weight: bold;
-            color: var(--text-color); 
-            flex-shrink: 0; 
-            margin-right: 15px; 
-        }
-        .profile-field-display span {
-            text-align: right; 
-            flex-grow: 1; 
-        }
-        /* Profile specific CSS for editable fields */
-        .profile-field.editable {
-            background-color: var(--input-bg-color);
-            border-color: var(--toggle-color); 
-            justify-content: flex-start;
-        }
-        .profile-field.editable span { 
-            display: none;
-        }
-        .profile-field.editable input, .profile-field.editable select {
-            background: none;
-            border: 1px solid var(--toggle-color); 
-            width: auto; 
-            flex-grow: 1; 
-            padding: 5px;
-            margin-left: 0; 
-            color: var(--text-color); 
-            box-sizing: border-box; 
-            border-radius: 4px;
-        }
-        body.light-theme .profile-field.editable input,
-        body.light-theme .profile-field.editable select {
-            color: #212121; 
-            border-color: #1e88e5;
-        }
-        body.gradient-theme .profile-field.editable input,
-        body.gradient-theme .profile-field.editable select {
-            color: #212121; 
-            border-color: #6a0dad;
-        }
-        body:not(.light-theme):not(.gradient-theme) .profile-field.editable input,
-        body:not(.light-theme):not(.gradient-theme) .profile-field.editable select {
-            color: #ffffff; 
-            border-color: #00bcd4;
-        }
-        .profile-edit-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            justify-content: center;
-        }
-        .profile-edit-buttons button {
-            width: auto;
-            flex-grow: 1;
-        }
-        .settings-option button {
-            width: auto;
-            margin-top: 0;
-            padding: 8px 15px; 
-            font-size: 0.95rem;
-            border-radius: 5px; 
-        }
-        .theme-toggle {
-            display: flex;
-            flex-wrap: wrap; 
-            align-items: center;
-            gap: 15px;
-            justify-content: flex-start; 
-            width: 100%; 
-        }
-        .theme-toggle label {
-            font-weight: normal;
-            display: flex; 
-            align-items: center;
-            gap: 5px;
-        }
-        .theme-toggle input[type="radio"] {
-            width: 18px;
-            height: 18px;
-            margin: 0;
-            cursor: pointer;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            border: 2px solid var(--text-color);
-            border-radius: 50%;
-            outline: none;
-            transition: background-color 0.2s ease, border-color 0.2s ease;
-            flex-shrink: 0; 
-        }
-        .theme-toggle input[type="radio"]:checked {
-            background-color: var(--button-bg-color);
-            border-color: var(--button-bg-color);
-        }
-        .content-section p {
-            font-size: 1rem;
-            margin-bottom: 15px;
-            color: var(--text-color); 
-        }
-        .content-section a {
-            color: var(--toggle-color); 
-            text-decoration: underline;
-        }
-        .content-section a:hover {
-            text-decoration: none;
-        }
-        img {
-            position: absolute;
-            top: 15px;
-            left: 20px;
-            height: 120px;
-            z-index: 100; /* Ensure logo is above other content temporarily */
-        }
+        body { font-family: 'Inter', sans-serif; position: relative; }
+        #landing-page::before {
+            content: ''; position: fixed; top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: radial-gradient(ellipse at top, #fff5e6, white 70%);
+            z-index: -1;
+        }
+        .hero-gradient-text {
+            background-image: linear-gradient(to right, #3b82f6, #60a5fa);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900;
+        }
+        .hero-button, .header-signup-btn { background-color: #2563eb; transition: background-color 0.2s; }
+        .hero-button:hover, .header-signup-btn:hover { background-color: #1d4ed8; }
+        .rad-gradient { background: linear-gradient(90deg, #1e40af, #3b82f6); }
+        .dashboard-theme { background-color: #101827; color: #f9fafb; }
+        .dashboard-card {
+            background-color: #1F2937; border: 1px solid #374151; color: #ffffff;
+            cursor: pointer; transition: all 0.2s ease; text-align: center;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 600; font-size: 1.25rem; min-height: 140px; border-radius: 0.75rem;
+        }
+        .dashboard-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.25); border-color: #4b5563; }
+        .dashboard-greeting { color: #ffffff; font-weight: 800; }
+        .dashboard-sub-greeting { color: #d1d5db; }
+        .header-dark {
+            background: #101827 !important;
+            border-bottom: 1px solid #1f2937;
+            backdrop-filter: none !important;
+        }
+        .header-dark span, .header-dark a { color: #ffffff !important; }
+        .header-dark i { color: #ffffff !important; }
     </style>
 </head>
-<body>
+<body class="text-gray-800 pt-16">
 
-    <img src="logo.png" alt="Rad Mentor Logo" />
+    <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm transition-colors duration-300">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <a href="/" class="flex items-center"><img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/><span class="text-2xl font-bold text-gray-800">RadMentor</span></a>
+            <nav id="main-nav" class="hidden md:flex items-center space-x-8"><a href="#courses" class="text-gray-600 hover:text-blue-600">Courses</a><a href="#features" class="text-gray-600 hover:text-blue-600">Features</a><a href="#pricing" class="text-gray-600 hover:text-blue-600">Pricing</a><a href="#about" class="text-gray-600 hover:text-blue-600">About Us</a></nav>
+            <div class="flex items-center">
+                <div id="logged-out-nav" class="hidden md:flex items-center"><button onclick="showAuthModal('signin')" class="text-gray-600 hover:text-blue-600 mr-6 font-medium">Login</button><button onclick="showAuthModal('signup')" class="header-signup-btn text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">Sign Up</button></div>
+                <div id="logged-in-nav" class="hidden relative"><button id="user-menu-button" class="flex items-center space-x-2"><span class="font-semibold text-gray-700">Hi, <span id="user-greeting-header"></span></span><i data-feather="chevron-down" class="w-4 h-4 text-gray-700"></i></button><div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden"><a href="#" onclick="showDashboardSection('main')" class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">My Dashboard</a><a href="#" onclick="showDashboardSection('profile')" class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">My Profile</a><a href="#" onclick="showDashboardSection('settings')" class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">Settings</a><div class="border-t border-gray-100"></div><a href="#" onclick="logout()" class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">Logout</a></div></div>
+                <button id="mobile-menu-button" class="md:hidden ml-4 text-gray-700"><i data-feather="menu"></i></button>
+            </div>
+        </div>
+        <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 right-0 bg-white shadow-md px-6 pb-4"><div id="mobile-logged-out-nav"><a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a><a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a><a href="#pricing" class="block py-2 text-gray-600 hover:text-blue-600">Pricing</a><a href="#about" class="block py-2 text-gray-600 hover:text-blue-600">About Us</a><div class="border-t mt-2 pt-2"><button onclick="showAuthModal('signin')" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Login</button></div></div></div>
+    </header>
 
-    <div class="container" id="auth-container" style="display: none;">
-        <h1 class="welcome-title" style="font-size: 2.5rem; margin-bottom: 10px;">Welcome to RadMentor</h1> 
-        <p class="welcome-subtitle" style="font-size: 1.2rem; margin-bottom: 25px;">The World’s Most Comprehensive Radiology Learning Source</p>
-        <h1 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 20px;">🔬 Login</h1> 
-        <div class="input-group"><input type="email" id="email" placeholder="Email" /></div>
-        <div class="input-group"><input type="password" id="password" placeholder="Password" /></div>
-        <button onclick="handleAuth()" id="auth-btn">Sign In</button>
-        <div class="toggle" onclick="toggleAuth()">Don't have an account? Sign up</div>
-        <p id="auth-message" style="color: #f00; text-align: center; margin-top: 10px;"></p>
+    <div id="landing-page">
+        <main>
+            <section class="pt-20 pb-24"><div class="container mx-auto px-6 text-center"><h1 class="text-5xl md:text-7xl font-black text-gray-900 leading-tight">The World’s Most Comprehensive<br/><span class="hero-gradient-text">Radiology Learning Source</span></h1><p class="mt-6 text-lg text-gray-600 max-w-2xl mx-auto">Master radiology with our expert-curated Q-banks, mock exams, and in-depth content. Built by radiologists, for future radiologists.</p><div class="mt-10 flex justify-center"><button onclick="showAuthModal('signup')" class="hero-button text-lg font-semibold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow">Get Started for Free</button></div></div></section>
+            <section id="courses" class="py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold text-gray-900">Prepare for Any Exam</h2><p class="mt-4 text-lg text-gray-600">Targeted preparation for all major radiology exams.</p></div><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"><div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100"><h3 class="text-2xl font-bold text-gray-800">FRCR</h3><p class="mt-2 text-gray-600">Comprehensive question banks and mock tests for the FRCR exam.</p></div><div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100"><h3 class="text-2xl font-bold text-gray-800">MD / DNB</h3><p class="mt-2 text-gray-600">Master your final year exams with our targeted content.</p></div><div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100"><h3 class="text-2xl font-bold text-gray-800">Anatomy</h3><p class="mt-2 text-gray-600">Detailed anatomical modules to build a strong foundation.</p></div></div></div></section>
+            <section id="about" class="py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold text-gray-900">Built by Doctors, for Doctors</h2></div><div class="max-w-4xl mx-auto bg-white/60 backdrop-blur-sm p-10 rounded-xl border text-left space-y-4 text-lg text-gray-700"><p>We are two radiologists trained at one of India’s premier medical institutes, united by a shared vision: to make high-quality radiology education accessible, affordable, and reliable for all.</p><p>In a world where accurate knowledge can shape clinical decisions, we built this platform as a trusted source of learning—for students, residents, and practitioners alike. Every question, explanation, and update is curated by us, backed by evidence, and rooted in real-world radiology practice.</p><p>Whether you're preparing for exams or refining your diagnostic skills, our goal is to support your journey with clear, concise, and clinically relevant content—delivered with the precision you'd expect from radiologists.</p><p class="font-semibold text-gray-800 pt-2">Welcome to a community built by Radiologists, for Radiologists.</p></div></div></section>
+        </main>
+        <footer class="bg-gray-900 text-white"><div class="container mx-auto px-6 py-12"><div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-500">&copy; 2025 RadMentor. All Rights Reserved.</div></div></footer>
+    </div>
+    
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[100] flex items-center justify-center p-4 hidden"><div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative"><button onclick="hideAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800"><i data-feather="x" class="w-7 h-7"></i></button><div class="p-8 md:p-12"><div id="auth-container"><h1 id="auth-title" class="text-3xl font-bold text-gray-900 text-center mb-2">Login</h1><p id="auth-subtitle" class="text-gray-600 text-center mb-8">Welcome back!</p><div class="space-y-4"><input type="email" id="email" placeholder="Email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"><input type="password" id="password" placeholder="Password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div><button onclick="handleAuth()" id="auth-btn" class="w-full hero-button text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Sign In</button><div class="text-center mt-6"><button onclick="toggleAuth()" id="toggle-btn" class="text-blue-600 hover:underline">Don't have an account? Sign up</button></div><p id="auth-message" class="text-red-500 text-center mt-4 font-medium"></p></div></div></div></div>
+    <div id="profile-form-container" class="fixed inset-0 bg-gray-100 z-[100] p-4 hidden overflow-y-auto"><div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-auto my-8 p-8 md:p-12"><h1 class="text-3xl font-bold text-gray-900 text-center">Complete Your Profile</h1><p class="text-gray-600 text-center mb-8">Please provide a few details.</p><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="md:col-span-2"><input type="text" id="name" placeholder="Full Name" class="w-full px-4 py-3 border border-gray-300 rounded-lg"></div><div><label class="font-medium">Date of Birth</label><input type="date" id="dob" class="w-full mt-1 px-4 py-3 border rounded-lg"></div><div><label class="font-medium">Sex</label><select id="sex" class="w-full mt-1 px-4 py-3 border rounded-lg"><option value="" disabled selected>Select</option><option>Male</option><option>Female</option><option>Other</option></select></div></div><button onclick="submitProfile()" class="w-full hero-button text-white font-bold py-3 rounded-lg mt-8 text-lg">Submit Profile</button></div></div>
+    
+    <div id="dashboard" class="hidden">
+        <aside id="sidebar" class="fixed top-0 right-0 h-full bg-white shadow-xl z-[60] w-72 p-6 transform translate-x-full transition-transform duration-300 ease-in-out"><div class="flex justify-between items-center mb-8"><h2 class="text-xl font-bold text-gray-800">Menu</h2><button id="close-sidebar-button" class="text-gray-600 hover:text-gray-900"><i data-feather="x"></i></button></div><nav class="space-y-2 text-gray-800"><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100" onclick="showDashboardSection('main')"><i data-feather="home" class="mr-3 w-5 h-5"></i>Home</a><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100" onclick="showDashboardSection('profile')"><i data-feather="user" class="mr-3 w-5 h-5"></i>Profile</a><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100" onclick="showDashboardSection('analytics')"><i data-feather="bar-chart-2" class="mr-3 w-5 h-5"></i>Analytics</a><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100" onclick="showDashboardSection('settings')"><i data-feather="settings" class="mr-3 w-5 h-5"></i>Settings</a><div class="border-t my-2"></div><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100" onclick="logout()"><i data-feather="log-out" class="mr-3 w-5 h-5"></i>Logout</a></nav></aside>
+        <div id="dashboard-content-wrapper" class="min-h-screen dashboard-theme pt-8 pb-12">
+            <div class="container mx-auto px-6">
+                <div id="dashboard-main-content" class="hidden"><h1 class="text-4xl dashboard-greeting">Welcome to RadMentor</h1><p class="mt-2 text-lg dashboard-sub-greeting">The World’s Most Comprehensive Radiology Learning Source</p><div id="access-level-notice" class="text-white mt-6"></div><div class="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"><div class="dashboard-card" onclick="alert('FRCR page coming soon!')">FRCR</div><div class="dashboard-card" onclick="alert('MICR page coming soon!')">MICR</div><div class="dashboard-card" onclick="alert('Anatomy page coming soon!')">Anatomy</div><div class="dashboard-card" onclick="alert('MD / DNB page coming soon!')">MD / DNB</div><div class="dashboard-card" onclick="alert('Superspeciality page coming soon!')">Superspeciality MCQs</div><div class="dashboard-card" onclick="alert('Fellowship page coming soon!')">Fellowship Exams</div></div></div>
+                <div id="admin-section" class="hidden bg-gray-100 p-4 sm:p-8 rounded-xl text-gray-800"></div>
+                <div id="profile-section" class="hidden bg-white p-8 rounded-lg shadow-md text-gray-800"></div>
+                <div id="analytics-section" class="hidden bg-white p-8 rounded-lg shadow-md text-gray-800"></div>
+                <div id="settings-section" class="hidden bg-white p-8 rounded-lg shadow-md text-gray-800"></div>
+            </div>
+        </div>
     </div>
 
-    <div class="container" id="profile-form" style="display: none;">
-        <h1>👤 Complete Your Profile</h1>
-        <p style="text-align: center; color: #81d4fa; font-size: 0.9rem;">
-            Please complete your profile to continue.
-        </p>
-        <div class="input-group"><input type="text" id="name" placeholder="Full Name" /></div>
-        <div class="input-group"><input type="date" id="dob" /></div>
-        <div class="input-group">
-            <select id="sex">
-                <option value="" disabled selected>Select Sex</option>
-                <option>Male</option>
-                <option>Female</option>
-                <option>Other</option>
-            </select>
-        </div>
-        <div class="input-group">
-            <select id="position">
-                <option value="" disabled selected>Select Position</option>
-                <option>Intern</option>
-                <option>Junior Resident</option>
-                <option>Senior Resident</option>
-                <option>Consultant</option>
-            </select>
-        </div>
-        <div class="input-group">
-            <input list="colleges" id="college" placeholder="Medical College" />
-            <datalist id="colleges">
-                <option value="All India Institute of Medical Sciences, New Delhi">
-                <option value="Postgraduate Institute of Medical Education and Research, Chandigarh">
-                <option value="Christian Medical College, Vellore">
-                <option value="National Institute of Mental Health and Neuro Sciences, Bangalore">
-                <option value="Jawaharlal Institute of Postgraduate Medical Education & Research, Puducherry">
-                <option value="Amrita Vishwa Vidyapeetham, Coimbatore">
-                <option value="Sanjay Gandhi Postgraduate Institute of Medical Sciences, Lucknow">
-                <option value="Banaras Hindu University, Varanasi">
-                <option value="Kasturba Medical College, Manipal">
-                <option value="Sri Ramachandra Institute of Higher Education and Research, Chennai">
-                <option value="St. John's Medical College, Bangalore">
-                <option value="Aligarh Muslim University, Aligarh">
-                <option value="Grant Medical College and Sir J.J. Group of Hospitals, Mumbai">
-                <option value="Institute of Liver and Biliary Sciences, New Delhi">
-                <option value="Madras Medical College, Chennai">
-                <option value="Maulana Azad Medical College, New Delhi">
-                <option value="King George's Medical University, Lucknow">
-                <option value="Seth G.S. Medical College and K.E.M. Hospital, Mumbai">
-                <option value="Vardhman Mahavir Medical College & Safdarjung Hospital, New Delhi">
-                <option value="Lady Hardinge Medical College, New Delhi">
-                <option value="Armed Forces Medical College, Pune">
-                <option value="Lokmanya Tilak Municipal Medical College, Mumbai">
-                <option value="BJ Medical College, Ahmedabad">
-                <option value="Stanley Medical College, Chennai">
-                <option value="Govt. Medical College, Thiruvananthapuram">
-                <option value="Osmania Medical College, Hyderabad">
-                <option value="Gandhi Medical College, Hyderabad">
-                <option value="Bangalore Medical College and Research Institute, Bangalore">
-                <option value="Mysore Medical College and Research Institute, Mysore">
-                <option value="Dr. B.R. Ambedkar Medical College, Bangalore">
-                <option value="J.N. Medical College, Belagavi">
-                <option value="Kalinga Institute of Industrial Technology, Bhubaneswar">
-                <option value="Mahatma Gandhi Medical College & Research Institute, Puducherry">
-                <option value="Datta Meghe Institute of Medical Sciences, Wardha">
-                <option value="Saveetha Institute of Medical and Technical Sciences, Chennai">
-                <option value="Chettinad Academy of Research and Education, Chennai">
-                <option value="M.S. Ramaiah Medical College, Bangalore">
-                <option value="Bharati Vidyapeeth (Deemed to be University), Pune">
-                <option value="Krishna Institute of Medical Sciences, Karad">
-                <option value="Dr. D.Y. Patil Vidyapeeth, Pune">
-                <option value="SRM Institute of Science and Technology, Chennai">
-                <option value="Manipal University, Jaipur">
-                <option value="MGM Medical College, Aurangabad">
-                <option value="GITAM, Visakhapatnam">
-                <option value="Narayana Medical College, Nellore">
-                <option value="KSRM Medical College, Kadapa">
-                <option value="Deccan College of Medical Sciences, Hyderabad">
-                <option value="Meenakshi Amma Medical College and Hospital, Chennai">
-                <option value="MVJ Medical College and Research Hospital, Bangalore">
-                <option value="Acharya Institute of Health Sciences, Bangalore">
-                <option value="SDM College of Medical Sciences & Hospital, Dharwad">
-                <option value="Navodaya Medical College, Raichur">
-                <option value="JSS Medical College, Mysore">
-                <option value="Rural Medical College, Loni">
-                <option value="Pramukhswami Medical College, Anand">
-                <option value="Adichunchanagiri Institute of Medical Sciences, Mandya">
-                <option value="Vydehi Institute of Medical Sciences and Research Centre, Bangalore">
-                <option value="Rajarajeswari Medical College and Hospital, Bangalore">
-                <option value="Yenepoya Medical College, Mangaluru">
-                <option value="Father Muller Medical College, Mangaluru">
-                <option value="Kempegowda Institute of Medical Sciences, Bangalore">
-                <option value="Maharaja Agrasen Medical College, Agroha">
-                <option value="Christian Medical College, Ludhiana">
-                <option value="Mata Gujri Memorial Medical College, Kishanganj">
-                <option value="Hi-Tech Medical College & Hospital, Bhubaneswar">
-                <option value="Maharishi Markandeshwar (Deemed to be University), Ambala">
-                <option value="Teerthanker Mahaveer University, Moradabad">
-                <option value="Santosh Medical College and Hospital, Ghaziabad">
-                <option value="Sharda University, Greater Noida">
-                <option value="Netaji Subhash Chandra Bose Medical College, Jabalpur">
-                <option value="Moti Lal Nehru Medical College, Allahabad">
-                <option value="Gajra Raja Medical College, Gwalior">
-                <option value="S.M.S. Medical College, Jaipur">
-                <option value="R.N.T. Medical College, Udaipur">
-                <option value="JLN Medical College, Ajmer">
-                <option value="Dr. S.N. Medical College, Jodhpur">
-                <option value="Government Medical College, Kota">
-                <option value="M.P. Shah Medical College, Jamnagar">
-                <option value="Government Medical College, Surat">
-                <option value="Pt. Deendayal Upadhyay Medical College, Rajkot">
-                <option value="Medical College, Baroda">
-                <option value="Assam Medical College, Dibrugarh">
-                <option value="Gauhati Medical College, Guwahati">
-                <option value="Silchar Medical College & Hospital, Silchar">
-                <option value="Indira Gandhi Medical College, Shimla">
-                <option value="Sher-i-Kashmir Institute of Medical Sciences, Srinagar">
-                <option value="Government Medical College, Jammu">
-                <option value="King Edward Memorial Hospital and Seth Gordhandas Sunderdas Medical College, Mumbai">
-                <option value="BYL Nair Charitable Hospital and Topiwala National Medical College, Mumbai">
-                <option value="Seth G.S. Medical College, Mumbai">
-                <option value="Lokmanya Tilak Municipal Medical College, Mumbai">
-                <option value="BJ Medical College, Pune">
-                <option value="Government Medical College, Nagpur">
-                <option value="Indira Gandhi Government Medical College, Nagpur">
-                <option value="Dr. V. M. Government Medical College, Solapur">
-                <option value="Government Medical College, Aurangabad">
-                <option value="Grant Medical College, Mumbai">
-                <option value="Armed Forces Medical College, Pune">
-                <option value="Government Medical College, Akola">
-                <option value="Government Medical College, Miraj">
-                <option value="Government Medical College, Latur">
-                <option value="AIIMS Bhopal">
-                <option value="AIIMS Bhubaneswar">
-                <option value="AIIMS Jodhpur">
-                <option value="AIIMS Patna">
-                <option value="AIIMS Raipur">
-                <option value="AIIMS Rishikesh">
-                <option value="AIIMS Nagpur">
-                <option value="AIIMS Mangalagiri">
-                <option value="AIIMS Gorakhpur">
-                <option value="AIIMS Kalyani">
-                <option value="AIIMS Raebareli">
-                <option value="AIIMS Bathinda">
-                <option value="AIIMS Bilaspur">
-                <option value="AIIMS Deoghar">
-                <option value="AIIMS Guwahati">
-                <option value="AIIMS Rajkot">
-                <option value="AIIMS Vijaypur">
-                <option value="AIIMS Madurai">
-                <option value="AIIMS Darbhanga">
-                <option value="AIIMS Rewari">
-                <option value="AIIMS Kashmir">
-                <option value="AIIMS Jammu">
-                <option value="AIIMS Manipur">
-                <option value="AIIMS Mizoram">
-                <option value="AIIMS Sikkim">
-                <option value="AIIMS Tripura">
-            </datalist>
-        </div>
-        <div class="input-group">
-            <select id="exam_pursuing">
-                <option value="" disabled selected>What exam are you pursuing?</option>
-                <option>Final year exam</option>
-                <option>DNB</option>
-                <option>FRCR</option>
-                <option>NEET SS</option>
-                <option>INICET SS</option>
-                <option>MICR</option>
-                <option>Fellowship exams</option>
-            </select>
-        </div>
-        <button onclick="submitProfile()">Submit Profile</button>
-    </div>
-
-    <div class="container dashboard" id="dashboard" style="display: none;">
-        <div class="topbar">
-            <div class="user-greeting">Hi, <span id="user-greeting-name">Doctor</span>!</div>
-            <div class="menu-icon" onclick="toggleSidebar()">☰</div>
-        </div>
-
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-item" onclick="showDashboardSection('main')">🏠 Home</div>
-            <div class="sidebar-item" onclick="showDashboardSection('profile')">👤 Profile</div>
-            <div class="sidebar-item" onclick="showDashboardSection('subscription')">💳 Subscription</div>
-            <div class="sidebar-item" onclick="showDashboardSection('settings')">⚙️ Settings</div>
-            <div class="sidebar-item" onclick="showDashboardSection('about-us')">ℹ️ About Us</div>
-            <div class="sidebar-item" onclick="showDashboardSection('contact-us')">📞 Contact Us</div>
-            <div class="sidebar-item" onclick="logout()">🚪 Logout</div>
-        </div>
-        
-        <div class="dashboard-content-wrapper" id="dashboard-main-content">
-            <h1 class="welcome-title">Welcome to RadMentor</h1>
-            <p class="welcome-subtitle">The World’s Most Comprehensive Radiology Learning Source</p>
-
-            <div class="mcq-grid">
-                <div class="dashboard-grid-item" onclick="window.location.href='frcr/'">FRCR</div>
-                <div class="dashboard-grid-item" onclick="alert('MICR MCQs coming soon!')">MICR</div>
-                <div class="dashboard-grid-item" onclick="window.location.href='anatomy/'">Anatomy</div>
-                <div class="dashboard-grid-item" onclick="alert('MD / DNB MCQs coming soon!')">MD / DNB</div>
-                <div class="dashboard-grid-item" onclick="alert('Superspeciality MCQs coming soon!')">Superspeciality MCQs</div>
-                <div class="dashboard-grid-item" onclick="alert('Fellowship Exams MCQs coming soon!')">Fellowship Exams</div>
-            </div>
-        </div>
-
-        <div class="content-section" id="profile-section">
-            <h2>Your Profile</h2>
-            <div class="profile-field-display"><strong>Full Name:</strong> <span id="display-name"></span></div>
-            <div class="profile-field-display"><strong>Email:</strong> <span id="display-email"></span></div> 
-            <div class="profile-field-display"><strong>Date of Birth:</strong> <span id="display-dob"></span></div>
-            <div class="profile-field-display"><strong>Sex:</strong> <span id="display-sex"></span></div>
-            <div class="profile-field-display"><strong>Position:</strong> <span id="display-position"></span></div>
-            <div class="profile-field-display"><strong>Medical College:</strong> <span id="display-college"></span></div>
-            <div class="profile-field-display"><strong>Exam Pursuing:</strong> <span id="display-exam"></span></div>
-            <button onclick="toggleProfileEditMode(true)">Edit Profile</button>
-        </div>
-
-        <div class="content-section" id="edit-profile-section" style="display: none;"> 
-            <h2>Edit Your Profile</h2>
-            <div class="input-group"><input type="text" id="edit-name" placeholder="Full Name" /></div>
-            <div class="input-group"><input type="date" id="edit-dob" /></div>
-            <div class="input-group">
-                <select id="edit-sex">
-                    <option value="" disabled selected>Select Sex</option>
-                    <option>Male</option>
-                    <option>Female</option>
-                    <option>Other</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <select id="edit-position">
-                    <option value="" disabled selected>Select Position</option>
-                    <option>Intern</option>
-                    <option>Junior Resident</option>
-                    <option>Senior Resident</option>
-                    <option>Consultant</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <input list="colleges" id="edit-college" placeholder="Medical College" />
-                <datalist id="colleges"></datalist> 
-            </div>
-            <div class="input-group">
-                <select id="edit-exam-pursuing">
-                    <option value="" disabled selected>What exam are you pursuing?</option>
-                    <option>Final year exam</option>
-                    <option>DNB</option>
-                    <option>FRCR</option>
-                    <option>NEET SS</option>
-                    <option>INICET SS</option>
-                    <option>MICR</option>
-                    <option>Fellowship exams</option>
-                </select>
-            </div>
-            <div class="profile-edit-buttons">
-                <button onclick="saveProfileChanges()">Save Changes</button>
-                <button onclick="toggleProfileEditMode(false)" style="background-color: #6c757d; color: white;">Cancel</button>
-            </div>
-        </div>
-
-        <div class="content-section" id="subscription-section">
-            <h2>Subscription</h2>
-            <p><strong>Package A:</strong> Basic Access - Monthly MCQs</p>
-            <p><strong>Package B:</strong> Premium Access - All MCQs + Mock Tests</p>
-            <p><strong>Package C:</strong> Elite Access - All features + Personal Tutoring</p>
-            <p>Choose the plan that suits your learning journey! More details and pricing coming soon.</p>
-            <button onclick="alert('Navigate to subscription plans page!')" style="background-color: var(--button-bg-color);">View Plans</button>
-        </div>
-
-        <div class="content-section" id="settings-section">
-            <h2>Settings</h2>
-            <div class="settings-option">
-                <label>Membership Taken Date:</label>
-                <span id="membership-start-date">N/A</span>
-            </div>
-            <div class="settings-option">
-                <label>Membership End Date:</label>
-                <span id="membership-end-date">N/A</span>
-            </div>
-            <div class="settings-option">
-                <label>Clear Bookmarks:</label>
-                <button onclick="alert('Bookmarks cleared! (Placeholder)')" style="background-color: #dc3545; color: white;">Clear</button>
-            </div>
-            <div class="settings-option theme-toggle">
-                <label for="theme-switch-light">Light Theme</label>
-                <input type="radio" id="theme-switch-light" name="theme" value="light" onchange="setTheme('light')">
-                <label for="theme-switch-dark">Dark Theme</label>
-                <input type="radio" id="theme-switch-dark" name="theme" value="dark" onchange="setTheme('dark')">
-                <label for="theme-switch-gradient">Gradient Theme</label>
-                <input type="radio" id="theme-switch-gradient" name="theme" value="gradient" onchange="setTheme('gradient')">
-            </div>
-            <div class="settings-option">
-                <label>Notification Preferences:</label>
-                <button onclick="alert('Notification settings (Placeholder)')" style="background-color: #007bff; color: white;">Manage</button>
-            </div>
-            <div class="settings-option">
-                <label>Change Password:</label>
-                <button onclick="alert('Password change dialog (Placeholder)')" style="background-color: #6c757d; color: white;">Change</button>
-            </div>
-            <div class="settings-option">
-                <label>Membership Status:</label>
-                <span id="membership-status">N/A</span>
-            </div>
-        </div>
-
-        <div class="content-section" id="about-us-section">
-            <h2>About Us</h2>
-            <p>We are two radiologists trained at one of India’s premier medical institutes, united by a shared vision: to make high-quality radiology education accessible, affordable, and reliable for all.</p>
-            <p>In a world where accurate knowledge can shape clinical decisions, we built this platform as a trusted source of learning—for students, residents, and practitioners alike. Every question, explanation, and update is curated by us, backed by evidence, and rooted in real-world radiology practice.</p>
-            <p>Whether you're preparing for exams or refining your diagnostic skills, our goal is to support your journey with clear, concise, and clinically relevant content—delivered with the precision you'd expect from radiologists.</p>
-            <p>Welcome to a community built by doctors, for doctors.</p>
-        </div>
-
-        <div class="content-section" id="contact-us-section">
-            <h2>Contact Us</h2>
-            <p>Have questions or feedback? We'd love to hear from you!</p>
-            <p>Email: <a href="mailto:support@radmentor.com" style="color: var(--toggle-color);">support@radmentor.com</a></p>
-            <p>Our team will get back to you as soon as possible.</p>
-        </div>
-
-    </div> <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
     <script>
-        // Your Firebase Configuration - REPLACE WITH YOUR ACTUAL CONFIGURATION IF DIFFERENT
         const firebaseConfig = {
-            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw", 
+            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
             authDomain: "radiology-mcqs.firebaseapp.com",
             projectId: "radiology-mcqs",
             storageBucket: "radiology-mcqs.appspot.com",
@@ -869,361 +101,94 @@
             appId: "1:862300415358:web:097d5e413f388e30587f2f",
             measurementId: "G-0V1SD1H95V"
         };
-
-        // Initialize Firebase
+        
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
-
-        let mode = 'signin'; 
-        let currentUserData = null; 
-
-        // --- Theme Logic ---
-        function setTheme(theme) {
-            document.body.classList.remove('light-theme', 'gradient-theme'); 
-            if (theme === 'light') {
-                document.body.classList.add('light-theme');
-            } else if (theme === 'gradient') { 
-                document.body.classList.add('gradient-theme');
-            }
-            localStorage.setItem('theme', theme); 
+        
+        let authMode = 'signin';
+        let currentUserData = null;
+        const ui = { header: document.querySelector('header'), landingPage: document.getElementById('landing-page'), dashboard: document.getElementById('dashboard'), profileForm: document.getElementById('profile-form-container'), loggedOutNav: document.getElementById('logged-out-nav'), loggedInNav: document.getElementById('logged-in-nav'), mainNav: document.getElementById('main-nav'), userMenuButton: document.getElementById('user-menu-button'), userMenu: document.getElementById('user-menu'), mobileMenuButton: document.getElementById('mobile-menu-button'), mobileMenu: document.getElementById('mobile-menu'), sidebar: document.getElementById('sidebar'), closeSidebarBtn: document.getElementById('close-sidebar-button'), mainDashboard: document.getElementById('dashboard-main-content'), adminDashboard: document.getElementById('admin-section') };
+        
+        // --- EVENT LISTENERS ---
+        ui.userMenuButton.addEventListener('click', (e) => { e.stopPropagation(); ui.userMenu.classList.toggle('hidden'); });
+        ui.mobileMenuButton.addEventListener('click', () => { if (currentUserData) { ui.sidebar.classList.remove('translate-x-full'); } else { ui.mobileMenu.classList.toggle('hidden'); } });
+        ui.closeSidebarBtn.addEventListener('click', () => ui.sidebar.classList.add('translate-x-full'));
+        window.addEventListener('click', (e) => { if (ui.loggedInNav && !ui.loggedInNav.contains(e.target)) ui.userMenu.classList.add('hidden'); });
+        
+        // --- AUTH MODAL ---
+        function showAuthModal(mode) { authMode = mode; updateAuthModalUI(); document.getElementById('auth-modal').classList.remove('hidden'); }
+        function hideAuthModal() { document.getElementById('auth-modal').classList.add('hidden'); }
+        function toggleAuth() { authMode = authMode === 'signin' ? 'signup' : 'signin'; updateAuthModalUI(); }
+        function updateAuthModalUI() { const isSignin = authMode === 'signin'; const title = document.getElementById('auth-title'); const subtitle = document.getElementById('auth-subtitle'); const btn = document.getElementById('auth-btn'); const toggleBtn = document.getElementById('toggle-btn'); title.textContent = isSignin ? 'Login' : 'Create Account'; subtitle.textContent = isSignin ? 'Welcome back!' : 'Start your journey.'; btn.textContent = isSignin ? 'Sign In' : 'Sign Up'; toggleBtn.textContent = isSignin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'; document.getElementById('auth-message').textContent = ''; }
+        
+        // --- AUTHENTICATION CORE ---
+        function handleAuth() { const email = document.getElementById('email').value; const password = document.getElementById('password').value; const msg = document.getElementById('auth-message'); const btn = document.getElementById('auth-btn'); if (!email || !password) { msg.textContent = "Please enter email and password."; return; } btn.disabled = true; if (authMode === 'signin') { auth.signInWithEmailAndPassword(email, password).catch(err => msg.textContent = err.message).finally(() => btn.disabled = false); } else { auth.createUserWithEmailAndPassword(email, password).then(cred => { db.collection('users').doc(cred.user.uid).set({ email: cred.user.email, accessLevel: 'Restricted', createdAt: firebase.firestore.FieldValue.serverTimestamp() }); return cred.user.sendEmailVerification(); }).then(() => { auth.signOut(); showAuthModal('signin'); msg.textContent = "Verification email sent!"; }).catch(err => msg.textContent = err.message).finally(() => btn.disabled = false); } }
+        function logout() { auth.signOut(); }
+        
+        // --- UI STATE MANAGEMENT ---
+        auth.onAuthStateChanged(user => { if (user && user.emailVerified) { db.collection('users').doc(user.uid).get().then(doc => { if (doc.exists) { currentUserData = { uid: user.uid, ...doc.data() }; setupUIForLoggedInUser(currentUserData); } }); } else { currentUserData = null; setupUIForLoggedOutUser(); if (user && !user.emailVerified) { showAuthModal('signin'); document.getElementById('auth-message').textContent = "Please verify your email."; } } });
+        
+        function setupUIForLoggedInUser(userData) {
+            hideAuthModal();
+            ui.landingPage.style.display = 'none';
+            ui.dashboard.style.display = 'block';
+            ui.loggedOutNav.style.display = 'none';
+            ui.loggedInNav.style.display = 'flex';
+            ui.mainNav.style.display = 'flex'; // **FIX: Ensure main nav is visible**
+            ui.header.classList.add('header-dark');
+            document.getElementById('user-greeting-header').textContent = userData.name ? userData.name.split(' ')[0] : 'User';
+            if (!userData.name) { ui.profileForm.classList.remove('hidden'); ui.dashboard.style.display = 'none'; } else { updateDashboardView(userData); }
         }
 
-        function setInitialTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            const lightSwitch = document.getElementById('theme-switch-light');
-            const darkSwitch = document.getElementById('theme-switch-dark');
-            const gradientSwitch = document.getElementById('theme-switch-gradient'); 
-
-            if (savedTheme === 'light') {
-                document.body.classList.add('light-theme');
-                if (lightSwitch) lightSwitch.checked = true;
-            } else if (savedTheme === 'gradient') { 
-                document.body.classList.add('gradient-theme');
-                if (gradientSwitch) gradientSwitch.checked = true;
-            }
-            else {
-                document.body.classList.remove('light-theme', 'gradient-theme');
-                if (darkSwitch) darkSwitch.checked = true;
-            }
+        function setupUIForLoggedOutUser() {
+            ui.landingPage.style.display = 'block';
+            ui.dashboard.style.display = 'none';
+            ui.profileForm.classList.add('hidden');
+            ui.loggedOutNav.style.display = 'flex';
+            ui.loggedInNav.style.display = 'none';
+            ui.mainNav.style.display = 'flex'; // **FIX: Ensure main nav is visible**
+            ui.header.classList.remove('header-dark');
         }
-
-        // --- Authentication Functions ---
-        function toggleAuth() {
-            mode = mode === 'signin' ? 'signup' : 'signin';
-            document.getElementById('auth-btn').textContent = mode === 'signin' ? 'Sign In' : 'Sign Up';
-            document.querySelector('.toggle').textContent = mode === 'signin'
-                ? "Don't have an account? Sign up"
-                : "Already have an account? Sign in";
-            document.getElementById('auth-message').textContent = ''; 
-        }
-
-        function handleAuth() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const authMessage = document.getElementById('auth-message');
-            authMessage.textContent = ''; 
-
-            if (email === "" || password === "") {
-                authMessage.textContent = "Please enter both email and password.";
-                return;
-            }
-
-            if (mode === 'signin') {
-                auth.signInWithEmailAndPassword(email, password)
-                    .then(userCredential => {
-                        const user = userCredential.user;
-                        if (!user.emailVerified) {
-                            auth.signOut(); 
-                            authMessage.textContent = "Please verify your email address. Check your inbox for a verification link.";
-                            return;
-                        }
-                        checkUserProfileAndLog(user); 
-                    })
-                    .catch(err => {
-                        authMessage.textContent = "Sign In Error: " + err.message;
-                    });
-            } else { // mode === 'signup'
-                auth.createUserWithEmailAndPassword(email, password)
-                    .then(userCredential => {
-                        const user = userCredential.user;
-                        return user.sendEmailVerification().then(() => {
-                            auth.signOut(); 
-                            authMessage.textContent = "Verification email sent! Please verify your email address before signing in.";
-                            return db.collection('users').doc(user.uid).set({
-                                email: user.email,
-                                accessLevel: 'restricted', 
-                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                                name: '', 
-                                dob: '',
-                                sex: '',
-                                position: '',
-                                college: '',
-                                examPursuing: ''
-                            });
-                        });
-                    })
-                    .catch(err => {
-                        authMessage.textContent = "Sign Up Error: " + err.message;
-                    });
-            }
-        }
-
-        function checkUserProfileAndLog(user) {
-            const userRef = db.collection('users').doc(user.uid);
-            userRef.get().then(doc => {
-                let userAccessLevel = 'restricted'; 
-                if (doc.exists) {
-                    currentUserData = doc.data(); 
-                    if (currentUserData.accessLevel) {
-                        userAccessLevel = currentUserData.accessLevel;
-                    }
-                } else {
-                    userRef.set({
-                        email: user.email,
-                        accessLevel: 'restricted', 
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        name: '', 
-                        dob: '',
-                        sex: '',
-                        position: '',
-                        college: '',
-                        examPursuing: ''
-                    }, { merge: true }).then(() => {
-                        currentUserData = { email: user.email, accessLevel: 'restricted' };
-                    });
-                }
-
-                db.collection('loginLogs').add({
-                    userId: user.uid,
-                    email: user.email,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    accessLevel: userAccessLevel
-                }).then(() => {
-                    console.log("Login event logged for user:", user.email, "Access:", userAccessLevel);
-                }).catch(logErr => {
-                    console.error("Error logging login event:", logErr);
-                });
-
-                if (doc.exists && doc.data().name) { 
-                    loadDashboard(doc.data().name, userAccessLevel);
-                } else {
-                    document.getElementById('auth-container').style.display = 'none';
-                    document.getElementById('profile-form').style.display = 'block';
-                }
-            }).catch(error => {
-                console.error("Error checking user profile or logging in:", error);
-                alert("An error occurred. Please try again.");
-            });
-        }
-
-        auth.onAuthStateChanged(user => {
-            // Remove 'dashboard-active' class on body when auth state changes (e.g., logout or initial load)
-            document.body.classList.remove('dashboard-active'); 
-
-            if (user) {
-                db.collection('users').doc(user.uid).get().then(doc => {
-                    if (doc.exists && doc.data().accessLevel === 'admin') {
-                        window.location.href = 'admin.html'; 
-                        return; 
-                    }
-                    document.getElementById('auth-container').style.display = 'none';
-                    document.getElementById('profile-form').style.display = 'none';
-                    document.getElementById('dashboard').style.display = 'none';
-                    document.querySelector('.topbar').style.display = 'none';
-                    document.getElementById('sidebar').classList.remove('show'); 
-
-                    if (!user.emailVerified) {
-                        auth.signOut(); 
-                        document.getElementById('auth-container').style.display = 'block';
-                        document.getElementById('auth-message').textContent = "Your email is not verified. Please check your inbox for a verification link.";
-                        return;
-                    }
-                    checkUserProfileAndLog(user);
-                }).catch(error => {
-                    console.error("Error checking user role:", error);
-                    document.getElementById('auth-container').style.display = 'block';
-                });
-            } else {
-                document.getElementById('auth-container').style.display = 'block';
-            }
-        });
-
-        function submitProfile() {
-            const user = auth.currentUser;
-            if (!user) {
-                alert("No user logged in. Please sign in first.");
-                return;
-            }
-
-            const profileData = {
-                name: document.getElementById('name').value,
-                dob: document.getElementById('dob').value,
-                sex: document.getElementById('sex').value,
-                position: document.getElementById('position').value,
-                college: document.getElementById('college').value,
-                examPursuing: document.getElementById('exam_pursuing').value,
-            };
-
-            if (!profileData.name || !profileData.dob || !profileData.sex || !profileData.position || !profileData.college || !profileData.examPursuing) {
-                alert("Please fill in all profile fields.");
-                return;
-            }
-
-            db.collection('users').doc(user.uid).update(profileData) 
-                .then(() => {
-                    currentUserData = { ...currentUserData, ...profileData }; 
-                    document.getElementById('profile-form').style.display = 'none';
-                    loadDashboard(currentUserData.name, currentUserData.accessLevel);
-                })
-                .catch(err => alert("Error saving profile: " + err.message));
-        }
-
-        function loadDashboard(userName = "Doctor", accessLevel = "restricted") {
-            document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('profile-form').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-            document.querySelector('.topbar').style.display = 'flex';
-            
-            // Add 'dashboard-active' class to body when dashboard loads
-            document.body.classList.add('dashboard-active'); 
-
-            document.getElementById('user-greeting-name').textContent = userName;
-
-            showDashboardSection('main'); 
-
-            const restrictedMessageDiv = document.createElement('div');
-            restrictedMessageDiv.className = 'restricted-content';
-            restrictedMessageDiv.innerHTML = '<p>You have restricted access. Some content may not be available. Please subscribe for full access.</p><button onclick="showDashboardSection(\'subscription\')">View Subscription Plans</button>';
-
-            const subscriberMessageDiv = document.createElement('div');
-            subscriberMessageDiv.className = 'subscriber-content';
-            subscriberMessageDiv.innerHTML = '<p>You have full subscriber access! Enjoy all features.</p>';
-
-            const dashboardContent = document.getElementById('dashboard-main-content');
-            
-            dashboardContent.querySelectorAll('.restricted-content, .subscriber-content').forEach(el => el.remove());
-
-            if (accessLevel === 'restricted') {
-                dashboardContent.appendChild(restrictedMessageDiv);
-            } else if (accessLevel === 'subscriber') {
-                dashboardContent.appendChild(subscriberMessageDiv);
-            }
-
-            document.querySelectorAll('.mcq-grid .dashboard-grid-item').forEach(item => {
-                const feature = item.textContent.trim(); 
-                if (accessLevel === 'restricted' && (feature === 'FRCR' || feature === 'MICR' || feature === 'Superspeciality MCQs' || feature === 'Fellowship Exams')) {
-                     item.style.opacity = '0.5';
-                     item.style.pointerEvents = 'none';
-                     item.onclick = () => alert('This content is for subscribers only. Please subscribe to unlock!');
-                } else {
-                    item.style.opacity = '1';
-                    item.style.pointerEvents = 'auto';
-                    if (feature === 'FRCR') item.onclick = () => window.location.href='frcr/';
-                    else if (feature === 'Anatomy') item.onclick = () => window.location.href='anatomy/';
-                    else if (feature === 'MICR') item.onclick = () => alert('MICR MCQs coming soon!');
-                    else if (feature === 'MD / DNB') item.onclick = () => alert('MD / DNB MCQs coming soon!');
-                    else if (feature === 'Superspeciality MCQs') item.onclick = () => alert('Superspeciality MCQs coming soon!');
-                    else if (feature === 'Fellowship Exams') item.onclick = () => alert('Fellowship Exams MCQs coming soon!');
-
-                }
-            });
-        }
-
-        function logout() {
-            auth.signOut().then(() => {
-                console.log("User signed out.");
-                currentUserData = null; 
-            }).catch(error => {
-                alert("Error signing out: " + error.message);
-            });
-        }
-
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('show');
-        }
-
+        
+        // --- DASHBOARD NAVIGATION & CONTENT ---
+        function updateDashboardView(userData) { const isAdmin = userData.accessLevel === 'Admin'; const adminMenuLink = document.getElementById('admin-menu-link'); if (isAdmin) { if (!adminMenuLink) { const link = document.createElement('a'); link.id = 'admin-menu-link'; link.href = "#"; link.className = "block px-4 py-2 text-sm text-blue-700 font-bold hover:bg-gray-100"; link.textContent = "Admin Panel"; link.onclick = () => showDashboardSection('admin'); ui.userMenu.insertBefore(link, ui.userMenu.firstChild); } showDashboardSection('admin'); } else { if (adminMenuLink) adminMenuLink.remove(); showDashboardSection('main'); } }
+        
         function showDashboardSection(sectionId) {
-            document.querySelectorAll('.content-section').forEach(section => {
-                section.style.display = 'none';
-            });
-            document.getElementById('dashboard-main-content').style.display = 'none';
-
-            if (sectionId === 'main') {
-                document.getElementById('dashboard-main-content').style.display = 'flex'; 
-            } else if (sectionId === 'profile') {
-                populateProfileDetails(); 
-                toggleProfileEditMode(false); 
-                document.getElementById('profile-section').style.display = 'block';
-            } else if (sectionId === 'subscription') {
-                document.getElementById('subscription-section').style.display = 'block';
-            } else if (sectionId === 'settings') {
-                populateSettings(); 
-                document.getElementById('settings-section').style.display = 'block';
-            } else if (sectionId === 'about-us') {
-                document.getElementById('about-us-section').style.display = 'block';
-            } else if (sectionId === 'contact-us') {
-                document.getElementById('contact-us-section').style.display = 'block';
-            }
-            
-            document.getElementById('sidebar').classList.remove('show');
-        }
-
-        function toggleProfileEditMode(editMode) {
-            const displayProfileSection = document.getElementById('profile-section');
-            const editProfileSection = document.getElementById('edit-profile-section');
-
-            if (editMode) {
-                displayProfileSection.style.display = 'none';
-                editProfileSection.style.display = 'block';
-                populateEditProfileForm(); 
-            } else {
-                displayProfileSection.style.display = 'block';
-                editProfileSection.style.display = 'none';
-                populateProfileDetails(); 
-            }
-        }
-
-
-        function populateProfileDetails() {
-            if (currentUserData) {
-                document.getElementById('display-name').textContent = currentUserData.name || 'N/A';
-                document.getElementById('display-email').textContent = auth.currentUser.email || 'N/A'; 
-                const dob = currentUserData.dob;
-                if (dob) {
-                    try {
-                        const dateObj = new Date(dob);
-                        document.getElementById('display-dob').textContent = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-                    } catch (e) {
-                        document.getElementById('display-dob').textContent = dob; 
-                    }
+            [ui.mainDashboard, ui.adminDashboard, document.getElementById('profile-section'), document.getElementById('settings-section'), document.getElementById('analytics-section')].forEach(el => { if(el) el.classList.add('hidden'); });
+            const elementToShow = document.getElementById(sectionId === 'main' ? 'dashboard-main-content' : `${sectionId}-section`);
+            if (elementToShow) {
+                elementToShow.classList.remove('hidden');
+                // Adjust background for non-main/admin sections
+                if (['profile', 'settings', 'analytics'].includes(sectionId)) {
+                    ui.dashboard.querySelector('#dashboard-content-wrapper').classList.remove('dashboard-theme');
+                    ui.dashboard.querySelector('#dashboard-content-wrapper').style.backgroundColor = '#f9fafb'; // light gray
                 } else {
-                    document.getElementById('display-dob').textContent = 'N/A';
+                    ui.dashboard.querySelector('#dashboard-content-wrapper').classList.add('dashboard-theme');
+                    ui.dashboard.querySelector('#dashboard-content-wrapper').style.backgroundColor = '';
                 }
-
-                document.getElementById('display-sex').textContent = currentUserData.sex || 'N/A';
-                document.getElementById('display-position').textContent = currentUserData.position || 'N/A';
-                document.getElementById('display-college').textContent = currentUserData.college || 'N/A';
-                document.getElementById('display-exam').textContent = currentUserData.examPursuing || 'N/A';
-                document.getElementById('membership-status').textContent = currentUserData.accessLevel ? currentUserData.accessLevel.toUpperCase() : 'N/A';
-
             }
+            if (sectionId === 'admin') loadUsersForAdmin();
+            if (sectionId === 'profile') populateProfileDetails();
+            if (sectionId === 'settings') populateSettingsDetails();
+            if (sectionId === 'analytics') populateAnalyticsDetails();
+            ui.sidebar.classList.add('translate-x-full');
         }
-
-        function populateSettings() {
-            document.getElementById('membership-start-date').textContent = "Not yet subscribed"; 
-            document.getElementById('membership-end-date').textContent = "Not yet subscribed"; 
-            if (currentUserData && currentUserData.accessLevel) {
-                 document.getElementById('membership-status').textContent = currentUserData.accessLevel ? currentUserData.accessLevel.toUpperCase() : 'N/A'; 
-                 if (currentUserData.accessLevel === 'subscriber') {
-                     document.getElementById('membership-start-date').textContent = "Jan 1, 2025 (Example)";
-                     document.getElementById('membership-end-date').textContent = "Jan 1, 2026 (Example)";
-                 }
-            }
-            setInitialTheme();
-        }
-
-        setInitialTheme();
+        
+        // --- PROFILE FORM ---
+        function submitProfile() { const profileData = { name: document.getElementById('name').value.trim(), dob: document.getElementById('dob').value, sex: document.getElementById('sex').value }; if (!profileData.name || !profileData.dob || !profileData.sex) { alert("Please fill all fields."); return; } db.collection('users').doc(currentUserData.uid).update(profileData).then(() => { ui.profileForm.classList.add('hidden'); currentUserData = { ...currentUserData, ...profileData }; setupUIForLoggedInUser(currentUserData); }); }
+        
+        // --- CONTENT POPULATION ---
+        function populateProfileDetails() { document.getElementById('profile-section').innerHTML = `<h2 class="text-2xl font-bold mb-6">My Profile</h2><div class="space-y-4 max-w-lg"><div class="p-4 bg-gray-50 rounded-lg"><strong>Name:</strong> ${currentUserData.name || 'N/A'}</div><div class="p-4 bg-gray-50 rounded-lg"><strong>Email:</strong> ${currentUserData.email}</div><div class="p-4 bg-gray-50 rounded-lg"><strong>Access Level:</strong> <span class="font-semibold text-blue-600">${currentUserData.accessLevel}</span></div></div>`; }
+        function populateSettingsDetails() { document.getElementById('settings-section').innerHTML = `<h2 class="text-2xl font-bold mb-6">Settings</h2><div class="space-y-6 max-w-lg"><div><h3 class="text-lg font-semibold">Account</h3><button class="mt-2 text-blue-600 hover:underline">Change Password (coming soon)</button></div><div><h3 class="text-lg font-semibold">Notifications</h3><p class="text-gray-600">Notification settings will be available here soon.</p></div></div>`; }
+        function populateAnalyticsDetails() { document.getElementById('analytics-section').innerHTML = `<h2 class="text-2xl font-bold mb-6">My Analytics</h2><p class="text-gray-600">Your performance analytics dashboard is coming soon!</p>`; }
+        
+        // --- ADMIN FUNCTIONS ---
+        function loadUsersForAdmin() { ui.adminDashboard.innerHTML = `<h1 class="text-3xl font-bold text-gray-900 mb-6">Admin Dashboard</h1><div class="bg-white p-6 rounded-lg shadow-md"><h2 class="text-2xl font-bold mb-4 text-gray-800">User Management</h2><div class="overflow-x-auto"><table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" class="py-3 px-6">User</th><th scope="col" class="py-3 px-6">Email</th><th scope="col" class="py-3 px-6">Access Level</th><th scope="col" class="py-3 px-6">Actions</th></tr></thead><tbody id="user-list"></tbody></table></div></div>`; const userListBody = document.getElementById('user-list'); userListBody.innerHTML = `<tr><td colspan="4" class="text-center p-4">Loading...</td></tr>`; db.collection('users').orderBy('createdAt','desc').get().then(snapshot => { userListBody.innerHTML = ''; snapshot.forEach(doc => { const user = doc.data(); const row = document.createElement('tr'); row.className = 'bg-white border-b'; row.innerHTML = `<td class="py-4 px-6">${user.name || 'N/A'}</td><td class="py-4 px-6">${user.email}</td><td class="py-4 px-6"><select id="select-${doc.id}" class="bg-gray-50 border border-gray-300 text-sm rounded-lg block w-full p-2.5"><option value="Restricted" ${user.accessLevel === 'Restricted' ? 'selected' : ''}>Restricted</option><option value="Premium" ${user.accessLevel === 'Premium' ? 'selected' : ''}>Premium</option><option value="Admin" ${user.accessLevel === 'Admin' ? 'selected' : ''}>Admin</option></select></td><td class="py-4 px-6"><button onclick="updateUserAccessLevel('${doc.id}')" class="font-medium text-blue-600 hover:underline">Save</button></td>`; userListBody.appendChild(row); }); }); }
+        function updateUserAccessLevel(userId) { const newLevel = document.getElementById(`select-${userId}`).value; if (confirm(`Change this user's access to ${newLevel}?`)) { db.collection('users').doc(userId).update({ accessLevel: newLevel }).then(() => alert('User updated successfully.')).catch(err => alert('Error: ' + err.message)); } }
+        
+        // --- Final Initialization ---
+        document.addEventListener('DOMContentLoaded', () => { feather.replace(); });
     </script>
 </body>
 </html>
