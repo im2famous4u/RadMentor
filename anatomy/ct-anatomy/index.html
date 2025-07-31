@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CT Anatomy - RadMentor</title>
+    <title>HRCT Temporal Bone - Axial - RadMentor</title>
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700&display=swap" rel="stylesheet"/>
     <style>
-        /* Base styles for all themes */
         body {
             font-family: 'Rubik', sans-serif;
             margin: 0;
@@ -18,93 +17,178 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             flex-direction: column;
-            overflow: hidden; /* Prevent body scroll */
+            overflow: hidden;
         }
 
-        /* Light Theme Variables */
         body.light-theme {
-            --bg-color: #f0f8ff; /* Very light blue/off-white background */
-            --container-bg-color: #ffffff; /* Pure white container background */
-            --text-color: #333333; /* Dark grey for general text */
-            --heading-color: #0d47a1; /* Darker blue for headings */
-            --box-bg-color: #e3f2fd; /* Light blue for boxes */
-            --box-hover-bg-color: #bbdefb; /* Slightly darker light blue on hover */
-            --box-border-color: #90caf9; /* Medium blue for box borders */
-            --back-button-bg: #1e88e5; /* Standard blue button */
-            --back-button-hover-bg: #1565c0; /* Darker blue button on hover */
+            --bg-color: #f0f8ff;
+            --container-bg-color: #ffffff;
+            --text-color: #333333;
+            --heading-color: #0d47a1;
+            --back-button-bg: #1e88e5;
+            --back-button-hover-bg: #1565c0;
+            --slider-track-bg: #c5d9e8;
+            --slider-thumb-bg: #1e88e5;
+            --annotation-text-color: #1a237e;
+            --annotation-bg-color: rgba(255, 255, 255, 0.95);
+            --annotation-border-color: #64b5f6;
+            --annotation-line-color: #42a5f5;
+            --annotation-point-color: #f44336;
         }
 
-        /* Dark Theme Variables */
         body:not(.light-theme) {
             --bg-color: #004d5e;
             --container-bg-color: #043f4e;
             --text-color: #ffffff;
             --heading-color: #ffffff;
-            --box-bg-color: #095a71;
-            --box-hover-bg-color: #064a5c;
-            --box-border-color: #043f4e;
             --back-button-bg: #00bcd4;
             --back-button-hover-bg: #0097a7;
+            --slider-track-bg: #032b36;
+            --slider-thumb-bg: #00bcd4;
+            --annotation-text-color: #e0f2f1;
+            --annotation-bg-color: rgba(0, 0, 0, 0.85);
+            --annotation-border-color: #00bcd4;
+            --annotation-line-color: #00bcd4;
+            --annotation-point-color: #f44336;
         }
 
-        .container {
+        .viewer-container {
             background-color: var(--container-bg-color);
             border-radius: 12px;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-            padding: 30px;
-            margin: 20px;
-            max-width: 900px; /* Wider to accommodate more boxes */
-            width: 90%;
-            text-align: center;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 1300px;
+            width: 95%;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
 
-        .container h1 {
+        .viewer-container h1 {
             color: var(--heading-color);
-            font-size: 2.5rem;
-            margin-bottom: 30px;
+            font-size: 2.2rem;
+            margin-bottom: 20px;
             text-align: center;
         }
 
-        .boxes-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Responsive grid */
-            gap: 20px;
-            width: 100%;
-            justify-content: center; /* Center boxes in the grid */
-            margin-bottom: 30px;
-        }
-
-        .box {
-            background-color: var(--box-bg-color);
-            color: var(--text-color);
-            padding: 25px 20px;
+        .image-wrapper {
+            position: relative;
+            /* Set width to the new image file width */
+            width: 1250px;
+            max-width: 100%;
+            background-color: #000;
             border-radius: 8px;
-            text-decoration: none;
-            font-size: 1.2rem;
+            overflow: hidden;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+            height: auto;
+            /* Maintain aspect ratio of the new 1250x600 image */
+            padding-bottom: calc(600 / 1250 * 100%);
+        }
+
+        .image-wrapper img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            user-select: none;
+            -webkit-user-drag: none;
+            z-index: 8;
+        }
+
+        .annotation-svg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9;
+            pointer-events: none;
+            overflow: visible;
+        }
+
+        .annotation-label {
+            position: absolute;
+            background-color: var(--annotation-bg-color);
+            color: var(--annotation-text-color);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
             font-weight: 500;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
-            cursor: pointer;
-            border: 1px solid var(--box-border-color);
+            white-space: nowrap;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border: 1px solid var(--annotation-border-color);
+            z-index: 11;
+            cursor: default;
+            transform: translate(-50%, -50%);
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            pointer-events: auto;
+        }
+        
+        .annotation-svg-overlay line {
+            stroke: var(--annotation-line-color);
+            stroke-width: 2;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+            stroke-linecap: round;
+        }
+        .annotation-svg-overlay line.visible-on-hover {
+            opacity: 0.7;
+        }
+        .annotation-svg-overlay circle {
+            fill: var(--annotation-point-color);
+            transition: all 0.1s ease;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .annotation-svg-overlay circle.visible-on-hover-circle {
+            r: 6;
+        }
+
+        .controls {
+            width: 100%;
+            margin-top: 25px;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            min-height: 100px; /* Ensure consistent box height */
-            text-align: center;
+            gap: 15px;
         }
 
-        .box:hover {
-            background-color: var(--box-hover-bg-color);
-            transform: translateY(-5px);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        #sliceSlider {
+            width: 90%;
+            -webkit-appearance: none; appearance: none;
+            height: 8px;
+            background: var(--slider-track-bg);
+            outline: none;
+            border-radius: 5px;
         }
-
+        #sliceSlider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: var(--slider-thumb-bg);
+            cursor: grab;
+        }
+        #sliceSlider::-moz-range-thumb {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: var(--slider-thumb-bg);
+            cursor: grab;
+        }
+        #sliceNumberDisplay {
+            font-size: 1.1rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
         .back-button {
             display: block;
             width: 200px;
+            margin: 40px auto 0;
             padding: 15px 25px;
             background-color: var(--back-button-bg);
             color: white;
@@ -118,86 +202,204 @@
         .back-button:hover {
             background-color: var(--back-button-hover-bg);
         }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-                margin: 15px;
-            }
-            .container h1 {
-                font-size: 2.2rem;
-                margin-bottom: 25px;
-            }
-            .box {
-                font-size: 1.1rem;
-                padding: 20px;
-            }
-            .boxes-grid {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-                gap: 15px;
-            }
-            .back-button {
-                width: 180px;
-                font-size: 1rem;
-            }
-        }
-        @media (max-width: 480px) {
-            .container h1 {
-                font-size: 1.8rem;
-                margin-bottom: 20px;
-            }
-            .box {
-                font-size: 1rem;
-                min-height: 80px;
-            }
-            .boxes-grid {
-                grid-template-columns: 1fr; /* Single column on very small screens */
-            }
-            .back-button {
-                width: 100%;
-                font-size: 0.95rem;
-            }
-        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>CT Anatomy</h1>
-
-        <div class="boxes-grid">
-            <a href="#" class="box">Head CT</a>
-            <a href="hrct-temporalbone/index.html" class="box">HRCT Temporal Bone</a>
-            <a href="#" class="box">Neck</a>
-            <a href="#" class="box">Thorax</a>
-            <a href="#" class="box">Chest Lymph Node Stations</a>
-            <a href="#" class="box">Abdomen - Pelvis CT</a>
+    <div class="viewer-container">
+        <h1>HRCT Temporal Bone - Axial Section</h1>
+        <div class="image-wrapper">
+            <img id="temporalBoneSliceImage" src="" alt="HRCT Temporal Bone Axial Slice">
+            <svg class="annotation-svg-overlay" id="annotationSvgOverlay"></svg>
+            <div id="annotationOverlay"></div>
         </div>
-
-        <a href="../index.html" class="back-button">Back to Anatomy</a>
+        <div class="controls">
+            <input type="range" id="sliceSlider" min="1" max="131" value="1">
+            <div id="sliceNumberDisplay">Slice: 1 / 131</div>
+        </div>
+        <a href="../index.html" class="back-button">Back to HRCT Temporal Bone Menu</a>
     </div>
 
     <script>
-        // Theme logic (copy-pasted from your previous files to ensure consistency)
-        function setTheme(theme) {
-            if (theme === 'light') {
-                document.body.classList.add('light-theme');
-                localStorage.setItem('theme', 'light');
-            } else {
-                document.body.classList.remove('light-theme');
-                localStorage.setItem('theme', 'dark');
-            }
-        }
+        // --- CONFIGURATION - UPDATED FOR PADDED IMAGES ---
+        const imageCount = 131;
+        const imageExtension = '.jpg';
+        const imageFolderPath = './images/';
+        const annotationJsonPath = './annotations/';
+        
+        // The dimension of the source medical data cube
+        const IMAGE_MRI_DATA_DIMENSION_MM = 512;
+        
+        // **NEW**: Dimensions of the actual anatomy scan (the original 850x532 part)
+        const ANATOMY_DATA_WIDTH = 850;
+        const ANATOMY_DATA_HEIGHT = 532;
 
-        function setInitialTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'light') {
-                document.body.classList.add('light-theme');
-            } else {
-                document.body.classList.remove('light-theme');
+        // **NEW**: Padding added to the anatomy scan
+        const PADDING_TOP = 34;
+        const PADDING_LEFT = 400;
+
+        // **NEW**: Final dimensions of your image files (e.g., 1250x600)
+        const IMAGE_FILE_WIDTH = 1250;
+        const IMAGE_FILE_HEIGHT = 600;
+
+        // Label placement settings
+        const LABEL_OFFSET_FROM_EDGE = 40;
+        const LABEL_VERTICAL_SPACING = 10;
+
+        // --- JSON FILENAMES ---
+        const jsonFilenames = [
+            "Aditus.mrk.json", "Ampulla of Superior SCC.mrk.json", "Ampulla of Superior SCC.mrk.json", "Arcuate eminence.mrk.json", "Axis.mrk.json", "Base of Cochlea.mrk.json", "Body of Incus.mrk.json", "Chorda tympani nerve.mrk.json", "Cochlear aqueduct.mrk.json", "Condylar Process.mrk.json", "Cupula of Cochlea.mrk.json", "Epitympanum.mrk.json", "Eustachian tube.mrk.json", "External Auditory canal.mrk.json", "Foramen Lacerum.mrk.json", "Foramen Ovale.mrk.json", "Foramen Spinosum.mrk.json", "Greater Petrosal Nerve.mrk.json", "Handle of Malleus.mrk.json", "Head of Malleus.mrk.json", "Hypoglossal Canal.mrk.json", "Hypotympanum.mrk.json", "Internal Acoustic Meatus.mrk.json", "Internal Carotid Canal.mrk.json", "Internal Genu.mrk.json", "Jugular fossa.mrk.json", "Labyrinthine part of 7th CN.mrk.json", "Lateral SCC.mrk.json", "Lenticular Process.mrk.json", "Long of process of Incus.mrk.json", "Mastoid Air cells.mrk.json", "Mastoid Process.mrk.json", "Mastoid part of 7th CN.mrk.json", "Mesotympanum.mrk.json", "Modiolous of Cochlea.mrk.json", "Neck of Malleus.mrk.json", "Occipital Bone.mrk.json", "Occipitomastoid suture.mrk.json", "Odontoid Process.mrk.json", "Oval Window.mrk.json", "Petromastoid canal.mrk.json", "Pinna.mrk.json", "Posterior Condylar Canal.mrk.json", "Posterior SCC.mrk.json", "Ramus of Mandible.mrk.json", "Round Window.mrk.json", "Sigmoid sinus.mrk.json", "Sphenoid Bone.mrk.json", "Sphenosquamous suture.mrk.json", "Squamous part of the Temporal bone.mrk.json", "Stapes foot plate.mrk.json", "Styloid Process.mrk.json", "Stylomastoid foramen.mrk.json", "Superior SCC.mrk.json", "TMJ.mrk.json", "Tegmen.mrk.json", "Tympanic Membrane.mrk.json", "Tympanic part of 7th CN.mrk.json", "Vestibular Aqueduct.mrk.json", "Vestibule.mrk.json", "Zygomatic bone.mrk.json"
+        ];
+        // --- END CONFIGURATION ---
+
+        const temporalBoneSliceImage = document.getElementById('temporalBoneSliceImage'); 
+        const sliceSlider = document.getElementById('sliceSlider');
+        const sliceNumberDisplay = document.getElementById('sliceNumberDisplay');
+        const annotationOverlay = document.getElementById('annotationOverlay');
+        const annotationSvgOverlay = document.getElementById('annotationSvgOverlay');
+
+        let allAnnotations = [];
+
+        async function loadAnnotations() {
+            const fetchPromises = jsonFilenames.map(filename => fetch(`${annotationJsonPath}${filename}`).then(res => res.json()));
+            try {
+                const results = await Promise.all(fetchPromises);
+                allAnnotations = results.flatMap(data => 
+                    data.markups?.flatMap(markup => 
+                        markup.controlPoints?.map(cp => ({
+                            slice: Math.round(cp.position[2]),
+                            text: cp.label.split(/-\d+/)[0].trim(),
+                            pointX_mm: cp.position[0],
+                            pointY_mm: cp.position[1],
+                        })) ?? []
+                    ) ?? []
+                );
+                updateSlice();
+            } catch (e) {
+                console.error("Error loading annotations:", e);
+                alert("A critical error occurred loading annotations.");
             }
         }
-        setInitialTheme();
+        
+        function updateSlice() {
+            const currentSlice = parseInt(sliceSlider.value);
+            temporalBoneSliceImage.src = `${imageFolderPath}${currentSlice}${imageExtension}`;
+            sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
+
+            annotationOverlay.innerHTML = '';
+            annotationSvgOverlay.innerHTML = '';
+
+            const checkOverlap = (testY, height, placedLabels) => {
+                const top1 = testY - height / 2;
+                const bottom1 = testY + height / 2;
+                for (const label of placedLabels) {
+                    if (top1 < (label.bottom + LABEL_VERTICAL_SPACING) && bottom1 > (label.top - LABEL_VERTICAL_SPACING)) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            temporalBoneSliceImage.onload = function() {
+                this.onload = null;
+
+                const imageDisplayWidth = this.offsetWidth;
+                const imageDisplayHeight = this.offsetHeight;
+
+                // Overall scale factor of the displayed image vs the file
+                const scaleX = imageDisplayWidth / IMAGE_FILE_WIDTH;
+                const scaleY = imageDisplayHeight / IMAGE_FILE_HEIGHT;
+
+                const annotationsForCurrentSlice = allAnnotations
+                    .filter(ann => ann.slice === currentSlice)
+                    .sort((a, b) => a.pointY_mm - b.pointY_mm);
+
+                let placedLabels = [];
+
+                annotationsForCurrentSlice.forEach((annotation, index) => {
+                    // --- REVISED COORDINATE CALCULATION ---
+                    // 1. Scale mm coordinate to the anatomy's pixel size (850x532)
+                    const x_in_anatomy = (annotation.pointX_mm / IMAGE_MRI_DATA_DIMENSION_MM) * ANATOMY_DATA_WIDTH;
+                    const y_in_anatomy = (annotation.pointY_mm / IMAGE_MRI_DATA_DIMENSION_MM) * ANATOMY_DATA_HEIGHT;
+
+                    // 2. Add padding to get position in the final file (1250x600)
+                    const x_in_file = x_in_anatomy + PADDING_LEFT;
+                    const y_in_file = y_in_anatomy + PADDING_TOP;
+
+                    // 3. Scale file position to the final displayed size
+                    const pX_px_displayed = x_in_file * scaleX;
+                    const pY_px_displayed = y_in_file * scaleY;
+
+                    // --- Label and SVG Element Creation ---
+                    const labelDiv = document.createElement('div');
+                    labelDiv.className = 'annotation-label';
+                    labelDiv.textContent = annotation.text;
+                    annotationOverlay.appendChild(labelDiv);
+
+                    const labelHeight = labelDiv.offsetHeight;
+                    const labelWidth = labelDiv.offsetWidth;
+
+                    let bestY = pY_px_displayed;
+                    let foundFit = false;
+
+                    // Stacking logic (same robust algorithm, now for the left column)
+                    if (bestY - labelHeight / 2 >= 0 && bestY + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(bestY, labelHeight, placedLabels)) {
+                        foundFit = true;
+                    }
+                    if (!foundFit) {
+                        for (let offset = 10; offset < imageDisplayHeight / 2; offset += 5) {
+                            let tryUp = pY_px_displayed - offset;
+                            if (tryUp - labelHeight / 2 >= 0 && !checkOverlap(tryUp, labelHeight, placedLabels)) { bestY = tryUp; foundFit = true; break; }
+                            let tryDown = pY_px_displayed + offset;
+                            if (tryDown + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(tryDown, labelHeight, placedLabels)) { bestY = tryDown; foundFit = true; break; }
+                        }
+                    }
+                    if (!foundFit) {
+                        for (let scanY = (labelHeight / 2) + 5; scanY < imageDisplayHeight - (labelHeight / 2); scanY += 5) {
+                            if (!checkOverlap(scanY, labelHeight, placedLabels)) { bestY = scanY; break; }
+                        }
+                    }
+                    bestY = Math.max(bestY, labelHeight / 2);
+                    bestY = Math.min(bestY, imageDisplayHeight - labelHeight / 2);
+
+                    // Place label in the left sidebar
+                    const labelTargetX_px = (PADDING_LEFT - LABEL_OFFSET_FROM_EDGE) * scaleX - (labelWidth / 2);
+                    const lineEndX = PADDING_LEFT * scaleX;
+
+                    labelDiv.style.left = `${labelTargetX_px}px`;
+                    labelDiv.style.top = `${bestY}px`;
+                    placedLabels.push({ top: bestY - labelHeight / 2, bottom: bestY + labelHeight / 2 });
+
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', pX_px_displayed);
+                    line.setAttribute('y1', pY_px_displayed);
+                    line.setAttribute('x2', lineEndX);
+                    line.setAttribute('y2', bestY);
+                    annotationSvgOverlay.appendChild(line);
+
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', pX_px_displayed);
+                    circle.setAttribute('cy', pY_px_displayed);
+                    circle.setAttribute('r', 4);
+                    annotationSvgOverlay.appendChild(circle);
+
+                    const activate = () => { line.classList.add('visible-on-hover'); circle.classList.add('visible-on-hover-circle'); };
+                    const deactivate = () => { line.classList.remove('visible-on-hover'); circle.classList.remove('visible-on-hover-circle'); };
+                    labelDiv.onmouseover = circle.onmouseover = activate;
+                    labelDiv.onmouseout = circle.onmouseout = deactivate;
+                });
+            };
+
+            if (temporalBoneSliceImage.complete) {
+                temporalBoneSliceImage.onload();
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadAnnotations);
+        sliceSlider.addEventListener('input', updateSlice);
+        window.addEventListener('resize', () => {
+            clearTimeout(window.resizeTimeout);
+            window.resizeTimeout = setTimeout(updateSlice, 100);
+        });
     </script>
 </body>
 </html>
