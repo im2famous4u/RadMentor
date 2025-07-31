@@ -27,8 +27,7 @@
         }
         .hero-button, .header-signup-btn { background-color: #2563eb; transition: background-color 0.2s; }
         .hero-button:hover, .header-signup-btn:hover { background-color: #1d4ed8; }
-        
-        /* --- NEW: Dashboard Theme (from the latest screenshot) --- */
+        .rad-gradient { background: linear-gradient(90deg, #1e40af, #3b82f6); }
         .dashboard-theme { background-color: #101827; color: #f9fafb; }
         .dashboard-card {
             background-color: #1F2937; border: 1px solid #374151; color: #ffffff;
@@ -39,8 +38,6 @@
         .dashboard-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.25); border-color: #4b5563; }
         .dashboard-greeting { color: #ffffff; font-weight: 800; }
         .dashboard-sub-greeting { color: #d1d5db; }
-        
-        /* --- NEW: Dark Header Style for Dashboard View --- */
         .header-dark {
             background: #101827 !important;
             border-bottom: 1px solid #1f2937;
@@ -58,7 +55,7 @@
             <nav id="main-nav" class="hidden md:flex items-center space-x-8"><a href="#courses" class="text-gray-600 hover:text-blue-600">Courses</a><a href="#features" class="text-gray-600 hover:text-blue-600">Features</a><a href="#pricing" class="text-gray-600 hover:text-blue-600">Pricing</a><a href="#about" class="text-gray-600 hover:text-blue-600">About Us</a></nav>
             <div class="flex items-center">
                 <div id="logged-out-nav" class="hidden md:flex items-center"><button onclick="showAuthModal('signin')" class="text-gray-600 hover:text-blue-600 mr-6 font-medium">Login</button><button onclick="showAuthModal('signup')" class="header-signup-btn text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">Sign Up</button></div>
-                <div id="logged-in-nav" class="hidden relative"><button id="user-menu-button" class="flex items-center space-x-2"><span class="font-semibold text-gray-700">Hi, <span id="user-greeting-header"></span></span><i data-feather="chevron-down" class="w-4 h-4 text-gray-700"></i></button><div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden"><a href="#" onclick="showDashboardSection('main')" class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">My Dashboard</a><a href="#" onclick="showDashboardSection('profile')" class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">My Profile</a><div class="border-t border-gray-100"></div><a href="#" onclick="logout()" class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">Logout</a></div></div>
+                <div id="logged-in-nav" class="hidden relative"><button id="user-menu-button" class="flex items-center space-x-2"><span class="font-semibold text-gray-700">Hi, <span id="user-greeting-header"></span></span><i data-feather="chevron-down" class="w-4 h-4 text-gray-700"></i></button><div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden"><a href="#" onclick="showDashboardSection('main')" class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">My Dashboard</a><a href="#" onclick="showDashboardSection('profile')" class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">My Profile</a><a href="#" onclick="showDashboardSection('settings')" class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">Settings</a><div class="border-t border-gray-100"></div><a href="#" onclick="logout()" class="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100">Logout</a></div></div>
                 <button id="mobile-menu-button" class="md:hidden ml-4 text-gray-700"><i data-feather="menu"></i></button>
             </div>
         </div>
@@ -69,7 +66,7 @@
         <main>
             <section class="pt-20 pb-24"><div class="container mx-auto px-6 text-center"><h1 class="text-5xl md:text-7xl font-black text-gray-900 leading-tight">The World’s Most Comprehensive<br/><span class="hero-gradient-text">Radiology Learning Source</span></h1><p class="mt-6 text-lg text-gray-600 max-w-2xl mx-auto">Master radiology with our expert-curated Q-banks, mock exams, and in-depth content. Built by radiologists, for future radiologists.</p><div class="mt-10 flex justify-center"><button onclick="showAuthModal('signup')" class="hero-button text-lg font-semibold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow">Get Started for Free</button></div></div></section>
             <section id="courses" class="py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold text-gray-900">Prepare for Any Exam</h2><p class="mt-4 text-lg text-gray-600">Targeted preparation for all major radiology exams.</p></div><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"><div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100"><h3 class="text-2xl font-bold text-gray-800">FRCR</h3><p class="mt-2 text-gray-600">Comprehensive question banks and mock tests for the FRCR exam.</p></div><div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100"><h3 class="text-2xl font-bold text-gray-800">MD / DNB</h3><p class="mt-2 text-gray-600">Master your final year exams with our targeted content.</p></div><div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100"><h3 class="text-2xl font-bold text-gray-800">Anatomy</h3><p class="mt-2 text-gray-600">Detailed anatomical modules to build a strong foundation.</p></div></div></div></section>
-            <section id="about" class="py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold text-gray-900">Built by Doctors, for Doctors</h2></div><div class="max-w-4xl mx-auto bg-white/60 backdrop-blur-sm p-10 rounded-xl border text-left space-y-4 text-lg text-gray-700"><p>We are two radiologists trained at one of India’s premier medical institutes, united by a shared vision...</p></div></div></section>
+            <section id="about" class="py-20"><div class="container mx-auto px-6"><div class="text-center mb-12"><h2 class="text-4xl font-bold text-gray-900">Built by Doctors, for Doctors</h2></div><div class="max-w-4xl mx-auto bg-white/60 backdrop-blur-sm p-10 rounded-xl border text-left space-y-4 text-lg text-gray-700"><p>We are two radiologists trained at one of India’s premier medical institutes, united by a shared vision: to make high-quality radiology education accessible, affordable, and reliable for all.</p><p>In a world where accurate knowledge can shape clinical decisions, we built this platform as a trusted source of learning—for students, residents, and practitioners alike. Every question, explanation, and update is curated by us, backed by evidence, and rooted in real-world radiology practice.</p><p>Whether you're preparing for exams or refining your diagnostic skills, our goal is to support your journey with clear, concise, and clinically relevant content—delivered with the precision you'd expect from radiologists.</p><p class="font-semibold text-gray-800 pt-2">Welcome to a community built by Radiologists, for Radiologists.</p></div></div></section>
         </main>
         <footer class="bg-gray-900 text-white"><div class="container mx-auto px-6 py-12"><div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-500">&copy; 2025 RadMentor. All Rights Reserved.</div></div></footer>
     </div>
@@ -78,14 +75,15 @@
     <div id="profile-form-container" class="fixed inset-0 bg-gray-100 z-[100] p-4 hidden overflow-y-auto"> </div>
     
     <div id="dashboard" class="hidden">
-        <aside id="sidebar" class="fixed top-0 right-0 h-full bg-white shadow-xl z-[60] w-72 p-6 transform translate-x-full transition-transform duration-300 ease-in-out">
-            </aside>
+        <aside id="sidebar" class="fixed top-0 right-0 h-full bg-white shadow-xl z-[60] w-72 p-6 transform translate-x-full transition-transform duration-300 ease-in-out"><div class="flex justify-between items-center mb-8"><h2 class="text-xl font-bold text-gray-800">Menu</h2><button id="close-sidebar-button" class="text-gray-600 hover:text-gray-900"><i data-feather="x"></i></button></div><nav class="space-y-2 text-gray-800"><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100" onclick="showDashboardSection('main')"><i data-feather="home" class="mr-3 w-5 h-5"></i>Home</a><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100" onclick="showDashboardSection('profile')"><i data-feather="user" class="mr-3 w-5 h-5"></i>Profile</a><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100" onclick="showDashboardSection('analytics')"><i data-feather="bar-chart-2" class="mr-3 w-5 h-5"></i>Analytics</a><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100" onclick="showDashboardSection('settings')"><i data-feather="settings" class="mr-3 w-5 h-5"></i>Settings</a><div class="border-t my-2"></div><a href="#" class="flex items-center p-3 rounded-lg hover:bg-gray-100" onclick="logout()"><i data-feather="log-out" class="mr-3 w-5 h-5"></i>Logout</a></nav></aside>
+        
         <div id="dashboard-content-wrapper" class="min-h-screen dashboard-theme pt-8 pb-12">
             <div class="container mx-auto px-6">
                 <div id="dashboard-main-content" class="hidden"><h1 class="text-4xl dashboard-greeting">Welcome to RadMentor</h1><p class="mt-2 text-lg dashboard-sub-greeting">The World’s Most Comprehensive Radiology Learning Source</p><div id="access-level-notice" class="text-white mt-6"></div><div class="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"><div class="dashboard-card" onclick="alert('FRCR page coming soon!')">FRCR</div><div class="dashboard-card" onclick="alert('MICR page coming soon!')">MICR</div><div class="dashboard-card" onclick="alert('Anatomy page coming soon!')">Anatomy</div><div class="dashboard-card" onclick="alert('MD / DNB page coming soon!')">MD / DNB</div><div class="dashboard-card" onclick="alert('Superspeciality page coming soon!')">Superspeciality MCQs</div><div class="dashboard-card" onclick="alert('Fellowship page coming soon!')">Fellowship Exams</div></div></div>
-                <div id="admin-section" class="hidden bg-gray-100 p-4 sm:p-8 rounded-xl text-gray-800">
-                    </div>
+                <div id="admin-section" class="hidden bg-gray-100 p-4 sm:p-8 rounded-xl text-gray-800"></div>
                 <div id="profile-section" class="hidden bg-white p-8 rounded-lg shadow-md text-gray-800"></div>
+                <div id="analytics-section" class="hidden bg-white p-8 rounded-lg shadow-md text-gray-800"></div>
+                <div id="settings-section" class="hidden bg-white p-8 rounded-lg shadow-md text-gray-800"></div>
             </div>
         </div>
     </div>
@@ -110,16 +108,17 @@
         const db = firebase.firestore();
         
         let currentUserData = null;
-        const ui = {
-            header: document.querySelector('header'),
-            landingPage: document.getElementById('landing-page'),
-            dashboard: document.getElementById('dashboard'),
-            // ... other UI elements
-        };
-
+        const ui = { header: document.querySelector('header'), landingPage: document.getElementById('landing-page'), dashboard: document.getElementById('dashboard'), profileForm: document.getElementById('profile-form-container'), loggedOutNav: document.getElementById('logged-out-nav'), loggedInNav: document.getElementById('logged-in-nav'), mobileLoggedOutNav: document.getElementById('mobile-logged-out-nav'), mainNav: document.getElementById('main-nav'), userMenuButton: document.getElementById('user-menu-button'), userMenu: document.getElementById('user-menu'), mobileMenuButton: document.getElementById('mobile-menu-button'), mobileMenu: document.getElementById('mobile-menu'), sidebar: document.getElementById('sidebar'), closeSidebarBtn: document.getElementById('close-sidebar-button'), mainDashboard: document.getElementById('dashboard-main-content'), adminDashboard: document.getElementById('admin-section') };
+        
+        ui.userMenuButton.addEventListener('click', (e) => { e.stopPropagation(); ui.userMenu.classList.toggle('hidden'); });
+        ui.mobileMenuButton.addEventListener('click', () => { if (currentUserData) { ui.sidebar.classList.remove('translate-x-full'); } else { ui.mobileMenu.classList.toggle('hidden'); } });
+        ui.closeSidebarBtn.addEventListener('click', () => ui.sidebar.classList.add('translate-x-full'));
+        window.addEventListener('click', (e) => { if (ui.loggedInNav && !ui.loggedInNav.contains(e.target)) ui.userMenu.classList.add('hidden'); });
+        
+        function logout() { auth.signOut(); }
+        
         auth.onAuthStateChanged(user => {
             if (user && user.emailVerified) {
-                // Fetch user data
                 db.collection('users').doc(user.uid).get().then(doc => {
                     if (doc.exists) {
                         currentUserData = { uid: user.uid, ...doc.data() };
@@ -133,38 +132,101 @@
         });
 
         function setupUIForLoggedInUser(userData) {
-            // Hides landing page, shows dashboard etc.
             ui.landingPage.classList.add('hidden');
             ui.dashboard.classList.remove('hidden');
-            
-            // UPDATED: Add dark class to header
+            ui.loggedOutNav.style.display = 'none';
+            ui.loggedInNav.style.display = 'block';
+            ui.mainNav.style.display = 'flex'; // Keep main nav visible
             ui.header.classList.add('header-dark');
-            
-            // ... rest of the setup logic
+            document.getElementById('user-greeting-header').textContent = userData.name ? userData.name.split(' ')[0] : 'User';
+
             if (!userData.name) {
-                // show profile form
+                // Redirect to profile completion
+                ui.profileForm.classList.remove('hidden');
+                ui.dashboard.classList.add('hidden');
             } else {
                 updateDashboardView(userData);
             }
         }
 
         function setupUIForLoggedOutUser() {
-            // Shows landing page, hides dashboard etc.
             ui.landingPage.classList.remove('hidden');
             ui.dashboard.classList.add('hidden');
-            
-            // UPDATED: Remove dark class from header
+            ui.profileForm.classList.add('hidden');
+            ui.loggedOutNav.style.display = 'flex';
+            ui.loggedInNav.style.display = 'none';
+            ui.mainNav.style.display = 'flex'; // Keep main nav visible
             ui.header.classList.remove('header-dark');
-            
-            // ... rest of the setup logic
         }
         
-        // --- All other JavaScript functions (handleAuth, showDashboardSection, etc.) go here ---
+        function updateDashboardView(userData) {
+            const isAdmin = userData.accessLevel === 'Admin';
+            const adminMenuLink = document.getElementById('admin-menu-link');
+            if (isAdmin) {
+                if (!adminMenuLink) {
+                    const link = document.createElement('a'); link.id = 'admin-menu-link'; link.href = "#"; link.className = "block px-4 py-2 text-sm text-blue-700 font-bold hover:bg-gray-100"; link.textContent = "Admin Panel"; link.onclick = () => showDashboardSection('admin'); ui.userMenu.insertBefore(link, ui.userMenu.firstChild);
+                }
+                showDashboardSection('admin');
+            } else {
+                if (adminMenuLink) adminMenuLink.remove();
+                showDashboardSection('main');
+            }
+        }
+        
+        function showDashboardSection(sectionId) {
+            [ui.mainDashboard, ui.adminDashboard, document.getElementById('profile-section'), document.getElementById('settings-section'), document.getElementById('analytics-section')].forEach(el => { if(el) el.classList.add('hidden'); });
+            const elementToShow = document.getElementById(sectionId === 'main' ? 'dashboard-main-content' : `${sectionId}-section`);
+            if (elementToShow) elementToShow.classList.remove('hidden');
+            
+            if (sectionId === 'admin') loadUsersForAdmin();
+            if (sectionId === 'profile') populateProfileDetails();
+            if (sectionId === 'settings') populateSettingsDetails();
+            if (sectionId === 'analytics') populateAnalyticsDetails();
+            
+            ui.sidebar.classList.add('translate-x-full');
+        }
+        
+        function populateProfileDetails() {
+            const section = document.getElementById('profile-section');
+            section.innerHTML = `
+                <h2 class="text-2xl font-bold mb-6">My Profile</h2>
+                <div class="space-y-4 max-w-lg">
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Name:</strong> ${currentUserData.name || 'N/A'}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Email:</strong> ${currentUserData.email}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Access Level:</strong> <span class="font-semibold text-blue-600">${currentUserData.accessLevel}</span></div>
+                </div>`;
+        }
 
-        // Final initialization
-        document.addEventListener('DOMContentLoaded', () => {
-             feather.replace();
-        });
+        function populateSettingsDetails() {
+            const section = document.getElementById('settings-section');
+            section.innerHTML = `
+                <h2 class="text-2xl font-bold mb-6">Settings</h2>
+                <div class="space-y-6 max-w-lg">
+                    <div><h3 class="text-lg font-semibold">Account</h3><button class="mt-2 text-blue-600 hover:underline">Change Password (coming soon)</button></div>
+                    <div><h3 class="text-lg font-semibold">Notifications</h3><p class="text-gray-600">Notification settings will be available here soon.</p></div>
+                </div>`;
+        }
+        
+        function populateAnalyticsDetails() {
+            const section = document.getElementById('analytics-section');
+            section.innerHTML = `<h2 class="text-2xl font-bold mb-6">My Analytics</h2><p class="text-gray-600">Your performance analytics dashboard is coming soon!</p>`;
+        }
+        
+        function loadUsersForAdmin() {
+            document.getElementById('admin-section').innerHTML = `<h1 class="text-3xl font-bold text-gray-900 mb-6">Admin Dashboard</h1><div class="bg-white p-6 rounded-lg shadow-md"><h2 class="text-2xl font-bold mb-4 text-gray-800">User Management</h2><div class="overflow-x-auto"><table class="w-full text-sm text-left text-gray-500"><thead class="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" class="py-3 px-6">User</th><th scope="col" class="py-3 px-6">Email</th><th scope="col" class="py-3 px-6">Access Level</th><th scope="col" class="py-3 px-6">Actions</th></tr></thead><tbody id="user-list"></tbody></table></div></div>`;
+            const userListBody = document.getElementById('user-list'); userListBody.innerHTML = `<tr><td colspan="4" class="text-center p-4">Loading...</td></tr>`;
+            db.collection('users').orderBy('createdAt','desc').get().then(snapshot => {
+                userListBody.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const user = doc.data(); const row = document.createElement('tr'); row.className = 'bg-white border-b'; row.innerHTML = `<td class="py-4 px-6">${user.name || 'N/A'}</td><td class="py-4 px-6">${user.email}</td><td class="py-4 px-6"><select id="select-${doc.id}" class="bg-gray-50 border border-gray-300 text-sm rounded-lg block w-full p-2.5"><option value="Restricted" ${user.accessLevel === 'Restricted' ? 'selected' : ''}>Restricted</option><option value="Premium" ${user.accessLevel === 'Premium' ? 'selected' : ''}>Premium</option><option value="Admin" ${user.accessLevel === 'Admin' ? 'selected' : ''}>Admin</option></select></td><td class="py-4 px-6"><button onclick="updateUserAccessLevel('${doc.id}')" class="font-medium text-blue-600 hover:underline">Save</button></td>`; userListBody.appendChild(row);
+                });
+            });
+        }
+        function updateUserAccessLevel(userId) { const newLevel = document.getElementById(`select-${userId}`).value; if (confirm(`Change this user's access to ${newLevel}?`)) { db.collection('users').doc(userId).update({ accessLevel: newLevel }).then(() => alert('User updated successfully.')).catch(err => alert('Error: ' + err.message)); } }
+
+        // --- All other JavaScript functions (handleAuth, submitProfile, etc.) are omitted for brevity but should be included here ---
+        
+        document.addEventListener('DOMContentLoaded', () => { feather.replace(); });
     </script>
 </body>
 </html>
