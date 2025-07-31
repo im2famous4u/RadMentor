@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
@@ -34,7 +33,7 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* Styles for the dashboard part, adapted from your original file */
+        /* Styles for the dashboard part */
         .dashboard-grid-item {
             transition: all 0.2s;
         }
@@ -51,15 +50,13 @@
 
     <!-- =================================================
     LANDING PAGE SECTION
-    This is the new public-facing homepage.
-    It will be hidden after successful login.
     ================================================== -->
     <div id="landing-page">
         <!-- Header -->
         <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
             <div class="container mx-auto px-6 py-3 flex justify-between items-center">
                 <div class="flex items-center">
-                    <img src="https://googleusercontent.com/file_content/0" alt="RadMentor Logo" class="h-10 mr-3"/>
+                    <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
                     <span class="text-2xl font-bold text-gray-800">RadMentor</span>
                 </div>
                 <nav class="hidden md:flex items-center space-x-8">
@@ -77,7 +74,7 @@
                     </button>
                 </div>
             </div>
-             <!-- Mobile Menu -->
+              <!-- Mobile Menu -->
             <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
                 <a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a>
                 <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a>
@@ -177,14 +174,14 @@
             <!-- About Us Section -->
             <section id="about" class="py-20">
                 <div class="container mx-auto px-6">
-                     <div class="text-center mb-12">
+                      <div class="text-center mb-12">
                         <h2 class="text-4xl font-bold text-gray-900">Built by Doctors, for Doctors</h2>
                     </div>
                     <div class="max-w-4xl mx-auto bg-white p-10 rounded-xl shadow-lg text-center">
                         <p class="text-lg text-gray-600">
                             We are two radiologists trained at one of India’s premier medical institutes, united by a shared vision: to make high-quality radiology education accessible, affordable, and reliable for all. Every question, explanation, and update is curated by us, backed by evidence, and rooted in real-world radiology practice.
                         </p>
-                         <p class="mt-4 text-lg font-semibold text-gray-800">Welcome to a community built with precision and care.</p>
+                          <p class="mt-4 text-lg font-semibold text-gray-800">Welcome to a community built with precision and care.</p>
                     </div>
                 </div>
             </section>
@@ -220,7 +217,6 @@
 
     <!-- =================================================
     AUTHENTICATION MODAL
-    This will pop up for login/signup.
     ================================================== -->
     <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
@@ -248,7 +244,6 @@
 
     <!-- =================================================
     PROFILE COMPLETION FORM
-    Shown after first signup.
     ================================================== -->
     <div id="profile-form-container" class="fixed inset-0 bg-gray-100 z-50 p-4 hidden overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-auto my-8 p-8 md:p-12">
@@ -282,11 +277,11 @@
                     </select>
                 </div>
                 <div class="md:col-span-2">
-                     <label class="font-medium text-gray-700">Medical College</label>
-                     <input list="colleges" id="college" placeholder="Type to search your college" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                     <datalist id="colleges">
-                        <!-- Options from your original file are included here -->
-                     </datalist>
+                      <label class="font-medium text-gray-700">Medical College</label>
+                      <input list="colleges" id="college" placeholder="Type to search your college" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <datalist id="colleges">
+                        <!-- College options will be populated by JS -->
+                      </datalist>
                 </div>
              </div>
              <button onclick="submitProfile()" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Submit Profile</button>
@@ -296,15 +291,13 @@
 
     <!-- =================================================
     DASHBOARD SECTION
-    This is the main app view for logged-in users.
-    It's hidden by default.
     ================================================== -->
     <div id="dashboard" class="hidden">
         <!-- Dashboard Topbar -->
         <div class="fixed top-0 left-0 right-0 bg-white shadow-md z-40">
             <div class="container mx-auto px-6 h-16 flex justify-between items-center">
                 <div class="flex items-center">
-                    <img src="https://googleusercontent.com/file_content/0" alt="RadMentor Logo" class="h-8"/>
+                    <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-8"/>
                     <span class="text-xl font-bold text-gray-800 ml-2">RadMentor</span>
                 </div>
                 <div class="flex items-center">
@@ -365,16 +358,16 @@
 
                 <!-- Other Dashboard Sections (Profile, Settings, etc.) -->
                 <div id="profile-section" class="hidden bg-white p-8 rounded-lg shadow-md">
-                     <h2 class="text-2xl font-bold mb-6">Your Profile</h2>
-                     <!-- Profile content will be populated by JS -->
+                      <h2 class="text-2xl font-bold mb-6">Your Profile</h2>
+                      <!-- Profile content will be populated by JS -->
                 </div>
                 <div id="subscription-section" class="hidden bg-white p-8 rounded-lg shadow-md">
-                     <h2 class="text-2xl font-bold mb-6">Subscription</h2>
-                     <!-- Subscription content will be populated by JS -->
+                      <h2 class="text-2xl font-bold mb-6">Subscription</h2>
+                      <!-- Subscription content will be populated by JS -->
                 </div>
                 <div id="settings-section" class="hidden bg-white p-8 rounded-lg shadow-md">
-                     <h2 class="text-2xl font-bold mb-6">Settings</h2>
-                     <!-- Settings content will be populated by JS -->
+                      <h2 class="text-2xl font-bold mb-6">Settings</h2>
+                      <!-- Settings content will be populated by JS -->
                 </div>
             </div>
         </div>
@@ -592,9 +585,8 @@
         }
 
         function logout() {
-            if (confirm("Are you sure you want to log out?")) {
-                auth.signOut();
-            }
+            // UPDATED: Removed the confirm() dialog for a smoother user experience.
+            auth.signOut();
         }
         
         // --- Dashboard Navigation & Sidebar ---
@@ -614,7 +606,10 @@
             document.getElementById('settings-section').classList.add('hidden');
             
             // Show the selected section
-            document.getElementById(`${sectionId}-section`)?.classList.remove('hidden');
+            const sectionToShow = document.getElementById(`${sectionId}-section`);
+            if (sectionToShow) {
+                sectionToShow.classList.remove('hidden');
+            }
             if (sectionId === 'main') {
                  document.getElementById('dashboard-main-content').classList.remove('hidden');
             }
@@ -633,36 +628,48 @@
             section.innerHTML = `
                 <h2 class="text-2xl font-bold mb-6">Your Profile</h2>
                 <div class="space-y-4">
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Name:</strong> ${currentUserData.name}</div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Email:</strong> ${currentUserData.email}</div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Date of Birth:</strong> ${currentUserData.dob}</div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Position:</strong> ${currentUserData.position}</div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>College:</strong> ${currentUserData.college}</div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Exam Pursuing:</strong> ${currentUserData.examPursuing}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Name:</strong> ${currentUserData.name || 'Not set'}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Email:</strong> ${currentUserData.email || 'Not set'}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Date of Birth:</strong> ${currentUserData.dob || 'Not set'}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Position:</strong> ${currentUserData.position || 'Not set'}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>College:</strong> ${currentUserData.college || 'Not set'}</div>
+                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Exam Pursuing:</strong> ${currentUserData.examPursuing || 'Not set'}</div>
                 </div>
             `;
         }
 
         function populateSubscriptionDetails() {
-             const section = document.getElementById('subscription-section');
-             section.innerHTML = `
+              const section = document.getElementById('subscription-section');
+              section.innerHTML = `
                 <h2 class="text-2xl font-bold mb-6">Subscription</h2>
                 <p class="text-gray-600">Your current plan: <span class="font-bold text-blue-600">${currentUserData.accessLevel.toUpperCase()}</span></p>
                 <p class="mt-4">Subscription management features coming soon!</p>
-             `;
+              `;
         }
         
         function populateSettingsDetails() {
             const section = document.getElementById('settings-section');
-             section.innerHTML = `
+              section.innerHTML = `
                 <h2 class="text-2xl font-bold mb-6">Settings</h2>
                 <p class="text-gray-600">Settings page is under construction.</p>
-             `;
+              `;
         }
 
-        // Populate datalist for colleges (from your original file)
+        // Populate datalist for colleges
         const collegeDatalist = document.getElementById('colleges');
-        const colleges = ["All India Institute of Medical Sciences, New Delhi", "Postgraduate Institute of Medical Education and Research, Chandigarh", "Christian Medical College, Vellore", "And many more..."]; // Add all colleges here
+        const colleges = [
+            "All India Institute of Medical Sciences, New Delhi", 
+            "Postgraduate Institute of Medical Education and Research, Chandigarh", 
+            "Christian Medical College, Vellore",
+            "National Institute of Mental Health and Neuro Sciences, Bangalore",
+            "Jawaharlal Institute of Postgraduate Medical Education & Research, Puducherry",
+            "Amrita Vishwa Vidyapeetham, Coimbatore",
+            "Sanjay Gandhi Postgraduate Institute of Medical Sciences, Lucknow",
+            "Banaras Hindu University, Varanasi",
+            "Kasturba Medical College, Manipal",
+            "King George's Medical University, Lucknow"
+            // Add more colleges here to expand the list
+        ];
         colleges.forEach(college => {
             const option = document.createElement('option');
             option.value = college;
