@@ -68,7 +68,7 @@
             padding: 20px;
             margin: 20px auto;
             /* Adjusted max-width to accommodate image + right sidebar for labels */
-            max-width: 1100px; /* 860px (image) + ~200px (labels) + padding */ 
+            max-width: 1100px; /* 860px (image) + ~200px (label space) + padding */ 
             width: 90%; /* Responsive width */
             box-sizing: border-box;
             display: flex;
@@ -87,7 +87,7 @@
         .image-wrapper {
             position: relative;
             /* Total width: image width (860px) + space for labels (e.g., 200px) */
-            width: 1060px; /* 860px (image) + 200px (label sidebar) */ 
+            width: 1060px; /* 860px (image data) + 200px (label sidebar) */ 
             height: 532px; /* Set to your actual image's pixel height */
             background-color: #000; /* Black background for imaging studies */
             border-radius: 8px;
@@ -102,8 +102,8 @@
         .image-wrapper img {
             position: absolute;
             top: 0;
-            left: 0;
-            width: 860px; /* Set to the actual width of your image */
+            left: 0; /* Image starts at the left of its wrapper */
+            width: 860px; /* Set to the actual width of your image file */
             height: 100%; /* Will scale with wrapper height */
             object-fit: contain; /* Ensures the image fits within its designated width without cropping */
             display: block;
@@ -161,9 +161,8 @@
             z-index: 11; /* Ensure labels are on top */
             cursor: default;
             
-            /* Align label to the right side of the entire image-wrapper */
-            /* transform will be handled in JS for vertical centering and specific X */
-            transform: translateY(-50%); /* Only center vertically */
+            /* Align label to its center based on its 'top' and 'left' */
+            transform: translate(-50%, -50%); 
 
             /* Visibility control: Labels are ALWAYS visible now */
             opacity: 1; /* Changed: Always visible */
@@ -247,16 +246,11 @@
         }
 
         /* Responsive adjustments for image wrapper */
-        /* This media query needs to be carefully adjusted based on your desired layout 
-           when the screen is smaller than the full 1060px width.
-           It's challenging to perfectly accommodate both a fixed image size and a label column
-           while being fully responsive without a more complex layout.
-           For simplicity, this example will shrink the entire image-wrapper. */
         @media (max-width: 1080px) { /* Adjust breakpoint if needed */
             .image-wrapper {
                 width: 100%; 
                 height: auto;
-                /* Keep the aspect ratio based on the original 1060px total width */
+                /* Maintain aspect ratio based on the total wrapper width (860 image + 200 label space = 1060 total) */
                 padding-bottom: calc(532 / 1060 * 100%); 
             }
             .image-wrapper img {
@@ -339,7 +333,7 @@
             <div id="sliceNumberDisplay">Slice: 1 / 131</div>
         </div>
 
-        <a href="../index.html" class="back-button">Back to HRCT Temporal Bone Menu</a>
+        <a href="../index.html" class="back-button">Back to HRCT Temporal Bone Menu</a> 
     </div>
 
     <script>
@@ -347,31 +341,33 @@
         const imageCount = 131; // Total number of axial images
         const imageBaseName = ''; // Images are named 1.jpg, 2.jpg, etc.
         const imageExtension = '.jpg'; // File extension for your images
-        const imageFolderPath = './images/'; // Path to your images folder
+        const imageFolderPath = './images/'; // Path to your images folder (assuming relative to this index.html)
         
-        const annotationJsonPath = './annotations/'; // Path to your annotations folder
+        const annotationJsonPath = './annotations/'; // Path to your annotations folder (assuming relative to this index.html)
         
-        // These are the actual pixel dimensions of your source images (860x532px)
-        const IMAGE_ACTUAL_WIDTH = 860; 
-        const IMAGE_ACTUAL_HEIGHT = 532;
+        // These are the actual pixel dimensions of your *anatomical data portion*
+        // assuming your 3D Slicer coordinates are based on a 512x512mm cube
+        const IMAGE_MRI_DATA_DIMENSION_MM = 512; // Used for coordinate scaling FROM JSON
+        
+        // These are the actual pixel dimensions of your *full image files* (860x532px)
+        const IMAGE_FILE_WIDTH = 860; // Actual width of the JPG/PNG file
+        const IMAGE_FILE_HEIGHT = 532; // Actual height of the JPG/PNG file
 
-        // NEW: Define the width of the dedicated label sidebar
-        const LABEL_SIDEBAR_WIDTH = 200; // Pixels for the right side where labels will be
+        // Define the width of the dedicated label sidebar within the *image file itself*
+        // Assuming labels are on the RIGHT side, so the MRI data is on the LEFT.
+        const LABEL_SIDEBAR_WIDTH = IMAGE_FILE_WIDTH - IMAGE_MRI_DATA_DIMENSION_MM; // 860 - 512 = 348px
+        const LABEL_OFFSET_FROM_MRI_EDGE = 15; // Pixels distance from MRI data edge to label's *closest edge*
 
-        // Annotation positioning relative to the RIGHT edge of the IMAGE DATA
-        const LABEL_OFFSET_FROM_IMAGE_RIGHT_EDGE = 15; // Pixels from the right edge of the *image data*
+        // This is the X-coordinate relative to the *image-wrapper's left edge*
+        // where the LEFT edge of the label column should begin.
+        // It's the end of the MRI data + offset
+        const LABEL_COLUMN_START_X = IMAGE_MRI_DATA_DIMENSION_MM + LABEL_OFFSET_FROM_MRI_EDGE; 
+
         const LABEL_VERTICAL_SPACING = 15; // Vertical spacing between stacked labels
-
-        // This is the X-coordinate relative to the *image-wrapper* where the right edge of the label should align.
-        const LABEL_ANCHOR_X_PX = IMAGE_ACTUAL_WIDTH + LABEL_OFFSET_FROM_IMAGE_RIGHT_EDGE; 
-
-        // Length of the line segment connecting point to label (will extend horizontally from point to label anchor)
-        const LINE_HORIZONTAL_OFFSET = 15; 
-
 
         // --- JSON FILENAMES (CRITICAL: LIST ALL YOUR HRCT TEMPORAL BONE AXIAL JSON FILES HERE) ---
         const jsonFilenames = [
-            // Re-pasting the full list from last time, but please ensure it's exact
+            // List your .mrk.json files here. Example:
             "Aditus.mrk.json", 
             "Ampulla of Superior SCC.mrk.json", 
             "Arcuate eminence.mrk.json", 
@@ -516,11 +512,13 @@
                                     const sliceZ = cp.position[2];
                                     const imageSliceNumber = Math.round(sliceZ); 
 
+                                    // Annotations are typically defined relative to the original MRI data (e.g., 512x512mm)
+                                    // We store the raw X, Y from JSON to scale it later based on actual image display size
                                     allAnnotations.push({
                                         slice: imageSliceNumber,
                                         text: cp.label.split(/-\d+/)[0].trim(), 
-                                        pointX: cp.position[0], 
-                                        pointY: cp.position[1], 
+                                        pointX_mm: cp.position[0], // Store raw MM value
+                                        pointY_mm: cp.position[1], // Store raw MM value
                                     });
                                 }
                             });
@@ -555,31 +553,43 @@
             const currentSlice = parseInt(sliceSlider.value);
             const imageUrl = `${imageFolderPath}${currentSlice}${imageExtension}`; 
             
+            // Set the image src. This will trigger onload if image changes.
             temporalBoneSliceImage.src = imageUrl;
             sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
 
-            annotationOverlay.innerHTML = '';
-            annotationSvgOverlay.innerHTML = '';
+            annotationOverlay.innerHTML = ''; // Clear previous labels
+            annotationSvgOverlay.innerHTML = ''; // Clear previous SVG elements
 
             temporalBoneSliceImage.onload = function() {
                 this.onload = null;
 
-                const imageWrapperWidth = temporalBoneSliceImage.parentElement.offsetWidth; // Get parent's width
-                const imageWrapperHeight = temporalBoneSliceImage.parentElement.offsetHeight; // Get parent's height
-                
-                // Calculate scaling factors for the image data portion (860px wide)
-                const imageDisplayWidth = temporalBoneSliceImage.offsetWidth; // This is the rendered width of the 860px image
-                const imageDisplayHeight = temporalBoneSliceImage.offsetHeight; // This is the rendered height of the 532px image
+                // Get actual rendered dimensions of the image element (which is also the SVG/overlay container)
+                const imageDisplayWidth = temporalBoneSliceImage.offsetWidth; 
+                const imageDisplayHeight = temporalBoneSliceImage.offsetHeight;
 
-                const scaleX = imageDisplayWidth / IMAGE_ACTUAL_WIDTH;
-                const scaleY = imageDisplayHeight / IMAGE_ACTUAL_HEIGHT;
+                // Calculate scaling factors for annotation points from MM to displayed pixels
+                // The X scaling maps 512mm to the IMAGE_MRI_DATA_DIMENSION_MM pixels of actual MRI data.
+                const scaleX_mri_to_display = imageDisplayWidth / IMAGE_FILE_WIDTH; // Scale for total width of image file
+                const scaleY_mri_to_display = imageDisplayHeight / IMAGE_FILE_HEIGHT; // Scale for total height of image file
+
+                // Calculate the actual pixel width of the MRI data portion as it's currently displayed
+                const mriDataDisplayWidth = IMAGE_MRI_DATA_DIMENSION_MM * scaleX_mri_to_display;
+
+                // Calculate the starting X-pixel of the MRI data portion on the displayed image (relative to image-wrapper's left edge)
+                // Assuming MRI data starts at X=0 in the 3D Slicer coordinate system and the black strip is on the RIGHT.
+                const mriDataRenderedLeftX = 0; // MRI data starts at the left edge of the displayed image for this HRCT
+                const mriDataRenderedRightX = mriDataRenderedLeftX + mriDataDisplayWidth;
 
                 if (annotationsLoaded) {
-                    const annotationsForCurrentSlice = allAnnotations.filter(ann => ann.slice === currentSlice);
-                    
+                    const annotationsForCurrentSlice = allAnnotations.filter(ann => ann.slice === currentSlice)
+                                                                     .sort((a, b) => a.pointY_mm - b.pointY_mm); // Sort by original Y (mm)
+
+                    let placedLabelsRightColumn = []; // Stores {top, bottom, element} for stacking
+
                     annotationsForCurrentSlice.forEach((annotation, index) => {
-                        const pX_px_displayed = annotation.pointX * scaleX;
-                        const pY_px_displayed = annotation.pointY * scaleY;
+                        // Convert point coordinates from MM to pixels relative to the displayed image
+                        const pX_px_displayed = annotation.pointX_mm * scaleX_mri_to_display;
+                        const pY_px_displayed = annotation.pointY_mm * scaleY_mri_to_display;
 
                         // --- Create HTML Label div ---
                         const labelDiv = document.createElement('div');
@@ -587,51 +597,82 @@
                         labelDiv.textContent = annotation.text;
                         labelDiv.id = `label-${currentSlice}-${index}`;
                         
-                        annotationOverlay.appendChild(labelDiv);
-                        
-                        // Position the label on the right side of the image-wrapper.
-                        // LABEL_ANCHOR_X_PX is the pixel coordinate relative to the image-wrapper's left edge
-                        // where the LEFT edge of the label should begin.
-                        labelDiv.style.left = `${(IMAGE_ACTUAL_WIDTH * scaleX) + LABEL_OFFSET_FROM_IMAGE_RIGHT_EDGE}px`; 
-                        labelDiv.style.top = `${pY_px_displayed + ANNOTATION_LABEL_OFFSET_Y}px`;
-                        // No need for labelDiv.classList.add('show') here as opacity is now 1 by default in CSS
+                        annotationOverlay.appendChild(labelDiv); // Append labels to annotationOverlay
 
-                        // --- Create SVG Line ---
+                        // --- Calculate Label Position (including stacking) ---
+                        const labelHeight = labelDiv.offsetHeight; // Get height after appending
+                        const labelWidth = labelDiv.offsetWidth; // Get width after appending
+
+                        // Label's center X. It's aligned to the LEFT edge of the right black strip.
+                        // Since transform(-50%, -50%) makes 'left' the center, calculate:
+                        const labelTargetX_px = mriDataRenderedRightX + LABEL_OFFSET_FROM_MRI_EDGE + (labelWidth / 2); 
+                        
+                        const lineX2_px_at_mri_edge = mriDataRenderedRightX; // Line ends at the right edge of MRI data
+
+                        // Initial desired Y (center of label) based on point's Y
+                        let desiredLabelCenterY_px = pY_px_displayed; 
+
+                        // Ensure label doesn't go off the top edge (considering label height)
+                        desiredLabelCenterY_px = Math.max(desiredLabelCenterY_px, (labelHeight / 2)); 
+
+                        // Check for overlaps within the right column
+                        for (let i = 0; i < placedLabelsRightColumn.length; i++) {
+                            const existingLabel = placedLabelsRightColumn[i];
+                            // If current label's potential top collides with an existing label's bottom
+                            if ( (desiredLabelCenterY_px - (labelHeight / 2)) < (existingLabel.bottom + LABEL_VERTICAL_SPACING) ) {
+                                // Overlap detected. Adjust current label's Y to be below the existing one.
+                                desiredLabelCenterY_px = existingLabel.bottom + LABEL_VERTICAL_SPACING + (labelHeight / 2);
+                            }
+                        }
+
+                        // Ensure label doesn't go off the bottom edge (considering label height)
+                        desiredLabelCenterY_px = Math.min(desiredLabelCenterY_px, imageDisplayHeight - (labelHeight / 2));
+
+
+                        // Apply the final positions (these are for the label's CENTER due to transform: translate(-50%,-50%))
+                        labelDiv.style.left = `${labelTargetX_px}px`; 
+                        labelDiv.style.top = `${desiredLabelCenterY_px}px`; 
+                        labelDiv.style.pointerEvents = 'auto'; // Ensure hover works on labels
+
+                        // Store this label's final actual (top, bottom) positions for future overlap checks
+                        placedLabelsRightColumn.push({
+                            top: desiredLabelCenterY_px - (labelHeight / 2), // Actual top edge of the label
+                            bottom: desiredLabelCenterY_px + (labelHeight / 2), // Actual bottom edge of the label
+                            element: labelDiv 
+                        });
+
+                        // --- Create SVG Line (slanting) ---
                         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                        line.setAttribute('x1', pX_px_displayed); // Line starts at the annotation point
+                        
+                        // Line starts at the point on the MRI data
+                        line.setAttribute('x1', pX_px_displayed);
                         line.setAttribute('y1', pY_px_displayed);
                         
-                        // Line ends at the starting X of the label
-                        line.setAttribute('x2', (IMAGE_ACTUAL_WIDTH * scaleX) + LABEL_OFFSET_FROM_IMAGE_RIGHT_EDGE - 5); // A little space before label starts
-                        line.setAttribute('y2', pY_px_displayed + ANNOTATION_LABEL_OFFSET_Y); // Y is the same as label center
-                        
+                        // Line's X-endpoint is at the edge of the MRI data (transition to black strip)
+                        line.setAttribute('x2', lineX2_px_at_mri_edge); 
+                        line.setAttribute('y2', desiredLabelCenterY_px); // Line ends at label's vertical center
+
                         line.id = `line-${currentSlice}-${index}`;
                         annotationSvgOverlay.appendChild(line);
 
-                        // Create SVG Circle for the point
+                        // Create SVG Circle for the point (always visible)
                         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                         circle.setAttribute('cx', pX_px_displayed);
                         circle.setAttribute('cy', pY_px_displayed);
-                        circle.setAttribute('r', 4); // Default radius
-                        circle.id = `circle-${currentSlice}-${index}`;
+                        circle.setAttribute('r', 4); 
+                        circle.classList.add('show'); 
+                        circle.id = `circle-${currentSlice}-${index}`; 
                         annotationSvgOverlay.appendChild(circle);
 
-                        // --- Add Hover Interactivity (only for line visibility) ---
-                        // Show line and highlight circle on hover over label or circle
-                        const activateAnnotation = () => {
+                        // --- Add Hover Interactivity ---
+                        labelDiv.addEventListener('mouseover', () => {
                             document.getElementById(`line-${currentSlice}-${index}`)?.classList.add('visible-on-hover');
                             document.getElementById(`circle-${currentSlice}-${index}`)?.classList.add('visible-on-hover-circle');
-                        };
-                        // Hide line and de-highlight circle on mouse out
-                        const deactivateAnnotation = () => {
+                        });
+                        labelDiv.addEventListener('mouseout', () => {
                             document.getElementById(`line-${currentSlice}-${index}`)?.classList.remove('visible-on-hover');
                             document.getElementById(`circle-${currentSlice}-${index}`)?.classList.remove('visible-on-hover-circle');
-                        };
-
-                        labelDiv.addEventListener('mouseover', activateAnnotation);
-                        labelDiv.addEventListener('mouseout', deactivateAnnotation);
-                        circle.addEventListener('mouseover', activateAnnotation);
-                        circle.addEventListener('mouseout', deactivateAnnotation);
+                        });
                         // --- End Hover Interactivity ---
                     });
                 } else {
@@ -639,18 +680,20 @@
                 }
             };
 
+            // If the image is already loaded (from cache or preloading), trigger the onload manually
             if (temporalBoneSliceImage.complete) {
                 temporalBoneSliceImage.onload(); 
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            console.log("DOM content loaded. Initializing viewer.");
-            preloadAllImages();
+            console.log("DOM content loaded. Initializing viewer."); 
+            preloadAllImages(); 
             loadAnnotations(); 
         });
 
-        sliceSlider.addEventListener('input', updateSlice); 
+        sliceSlider.addEventListener('input', updateSlice); // Using 'input' for continuous update if preferred
+                                                          // Or use 'change' for update on release.
         
         let resizeTimeout;
         window.addEventListener('resize', () => {
@@ -658,7 +701,7 @@
             resizeTimeout = setTimeout(() => {
                 console.log("Window resized, updating slice.");
                 updateSlice();
-            }, 100);
+            }, 100); 
         });
     </script>
 </body>
