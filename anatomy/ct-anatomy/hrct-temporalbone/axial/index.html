@@ -218,25 +218,23 @@
     </div>
 
     <script>
-        // --- CONFIGURATION - FOR PADDED IMAGES ---
+        // --- CONFIGURATION - FOR CENTERED ANATOMY WITH TWO SIDEBARS ---
         const imageCount = 131;
         const imageExtension = '.jpg';
         const imageFolderPath = './images/';
         const annotationJsonPath = './annotations/';
         
-        // **NEW**: Dimensions of the actual anatomy scan (the original 850x532 part)
         const ANATOMY_DATA_WIDTH = 850;
         const ANATOMY_DATA_HEIGHT = 532;
 
-        // **NEW**: Padding added to the anatomy scan
         const PADDING_TOP = 34;
-        const PADDING_LEFT = 400;
+        // **NEW**: Assuming the 850px anatomy is centered in the 1250px canvas.
+        // This calculates the left padding automatically.
+        const PADDING_LEFT = (1250 - ANATOMY_DATA_WIDTH) / 2; // Should be 200px
 
-        // **NEW**: Final dimensions of your image files (e.g., 1250x600)
         const IMAGE_FILE_WIDTH = 1250;
         const IMAGE_FILE_HEIGHT = 600;
 
-        // Label placement settings
         const LABEL_OFFSET_FROM_EDGE = 40;
         const LABEL_VERTICAL_SPACING = 10;
 
@@ -306,24 +304,19 @@
                 const annotationsForCurrentSlice = allAnnotations
                     .filter(ann => ann.slice === currentSlice)
                     .sort((a, b) => a.pointY_mm - b.pointY_mm);
-
-                let placedLabels = [];
+                
+                // **NEW**: Two separate arrays for the two label columns
+                let placedLabelsLeft = [];
+                let placedLabelsRight = [];
 
                 annotationsForCurrentSlice.forEach((annotation, index) => {
-                    // --- CORRECTED COORDINATE CALCULATION ---
-                    // 1. Treat incoming coordinates as pixels on the 850x532 anatomy scan.
                     const x_in_anatomy = annotation.pointX_mm;
                     const y_in_anatomy = annotation.pointY_mm;
-
-                    // 2. Add padding to get position in the final file (1250x600)
                     const x_in_file = x_in_anatomy + PADDING_LEFT;
                     const y_in_file = y_in_anatomy + PADDING_TOP;
-
-                    // 3. Scale file position to the final displayed size
                     const pX_px_displayed = x_in_file * scaleX;
                     const pY_px_displayed = y_in_file * scaleY;
 
-                    // --- Label and SVG Element Creation ---
                     const labelDiv = document.createElement('div');
                     labelDiv.className = 'annotation-label';
                     labelDiv.textContent = annotation.text;
@@ -332,36 +325,48 @@
                     const labelHeight = labelDiv.offsetHeight;
                     const labelWidth = labelDiv.offsetWidth;
 
+                    // --- NEW: TWO-COLUMN LOGIC ---
+                    const pointIsOnLeftSide = x_in_anatomy < ANATOMY_DATA_WIDTH / 2;
+                    const targetColumn = pointIsOnLeftSide ? placedLabelsLeft : placedLabelsRight;
+                    
                     let bestY = pY_px_displayed;
                     let foundFit = false;
 
-                    // Stacking logic for the left column
-                    if (bestY - labelHeight / 2 >= 0 && bestY + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(bestY, labelHeight, placedLabels)) {
+                    // Stacking logic (applied to the correct column)
+                    if (bestY - labelHeight / 2 >= 0 && bestY + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(bestY, labelHeight, targetColumn)) {
                         foundFit = true;
                     }
                     if (!foundFit) {
                         for (let offset = 10; offset < imageDisplayHeight / 2; offset += 5) {
                             let tryUp = pY_px_displayed - offset;
-                            if (tryUp - labelHeight / 2 >= 0 && !checkOverlap(tryUp, labelHeight, placedLabels)) { bestY = tryUp; foundFit = true; break; }
+                            if (tryUp - labelHeight / 2 >= 0 && !checkOverlap(tryUp, labelHeight, targetColumn)) { bestY = tryUp; foundFit = true; break; }
                             let tryDown = pY_px_displayed + offset;
-                            if (tryDown + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(tryDown, labelHeight, placedLabels)) { bestY = tryDown; foundFit = true; break; }
+                            if (tryDown + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(tryDown, labelHeight, targetColumn)) { bestY = tryDown; foundFit = true; break; }
                         }
                     }
                     if (!foundFit) {
                         for (let scanY = (labelHeight / 2) + 5; scanY < imageDisplayHeight - (labelHeight / 2); scanY += 5) {
-                            if (!checkOverlap(scanY, labelHeight, placedLabels)) { bestY = scanY; break; }
+                            if (!checkOverlap(scanY, labelHeight, targetColumn)) { bestY = scanY; break; }
                         }
                     }
                     bestY = Math.max(bestY, labelHeight / 2);
                     bestY = Math.min(bestY, imageDisplayHeight - labelHeight / 2);
 
-                    // Place label in the left sidebar
-                    const labelTargetX_px = (PADDING_LEFT - LABEL_OFFSET_FROM_EDGE - (labelWidth / 2)) * scaleX;
-                    const lineEndX = PADDING_LEFT * scaleX;
+                    let labelTargetX_px, lineEndX;
+                    if (pointIsOnLeftSide) {
+                        // Position label in the left sidebar
+                        labelTargetX_px = (PADDING_LEFT - LABEL_OFFSET_FROM_EDGE) * scaleX - (labelWidth / 2);
+                        lineEndX = PADDING_LEFT * scaleX;
+                    } else {
+                        // Position label in the right sidebar
+                        const rightSidebarStartX = (PADDING_LEFT + ANATOMY_DATA_WIDTH) * scaleX;
+                        labelTargetX_px = rightSidebarStartX + (LABEL_OFFSET_FROM_EDGE * scaleX) + (labelWidth / 2);
+                        lineEndX = rightSidebarStartX;
+                    }
 
                     labelDiv.style.left = `${labelTargetX_px}px`;
                     labelDiv.style.top = `${bestY}px`;
-                    placedLabels.push({ top: bestY - labelHeight / 2, bottom: bestY + labelHeight / 2 });
+                    targetColumn.push({ top: bestY - labelHeight / 2, bottom: bestY + labelHeight / 2 });
 
                     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                     line.setAttribute('x1', pX_px_displayed);
