@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>FRCR Quiz</title>
+    <title>FRCR Physics Quiz</title>
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <style>
         /* --- Theme Variables --- */
@@ -190,26 +190,12 @@
 <body>
 
     <div class="main-container">
-        <!-- Home Screen -->
-        <div id="home-screen" class="screen active">
-            <div class="selection-container">
-                <div class="selection-header">
-                    <h1>FRCR Quiz</h1>
-                    <button id="theme-toggle-home" class="theme-toggle-button">🌓</button>
-                </div>
-                <div class="selection-grid">
-                    <button id="physics-btn" class="selection-button">Physics</button>
-                    <button id="anatomy-btn" class="selection-button disabled">Anatomy</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Physics Category Screen -->
-        <div id="physics-category-screen" class="screen">
+        <!-- Physics Category Screen (Now the initial screen) -->
+        <div id="physics-category-screen" class="screen active">
             <div class="selection-container">
                 <div class="quiz-header">
                     <h1>Physics Topics</h1>
-                    <button class="back-button" data-target="home-screen">Home</button>
+                    <button class="back-button" onclick="history.back()">Back</button>
                 </div>
                 <div id="physics-topics-grid" class="selection-grid"></div>
             </div>
@@ -239,7 +225,7 @@
         const GOOGLE_SHEET_ID = '1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8';
         const PHYSICS_TOPICS = [
             { name: "Basic Physics", gid: "2009849222" },
-            { name: "General Radiation Hazards & Protection", gid: "2009849222" },
+            { name: "General Radiation Hazards & Protection", gid: "2009849222" }, // Note: Same GID as Basic Physics
             { name: "Image Quality & X-ray Production", gid: "1706416231" },
             { name: "Film Screen Radiography", gid: "1257614317" },
             { name: "Digital Radiography", gid: "917881905" },
@@ -256,11 +242,9 @@
 
         // --- DOM Elements ---
         const screens = document.querySelectorAll('.screen');
-        const physicsBtn = document.getElementById('physics-btn');
         const physicsTopicsGrid = document.getElementById('physics-topics-grid');
         const quizTitle = document.getElementById('quiz-title');
         const backButtons = document.querySelectorAll('.back-button');
-        const themeToggleHome = document.getElementById('theme-toggle-home');
         
         const loadingContainer = document.getElementById('loading-container');
         const errorContainer = document.getElementById('error-container');
@@ -271,20 +255,8 @@
         const questionCounter = document.getElementById('question-counter');
 
         // --- Functions (Theming) ---
-        function setTheme(theme) {
-            localStorage.setItem('theme', theme);
-            if (theme === 'light') {
-                document.body.classList.add('light-theme');
-            } else {
-                document.body.classList.remove('light-theme');
-            }
-        }
-        
-        function toggleTheme() {
-            const currentTheme = localStorage.getItem('theme') || 'dark';
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            setTheme(newTheme);
-        }
+        // Simplified: This page will be light theme by default to match the main site.
+        document.body.classList.add('light-theme');
 
         // --- Functions (Navigation & Setup) ---
         function showScreen(screenId) { screens.forEach(s => s.classList.toggle('active', s.id === screenId)); }
@@ -326,6 +298,9 @@
                     if (allQuestions.length > 0) {
                         navigationControls.style.display = 'flex';
                         showQuestion(currentQuestionIndex);
+                    } else {
+                        errorContainer.style.display = 'block';
+                        errorContainer.textContent = 'No questions found in the selected topic.';
                     }
                     loadingContainer.style.display = 'none';
                 })
@@ -333,16 +308,16 @@
                     console.error('Data fetch/parse error:', err);
                     loadingContainer.style.display = 'none';
                     errorContainer.style.display = 'block';
-                    errorContainer.textContent = `Error loading questions. Please check sheet name/gid and sharing settings. Details: ${err.message}`;
+                    errorContainer.textContent = `Error loading questions. Please check the Google Sheet ID, GID, and sharing settings. Details: ${err.message}`;
                 });
         }
         function parseCSVToQuestions(text) {
             const rows = text.trim().split(/\r?\n/).map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(f => f.trim().replace(/^"|"$/g, '')));
-            if (rows.length < 2) { errorContainer.textContent = 'Sheet is empty.'; return []; }
+            if (rows.length < 2) { return []; }
             const headers = rows[0].map(h => h.trim().toLowerCase());
             const dataRows = rows.slice(1);
             const questionIndex = headers.indexOf('question');
-            if (questionIndex === -1) { errorContainer.innerHTML = "<strong>Error:</strong> 'question' column not found."; return []; }
+            if (questionIndex === -1) { console.error("Column 'question' not found."); return []; }
             
             return dataRows.map(row => {
                 const mainQuestionText = row[questionIndex];
@@ -453,14 +428,10 @@
 
         // --- Event Listeners (Initial Setup) ---
         document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            setTheme(savedTheme);
             populateTopics();
-            showScreen('home-screen');
+            showScreen('physics-category-screen');
         });
-        physicsBtn.addEventListener('click', () => showScreen('physics-category-screen'));
         backButtons.forEach(b => b.addEventListener('click', () => showScreen(b.dataset.target)));
-        themeToggleHome.addEventListener('click', toggleTheme);
         prevButton.addEventListener('click', () => showQuestion(--currentQuestionIndex));
         nextButton.addEventListener('click', () => showQuestion(++currentQuestionIndex));
 
