@@ -75,7 +75,6 @@
 
         .image-wrapper {
             position: relative;
-            /* Set width to the new image file width */
             width: 1250px;
             max-width: 100%;
             background-color: #000;
@@ -83,7 +82,6 @@
             overflow: hidden;
             box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
             height: auto;
-            /* Maintain aspect ratio of the new 1250x600 image */
             padding-bottom: calc(600 / 1250 * 100%);
         }
 
@@ -220,14 +218,11 @@
     </div>
 
     <script>
-        // --- CONFIGURATION - UPDATED FOR PADDED IMAGES ---
+        // --- CONFIGURATION - FOR PADDED IMAGES ---
         const imageCount = 131;
         const imageExtension = '.jpg';
         const imageFolderPath = './images/';
         const annotationJsonPath = './annotations/';
-        
-        // The dimension of the source medical data cube
-        const IMAGE_MRI_DATA_DIMENSION_MM = 512;
         
         // **NEW**: Dimensions of the actual anatomy scan (the original 850x532 part)
         const ANATOMY_DATA_WIDTH = 850;
@@ -305,7 +300,6 @@
                 const imageDisplayWidth = this.offsetWidth;
                 const imageDisplayHeight = this.offsetHeight;
 
-                // Overall scale factor of the displayed image vs the file
                 const scaleX = imageDisplayWidth / IMAGE_FILE_WIDTH;
                 const scaleY = imageDisplayHeight / IMAGE_FILE_HEIGHT;
 
@@ -316,10 +310,10 @@
                 let placedLabels = [];
 
                 annotationsForCurrentSlice.forEach((annotation, index) => {
-                    // --- REVISED COORDINATE CALCULATION ---
-                    // 1. Scale mm coordinate to the anatomy's pixel size (850x532)
-                    const x_in_anatomy = (annotation.pointX_mm / IMAGE_MRI_DATA_DIMENSION_MM) * ANATOMY_DATA_WIDTH;
-                    const y_in_anatomy = (annotation.pointY_mm / IMAGE_MRI_DATA_DIMENSION_MM) * ANATOMY_DATA_HEIGHT;
+                    // --- CORRECTED COORDINATE CALCULATION ---
+                    // 1. Treat incoming coordinates as pixels on the 850x532 anatomy scan.
+                    const x_in_anatomy = annotation.pointX_mm;
+                    const y_in_anatomy = annotation.pointY_mm;
 
                     // 2. Add padding to get position in the final file (1250x600)
                     const x_in_file = x_in_anatomy + PADDING_LEFT;
@@ -341,7 +335,7 @@
                     let bestY = pY_px_displayed;
                     let foundFit = false;
 
-                    // Stacking logic (same robust algorithm, now for the left column)
+                    // Stacking logic for the left column
                     if (bestY - labelHeight / 2 >= 0 && bestY + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(bestY, labelHeight, placedLabels)) {
                         foundFit = true;
                     }
@@ -362,7 +356,7 @@
                     bestY = Math.min(bestY, imageDisplayHeight - labelHeight / 2);
 
                     // Place label in the left sidebar
-                    const labelTargetX_px = (PADDING_LEFT - LABEL_OFFSET_FROM_EDGE) * scaleX - (labelWidth / 2);
+                    const labelTargetX_px = (PADDING_LEFT - LABEL_OFFSET_FROM_EDGE - (labelWidth / 2)) * scaleX;
                     const lineEndX = PADDING_LEFT * scaleX;
 
                     labelDiv.style.left = `${labelTargetX_px}px`;
