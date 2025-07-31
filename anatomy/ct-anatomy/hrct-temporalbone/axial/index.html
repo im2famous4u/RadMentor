@@ -58,7 +58,8 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             padding: 20px;
             margin: 20px auto;
-            max-width: 1300px;
+            /* NEW: Wider max-width for two sidebars */
+            max-width: 1550px; 
             width: 95%;
             box-sizing: border-box;
             display: flex;
@@ -75,22 +76,25 @@
 
         .image-wrapper {
             position: relative;
-            width: 1250px;
+            /* NEW: Width to accommodate the image file + a right sidebar */
+            width: 1500px;
             max-width: 100%;
             background-color: #000;
             border-radius: 8px;
             overflow: hidden;
             box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
             height: auto;
-            padding-bottom: calc(600 / 1250 * 100%);
+            /* NEW: Aspect ratio of the wider container */
+            padding-bottom: calc(600 / 1500 * 100%);
         }
 
         .image-wrapper img {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            /* Image is no longer 100% width of the wrapper */
+            width: 1250px;
+            height: 600px;
             object-fit: contain;
             display: block;
             user-select: none;
@@ -108,7 +112,8 @@
             pointer-events: none;
             overflow: visible;
         }
-
+        
+        /* Default label style (left-aligned) */
         .annotation-label {
             position: absolute;
             background-color: var(--annotation-bg-color);
@@ -122,10 +127,15 @@
             border: 1px solid var(--annotation-border-color);
             z-index: 11;
             cursor: default;
-            transform: translate(-100%, -50%);
+            transform: translate(0, -50%); /* For left-aligned text */
             opacity: 1;
             transition: opacity 0.3s ease;
             pointer-events: auto;
+        }
+        
+        /* Special class for labels on the left sidebar */
+        .annotation-label.align-right {
+            transform: translate(-100%, -50%); /* For right-aligned text */
         }
         
         .annotation-svg-overlay line {
@@ -148,7 +158,6 @@
             r: 6;
         }
         
-        /* RESTORED: Horizontal controls below the image */
         .controls {
             width: 100%;
             margin-top: 25px;
@@ -160,34 +169,9 @@
 
         #sliceSlider {
             width: 90%;
-            -webkit-appearance: none;
-            appearance: none;
-            height: 8px;
-            background: var(--slider-track-bg);
-            outline: none;
-            border-radius: 5px;
+            max-width: 1250px;
         }
-        #sliceSlider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--slider-thumb-bg);
-            cursor: grab;
-        }
-        #sliceSlider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--slider-thumb-bg);
-            cursor: grab;
-        }
-        #sliceNumberDisplay {
-            font-size: 1.1rem;
-            color: var(--text-color);
-            font-weight: 500;
-        }
+        
         .back-button {
             display: block;
             width: 200px;
@@ -212,7 +196,7 @@
         <h1>HRCT Temporal Bone - Axial Section</h1>
         <div class="image-wrapper">
             <img id="temporalBoneSliceImage" src="" alt="HRCT Temporal Bone Axial Slice">
-            <svg class="annotation-svg-overlay" id="annotationSvgOverlay"></svg>
+            <svg class.annotation-svg-overlay" id="annotationSvgOverlay"></svg>
             <div id="annotationOverlay"></div>
         </div>
         
@@ -237,6 +221,8 @@
         const PADDING_LEFT = 400;
         const IMAGE_FILE_WIDTH = 1250;
         const IMAGE_FILE_HEIGHT = 600;
+        const RIGHT_SIDEBAR_WIDTH = 250; // Virtual space for right-side labels
+        
         const LABEL_OFFSET_FROM_ANATOMY_EDGE = 20;
         const LABEL_VERTICAL_SPACING = 10;
         
@@ -270,7 +256,6 @@
         }
         
         function updateSlice() {
-            // **FIXED**: No longer need to invert the slider value.
             const currentSlice = parseInt(sliceSlider.value);
             temporalBoneSliceImage.src = `${imageFolderPath}${currentSlice}${imageExtension}`;
             sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
@@ -295,21 +280,26 @@
                 const imageDisplayWidth = this.offsetWidth;
                 const imageDisplayHeight = this.offsetHeight;
 
-                const scaleX = imageDisplayWidth / IMAGE_FILE_WIDTH;
+                const scaleX = imageDisplayWidth / (IMAGE_FILE_WIDTH + RIGHT_SIDEBAR_WIDTH);
                 const scaleY = imageDisplayHeight / IMAGE_FILE_HEIGHT;
+                
+                // Adjust scale for the image tag itself if its container is wider
+                const imgTagScaleX = imageDisplayWidth / (IMAGE_FILE_WIDTH + RIGHT_SIDEBAR_WIDTH);
 
                 const annotationsForCurrentSlice = allAnnotations
                     .filter(ann => ann.slice === currentSlice)
                     .sort((a, b) => a.pointY_mm - b.pointY_mm);
 
-                let placedLabels = [];
+                let placedLabelsLeft = [];
+                let placedLabelsRight = [];
 
                 annotationsForCurrentSlice.forEach((annotation, index) => {
                     const x_in_anatomy = annotation.pointX_mm;
                     const y_in_anatomy = annotation.pointY_mm;
                     const x_in_file = x_in_anatomy + PADDING_LEFT;
                     const y_in_file = y_in_anatomy + PADDING_TOP;
-                    const pX_px_displayed = x_in_file * scaleX;
+                    
+                    const pX_px_displayed = x_in_file * imgTagScaleX;
                     const pY_px_displayed = y_in_file * scaleY;
 
                     const labelDiv = document.createElement('div');
@@ -318,36 +308,51 @@
                     annotationOverlay.appendChild(labelDiv);
 
                     const labelHeight = labelDiv.offsetHeight;
+                    const labelWidth = labelDiv.offsetWidth;
+
+                    const pointIsOnLeftSide = x_in_anatomy < (ANATOMY_DATA_WIDTH / 2);
+                    const targetColumn = pointIsOnLeftSide ? placedLabelsLeft : placedLabelsRight;
                     
                     let bestY = pY_px_displayed;
                     let foundFit = false;
 
-                    if (bestY - labelHeight / 2 >= 0 && bestY + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(bestY, labelHeight, placedLabels)) {
+                    // Stacking Logic
+                    if (bestY - labelHeight / 2 >= 0 && bestY + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(bestY, labelHeight, targetColumn)) {
                         foundFit = true;
                     }
                     if (!foundFit) {
                         for (let offset = 10; offset < imageDisplayHeight / 2; offset += 5) {
                             let tryUp = pY_px_displayed - offset;
-                            if (tryUp - labelHeight / 2 >= 0 && !checkOverlap(tryUp, labelHeight, placedLabels)) { bestY = tryUp; foundFit = true; break; }
+                            if (tryUp - labelHeight / 2 >= 0 && !checkOverlap(tryUp, labelHeight, targetColumn)) { bestY = tryUp; foundFit = true; break; }
                             let tryDown = pY_px_displayed + offset;
-                            if (tryDown + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(tryDown, labelHeight, placedLabels)) { bestY = tryDown; foundFit = true; break; }
+                            if (tryDown + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(tryDown, labelHeight, targetColumn)) { bestY = tryDown; foundFit = true; break; }
                         }
                     }
                     if (!foundFit) {
                         for (let scanY = (labelHeight / 2) + 5; scanY < imageDisplayHeight - (labelHeight / 2); scanY += 5) {
-                            if (!checkOverlap(scanY, labelHeight, placedLabels)) { bestY = scanY; break; }
+                            if (!checkOverlap(scanY, labelHeight, targetColumn)) { bestY = scanY; break; }
                         }
                     }
+                    
                     bestY = Math.max(bestY, labelHeight / 2);
                     bestY = Math.min(bestY, imageDisplayHeight - labelHeight / 2);
                     
-                    const anatomyEdgeX = PADDING_LEFT * scaleX;
-                    const labelTargetX_px = anatomyEdgeX - LABEL_OFFSET_FROM_ANATOMY_EDGE;
-                    const lineEndX = labelTargetX_px;
+                    let labelTargetX_px, lineEndX;
+
+                    if (pointIsOnLeftSide) {
+                        labelDiv.classList.add('align-right');
+                        const anatomyEdgeX = PADDING_LEFT * imgTagScaleX;
+                        labelTargetX_px = anatomyEdgeX - LABEL_OFFSET_FROM_ANATOMY_EDGE;
+                        lineEndX = labelTargetX_px;
+                    } else {
+                        const anatomyEdgeX = (PADDING_LEFT + ANATOMY_DATA_WIDTH) * imgTagScaleX;
+                        labelTargetX_px = anatomyEdgeX + LABEL_OFFSET_FROM_ANATOMY_EDGE;
+                        lineEndX = labelTargetX_px;
+                    }
 
                     labelDiv.style.left = `${labelTargetX_px}px`;
                     labelDiv.style.top = `${bestY}px`;
-                    placedLabels.push({ top: bestY - labelHeight / 2, bottom: bestY + labelHeight / 2 });
+                    targetColumn.push({ top: bestY - labelHeight / 2, bottom: bestY + labelHeight / 2 });
 
                     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                     line.setAttribute('x1', pX_px_displayed);
@@ -374,27 +379,19 @@
             }
         }
         
-        // --- Event Listeners ---
         document.addEventListener('DOMContentLoaded', loadAnnotations);
-        
         sliceSlider.addEventListener('input', updateSlice);
-
-        // **UPDATED**: Mouse wheel logic for horizontal slider
         imageWrapper.addEventListener('wheel', (event) => {
             event.preventDefault(); 
-            
             let currentValue = parseInt(sliceSlider.value);
-            // Scrolling down (deltaY > 0) should increment the slice number (move right)
             if (event.deltaY > 0) {
                 currentValue = Math.min(parseInt(sliceSlider.max), currentValue + 1);
             } else {
-                // Scrolling up (deltaY < 0) should decrement the slice number (move left)
                 currentValue = Math.max(parseInt(sliceSlider.min), currentValue - 1);
             }
             sliceSlider.value = currentValue;
             updateSlice();
         });
-
         window.addEventListener('resize', () => {
             clearTimeout(window.resizeTimeout);
             window.resizeTimeout = setTimeout(updateSlice, 100);
