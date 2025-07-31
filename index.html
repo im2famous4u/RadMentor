@@ -80,7 +80,7 @@
             </nav>
             <div class="flex items-center">
                 <!-- Logged Out Navigation (Visible by default) -->
-                <div id="logged-out-nav" class="hidden md:flex items-center">
+                <div id="logged-out-nav" class="md:flex items-center">
                     <button onclick="showAuthModal('signin')" class="text-gray-600 hover:text-blue-600 mr-6">Login</button>
                     <button onclick="showAuthModal('signup')" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                         Sign Up
@@ -108,22 +108,23 @@
                     <i data-feather="menu"></i>
                 </button>
             </div>
-             <!-- Mobile Menu -->
-            <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 right-0 bg-white shadow-md px-6 pb-4">
-                <a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a>
-                <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a>
-                <a href="#pricing" class="block py-2 text-gray-600 hover:text-blue-600">Pricing</a>
-                <a href="#about" class="block py-2 text-gray-600 hover:text-blue-600">About Us</a>
-                <div id="mobile-logged-out-nav">
-                    <button onclick="showAuthModal('signin')" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Login</button>
-                </div>
-                 <div id="mobile-logged-in-nav" class="hidden border-t mt-2 pt-2">
-                     <a href="#" onclick="showDashboardSection('main')" class="block py-2 text-gray-600 hover:text-blue-600">My Dashboard</a>
-                     <a href="#" onclick="alert('Bookmarks page coming soon!')" class="block py-2 text-gray-600 hover:text-blue-600">Bookmarks</a>
-                     <a href="#" onclick="logout()" class="block py-2 text-gray-600 hover:text-blue-600">Logout</a>
-                </div>
+        </div>
+         <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+            <a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a>
+            <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a>
+            <a href="#pricing" class="block py-2 text-gray-600 hover:text-blue-600">Pricing</a>
+            <a href="#about" class="block py-2 text-gray-600 hover:text-blue-600">About Us</a>
+            <div id="mobile-logged-out-nav">
+                <button onclick="showAuthModal('signin')" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Login</button>
             </div>
-        </header>
+             <div id="mobile-logged-in-nav" class="hidden border-t mt-2 pt-2">
+                 <a href="#" onclick="showDashboardSection('main')" class="block py-2 text-gray-600 hover:text-blue-600">My Dashboard</a>
+                 <a href="#" onclick="alert('Bookmarks page coming soon!')" class="block py-2 text-gray-600 hover:text-blue-600">Bookmarks</a>
+                 <a href="#" onclick="logout()" class="block py-2 text-gray-600 hover:text-blue-600">Logout</a>
+            </div>
+        </div>
+    </header>
 
     <!-- =================================================
     LANDING PAGE SECTION
@@ -1032,15 +1033,3 @@
 
 </body>
 </html>
-" code between  and  in the most up-to-date Canvas "RadMentor Homepage (with Admin Panel)" document above and am asking a query about/based on this code below.
-Instructions to follow:
-  * Don't output/edit the document if the query is Direct/Simple. For example, if the query asks for a simple explanation, output a direct answer.
-  * Make sure to **edit** the document if the query shows the intent of editing the document, in which case output the entire edited document, **not just that section or the edits**.
-    * Don't output the same document/empty document and say that you have edited it.
-    * Don't change unrelated code in the document.
-  * Don't output  and  in your final response.
-  * Any references like "this" or "selected code" refers to the code between  and  tags.
-  * Just acknowledge my request in the introduction.
-  * Make sure to refer to the document as "Canvas" in your response.
-
-the code is not working properly it is not showing any content on the webpage just a blank page is visi
