@@ -170,12 +170,6 @@
             pointer-events: auto; /* Allow hovering on the label */
         }
 
-        /* The .show class is no longer needed for label visibility, 
-           but can be kept for other purposes if desired later. */
-        /* .annotation-label.show {
-            opacity: 1;
-        } */
-
         .controls {
             width: 100%;
             margin-top: 25px;
@@ -370,68 +364,7 @@
 
         // --- JSON FILENAMES (CRITICAL: LIST ALL YOUR HRCT TEMPORAL BONE AXIAL JSON FILES HERE) ---
         const jsonFilenames = [
-            // List your .mrk.json files here. Example:
-            "Aditus.mrk.json", 
-            "Ampulla of Superior SCC.mrk.json", 
-            "Ampulla of Superior SCC.mrk.json", 
-            "Arcuate eminence.mrk.json", 
-            "Axis.mrk.json", 
-            "Base of Cochlea.mrk.json", 
-            "Body of Incus.mrk.json", 
-            "Chorda tympani nerve.mrk.json", 
-            "Cochlear aqueduct.mrk.json", 
-            "Condylar Process.mrk.json",
-            "Cupula of Cochlea.mrk.json",
-            "Epitympanum.mrk.json",
-            "Eustachian tube.mrk.json",
-            "External Auditory canal.mrk.json",
-            "Foramen Lacerum.mrk.json",
-            "Foramen Ovale.mrk.json",
-            "Foramen Spinosum.mrk.json",
-            "Greater Petrosal Nerve.mrk.json",
-            "Handle of Malleus.mrk.json",
-            "Head of Malleus.mrk.json",
-            "Hypoglossal Canal.mrk.json",
-            "Hypotympanum.mrk.json",
-            "Internal Acoustic Meatus.mrk.json",
-            "Internal Carotid Canal.mrk.json",
-            "Internal Genu.mrk.json",
-            "Jugular fossa.mrk.json",
-            "Labyrinthine part of 7th CN.mrk.json",
-            "Lateral SCC.mrk.json",
-            "Lenticular Process.mrk.json",
-            "Long of process of Incus.mrk.json",
-            "Mastoid Air cells.mrk.json",
-            "Mastoid Process.mrk.json",
-            "Mastoid part of 7th CN.mrk.json",
-            "Mesotympanum.mrk.json",
-            "Modiolous of Cochlea.mrk.json", 
-            "Neck of Malleus.mrk.json",
-            "Occipital Bone.mrk.json",
-            "Occipitomastoid suture.mrk.json",
-            "Odontoid Process.mrk.json",
-            "Oval Window.mrk.json",
-            "Petromastoid canal.mrk.json",
-            "Pinna.mrk.json",
-            "Posterior Condylar Canal.mrk.json",
-            "Posterior SCC.mrk.json",
-            "Ramus of Mandible.mrk.json",
-            "Round Window.mrk.json",
-            "Sigmoid sinus.mrk.json",
-            "Sphenoid Bone.mrk.json",
-            "Sphenosquamous suture.mrk.json",
-            "Squamous part of the Temporal bone.mrk.json", 
-            "Stapes foot plate.mrk.json",
-            "Styloid Process.mrk.json",
-            "Stylomastoid foramen.mrk.json",
-            "Superior SCC.mrk.json",
-            "TMJ.mrk.json",
-            "Tegmen.mrk.json",
-            "Tympanic Membrane.mrk.json",
-            "Tympanic part of 7th CN.mrk.json",
-            "Vestibular Aqueduct.mrk.json",
-            "Vestibule.mrk.json",
-            "Zygomatic bone.mrk.json"
+            "Aditus.mrk.json", "Ampulla of Superior SCC.mrk.json", "Ampulla of Superior SCC.mrk.json", "Arcuate eminence.mrk.json", "Axis.mrk.json", "Base of Cochlea.mrk.json", "Body of Incus.mrk.json", "Chorda tympani nerve.mrk.json", "Cochlear aqueduct.mrk.json", "Condylar Process.mrk.json", "Cupula of Cochlea.mrk.json", "Epitympanum.mrk.json", "Eustachian tube.mrk.json", "External Auditory canal.mrk.json", "Foramen Lacerum.mrk.json", "Foramen Ovale.mrk.json", "Foramen Spinosum.mrk.json", "Greater Petrosal Nerve.mrk.json", "Handle of Malleus.mrk.json", "Head of Malleus.mrk.json", "Hypoglossal Canal.mrk.json", "Hypotympanum.mrk.json", "Internal Acoustic Meatus.mrk.json", "Internal Carotid Canal.mrk.json", "Internal Genu.mrk.json", "Jugular fossa.mrk.json", "Labyrinthine part of 7th CN.mrk.json", "Lateral SCC.mrk.json", "Lenticular Process.mrk.json", "Long of process of Incus.mrk.json", "Mastoid Air cells.mrk.json", "Mastoid Process.mrk.json", "Mastoid part of 7th CN.mrk.json", "Mesotympanum.mrk.json", "Modiolous of Cochlea.mrk.json", "Neck of Malleus.mrk.json", "Occipital Bone.mrk.json", "Occipitomastoid suture.mrk.json", "Odontoid Process.mrk.json", "Oval Window.mrk.json", "Petromastoid canal.mrk.json", "Pinna.mrk.json", "Posterior Condylar Canal.mrk.json", "Posterior SCC.mrk.json", "Ramus of Mandible.mrk.json", "Round Window.mrk.json", "Sigmoid sinus.mrk.json", "Sphenoid Bone.mrk.json", "Sphenosquamous suture.mrk.json", "Squamous part of the Temporal bone.mrk.json", "Stapes foot plate.mrk.json", "Styloid Process.mrk.json", "Stylomastoid foramen.mrk.json", "Superior SCC.mrk.json", "TMJ.mrk.json", "Tegmen.mrk.json", "Tympanic Membrane.mrk.json", "Tympanic part of 7th CN.mrk.json", "Vestibular Aqueduct.mrk.json", "Vestibule.mrk.json", "Zygomatic bone.mrk.json"
         ];
         // --- END JSON FILENAMES ---
         // --- END CONFIGURATION ---
@@ -550,7 +483,7 @@
                 preloadedImages.push(img);
             }
         }
-
+        
         // --- Display Logic ---
         function updateSlice() {
             const currentSlice = parseInt(sliceSlider.value);
@@ -562,149 +495,133 @@
             annotationOverlay.innerHTML = ''; // Clear previous labels
             annotationSvgOverlay.innerHTML = ''; // Clear previous SVG elements
 
+            // Helper function to check for overlaps. It only checks against other labels, not container bounds.
+            const checkOverlapWithPlacedLabels = (testCenterY, testHeight, placedLabelsArr) => {
+                const testTop = testCenterY - (testHeight / 2);
+                const testBottom = testCenterY + (testHeight / 2);
+
+                for (let i = 0; i < placedLabelsArr.length; i++) {
+                    const existing = placedLabelsArr[i];
+                    // Check if the vertical span of the test label (plus spacing) intersects with an existing one.
+                    if (testTop < (existing.bottom + LABEL_VERTICAL_SPACING) && testBottom > (existing.top - LABEL_VERTICAL_SPACING)) {
+                        return true; // Overlap detected
+                    }
+                }
+                return false; // No overlap
+            };
+
             temporalBoneSliceImage.onload = function() {
                 this.onload = null;
 
-                // Get actual rendered dimensions of the image element (which is also the SVG/overlay container)
                 const imageDisplayWidth = temporalBoneSliceImage.offsetWidth; 
                 const imageDisplayHeight = temporalBoneSliceImage.offsetHeight;
 
-                // Calculate scaling factors for annotation points from MM (512x512) to displayed pixels (860x532)
-                const scaleX_mri_data_to_display = imageDisplayWidth / IMAGE_FILE_WIDTH; // Scale for total width of image file
-                const scaleY_mri_data_to_display = imageDisplayHeight / IMAGE_FILE_HEIGHT; // Scale for total height of image file
+                const scaleX_mri_data_to_display = imageDisplayWidth / IMAGE_FILE_WIDTH;
+                const scaleY_mri_data_to_display = imageDisplayHeight / IMAGE_FILE_HEIGHT;
 
-                // Calculate the actual pixel width of the MRI data portion as it's currently displayed
                 const mriDataDisplayWidth_scaled = IMAGE_MRI_DATA_DIMENSION_MM * scaleX_mri_data_to_display;
-
-                // Define the start and end X coordinates of the *MRI data itself* within the displayed image
-                // Assuming MRI data starts at X=0 in the image file and the black strip is on the RIGHT.
                 const mriDataRenderedLeftX = 0; 
                 const mriDataRenderedRightX = mriDataRenderedLeftX + mriDataDisplayWidth_scaled;
 
                 if (annotationsLoaded) {
-                    const annotationsForCurrentSlice = allAnnotations.filter(ann => ann.slice === currentSlice)
-                                                                     .sort((a, b) => a.pointY_mm - b.pointY_mm); // Sort by original Y (mm)
+                    const annotationsForCurrentSlice = allAnnotations
+                        .filter(ann => ann.slice === currentSlice)
+                        .sort((a, b) => a.pointY_mm - b.pointY_mm); // Sort by original Y
 
-                    let placedLabelsRightColumn = []; // Stores {top, bottom, element} for stacking
+                    let placedLabelsRightColumn = []; // Stores {top, bottom} for placed labels
 
                     annotationsForCurrentSlice.forEach((annotation, index) => {
-                        // Convert point coordinates from MM to pixels relative to the displayed image (860x532)
                         const pX_px_displayed = annotation.pointX_mm * scaleX_mri_data_to_display;
                         const pY_px_displayed = annotation.pointY_mm * scaleY_mri_data_to_display;
-
-                        // --- Create HTML Label div ---
+                        
                         const labelDiv = document.createElement('div');
                         labelDiv.classList.add('annotation-label');
                         labelDiv.textContent = annotation.text;
                         labelDiv.id = `label-${currentSlice}-${index}`;
-                        
                         annotationOverlay.appendChild(labelDiv); 
 
-                        // --- Calculate Label Position (including stacking) ---
-                        const labelHeight = labelDiv.offsetHeight; // Get height after appending
-                        const labelWidth = labelDiv.offsetWidth; // Get width after appending
-
-                        // Label's target X (center of label)
-                        // It's aligned to the LEFT edge of the right black strip, plus offset, plus half its width.
-                        const labelTargetX_px = mriDataRenderedRightX + LABEL_OFFSET_FROM_MRI_EDGE + (labelWidth / 2); 
+                        const labelHeight = labelDiv.offsetHeight;
+                        const labelWidth = labelDiv.offsetWidth;
                         
-                        const lineX2_px_at_mri_edge = mriDataRenderedRightX; // Line ends at the right edge of MRI data
-
-                        // Initial desired Y (center of label) based on point's Y
-                        let desiredLabelCenterY_px = pY_px_displayed; 
-
-                        // Check for overlaps within the right column
-                        // This loop tries to find the best non-overlapping vertical spot
-                        let bestY = desiredLabelCenterY_px;
+                        // ===== START OF REVISED PLACEMENT LOGIC =====
+                        let bestY = pY_px_displayed;
                         let foundFit = false;
 
-                        // Try original Y first
-                        if (!checkOverlap(desiredLabelCenterY_px, labelHeight, placedLabelsRightColumn, imageDisplayHeight)) {
-                            foundFit = true;
-                        } else {
-                            // If overlaps, try moving up and down iteratively
-                            let offset = LABEL_VERTICAL_SPACING;
-                            const maxSearchOffset = Math.max(imageDisplayHeight, labelHeight * annotationsForCurrentSlice.length); // Max reasonable search distance
+                        // Step 1: Try the ideal position, but only if it's fully within bounds.
+                        if (bestY - labelHeight / 2 >= 0 && bestY + labelHeight / 2 <= imageDisplayHeight) {
+                            if (!checkOverlapWithPlacedLabels(bestY, labelHeight, placedLabelsRightColumn)) {
+                                foundFit = true;
+                            }
+                        }
 
-                            while (!foundFit && offset <= maxSearchOffset) {
-                                // Try moving up
-                                let tryY_up = desiredLabelCenterY_px - offset;
-                                if (tryY_up - (labelHeight / 2) >= 0 && // Ensure label is within top boundary
-                                    !checkOverlap(tryY_up, labelHeight, placedLabelsRightColumn, imageDisplayHeight)) {
+                        // Step 2: If ideal is not free, search outwards from it.
+                        if (!foundFit) {
+                            let offset = LABEL_VERTICAL_SPACING;
+                            while (offset < imageDisplayHeight / 2) { // Limit search range
+                                // Try position ABOVE ideal
+                                let tryY_up = pY_px_displayed - offset;
+                                if (tryY_up - labelHeight / 2 >= 0 && !checkOverlapWithPlacedLabels(tryY_up, labelHeight, placedLabelsRightColumn)) {
                                     bestY = tryY_up;
                                     foundFit = true;
                                     break;
                                 }
-                                // Try moving down
-                                let tryY_down = desiredLabelCenterY_px + offset;
-                                if (tryY_down + (labelHeight / 2) <= imageDisplayHeight && // Ensure label is within bottom boundary
-                                    !checkOverlap(tryY_down, labelHeight, placedLabelsRightColumn, imageDisplayHeight)) {
+                                // Try position BELOW ideal
+                                let tryY_down = pY_px_displayed + offset;
+                                if (tryY_down + labelHeight / 2 <= imageDisplayHeight && !checkOverlapWithPlacedLabels(tryY_down, labelHeight, placedLabelsRightColumn)) {
                                     bestY = tryY_down;
                                     foundFit = true;
                                     break;
                                 }
-                                offset += LABEL_VERTICAL_SPACING; // Increase offset for next iteration
+                                offset += LABEL_VERTICAL_SPACING;
+                            }
+                        }
+
+                        // Step 3: FALLBACK - If still no fit, scan from top to find the first available slot.
+                        // This guarantees a visible placement.
+                        if (!foundFit) {
+                             // Start scanning from the top edge downwards
+                            for (let scanY = (labelHeight / 2) + 5; scanY < imageDisplayHeight - (labelHeight / 2); scanY += 5) {
+                                if (!checkOverlapWithPlacedLabels(scanY, labelHeight, placedLabelsRightColumn)) {
+                                    bestY = scanY;
+                                    break; // Found a spot, exit the scan
+                                }
                             }
                         }
                         
-                        // Fallback if no ideal spot found (e.g., extremely dense labels, or not enough space)
-                        if (!foundFit) {
-                           // If still no fit after extensive search, just stack downwards from the last available spot.
-                           // This ensures labels are always rendered, even if overlapping or off-screen.
-                           if (placedLabelsRightColumn.length > 0) {
-                               bestY = placedLabelsRightColumn[placedLabelsRightColumn.length - 1].bottom + LABEL_VERTICAL_SPACING + (labelHeight / 2);
-                           }
-                           // Ensure fallback doesn't go off screen bottom
-                           bestY = Math.min(bestY, imageDisplayHeight - (labelHeight / 2));
-                        }
-
-                        // Ensure final Y is within image bounds after all adjustments (final clamping)
-                        bestY = Math.max(bestY, (labelHeight / 2)); 
+                        // Final safety clamp
+                        bestY = Math.max(bestY, (labelHeight / 2));
                         bestY = Math.min(bestY, imageDisplayHeight - (labelHeight / 2));
+                        // ===== END OF REVISED PLACEMENT LOGIC =====
 
-
-                        // Apply the final positions (these are for the label's CENTER due to transform: translate(-50%,-50%))
+                        const labelTargetX_px = mriDataRenderedRightX + LABEL_OFFSET_FROM_MRI_EDGE + (labelWidth / 2); 
                         labelDiv.style.left = `${labelTargetX_px}px`; 
                         labelDiv.style.top = `${bestY}px`; 
-                        labelDiv.style.pointerEvents = 'auto'; // Ensure hover works on labels
 
-                        // Store this label's final actual (top, bottom) positions for future overlap checks
                         placedLabelsRightColumn.push({
-                            top: bestY - (labelHeight / 2), // Actual top edge of the label
-                            bottom: bestY + (labelHeight / 2), // Actual bottom edge of the label
-                            element: labelDiv 
+                            top: bestY - (labelHeight / 2),
+                            bottom: bestY + (labelHeight / 2),
                         });
 
-                        // --- Create SVG Line (slanted) ---
                         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                        
-                        // Line starts at the point on the MRI data
                         line.setAttribute('x1', pX_px_displayed);
                         line.setAttribute('y1', pY_px_displayed);
-                        
-                        // Line's X-endpoint is at the edge of the MRI data (transition to black strip)
-                        line.setAttribute('x2', lineX2_px_at_mri_edge); 
-                        line.setAttribute('y2', bestY); // Line ends at label's vertical center (adjusted Y)
-
+                        line.setAttribute('x2', mriDataRenderedRightX); 
+                        line.setAttribute('y2', bestY); // Line connects to the final adjusted Y
                         line.id = `line-${currentSlice}-${index}`;
                         annotationSvgOverlay.appendChild(line);
 
-                        // Create SVG Circle for the point (always visible)
                         const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                         circle.setAttribute('cx', pX_px_displayed);
                         circle.setAttribute('cy', pY_px_displayed);
                         circle.setAttribute('r', 4); 
-                        circle.classList.add('show'); 
                         circle.id = `circle-${currentSlice}-${index}`; 
                         annotationSvgOverlay.appendChild(circle);
 
                         // --- Add Hover Interactivity ---
-                        // Show line and highlight circle on hover over label or circle
                         const activateAnnotation = () => {
                             document.getElementById(`line-${currentSlice}-${index}`)?.classList.add('visible-on-hover');
                             document.getElementById(`circle-${currentSlice}-${index}`)?.classList.add('visible-on-hover-circle');
                         };
-                        // Hide line and de-highlight circle on mouse out
                         const deactivateAnnotation = () => {
                             document.getElementById(`line-${currentSlice}-${index}`)?.classList.remove('visible-on-hover');
                             document.getElementById(`circle-${currentSlice}-${index}`)?.classList.remove('visible-on-hover-circle');
@@ -714,37 +631,10 @@
                         labelDiv.addEventListener('mouseout', deactivateAnnotation);
                         circle.addEventListener('mouseover', activateAnnotation);
                         circle.addEventListener('mouseout', deactivateAnnotation);
-                        // --- End Hover Interactivity ---
                     });
-                } else {
-                    console.warn("Annotations not yet loaded or failed to load. Skipping rendering of annotations for this slice.");
                 }
             };
 
-            // Helper function to check if a potential label position overlaps with any already placed labels
-            // Added imageDisplayHeight to ensure labels don't go out of bounds during overlap check
-            function checkOverlap(testCenterY, testHeight, placedLabelsArr, containerHeight) {
-                const testTop = testCenterY - (testHeight / 2);
-                const testBottom = testCenterY + (testHeight / 2);
-
-                // Check if the test label is already out of container bounds
-                if (testTop < 0 || testBottom > containerHeight) {
-                    return true; // Overlaps with container boundary
-                }
-
-                for (let i = 0; i < placedLabelsArr.length; i++) {
-                    const existing = placedLabelsArr[i];
-                    // Overlap if (testTop < existing.bottom + spacing AND testBottom > existing.top - spacing)
-                    // Added a buffer LABEL_VERTICAL_SPACING for checking overlaps
-                    if (testTop < (existing.bottom + LABEL_VERTICAL_SPACING) && testBottom > (existing.top - LABEL_VERTICAL_SPACING)) {
-                        return true; // Overlaps with an existing label
-                    }
-                }
-                return false; // No overlap
-            }
-
-
-            // If the image is already loaded (from cache or preloading), trigger the onload manually
             if (temporalBoneSliceImage.complete) {
                 temporalBoneSliceImage.onload(); 
             }
@@ -756,8 +646,7 @@
             loadAnnotations(); 
         });
 
-        sliceSlider.addEventListener('input', updateSlice); // Using 'input' for continuous update if preferred
-                                                          // Or use 'change' for update on release.
+        sliceSlider.addEventListener('input', updateSlice);
         
         let resizeTimeout;
         window.addEventListener('resize', () => {
