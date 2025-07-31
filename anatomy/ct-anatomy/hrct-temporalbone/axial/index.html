@@ -57,7 +57,7 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
             padding: 20px;
             margin: 20px auto;
-            max-width: 1550px;
+            max-width: 1550px; /* Wider to accommodate labels on both sides */
             width: 95%;
             box-sizing: border-box;
             display: flex;
@@ -71,11 +71,18 @@
             margin-bottom: 20px;
             text-align: center;
         }
-
-        .image-wrapper {
+        
+        /* This wrapper creates the space for the right-side labels */
+        .viewer-body {
             position: relative;
             width: 100%;
-            max-width: 1250px;
+            max-width: 1500px; /* 1250px for image + 250px for right sidebar */
+        }
+        
+        .image-wrapper {
+            position: relative;
+            width: 1250px; /* Fixed width of your image file */
+            max-width: 100%;
             background-color: #000;
             border-radius: 8px;
             box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
@@ -110,8 +117,6 @@
             z-index: 11;
             cursor: default;
             pointer-events: auto;
-            
-            /* FIXED: Allow text to wrap and set a max width */
             white-space: normal;
             max-width: 180px;
             line-height: 1.2;
@@ -175,10 +180,12 @@
 <body>
     <div class="viewer-container">
         <h1>HRCT Temporal Bone - Axial Section</h1>
-        <div class="image-wrapper">
-            <img id="temporalBoneSliceImage" src="" alt="HRCT Temporal Bone Axial Slice">
-            <svg class="annotation-svg-overlay" id="annotationSvgOverlay"></svg>
-            <div id="annotationOverlay"></div>
+        <div class="viewer-body">
+            <div class="image-wrapper">
+                <img id="temporalBoneSliceImage" src="" alt="HRCT Temporal Bone Axial Slice">
+                <svg class="annotation-svg-overlay" id="annotationSvgOverlay"></svg>
+                <div id="annotationOverlay"></div>
+            </div>
         </div>
         
         <div class="controls">
@@ -206,6 +213,7 @@
         const LABEL_OFFSET_FROM_ANATOMY_EDGE = 20;
         const LABEL_VERTICAL_SPACING = 10;
         
+        const viewerBody = document.querySelector('.viewer-body');
         const imageWrapper = document.querySelector('.image-wrapper');
         const temporalBoneSliceImage = document.getElementById('temporalBoneSliceImage'); 
         const sliceSlider = document.getElementById('sliceSlider');
@@ -272,15 +280,18 @@
                 annotationsForCurrentSlice.forEach((annotation, index) => {
                     const x_in_anatomy = annotation.pointX_mm;
                     const y_in_anatomy = annotation.pointY_mm;
+                    
                     const x_in_file = x_in_anatomy + PADDING_LEFT;
                     const y_in_file = y_in_anatomy + PADDING_TOP;
+                    
                     const pX_px = x_in_file * scaleX;
                     const pY_px = y_in_file * scaleY;
 
                     const labelDiv = document.createElement('div');
                     labelDiv.className = 'annotation-label';
                     labelDiv.textContent = annotation.text;
-                    annotationOverlay.appendChild(labelDiv);
+                    // Append labels to the overall viewer body, not the image wrapper
+                    viewerBody.appendChild(labelDiv);
 
                     const labelHeight = labelDiv.offsetHeight;
                     
@@ -313,12 +324,12 @@
 
                     if (pointIsOnLeftSide) {
                         labelDiv.classList.add('align-right');
-                        const anatomyEdgeX = PADDING_LEFT * scaleX;
+                        const anatomyEdgeX = (imageWrapper.offsetLeft) + (PADDING_LEFT * scaleX);
                         labelTargetX_px = anatomyEdgeX - LABEL_OFFSET_FROM_ANATOMY_EDGE;
                         lineEndX_px = labelTargetX_px;
                     } else {
                         labelDiv.classList.add('align-left');
-                        const anatomyEdgeX = (PADDING_LEFT + ANATOMY_DATA_WIDTH) * scaleX;
+                        const anatomyEdgeX = (imageWrapper.offsetLeft) + ((PADDING_LEFT + ANATOMY_DATA_WIDTH) * scaleX);
                         labelTargetX_px = anatomyEdgeX + LABEL_OFFSET_FROM_ANATOMY_EDGE;
                         lineEndX_px = labelTargetX_px;
                     }
@@ -366,7 +377,6 @@
             updateSlice();
         });
         
-        // NEW: Keyboard arrow key controls
         document.addEventListener('keydown', (event) => {
             let currentValue = parseInt(sliceSlider.value);
             let isChanged = false;
@@ -379,7 +389,7 @@
             }
 
             if (isChanged) {
-                event.preventDefault(); // Prevents browser from scrolling the page
+                event.preventDefault();
                 sliceSlider.value = currentValue;
                 updateSlice();
             }
