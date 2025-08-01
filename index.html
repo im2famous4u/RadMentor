@@ -46,20 +46,6 @@
         .sidebar {
             transition: transform 0.3s ease-in-out;
         }
-        /* MCQ Option Button Styles */
-        .mcq-option-btn {
-            transition: background-color 0.2s, border-color 0.2s;
-        }
-        .mcq-option-btn.correct {
-            background-color: #dcfce7; /* green-100 */
-            border-color: #22c55e; /* green-500 */
-            color: #166534; /* green-800 */
-        }
-        .mcq-option-btn.incorrect {
-            background-color: #fee2e2; /* red-100 */
-            border-color: #ef4444; /* red-500 */
-            color: #991b1b; /* red-800 */
-        }
     </style>
 </head>
 <body class="text-gray-800">
@@ -86,20 +72,20 @@
                 </div>
                 <!-- Logged In Buttons -->
                 <div id="header-logged-in" class="hidden items-center">
-                      <span class="hidden sm:block text-gray-700 mr-4">Hi, <span id="user-greeting-header"></span>!</span>
-                      <button onclick="showDashboard()" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                          Dashboard
-                      </button>
-                     <button onclick="logout()" class="ml-4 text-gray-600 hover:text-blue-600" title="Logout">
-                          <i data-feather="log-out"></i>
-                      </button>
+                     <span class="hidden sm:block text-gray-700 mr-4">Hi, <span id="user-greeting-header"></span>!</span>
+                     <button onclick="showDashboard()" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                        Dashboard
+                    </button>
+                    <button onclick="logout()" class="ml-4 text-gray-600 hover:text-blue-600" title="Logout">
+                        <i data-feather="log-out"></i>
+                    </button>
                 </div>
                 <button id="mobile-menu-button" class="md:hidden ml-4 text-gray-700">
                     <i data-feather="menu"></i>
                 </button>
             </div>
         </div>
-         <!-- Mobile Menu -->
+          <!-- Mobile Menu -->
         <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
             <a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a>
             <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a>
@@ -252,6 +238,7 @@
     </div>
 
     <!-- AUTHENTICATION MODAL, PROFILE FORM -->
+    <!-- These sections are the same as before -->
     <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
             <button onclick="hideAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
@@ -367,7 +354,7 @@
                              <i data-feather="file-text" class="w-10 h-10 text-blue-600 mb-4"></i>
                             <h3 class="text-2xl font-bold text-gray-800">MICR</h3>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="startMcqSession('Anatomy')">
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='anatomy/'">
                              <i data-feather="activity" class="w-10 h-10 text-blue-600 mb-4"></i>
                             <h3 class="text-2xl font-bold text-gray-800">Anatomy</h3>
                         </div>
@@ -414,10 +401,10 @@
                     <h1 class="text-3xl font-bold text-gray-900">FRCR Part 1</h1>
                     <p class="mt-2 text-lg text-gray-600">Select a subject to begin.</p>
                     <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="startMcqSession('FRCR', 'Anatomy')">
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='frcr/Part 1/Anatomy/'">
                             <h3 class="text-2xl font-bold text-gray-800">FRCR Anatomy</h3>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="startMcqSession('FRCR', 'Physics')">
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='frcr/Part 1/Physics/'">
                             <h3 class="text-2xl font-bold text-gray-800">FRCR Physics</h3>
                         </div>
                     </div>
@@ -429,40 +416,6 @@
             </div>
         </div>
     </div>
-    
-    <!-- =================================================
-    MCQ VIEWER SECTION
-    ================================================== -->
-    <div id="mcq-viewer" class="hidden pt-24 pb-12 bg-gray-50 min-h-screen">
-        <div class="container mx-auto px-6 max-w-4xl">
-            <button onclick="showDashboard(true)" class="flex items-center text-gray-600 hover:text-blue-600 mb-6">
-                <i data-feather="arrow-left" class="mr-2"></i> Back to Dashboard
-            </button>
-            <div id="mcq-content" class="bg-white p-8 rounded-lg shadow-md">
-                <h1 id="mcq-title" class="text-3xl font-bold text-gray-900"></h1>
-                <div id="mcq-progress" class="mt-4 h-2 bg-gray-200 rounded-full">
-                    <div id="mcq-progress-bar" class="h-2 bg-blue-600 rounded-full" style="width: 0%;"></div>
-                </div>
-                <p id="mcq-counter" class="text-right text-sm text-gray-500 mt-1"></p>
-                
-                <div id="mcq-question-area">
-                    <p id="mcq-question-text" class="text-xl text-gray-800 mt-8"></p>
-                    <div id="mcq-options" class="mt-6 space-y-4"></div>
-                    <div id="mcq-explanation" class="hidden mt-6 p-4 bg-gray-50 border-l-4 border-gray-400"></div>
-                    <button id="mcq-next-btn" class="hidden mt-8 w-full rad-gradient text-white font-bold py-3 rounded-lg text-lg hover:shadow-lg transition-shadow">Next Question</button>
-                </div>
-                
-                <div id="mcq-results" class="hidden text-center py-10">
-                    <h2 class="text-4xl font-bold text-gray-900">Quiz Complete!</h2>
-                    <p class="mt-4 text-2xl">Your Score: <span id="mcq-score" class="font-bold rad-gradient-text"></span></p>
-                    <button onclick="showDashboard(true)" class="mt-8 rad-gradient text-white font-bold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-lg">
-                        Return to Dashboard
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
 
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -492,11 +445,6 @@
         // --- Global State ---
         let authMode = 'signin';
         let currentUserData = null;
-        let mcqState = {
-            questions: [],
-            currentQuestionIndex: 0,
-            score: 0,
-        };
 
         // --- UI Elements ---
         const authModal = document.getElementById('auth-modal');
@@ -518,7 +466,6 @@
         const mainDashboardContent = document.getElementById('dashboard-main-content');
         const frcrPartsView = document.getElementById('frcr-parts-view');
         const frcrPart1SubjectsView = document.getElementById('frcr-part1-subjects-view');
-        const mcqViewer = document.getElementById('mcq-viewer');
 
 
         // --- Event Listeners ---
@@ -664,7 +611,6 @@
             
             landingPage.classList.remove('hidden');
             dashboard.classList.add('hidden');
-            mcqViewer.classList.add('hidden');
             feather.replace();
         }
 
@@ -677,20 +623,12 @@
             landingPage.classList.remove('hidden');
             dashboard.classList.add('hidden');
             profileFormContainer.classList.add('hidden');
-            mcqViewer.classList.add('hidden');
             hideAuthModal();
         }
         
-        function showDashboard(fromQuiz = false) {
+        function showDashboard() {
             landingPage.classList.add('hidden');
-            mcqViewer.classList.add('hidden');
             dashboard.classList.remove('hidden');
-            
-            if (fromQuiz) {
-                showMainDashboard();
-                return;
-            }
-
             document.getElementById('user-greeting-name').textContent = currentUserData.name.split(' ')[0];
             
             const noticeDiv = document.getElementById('access-level-notice');
@@ -710,7 +648,6 @@
         
         function showLandingPage() {
             dashboard.classList.add('hidden');
-            mcqViewer.classList.add('hidden');
             landingPage.classList.remove('hidden');
         }
 
@@ -749,7 +686,7 @@
             feather.replace();
         }
 
-        // --- Dashboard View Functions ---
+        // --- NEW Dashboard View Functions ---
         function showMainDashboard() {
             mainDashboardContent.classList.remove('hidden');
             frcrPartsView.classList.add('hidden');
@@ -803,109 +740,6 @@
               `;
         }
 
-        // --- MCQ LOGIC ---
-        async function startMcqSession(category, subcategory = null) {
-            landingPage.classList.add('hidden');
-            dashboard.classList.add('hidden');
-            mcqViewer.classList.remove('hidden');
-            document.getElementById('mcq-question-area').classList.remove('hidden');
-            document.getElementById('mcq-results').classList.add('hidden');
-
-
-            const title = subcategory ? `${category} - ${subcategory}` : category;
-            document.getElementById('mcq-title').textContent = title;
-            
-            // Reset state
-            mcqState = { questions: [], currentQuestionIndex: 0, score: 0 };
-
-            try {
-                let query = db.collection('questions').where('category', '==', category);
-                if (subcategory) {
-                    query = query.where('subcategory', '==', subcategory);
-                }
-                const snapshot = await query.get();
-                
-                if (snapshot.empty) {
-                    document.getElementById('mcq-question-text').textContent = 'No questions found for this category. Please check back later!';
-                    return;
-                }
-
-                mcqState.questions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                displayQuestion();
-            } catch (error) {
-                console.error("Error fetching questions:", error);
-                document.getElementById('mcq-question-text').textContent = 'Error loading questions. Please try again.';
-            }
-        }
-
-        function displayQuestion() {
-            const question = mcqState.questions[mcqState.currentQuestionIndex];
-            const progress = ((mcqState.currentQuestionIndex) / mcqState.questions.length) * 100;
-
-            document.getElementById('mcq-progress-bar').style.width = `${progress}%`;
-            document.getElementById('mcq-counter').textContent = `Question ${mcqState.currentQuestionIndex + 1} of ${mcqState.questions.length}`;
-            document.getElementById('mcq-question-text').textContent = question.questionText;
-            
-            const optionsContainer = document.getElementById('mcq-options');
-            optionsContainer.innerHTML = '';
-            
-            question.options.forEach((option, index) => {
-                const button = document.createElement('button');
-                button.textContent = option;
-                button.className = 'mcq-option-btn block w-full text-left p-4 border border-gray-300 rounded-lg hover:bg-gray-100';
-                button.onclick = () => selectAnswer(index, button);
-                optionsContainer.appendChild(button);
-            });
-
-            document.getElementById('mcq-explanation').classList.add('hidden');
-            document.getElementById('mcq-next-btn').classList.add('hidden');
-        }
-
-        function selectAnswer(selectedIndex) {
-            const question = mcqState.questions[mcqState.currentQuestionIndex];
-            const options = document.getElementById('mcq-options').children;
-
-            // Disable all buttons after an answer is selected
-            for (let btn of options) {
-                btn.disabled = true;
-            }
-
-            // Check if correct
-            if (selectedIndex === question.correctAnswerIndex) {
-                mcqState.score++;
-                options[selectedIndex].classList.add('correct');
-            } else {
-                options[selectedIndex].classList.add('incorrect');
-                // Also show the correct answer
-                options[question.correctAnswerIndex].classList.add('correct');
-            }
-            
-            // Show explanation
-            const explanationDiv = document.getElementById('mcq-explanation');
-            explanationDiv.innerHTML = `<p class="font-bold">Explanation:</p><p>${question.explanation}</p>`;
-            explanationDiv.classList.remove('hidden');
-            
-            // Show next button
-            document.getElementById('mcq-next-btn').classList.remove('hidden');
-        }
-
-        document.getElementById('mcq-next-btn').addEventListener('click', () => {
-            mcqState.currentQuestionIndex++;
-            if (mcqState.currentQuestionIndex < mcqState.questions.length) {
-                displayQuestion();
-            } else {
-                showResults();
-            }
-        });
-
-        function showResults() {
-            document.getElementById('mcq-question-area').classList.add('hidden');
-            const resultsDiv = document.getElementById('mcq-results');
-            resultsDiv.classList.remove('hidden');
-            document.getElementById('mcq-score').textContent = `${mcqState.score} / ${mcqState.questions.length}`;
-        }
-
-
         // Populate datalist for colleges
         const collegeDatalist = document.getElementById('colleges');
         const colleges = [
@@ -919,7 +753,6 @@
             "Banaras Hindu University, Varanasi",
             "Kasturba Medical College, Manipal",
             "King George's Medical University, Lucknow"
-            // Add more colleges as needed
         ];
         colleges.forEach(college => {
             const option = document.createElement('option');
