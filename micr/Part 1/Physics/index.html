@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>MICR Physics Quiz - RadMentor</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <style>
+        /* Custom styles to match main website */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Light gray background matching main site */
+            color: #212121;
+        }
+
+        /* Custom gradient for buttons and highlights */
+        .rad-gradient {
+            background: linear-gradient(90deg, #1e40af, #3b82f6);
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* --- Screen Management --- */
+        .screen { display: none; width: 100%; }
+        .screen.active { display: block; }
+
+        /* --- Home and Category Screen Styles --- */
+        .selection-container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+        }
+        .selection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .selection-header h1 {
+            font-size: 2.2rem;
+            margin: 0;
+            color: #1f2937;
+            text-align: left;
+            flex-grow: 1;
+        }
+
+        .selection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .selection-button {
+            background: linear-gradient(90deg, #1e40af, #3b82f6);
+            color: white;
+            border: none;
+            padding: 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            text-align: center;
+        }
+        .selection-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .selection-button.disabled { background-color: #a0aec0; cursor: not-allowed; transform: none; }
+
+        /* --- Quiz View Styles --- */
+        .quiz-container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        .quiz-header {
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .quiz-header h1 { font-size: 1.8rem; margin: 0; color: #1f2937; }
+        .back-button {
+             background-color: transparent;
+             color: #374151;
+             border: 1px solid #e5e7eb;
+             padding: 8px 16px;
+             border-radius: 6px;
+             cursor: pointer;
+             font-size: 0.9rem;
+             font-weight: 500;
+             transition: background-color 0.2s;
+        }
+        .back-button:hover{ background-color: #f3f4f6; }
+
+        .loading-container, .error-container { text-align: center; padding: 40px; font-size: 1.2rem; }
+        .error-container { color: #c53030; background-color: #fed7d7; border: 1px solid #fbb6b6; border-radius: 8px; }
+
+        #questions-display { flex-grow: 1; }
+        .question-block { background-color: white; border-radius: 8px; padding: 20px; }
+        .question-number { font-size: 1.1rem; font-weight: 500; color: #6b7280; margin-bottom: 15px; }
+        .main-question-text { font-size: 1.4rem; font-weight: 600; line-height: 1.5; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #e5e7eb; }
+        
+        .subset-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .subset-item.correct { background-color: #c6f6d5; border-color: #68d391; }
+        .subset-item.incorrect { background-color: #fed7d7; border-color: #fc8181; }
+
+        .subset-q-container { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+        .subset-q-text { flex-grow: 1; margin: 0; font-size: 1.1rem; line-height: 1.6; }
+        .subset-options { display: flex; gap: 10px; }
+        .subset-options label { display: block; padding: 8px 16px; border: 1px solid #e5e7eb; border-radius: 6px; cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
+        .subset-options input[type="radio"] { display: none; }
+        .subset-options input[type="radio"]:checked + label { border-color: #4299e1; background-color: #ebf8ff; color: #212121; font-weight: 600; }
+        
+        .all-explanations {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #f7fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            display: none; /* Hidden by default */
+        }
+        .all-explanations.visible { display: block; }
+        .all-explanations h3 { margin-top: 0; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb; color: #1f2937; }
+        .explanation-item p { margin: 0 0 10px 0; line-height: 1.6; }
+        .explanation-item:last-child p { margin-bottom: 0; }
+
+        .navigation-controls { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid #e5e7eb; margin-top: 20px; }
+        .nav-button {
+            background: linear-gradient(90deg, #1e40af, #3b82f6);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .nav-button:hover:not(:disabled) {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .nav-button:disabled { background-color: #a0aec0; cursor: not-allowed; }
+        #question-counter { font-size: 1.1rem; font-weight: 500; color: #6b7280; text-align: center; padding-top: 1rem; }
+
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Header matching main website -->
+    <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
+                <span class="text-2xl font-bold text-gray-800">RadMentor</span>
+            </div>
+            <nav class="hidden md:flex items-center space-x-8">
+                <a href="../../../index.html" class="text-gray-600 hover:text-blue-600">Home</a>
+                <a href="../../../index.html#courses" class="text-gray-600 hover:text-blue-600">Courses</a>
+                <a href="../../../index.html#features" class="text-gray-600 hover:text-blue-600">Features</a>
+                <a href="../../../index.html#about" class="text-gray-600 hover:text-blue-600">About Us</a>
+            </nav>
+            <div class="flex items-center">
+                <button onclick="window.location.href='../../index.html'" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                    Back to MICR
+                </button>
+                <button id="mobile-menu-button" class="md:hidden ml-4 text-gray-700">
+                    <i data-feather="menu"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+            <a href="../../../index.html" class="block py-2 text-gray-600 hover:text-blue-600">Home</a>
+            <a href="../../../index.html#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a>
+            <a href="../../../index.html#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a>
+            <a href="../../../index.html#about" class="block py-2 text-gray-600 hover:text-blue-600">About Us</a>
+        </div>
+    </header>
+
+    <div class="main-container pt-24">
+        <!-- Physics Category Screen (Now the initial screen) -->
+        <div id="physics-category-screen" class="screen active">
+            <div class="selection-container">
+                <div class="quiz-header">
+                    <h1>Physics Topics</h1>
+                    <button class="back-button" onclick="history.back()">Back</button>
+                </div>
+                <div id="physics-topics-grid" class="selection-grid"></div>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-container">
+                <div class="quiz-header">
+                    <h1 id="quiz-title">Physics Questions</h1>
+                    <button class="back-button" data-target="physics-category-screen">Back to Topics</button>
+                </div>
+                <div id="loading-container" class="loading-container"><p>Loading questions...</p></div>
+                <div id="error-container" class="error-container" style="display:none;"></div>
+                <div id="questions-display"></div>
+                <div id="navigation-controls" style="display: none;">
+                    <button id="prev-button" class="nav-button">Previous</button>
+                    <button id="next-button" class="nav-button">Next</button>
+                </div>
+                <div id="question-counter"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const GOOGLE_SHEET_ID = '1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8';
+        const PHYSICS_TOPICS = [
+            { name: "Basic Physics", gid: "2009849222" },
+            { name: "General Radiation Hazards & Protection", gid: "2009849222" }, // Note: Same GID as Basic Physics
+            { name: "Image Quality & X-ray Production", gid: "1706416231" },
+            { name: "Film Screen Radiography", gid: "1257614317" },
+            { name: "Digital Radiography", gid: "917881905" },
+            { name: "Fluoroscopy", gid: "1461599884" },
+            { name: "Computed Tomography", gid: "986205874" },
+            { name: "Nuclear Medicine", gid: "2016453957" },
+            { name: "Ultrasound", gid: "638565218" },
+            { name: "Magnetic Resonance Imaging", gid: "2026917708" },
+        ];
+
+        // --- State ---
+        let allQuestions = [];
+        let currentQuestionIndex = 0;
+
+        // --- DOM Elements ---
+        const screens = document.querySelectorAll('.screen');
+        const physicsTopicsGrid = document.getElementById('physics-topics-grid');
+        const quizTitle = document.getElementById('quiz-title');
+        const backButtons = document.querySelectorAll('.back-button');
+        
+        const loadingContainer = document.getElementById('loading-container');
+        const errorContainer = document.getElementById('error-container');
+        const questionsDisplay = document.getElementById('questions-display');
+        const navigationControls = document.getElementById('navigation-controls');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        const questionCounter = document.getElementById('question-counter');
+
+        // Initialize Feather Icons
+        feather.replace();
+
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
+        // --- Functions (Navigation & Setup) ---
+        function showScreen(screenId) { screens.forEach(s => s.classList.toggle('active', s.id === screenId)); }
+        function populateTopics() {
+            physicsTopicsGrid.innerHTML = '';
+            PHYSICS_TOPICS.forEach(topic => {
+                const button = document.createElement('button');
+                button.className = 'selection-button';
+                button.textContent = topic.name;
+                button.addEventListener('click', () => startQuiz(topic));
+                physicsTopicsGrid.appendChild(button);
+            });
+        }
+        function startQuiz(topic) {
+            quizTitle.textContent = topic.name;
+            showScreen('quiz-screen');
+            resetQuizView();
+            fetchQuizData(GOOGLE_SHEET_ID, topic);
+        }
+        function resetQuizView() {
+            loadingContainer.style.display = 'block';
+            errorContainer.style.display = 'none';
+            errorContainer.textContent = '';
+            questionsDisplay.innerHTML = '';
+            navigationControls.style.display = 'none';
+            allQuestions = [];
+            currentQuestionIndex = 0;
+        }
+
+        // --- Functions (Data Fetching & Parsing) ---
+        function fetchQuizData(sheetId, topic) {
+            const queryParam = topic.gid ? `gid=${topic.gid}` : `sheet=${encodeURIComponent(topic.sheetName)}`;
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&${queryParam}`;
+            
+            fetch(url)
+                .then(r => { if (!r.ok) throw new Error(`Network error: ${r.status}`); return r.text(); })
+                .then(csv => {
+                    allQuestions = parseCSVToQuestions(csv);
+                    if (allQuestions.length > 0) {
+                        navigationControls.style.display = 'flex';
+                        showQuestion(currentQuestionIndex);
+                    } else {
+                        errorContainer.style.display = 'block';
+                        errorContainer.textContent = 'No questions found in the selected topic.';
+                    }
+                    loadingContainer.style.display = 'none';
+                })
+                .catch(err => {
+                    console.error('Data fetch/parse error:', err);
+                    loadingContainer.style.display = 'none';
+                    errorContainer.style.display = 'block';
+                    errorContainer.textContent = `Error loading questions. Please check the Google Sheet ID, GID, and sharing settings. Details: ${err.message}`;
+                });
+        }
+        function parseCSVToQuestions(text) {
+            const rows = text.trim().split(/\r?\n/).map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(f => f.trim().replace(/^"|"$/g, '')));
+            if (rows.length < 2) { return []; }
+            const headers = rows[0].map(h => h.trim().toLowerCase());
+            const dataRows = rows.slice(1);
+            const questionIndex = headers.indexOf('question');
+            if (questionIndex === -1) { console.error("Column 'question' not found."); return []; }
+            
+            return dataRows.map(row => {
+                const mainQuestionText = row[questionIndex];
+                if (!mainQuestionText) return null;
+                const subsets = [];
+                for (let i = 1; i <= 5; i++) {
+                    const subQHeader = i === 1 ? 'question a1' : `a${i}`;
+                    const ansHeader = `answer of a${i}`;
+                    const expHeader = `explanation of a${i}`;
+                    const subQIndex = headers.indexOf(subQHeader);
+                    const ansIndex = headers.indexOf(ansHeader);
+                    const expIndex = headers.indexOf(expHeader);
+                    if (subQIndex !== -1 && ansIndex !== -1) {
+                        const subQText = row[subQIndex];
+                        const correctAns = row[ansIndex];
+                        if (subQText && correctAns) {
+                            subsets.push({
+                                text: subQText,
+                                correctAnswer: correctAns,
+                                explanation: expIndex !== -1 ? row[expIndex] : ''
+                            });
+                        }
+                    }
+                }
+                return subsets.length > 0 ? { question: mainQuestionText, subsets } : null;
+            }).filter(Boolean);
+        }
+
+        // --- Functions (Quiz Rendering & Interaction) ---
+        function showQuestion(index) {
+            if (!allQuestions || allQuestions.length === 0) return;
+            const q = allQuestions[index];
+            
+            const allExplanations = [];
+            const subsetsHtml = q.subsets.map((subset, i) => {
+                if (subset.explanation) {
+                    allExplanations.push(`<div class="explanation-item"><p><strong>${String.fromCharCode(97 + i)})</strong> ${subset.explanation}</p></div>`);
+                }
+                return `
+                    <div class="subset-item" id="subset-${index}-${i}" data-answered="false">
+                        <div class="subset-q-container">
+                            <p class="subset-q-text"><strong>${String.fromCharCode(97 + i)})</strong> ${subset.text}</p>
+                            <div class="subset-options" data-subset-index="${i}">
+                                <input type="radio" id="q${index}s${i}t" name="q${index}s${i}" value="True"><label for="q${index}s${i}t">True</label>
+                                <input type="radio" id="q${index}s${i}f" name="q${index}s${i}" value="False"><label for="q${index}s${i}f">False</label>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            const explanationsContainerHtml = allExplanations.length > 0 ? `
+                <div class="all-explanations" id="explanations-${index}">
+                    <h3>Explanations</h3>
+                    ${allExplanations.join('')}
+                </div>
+            ` : '';
+
+            questionsDisplay.innerHTML = `
+                <div class="question-block" id="main-question-${index}">
+                    <div class="question-number">Question ${index + 1}</div>
+                    <p class="main-question-text">${q.question}</p>
+                    <div id="subsets-container">${subsetsHtml}</div>
+                    ${explanationsContainerHtml}
+                </div>`;
+            
+            updateNav(index);
+            attachSubsetListeners(index);
+        }
+
+        function attachSubsetListeners(questionIndex) {
+            const subsetsContainer = document.getElementById('subsets-container');
+            subsetsContainer.addEventListener('change', (e) => {
+                if (e.target.type === 'radio') {
+                    const subsetItem = e.target.closest('.subset-item');
+                    subsetItem.dataset.answered = "true";
+                    subsetItem.dataset.selected = e.target.value;
+
+                    const allAnswered = [...subsetsContainer.querySelectorAll('.subset-item')].every(item => item.dataset.answered === 'true');
+                    
+                    if (allAnswered) {
+                        evaluateAllAnswers(questionIndex);
+                    }
+                }
+            });
+        }
+
+        function evaluateAllAnswers(qIndex) {
+            allQuestions[qIndex].subsets.forEach((subset, sIndex) => {
+                const container = document.getElementById(`subset-${qIndex}-${sIndex}`);
+                const selectedValue = container.dataset.selected;
+                const isCorrect = selectedValue && (selectedValue.toLowerCase() === subset.correctAnswer.toLowerCase());
+                
+                container.classList.add(isCorrect ? 'correct' : 'incorrect');
+                container.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = true);
+            });
+            
+            const explanationsContainer = document.getElementById(`explanations-${qIndex}`);
+            if (explanationsContainer) {
+                explanationsContainer.classList.add('visible');
+            }
+        }
+
+        function updateNav(index) {
+            questionCounter.textContent = `Question ${index + 1} of ${allQuestions.length}`;
+            prevButton.disabled = index === 0;
+            nextButton.disabled = index === allQuestions.length - 1;
+        }
+
+        // --- Event Listeners (Initial Setup) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            populateTopics();
+            showScreen('physics-category-screen');
+        });
+        backButtons.forEach(b => b.addEventListener('click', () => showScreen(b.dataset.target)));
+        prevButton.addEventListener('click', () => showQuestion(--currentQuestionIndex));
+        nextButton.addEventListener('click', () => showQuestion(++currentQuestionIndex));
+
+    </script>
+</body>
+</html>
