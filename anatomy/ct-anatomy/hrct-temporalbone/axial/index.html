@@ -185,15 +185,18 @@
                     .filter(ann => ann.slice === currentSlice)
                     .sort((a, b) => a.pointY_mm - b.pointY_mm);
 
-                annotationsForCurrentSlice.forEach((annotation) => {
+                // ** NEW LOGIC: Divide annotations into top and bottom halves **
+                const midpoint = Math.ceil(annotationsForCurrentSlice.length / 2);
+
+                annotationsForCurrentSlice.forEach((annotation, index) => {
                     const labelDiv = document.createElement('div');
                     labelDiv.className = 'annotation-label';
                     labelDiv.textContent = annotation.text;
-                    labelDiv.dataset.text = annotation.text; // Store text for matching
+                    // Use a unique ID for each label to ensure correct line drawing
+                    labelDiv.id = `label-${index}`; 
 
-                    const pointIsOnLeftSide = annotation.pointX_mm < (ANATOMY_DATA_WIDTH / 2);
-
-                    if (pointIsOnLeftSide) {
+                    // Place top half on the left, bottom half on the right
+                    if (index < midpoint) {
                         labelDiv.classList.add('text-right');
                         leftAnnotationsColumn.appendChild(labelDiv);
                     } else {
@@ -221,10 +224,11 @@
             const scaleY = imageDisplayHeight / IMAGE_FILE_HEIGHT;
             
             const svgRect = annotationSvgOverlay.getBoundingClientRect();
+            const midpoint = Math.ceil(annotations.length / 2);
 
-            annotations.forEach(annotation => {
-                // Find the corresponding label div in the side columns
-                const labelDiv = document.querySelector(`.annotation-label[data-text="${annotation.text}"]`);
+            annotations.forEach((annotation, index) => {
+                // Find the corresponding label div using its unique ID
+                const labelDiv = document.getElementById(`label-${index}`);
                 if (!labelDiv) return;
 
                 // Calculate the position of the annotation point on the image
@@ -232,11 +236,12 @@
                 const pY_px = (annotation.pointY_mm + PADDING_TOP) * scaleY;
 
                 const labelRect = labelDiv.getBoundingClientRect();
-                const pointIsOnLeftSide = annotation.pointX_mm < (ANATOMY_DATA_WIDTH / 2);
+                // ** NEW LOGIC: Check if the label is in the top or bottom half **
+                const isOnLeftColumn = index < midpoint;
                 
                 // Calculate the line's end point (Y is middle of label, X is edge of label)
                 const lineEndY = labelRect.top - svgRect.top + (labelRect.height / 2);
-                const lineEndX = pointIsOnLeftSide ? (labelRect.right - svgRect.left) : (labelRect.left - svgRect.left);
+                const lineEndX = isOnLeftColumn ? (labelRect.right - svgRect.left) : (labelRect.left - svgRect.left);
 
                 // Create and draw the line
                 const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
