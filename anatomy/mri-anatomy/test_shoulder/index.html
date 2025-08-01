@@ -7,269 +7,77 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
+    
+    <!-- Papaya Viewer CSS and JavaScript -->
+    <link rel="stylesheet" type="text/css" href="https://raw.githack.com/rii-mango/Papaya/master/release/current/standard/papaya.css" />
+    <script type="text/javascript" src="https://raw.githack.com/rii-mango/Papaya/master/release/current/standard/papaya.js"></script>
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #111827; /* gray-900 */
+            background-color: #f3f4f6; /* gray-100 */
         }
-        .viewport {
-            border: 2px solid #374151; /* gray-700 */
-            border-radius: 0.5rem;
-            flex-grow: 1;
-            position: relative;
-        }
-        .viewport-label {
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            pointer-events: none;
-        }
-        /* Style for the loading spinner */
-        .loader {
-            border: 8px solid #374151; /* gray-700 */
-            border-top: 8px solid #3b82f6; /* blue-500 */
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1.5s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        /* Override Papaya's default container to fit our layout */
+        .papaya-container {
+            width: 100% !important;
+            height: 100% !important;
         }
     </style>
+
+    <script type="text/javascript">
+        // --- Configuration ---
+        var params = [];
+        params["worldSpace"] = true;
+        params["showControls"] = true;
+        params["showOrientation"] = true;
+        params["orthogonal"] = "hidden"; // Hide the 3D view, show only MPR
+
+        // --- Generate the list of DICOM file URLs ---
+        // This creates an array of all 280 DICOM file URLs from your GitHub repository.
+        const dicomFiles = [];
+        const baseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/DICOM/";
+        const numSlices = 280;
+
+        for (let i = 1; i <= numSlices; i++) {
+            const fileName = `IMG-0001-${String(i).padStart(5, '0')}.dcm`;
+            dicomFiles.push(baseUrl + fileName);
+        }
+
+        // Add the array of files to the Papaya parameters
+        params["images"] = dicomFiles;
+
+        // --- Annotation Loading (Future Step) ---
+        // We will add the logic to load your .mrk.json files here later.
+        // For now, the priority is getting the DICOM images to load correctly.
+    </script>
 </head>
-<body class="text-white">
-    <div id="root" class="w-screen h-screen flex flex-col p-4">
+<body class="text-gray-800">
+
+    <div class="w-screen h-screen flex flex-col p-4">
         <!-- Header -->
         <div class="flex-shrink-0 flex justify-between items-center mb-4">
             <div>
-                <h1 class="text-3xl font-extrabold">Shoulder MRI Viewer</h1>
-                <p id="status-text" class="text-gray-400">Initializing viewer...</p>
+                <h1 class="text-3xl font-extrabold text-gray-900">Shoulder MRI Viewer</h1>
+                <p id="status-text" class="text-gray-500">Loading DICOM series. This may take a moment...</p>
             </div>
-            <button onclick="history.back()" class="inline-flex items-center text-gray-300 hover:text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 bg-gray-700 hover:bg-gray-600">
+            <button onclick="history.back()" class="inline-flex items-center text-gray-600 hover:text-blue-600 font-semibold py-2 px-4 rounded-lg transition-colors duration-200 bg-gray-200 hover:bg-gray-300">
                 <i data-feather="arrow-left" class="mr-2 h-5 w-5"></i>
                 <span>Back to MRI Anatomy</span>
             </button>
         </div>
 
-        <!-- Viewer Container -->
-        <div id="viewer-container" class="flex-grow flex flex-col md:flex-row gap-4 relative">
-            <div id="loading-overlay" class="absolute inset-0 bg-gray-900 bg-opacity-80 z-50 flex flex-col items-center justify-center">
-                <div class="loader"></div>
-                <p id="loading-progress" class="mt-4 text-lg font-semibold text-gray-300"></p>
-            </div>
-            <div id="axial-viewport" class="viewport">
-                <div class="viewport-label">Axial</div>
-            </div>
-            <div id="sagittal-viewport" class="viewport">
-                <div class="viewport-label">Sagittal</div>
-            </div>
-            <div id="coronal-viewport" class="viewport">
-                <div class="viewport-label">Coronal</div>
-            </div>
+        <!-- Papaya Viewer Container -->
+        <div class="flex-grow bg-black rounded-lg shadow-md">
+            <div class="papaya" data-params="params"></div>
         </div>
     </div>
 
-    <!-- Cornerstone3D and DICOM Loader Scripts -->
-    <script src="https://unpkg.com/@cornerstonejs/core@1.76.1/dist/umd/cornerstone-core.js"></script>
-    <script src="https://unpkg.com/@cornerstonejs/tools@1.76.1/dist/umd/cornerstone-tools.js"></script>
-    <script src="https://unpkg.com/@cornerstonejs/streaming-image-volume-loader@1.76.1/dist/umd/cornerstone-streaming-image-volume-loader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dicom-parser@1.8.21/dist/dicomParser.min.js"></script>
-    <script src="https://unpkg.com/gl-matrix@3.4.3/dist/gl-matrix-min.js"></script>
-
-    <script type="module">
-        // --- Destructure necessary Cornerstone3D modules ---
-        const {
-            RenderingEngine,
-            Enums: csEnums,
-            volumeLoader,
-            setVolumesForViewports,
-            utilities: csUtilities,
-        } = cornerstone;
-        const {
-            ToolGroupManager,
-            CrosshairsTool,
-            StackScrollMouseWheelTool,
-            ZoomTool,
-            PanTool,
-            WindowLevelTool,
-            addTool,
-            Enums: csToolsEnums,
-            annotation,
-            PointSetTool,
-        } = cornerstoneTools;
-        const {
-            cornerstoneStreamingImageVolumeLoader,
-            wadoImageLoader,
-        } = cornerstoneStreamingImageVolumeLoader;
-
-        // --- Configuration ---
-        const renderingEngineId = 'myRenderingEngine';
-        const axialViewportId = 'axial-viewport-id';
-        const sagittalViewportId = 'sagittal-viewport-id';
-        const coronalViewportId = 'coronal-viewport-id';
-        const toolGroupId = 'mpr-tool-group';
-        const volumeId = 'cornerstoneStreamingImageVolume:myVolume';
-
-        const annotationFiles = [
-            'Deltoid.mrk.json',
-            'Humerus.mrk.json',
-            'Scapula.mrk.json'
-        ];
-
-        // --- Main Application Logic ---
-        async function run() {
-            const statusText = document.getElementById('status-text');
-            const loadingOverlay = document.getElementById('loading-overlay');
-            const loadingProgress = document.getElementById('loading-progress');
-
-            try {
-                // 1. Initialize Cornerstone
-                statusText.textContent = 'Initializing Cornerstone...';
-                await cornerstone.init();
-
-                // 2. Configure DICOM Loader
-                wadoImageLoader.external.cornerstone = cornerstone;
-                wadoImageLoader.external.dicomParser = dicomParser;
-                await wadoImageLoader.configure({
-                    useWebWorkers: true,
-                    decodeConfig: {
-                        convertFloatPixelDataToInt: false,
-                    },
-                });
-
-                // 3. Configure Volume Loader
-                volumeLoader.registerVolumeLoader(
-                    'cornerstoneStreamingImageVolume',
-                    cornerstoneStreamingImageVolumeLoader
-                );
-
-                // 4. Get the list of DICOM image IDs from your GitHub repo
-                statusText.textContent = 'Generating image URLs...';
-                const numSlices = 280;
-                const imageIds = [];
-                const baseUrl = 'https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/DICOM/';
-
-                for (let i = 1; i <= numSlices; i++) {
-                    const fileName = `IMG-0001-${String(i).padStart(5, '0')}.dcm`;
-                    const imageUrl = `${baseUrl}${fileName}`;
-                    const imageId = `wadors:${imageUrl}`;
-                    imageIds.push(imageId);
-                }
-                
-                // 5. Setup Rendering Engine and Viewports
-                const renderingEngine = new RenderingEngine(renderingEngineId);
-                const viewportInputArray = [
-                    { viewportId: axialViewportId, element: document.getElementById('axial-viewport'), type: csEnums.ViewportType.ORTHOGRAPHIC, defaultOptions: { orientation: csEnums.OrientationAxis.AXIAL } },
-                    { viewportId: sagittalViewportId, element: document.getElementById('sagittal-viewport'), type: csEnums.ViewportType.ORTHOGRAPHIC, defaultOptions: { orientation: csEnums.OrientationAxis.SAGITTAL } },
-                    { viewportId: coronalViewportId, element: document.getElementById('coronal-viewport'), type: csEnums.ViewportType.ORTHOGRAPHIC, defaultOptions: { orientation: csEnums.OrientationAxis.CORONAL } },
-                ];
-                renderingEngine.setViewports(viewportInputArray);
-
-                // 6. Setup Tools
-                addTool(PanTool);
-                addTool(ZoomTool);
-                addTool(StackScrollMouseWheelTool);
-                addTool(CrosshairsTool);
-                addTool(WindowLevelTool);
-                addTool(PointSetTool);
-
-                const toolGroup = ToolGroupManager.createToolGroup(toolGroupId);
-                toolGroup.addTool(PanTool.toolName);
-                toolGroup.addTool(ZoomTool.toolName);
-                toolGroup.addTool(StackScrollMouseWheelTool.toolName);
-                toolGroup.addTool(WindowLevelTool.toolName);
-                toolGroup.addTool(CrosshairsTool.toolName, { groupName: toolGroupId });
-                toolGroup.addTool(PointSetTool.toolName);
-
-                toolGroup.setToolActive(WindowLevelTool.toolName, { bindings: [{ mouseButton: csToolsEnums.MouseBindings.Primary }] });
-                toolGroup.setToolActive(PanTool.toolName, { bindings: [{ mouseButton: csToolsEnums.MouseBindings.Auxiliary }] });
-                toolGroup.setToolActive(ZoomTool.toolName, { bindings: [{ mouseButton: csToolsEnums.MouseBindings.Secondary }] });
-                toolGroup.setToolActive(StackScrollMouseWheelTool.toolName);
-                toolGroup.setToolActive(CrosshairsTool.toolName);
-
-                toolGroup.addViewport(axialViewportId, renderingEngineId);
-                toolGroup.addViewport(sagittalViewportId, renderingEngineId);
-                toolGroup.addViewport(coronalViewportId, renderingEngineId);
-
-                // 7. Load the DICOM volume with progress tracking
-                statusText.textContent = 'Loading DICOM volume...';
-                cornerstone.eventTarget.addEventListener(csEnums.Events.IMAGE_VOLUME_LOADING_COMPLETED, () => {
-                     statusText.textContent = 'Volume loaded successfully. Setting viewports...';
-                });
-                
-                let loadedCount = 0;
-                cornerstone.eventTarget.addEventListener(csEnums.Events.IMAGE_LOADED, () => {
-                    loadedCount++;
-                    loadingProgress.textContent = `Loading DICOM Images (${loadedCount}/${numSlices})...`;
-                });
-
-                const volume = await volumeLoader.createAndCacheVolume(volumeId, {
-                    imageIds
-                });
-                volume.load();
-
-                // 8. Set the volume on the viewports
-                await setVolumesForViewports(renderingEngine, [{
-                    volumeId
-                }], [axialViewportId, sagittalViewportId, coronalViewportId]);
-                
-                // 9. Load and display annotations
-                statusText.textContent = 'Loading annotations...';
-                await loadAndDisplayAnnotations();
-                
-                // 10. Render the scene
-                renderingEngine.renderViewports([axialViewportId, sagittalViewportId, coronalViewportId]);
-
-                loadingOverlay.style.display = 'none';
-                statusText.textContent = 'Scroll to zoom, drag to pan, and move the crosshairs to explore.';
-
-            } catch (error) {
-                console.error('Error during viewer setup:', error);
-                loadingOverlay.style.display = 'none';
-                statusText.textContent = `Error: ${error.message}. Check console for details.`;
-            }
-        }
-
-        async function loadAndDisplayAnnotations() {
-            const annotationManager = annotation.state.getAnnotationManager();
-            const frameOfReferenceUID = csUtilities.getViewportUID(axialViewportId);
-
-            for (const fileName of annotationFiles) {
-                try {
-                    const response = await fetch(`./${fileName}`);
-                    const data = await response.json();
-                    
-                    const points = data.markups[0].controlPoints;
-                    const toolData = {
-                        points: points.map(p => ({
-                            worldPosition: p.position,
-                            text: p.label
-                        }))
-                    };
-
-                    annotation.addAnnotation({
-                        annotationUID: csUtilities.uuidv4(),
-                        data: toolData,
-                        toolName: PointSetTool.toolName,
-                    }, frameOfReferenceUID);
-
-                } catch (error) {
-                    console.error(`Failed to load or parse annotation file: ${fileName}`, error);
-                }
-            }
-        }
-
-        // --- Run the application ---
-        run();
+    <script>
         feather.replace();
+        // Add a listener to know when the viewer is ready
+        document.addEventListener('papayaReady', function() {
+            document.getElementById('status-text').textContent = 'Viewer is ready. Use your mouse to explore the images.';
+        });
     </script>
 </body>
 </html>
