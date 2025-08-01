@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>June 2020 DNB - Paper 1 - RadMentor</title> <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #374151;
+        }
+        .rad-gradient-text {
+            background: linear-gradient(90deg, #1e40af, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+        /* PDF Viewer Specific Styles */
+        #pdf-viewer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #e2e8f0; /* bg-gray-200 */
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            max-width: calc(100vw - 4rem); /* Adjust based on padding/margin */
+            margin: 0 auto;
+            overflow: hidden; /* To keep inner scrollable */
+            height: calc(100vh - 180px); /* Adjust height to fit viewport, considering header/footer/margins */
+        }
+        #pdf-canvas-container {
+            flex-grow: 1;
+            width: 100%;
+            height: 100%;
+            overflow: auto; /* Enable scrolling for PDF content */
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center the canvas horizontally */
+            background-color: white; /* Canvas background */
+            border-radius: 0.25rem;
+        }
+        canvas {
+            border: 1px solid #cbd5e0; /* border-gray-300 */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            max-width: 100%; /* Ensure canvas doesn't overflow */
+            height: auto;
+            display: block; /* Remove extra space below canvas */
+            margin: 10px 0; /* Space between pages */
+            image-rendering: -webkit-optimize-contrast; /* Potentially improve clarity on some browsers */
+            image-rendering: crisp-edges; /* Modern alternative */
+            image-rendering: pixelated; /* Alternative */
+        }
+        .pdf-nav-buttons button {
+            @apply px-4 py-2 rounded-md font-semibold text-white; /* Apply common styles with Tailwind */
+            background: linear-gradient(90deg, #1e40af, #3b82f6); /* rad-gradient */
+            transition: background-color 0.2s ease;
+        }
+        .pdf-nav-buttons button:hover {
+            background: linear-gradient(90deg, #3b82f6, #1e40af); /* Slightly change gradient on hover */
+        }
+        .pdf-nav-buttons button:disabled {
+            @apply bg-gray-300 text-gray-500 cursor-not-allowed;
+            background: #cbd5e0; /* bg-gray-300 */
+        }
+        /* Optional: Invisible overlay to deter text selection/right-click */
+        .copy-protection-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 50; /* Above canvas, below watermark */
+            background-color: rgba(255, 255, 255, 0); /* Fully transparent */
+            pointer-events: none; /* Allows user to interact with elements *underneath* this overlay if needed */
+            /* To block ALL interaction, change pointer-events to auto */
+            /* We rely on PDF.js rendering text as images for actual copy protection */
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    
+    <header class="bg-white/80 backdrop-blur-lg flex-shrink-0 z-20 shadow-sm">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
+                <span class="text-2xl font-bold text-gray-800">RadMentor</span>
+            </div>
+            <nav class="hidden md:flex items-center space-x-8">
+                <a href="/" class="text-gray-600 hover:text-blue-600">Dashboard</a>
+                <a href="/anatomy/mri-anatomy/test_shoulder/index.html" class="text-gray-600 hover:text-blue-600">Anatomy Viewer</a>
+                <a href="#" class="text-gray-600 hover:text-blue-600">Courses</a>
+                <a href="../../../../index.html" class="text-blue-600 font-semibold">DNB Previous Year Questions</a> 
+            </nav>
+            <a href="/dashboard.html" class="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition-colors hidden md:block">
+                Dashboard
+            </a>
+        </div>
+    </header>
+
+    <main class="flex-1 container mx-auto px-6 py-8 flex flex-col items-center">
+        <h1 class="text-4xl font-extrabold text-center mb-6 rad-gradient-text">
+            June 2020 DNB - Paper 1 </h1>
+        <p class="text-lg text-gray-600 text-center max-w-2xl mb-12">
+            View questions and answers for this paper.
+        </p>
+
+        <div id="pdf-viewer-container" class="w-full">
+            <div id="pdf-canvas-container" class="relative">
+                <div class="copy-protection-overlay"></div>
+            </div>
+            <div class="pdf-nav-buttons flex items-center justify-center space-x-6 mt-4">
+                <button id="prev-page">Previous</button>
+                <span class="text-lg font-semibold text-gray-800">Page: <span id="page-num">1</span> / <span id="page-count">--</span></span>
+                <button id="next-page">Next</button>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-gray-800 text-white text-center py-4 mt-8 flex-shrink-0">
+        <p>&copy; 2025 RadMentor. All rights reserved.</p>
+    </footer>
+
+    <script src="/js/pdf.min.js"></script>
+
+    <script>
+        // Set up the worker source
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/js/pdf.worker.min.js';
+
+        let pdfDoc = null;
+        let pageNum = 1;
+        let pageRendering = false;
+        let pageNumPending = null;
+        let scale = 1.8; // Increased scale for better resolution, adjust as needed
+
+        const pdfViewerContainer = document.getElementById('pdf-viewer-container');
+        const pdfCanvasContainer = document.getElementById('pdf-canvas-container');
+        const pageNumSpan = document.getElementById('page-num');
+        const pageCountSpan = document.getElementById('page-count');
+        const prevPageBtn = document.getElementById('prev-page');
+        const nextPageBtn = document.getElementById('next-page');
+
+        // --- Watermark Logo Configuration ---
+        const watermarkLogoSrc = "/logo.png"; // Your logo at the root
+        let watermarkLogo = new Image();
+        let logoLoaded = false;
+        
+        watermarkLogo.onload = () => {
+            logoLoaded = true;
+            if (pdfDoc && !pageRendering) {
+                renderPage(pageNum); // Re-render to apply logo if PDF already loaded
+            }
+        };
+        watermarkLogo.onerror = () => {
+            console.warn("Watermark logo failed to load. PDF will display without logo watermark. Path tried: " + watermarkLogoSrc);
+            logoLoaded = false;
+        };
+        watermarkLogo.src = watermarkLogoSrc;
+
+
+        async function renderPage(num) {
+            pageRendering = true;
+            pageNumSpan.textContent = num; // Update page number immediately
+
+            const page = await pdfDoc.getPage(num);
+            const viewport = page.getViewport({ scale: scale });
+
+            pdfCanvasContainer.innerHTML = ''; // Clear previous content
+
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            canvas.classList.add('pdf-page-canvas'); 
+
+            pdfCanvasContainer.appendChild(canvas);
+
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport,
+                // By default, PDF.js renders to canvas in a way that prevents text selection
+                // unless specific text layer options are enabled. We are NOT enabling them.
+            };
+
+            const renderTask = page.render(renderContext);
+
+            await renderTask.promise; // Wait for PDF page to render
+
+            // --- Apply Logo Watermark (Subtle) ---
+            if (logoLoaded) {
+                context.save(); // Save context for logo
+                context.globalAlpha = 0.05; // VERY low opacity for subtle hologram effect (5%)
+                
+                const logoOriginalAspectRatio = watermarkLogo.naturalWidth / watermarkLogo.naturalHeight;
+                // Calculate logo dimensions to fit within a certain percentage of the page
+                const targetLogoWidth = viewport.width * 0.3; // Logo takes up 30% of page width
+                const targetLogoHeight = targetLogoWidth / logoOriginalAspectRatio;
+
+                // Center the logo
+                const logoX = (canvas.width - targetLogoWidth) / 2;
+                const logoY = (canvas.height - targetLogoHeight) / 2;
+
+                context.drawImage(watermarkLogo, logoX, logoY, targetLogoWidth, targetLogoHeight);
+                
+                context.restore(); // Restore globalAlpha and other settings
+            }
+
+            pageRendering = false;
+            if (pageNumPending !== null) {
+                renderPage(pageNumPending);
+                pageNumPending = null;
+            }
+        }
+
+        function queueRenderPage(num) {
+            if (pageRendering) {
+                pageNumPending = num;
+            } else {
+                renderPage(num);
+            }
+        }
+
+        function onPrevPage() {
+            if (pageNum <= 1) return;
+            pageNum--;
+            queueRenderPage(pageNum);
+        }
+
+        function onNextPage() {
+            if (pageNum >= pdfDoc.numPages) return;
+            pageNum++;
+            queueRenderPage(pageNum);
+        }
+
+        prevPageBtn.addEventListener('click', onPrevPage);
+        nextPageBtn.addEventListener('click', onNextPage);
+
+        async function loadPdfDocument(pdfUrl) {
+            try {
+                const loadingTask = pdfjsLib.getDocument(pdfUrl);
+                pdfDoc = await loadingTask.promise;
+                pageCountSpan.textContent = pdfDoc.numPages;
+                pageNum = 1;
+                renderPage(pageNum);
+            } catch (error) {
+                console.error('Error loading PDF:', error);
+                alert('Failed to load PDF document. Please check the PDF path and ensure it\'s accessible.');
+            }
+        }
+
+        // --- Main Execution ---
+        // The PDF file is in the SAME folder as this index.html file.
+        // E.g., RadMentor/MD_DNB/DNB/2020/june/index.html and RadMentor/MD_DNB/DNB/2020/june/DNB JUNE 2020 Paper 1.pdf
+        const pdfFileName = "DNB JUNE 2020 Paper 1.pdf"; // This is the file you want to display on THIS page
+        const pdfUrl = pdfFileName; 
+
+        loadPdfDocument(pdfUrl);
+
+    </script>
+</body>
+</html>
