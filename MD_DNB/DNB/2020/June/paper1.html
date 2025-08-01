@@ -8,8 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -23,21 +21,19 @@
             background-clip: text;
             text-fill-color: transparent;
         }
-        /* PDF Viewer Specific Styles */
         #pdf-viewer-outer-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #e2e8f0; /* bg-gray-200 */
+            background-color: #e2e8f0;
             border-radius: 0.5rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             padding: 1rem;
-            max-width: calc(100vw - 4rem); /* Adjust based on padding/margin */
+            max-width: calc(100vw - 4rem);
             margin: 0 auto;
-            overflow: hidden; /* To keep inner scrollable */
-            height: calc(100vh - 180px); /* Adjust height to fit viewport, considering header/footer/margins */
+            overflow: hidden;
+            height: calc(100vh - 180px);
         }
-        
         .pdf-nav-buttons button {
             background: linear-gradient(90deg, #1e40af, #3b82f6);
             transition: background-color 0.2s ease;
@@ -48,18 +44,17 @@
         .pdf-nav-buttons button:disabled {
             background: #cbd5e0;
         }
-
         #pdf-canvas-container {
             flex-grow: 1;
             width: 100%;
             height: 100%;
-            overflow: auto; /* Enable scrolling for PDF content */
+            overflow: auto;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Center the canvas horizontally */
-            background-color: white; /* Canvas background */
+            align-items: center;
+            background-color: white;
             border-radius: 0.25rem;
-            position: relative; /* For loading spinner */
+            position: relative;
         }
         canvas {
             border: 1px solid #cbd5e0;
@@ -68,11 +63,7 @@
             height: auto;
             display: block;
             margin: 10px 0;
-            image-rendering: -webkit-optimize-contrast; 
-            image-rendering: crisp-edges; 
-            image-rendering: pixelated; 
         }
-        /* Loading spinner */
         .loader {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #3b82f6;
@@ -85,7 +76,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 100;
-            display: none; /* Hidden by default */
+            display: none;
         }
         @keyframes spin {
             0% { transform: translate(-50%, -50%) rotate(0deg); }
@@ -129,8 +120,6 @@
                 <button id="fit-page-btn" class="px-3 py-1.5 rounded-md text-gray-700 bg-white shadow-sm hover:bg-gray-100 transition-colors" title="Fit to Page"><i class="fas fa-expand-arrows-alt text-blue-600"></i></button>
                 <button id="rotate-left-btn" class="px-3 py-1.5 rounded-md text-gray-700 bg-white shadow-sm hover:bg-gray-100 transition-colors" title="Rotate Left"><i class="fas fa-undo text-blue-600"></i></button>
                 <button id="rotate-right-btn" class="px-3 py-1.5 rounded-md text-gray-700 bg-white shadow-sm hover:bg-gray-100 transition-colors" title="Rotate Right"><i class="fas fa-redo text-blue-600"></i></button>
-                <button id="download-btn" class="px-3 py-1.5 rounded-md text-gray-700 bg-white shadow-sm hover:bg-gray-100 transition-colors" title="Download Watermarked PDF"><i class="fas fa-download text-blue-600"></i></button>
-                <button id="print-btn" class="px-3 py-1.5 rounded-md text-gray-700 bg-white shadow-sm hover:bg-gray-100 transition-colors" title="Print Watermarked PDF"><i class="fas fa-print text-blue-600"></i></button>
             </div>
 
             <div id="pdf-canvas-container" class="relative">
@@ -151,15 +140,14 @@
 
     <script src="/js/pdf.min.js"></script>
     <script>
-        // Set up the worker source
         pdfjsLib.GlobalWorkerOptions.workerSrc = '/js/pdf.worker.min.js';
 
         let pdfDoc = null;
         let pageNum = 1;
         let pageRendering = false;
         let pageNumPending = null;
-        let scale = 1.8; // Initial scale
-        let rotation = 0; // Current rotation
+        let scale = 1.5; // Adjusted initial scale
+        let rotation = 0;
 
         const pdfCanvasContainer = document.getElementById('pdf-canvas-container');
         const pageNumSpan = document.getElementById('page-num');
@@ -167,19 +155,15 @@
         const prevPageBtn = document.getElementById('prev-page');
         const nextPageBtn = document.getElementById('next-page');
         const pdfLoader = document.getElementById('pdf-loader');
-
-        // Toolbar Buttons
+        
         const zoomInBtn = document.getElementById('zoom-in-btn');
         const zoomOutBtn = document.getElementById('zoom-out-btn');
         const fitWidthBtn = document.getElementById('fit-width-btn');
         const fitPageBtn = document.getElementById('fit-page-btn');
         const rotateLeftBtn = document.getElementById('rotate-left-btn');
         const rotateRightBtn = document.getElementById('rotate-right-btn');
-        const downloadBtn = document.getElementById('download-btn');
-        const printBtn = document.getElementById('print-btn');
-
-        // --- Watermark Logo Configuration ---
-        const watermarkLogoSrc = "/logo.png"; // Your logo at the root
+        
+        const watermarkLogoSrc = "/logo.png";
         let watermarkLogo = new Image();
         let logoLoaded = false;
         
@@ -190,7 +174,7 @@
             }
         };
         watermarkLogo.onerror = () => {
-            console.warn("Watermark logo failed to load. Path tried: " + watermarkLogoSrc);
+            console.warn("Watermark logo failed to load.");
             logoLoaded = false;
         };
         watermarkLogo.src = watermarkLogoSrc;
@@ -202,41 +186,57 @@
             pdfLoader.style.display = 'block';
             pageNumSpan.textContent = num;
             
-            // Update button states
             prevPageBtn.disabled = (num <= 1);
             nextPageBtn.disabled = (num >= pdfDoc.numPages);
 
             try {
                 const page = await pdfDoc.getPage(num);
                 const viewport = page.getViewport({ scale: scale, rotation: rotation });
-
-                pdfCanvasContainer.innerHTML = ''; // Clear previous canvas
-
+                
+                // --- FIX for blurry text: Render canvas at high resolution ---
                 const canvas = document.createElement('canvas');
                 const context = canvas.getContext('2d');
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
+                const devicePixelRatio = window.devicePixelRatio || 1;
+                
+                canvas.width = Math.floor(viewport.width * devicePixelRatio);
+                canvas.height = Math.floor(viewport.height * devicePixelRatio);
+                canvas.style.width = `${Math.floor(viewport.width)}px`;
+                canvas.style.height = `${Math.floor(viewport.height)}px`;
+                
+                context.scale(devicePixelRatio, devicePixelRatio);
+                // --- End of fix ---
 
+                pdfCanvasContainer.innerHTML = '';
                 pdfCanvasContainer.appendChild(canvas);
 
                 const renderContext = {
                     canvasContext: context,
                     viewport: viewport,
                 };
-
                 await page.render(renderContext).promise;
 
+                // --- MODIFIED Watermark ---
                 if (logoLoaded) {
                     context.save();
-                    context.globalAlpha = 0.05;
-                    const targetLogoWidth = viewport.width * 0.3;
+                    context.globalAlpha = 0.08; // Increased opacity
+                    
+                    // Logo Image (Increased size)
+                    const targetLogoWidth = viewport.width * 0.40;
                     const targetLogoHeight = (watermarkLogo.naturalHeight / watermarkLogo.naturalWidth) * targetLogoWidth;
-                    const logoX = (canvas.width - targetLogoWidth) / 2;
-                    const logoY = (canvas.height - targetLogoHeight) / 2;
+                    const logoX = (viewport.width - targetLogoWidth) / 2;
+                    const logoY = (viewport.height - targetLogoHeight) / 2;
                     context.drawImage(watermarkLogo, logoX, logoY, targetLogoWidth, targetLogoHeight);
+
+                    // Text below logo
+                    const fontSize = viewport.width / 35; // Responsive font size
+                    context.font = `bold ${fontSize}px Inter, sans-serif`;
+                    context.fillStyle = '#000000';
+                    context.textAlign = 'center';
+                    const textY = logoY + targetLogoHeight + fontSize; 
+                    context.fillText('RadMentor', viewport.width / 2, textY);
+                    
                     context.restore();
                 }
-
             } catch (error) {
                 console.error("Error rendering PDF page:", error);
             } finally {
@@ -257,19 +257,16 @@
             }
         }
 
-        // --- Event Handlers ---
         prevPageBtn.addEventListener('click', () => {
             if (pageNum <= 1) return;
             pageNum--;
             queueRenderPage(pageNum);
         });
-
         nextPageBtn.addEventListener('click', () => {
             if (pageNum >= pdfDoc.numPages) return;
             pageNum++;
             queueRenderPage(pageNum);
         });
-
         zoomInBtn.addEventListener('click', () => { scale *= 1.2; queueRenderPage(pageNum); });
         zoomOutBtn.addEventListener('click', () => { scale /= 1.2; queueRenderPage(pageNum); });
         rotateLeftBtn.addEventListener('click', () => { rotation = (rotation - 90 + 360) % 360; queueRenderPage(pageNum); });
@@ -278,16 +275,15 @@
         fitWidthBtn.addEventListener('click', () => {
             pdfDoc.getPage(pageNum).then(page => {
                 const viewport = page.getViewport({ scale: 1.0, rotation: rotation });
-                const containerWidth = pdfCanvasContainer.clientWidth - 20; // with padding
+                const containerWidth = pdfCanvasContainer.clientWidth - 20;
                 scale = containerWidth / viewport.width;
                 queueRenderPage(pageNum);
             });
         });
-
         fitPageBtn.addEventListener('click', () => {
             pdfDoc.getPage(pageNum).then(page => {
                 const viewport = page.getViewport({ scale: 1.0, rotation: rotation });
-                const containerHeight = document.getElementById('pdf-viewer-outer-container').clientHeight - 120; // account for controls
+                const containerHeight = document.getElementById('pdf-viewer-outer-container').clientHeight - 120;
                 const containerWidth = pdfCanvasContainer.clientWidth - 20;
                 const scaleX = containerWidth / viewport.width;
                 const scaleY = containerHeight / viewport.height;
@@ -296,75 +292,6 @@
             });
         });
 
-        // --- Download and Print ---
-        async function renderPdfWithWatermarkToBlob(originalPdfDoc) {
-            if (typeof PDFLib === 'undefined' || typeof PDFLib.PDFDocument === 'undefined') {
-                console.error("PDF-LIB.js is not loaded.");
-                alert("Download/Print functionality requires PDF-LIB.js.");
-                return null;
-            }
-
-            const { PDFDocument, rgb } = PDFLib;
-            const newPdfDoc = await PDFDocument.create();
-            
-            let embeddedLogo = null;
-            if (logoLoaded) {
-                try {
-                    const logoBytes = await fetch(watermarkLogoSrc).then(res => res.arrayBuffer());
-                    embeddedLogo = await newPdfDoc.embedPng(logoBytes);
-                } catch (e) {
-                    console.error("Failed to embed watermark logo:", e);
-                }
-            }
-
-            const pageBytesArray = await originalPdfDoc.copyPages(originalPdfDoc, Array.from({length: originalPdfDoc.numPages}, (_, i) => i));
-
-            for (const pageBytes of pageBytesArray) {
-                const [newPage] = await newPdfDoc.copyPages(originalPdfDoc, [originalPdfDoc.getPageNumber(pageBytes) - 1]);
-                const { width, height } = newPage.getSize();
-
-                if (embeddedLogo) {
-                    const targetLogoWidth = width * 0.3;
-                    const targetLogoHeight = (embeddedLogo.height / embeddedLogo.width) * targetLogoWidth;
-                    newPage.drawImage(embeddedLogo, {
-                        x: (width - targetLogoWidth) / 2,
-                        y: (height - targetLogoHeight) / 2,
-                        width: targetLogoWidth,
-                        height: targetLogoHeight,
-                        opacity: 0.05,
-                    });
-                }
-                newPdfDoc.addPage(newPage);
-            }
-            return newPdfDoc.save();
-        }
-
-        async function onDownloadPdf() {
-            if (!pdfDoc) return;
-            pdfLoader.style.display = 'block';
-            try {
-                const pdfBlob = await renderPdfWithWatermarkToBlob(pdfDoc);
-                if (pdfBlob) {
-                    const url = URL.createObjectURL(new Blob([pdfBlob], { type: 'application/pdf' }));
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'Watermarked_DNB_JUNE_2020_Paper_1.pdf';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                }
-            } catch (error) {
-                console.error("Error generating watermarked PDF for download:", error);
-            } finally {
-                pdfLoader.style.display = 'none';
-            }
-        }
-        downloadBtn.addEventListener('click', onDownloadPdf);
-        // Add print handler if needed, similar to download
-        printBtn.addEventListener('click', onDownloadPdf); // Simple: make print also download for now.
-
-        // --- Load the PDF Document ---
         async function loadPdfDocument(pdfUrl) {
             try {
                 pdfLoader.style.display = 'block';
@@ -375,16 +302,13 @@
                 renderPage(pageNum);
             } catch (error) {
                 console.error('Error loading PDF:', error);
-                alert(`Failed to load PDF document. Please check the path and ensure it's accessible.\nPath: ${pdfUrl}\nError: ${error.message}`);
+                alert(`Failed to load PDF document.\nPath: ${pdfUrl}\nError: ${error.message}`);
                 pdfLoader.style.display = 'none';
             }
         }
-
-        // --- Main Execution ---
-        // FIX: Corrected the path to the PDF file.
+        
         const pdfUrl = "/MD_DNB/DNB/2020/June/DNB JUNE 2020 Paper 1.pdf"; 
         loadPdfDocument(pdfUrl);
-
     </script>
 </body>
 </html>
