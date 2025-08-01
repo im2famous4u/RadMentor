@@ -1,63 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8">
   <title>Shoulder MRI Viewer</title>
+  <script src="https://unpkg.com/cornerstone-core"></script>
+  <script src="https://unpkg.com/cornerstone-tools"></script>
+  <script src="https://unpkg.com/dicom-parser"></script>
+  <script src="https://unpkg.com/cornerstone-wado-image-loader"></script>
   <style>
-    body {
-      margin: 0;
-      background: black;
-      color: white;
-      font-family: Arial, sans-serif;
-    }
     #dicomImage {
       width: 512px;
       height: 512px;
-      margin: 20px auto;
       background-color: black;
     }
   </style>
 </head>
 <body>
+  <div id="dicomImage"></div>
+  <script>
+    // Link Cornerstone and WADO loader
+    cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
 
-<h2 style="text-align:center;">Shoulder MRI Viewer</h2>
-<div id="dicomImage"></div>
+    // Enable the element
+    const element = document.getElementById('dicomImage');
+    cornerstone.enable(element);
 
-<!-- ✅ Load libraries in the correct order -->
-<script src="https://unpkg.com/cornerstone-core@2/dist/cornerstone.js"></script>
-<script src="https://unpkg.com/dicom-parser/dist/dicomParser.js"></script>
-<script src="https://unpkg.com/cornerstone-wado-image-loader@4/dist/cornerstoneWADOImageLoader.js"></script>
-<script src="https://unpkg.com/cornerstone-tools@4/dist/cornerstoneTools.js"></script>
-
-<!-- ✅ Your script -->
-<script>
-  // Link cornerstoneWADOImageLoader with cornerstone
-  cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
-  cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
-
-  // Set web worker path for WADO loader
-  cornerstoneWADOImageLoader.webWorkerManager.initialize({
-    webWorkerPath: 'https://unpkg.com/cornerstone-wado-image-loader@4/dist/cornerstoneWADOImageLoaderWebWorker.js',
-    taskConfiguration: {
-      decodeTask: {
-        codecsPath: 'https://unpkg.com/cornerstone-wado-image-loader@4/dist/cornerstoneWADOImageLoaderCodecs.js'
-      }
+    // Generate the list of all 280 slice URLs
+    const baseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/";
+    const imageIds = [];
+    for (let i = 1; i <= 280; i++) {
+      const num = String(i).padStart(4, '0'); // IMG0001 format
+      imageIds.push(`wadouri:${baseUrl}IMG${num}.dcm`);
     }
-  });
 
-  const element = document.getElementById('dicomImage');
-  cornerstone.enable(element);
+    let currentImageIndex = 0;
 
-  // Change this to your actual DICOM URL
-  const dicomImageUrl = 'wadouri:http://localhost/dicoms/shoulder.dcm';
+    // Function to display the current image
+    function loadAndViewImage(index) {
+      const imageId = imageIds[index];
+      cornerstone.loadAndCacheImage(imageId).then(function(image) {
+        cornerstone.displayImage(element, image);
+      }).catch(err => console.error(err));
+    }
 
-  cornerstone.loadImage(dicomImageUrl).then(function(image) {
-    cornerstone.displayImage(element, image);
-  }).catch(function(err) {
-    console.error('Error loading DICOM image:', err);
-  });
-</script>
+    // Initial load
+    loadAndViewImage(currentImageIndex);
 
+    // Auto-play through all images once
+    let playInterval = setInterval(() => {
+      currentImageIndex++;
+      if (currentImageIndex >= imageIds.length) {
+        clearInterval(playInterval);
+      } else {
+        loadAndViewImage(currentImageIndex);
+      }
+    }, 100); // 100 ms per slice
+  </script>
 </body>
 </html>
