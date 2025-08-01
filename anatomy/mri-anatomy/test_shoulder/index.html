@@ -200,10 +200,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/dicom-parser/dist/dicomParser.min.js"></script>
     <script type="module">
-        import * as cornerstone3D from 'https://cdn.jsdelivr.net/npm/@cornerstonejs/core@1.74.2/dist/esm/index.js';
-        import * as cornerstoneTools from 'https://cdn.jsdelivr.net/npm/@cornerstonejs/tools@1.74.2/dist/esm/index.js';
-        import dicomLoader from 'https://cdn.jsdelivr.net/npm/@cornerstonejs/dicom-image-loader@1.74.2/dist/esm/index.js';
-        import { init as initProviders } from 'https://cdn.jsdelivr.net/npm/@cornerstonejs/streaming-image-volume-loader@1.74.2/dist/esm/index.js';
+        // Updated CDN imports for better reliability
+        import * as cornerstone3D from 'https://cdn.jsdelivr.net/npm/@cornerstonejs/core@latest/dist/umd/index.js';
+        import * as cornerstoneTools from 'https://cdn.jsdelivr.net/npm/@cornerstonejs/tools@latest/dist/umd/index.js';
+        import dicomLoader from 'https://cdn.jsdelivr.net/npm/@cornerstonejs/dicom-image-loader@latest/dist/umd/index.js';
+        import { init as initProviders } from 'https://cdn.jsdelivr.net/npm/@cornerstonejs/streaming-image-volume-loader@latest/dist/umd/index.js';
         
         const { RenderingEngine, Enums, volumeLoader, utilities } = cornerstone3D;
         const { PanTool, WindowLevelTool, StackScrollMouseWheelTool, ZoomTool, ToolGroupManager, MPRCrosshairsTool } = cornerstoneTools;
