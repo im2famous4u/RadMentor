@@ -46,6 +46,24 @@
         .sidebar {
             transition: transform 0.3s ease-in-out;
         }
+        
+        /* Animation for sections */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Profile page specific styles */
+        .profile-sidebar-link.active {
+            background-color: #dbeafe;
+            color: #1e40af;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body class="text-gray-800">
@@ -60,25 +78,34 @@
             <nav id="main-nav" class="hidden md:flex items-center space-x-8">
                 <a href="#courses" class="text-gray-600 hover:text-blue-600">Courses</a>
                 <a href="#features" class="text-gray-600 hover:text-blue-600">Features</a>
-                <a href="#about" class="text-gray-600 hover:text-blue-600">About Us</a>
+                <a href="#pricing" class="text-gray-600 hover:text-blue-600">Pricing</a>
+                <a href="#contact" class="text-gray-600 hover:text-blue-600">Contact</a>
+                <a href="#" id="header-login-tab" onclick="showAuthModal('signin')" class="text-gray-600 hover:text-blue-600">Login</a>
             </nav>
             <div class="flex items-center">
                 <!-- Logged Out Buttons -->
                 <div id="header-logged-out" class="flex items-center">
-                    <button onclick="showAuthModal('signin')" class="hidden md:block text-gray-600 hover:text-blue-600 mr-6">Login</button>
                     <button onclick="showAuthModal('signup')" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                         Sign Up
                     </button>
                 </div>
-                <!-- Logged In Buttons -->
-                <div id="header-logged-in" class="hidden items-center">
-                     <span class="hidden sm:block text-gray-700 mr-4">Hi, <span id="user-greeting-header"></span>!</span>
-                     <button onclick="showDashboard()" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                        Dashboard
-                    </button>
-                    <button onclick="logout()" class="ml-4 text-gray-600 hover:text-blue-600" title="Logout">
-                        <i data-feather="log-out"></i>
-                    </button>
+                <!-- Logged In User Menu -->
+                <div id="header-logged-in" class="hidden relative">
+                     <button id="user-menu-button" class="flex items-center space-x-2">
+                        <img id="user-avatar" src="https://placehold.co/40x40/E2E8F0/4A5568?text=U" alt="User Avatar" class="w-10 h-10 rounded-full">
+                        <span class="font-semibold text-gray-700" id="user-greeting-header"></span>
+                        <i data-feather="chevron-down" class="w-5 h-5 text-gray-600"></i>
+                     </button>
+                     <!-- Dropdown Menu -->
+                     <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl z-50 border">
+                        <div class="p-2">
+                            <a href="#" onclick="showDashboardSection('profile')" class="block px-4 py-2 text-gray-700 rounded-md hover:bg-blue-500 hover:text-white">Profile</a>
+                            <a href="#" onclick="showDashboard()" class="block px-4 py-2 text-gray-700 rounded-md hover:bg-blue-500 hover:text-white">Prepare</a>
+                            <a href="#" onclick="showDashboardSection('settings')" class="block px-4 py-2 text-gray-700 rounded-md hover:bg-blue-500 hover:text-white">Settings</a>
+                            <div class="border-t my-1"></div>
+                            <a href="#" onclick="logout()" class="block w-full text-left px-4 py-2 text-red-600 rounded-md hover:bg-red-500 hover:text-white">Logout</a>
+                        </div>
+                     </div>
                 </div>
                 <button id="mobile-menu-button" class="md:hidden ml-4 text-gray-700">
                     <i data-feather="menu"></i>
@@ -89,15 +116,19 @@
         <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
             <a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a>
             <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a>
-            <a href="#about" class="block py-2 text-gray-600 hover:text-blue-600">About Us</a>
+            <a href="#pricing" class="block py-2 text-gray-600 hover:text-blue-600">Pricing</a>
+            <a href="#contact" class="block py-2 text-gray-600 hover:text-blue-600">Contact</a>
             <!-- Mobile Logged Out -->
             <div id="mobile-logged-out">
                 <button onclick="showAuthModal('signin')" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Login</button>
             </div>
              <!-- Mobile Logged In -->
             <div id="mobile-logged-in" class="hidden">
-                <button onclick="showDashboard()" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Dashboard</button>
-                <button onclick="logout()" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Logout</button>
+                <div class="border-t my-2"></div>
+                <button onclick="showDashboard()" class="block w-full text-left py-2 font-semibold text-blue-600">Dashboard</button>
+                <button onclick="showDashboardSection('profile')" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Profile</button>
+                <button onclick="showDashboardSection('bookmarks')" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Bookmarks</button>
+                <button onclick="logout()" class="block w-full text-left py-2 text-red-600">Logout</button>
             </div>
         </div>
     </header>
@@ -125,43 +156,43 @@
             </section>
 
             <!-- Courses Section -->
-            <section id="courses" class="py-20">
+            <section id="courses" class="py-20 fade-in-section">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
                         <h2 class="text-4xl font-bold text-gray-900">Prepare for Any Exam</h2>
                         <p class="mt-4 text-lg text-gray-600">Targeted preparation for all major radiology exams.</p>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
+                        <a href="frcr.html" class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
                             <h3 class="text-2xl font-bold text-gray-800">FRCR</h3>
                             <p class="mt-2 text-gray-600">Comprehensive question banks and mock tests for the FRCR exam.</p>
-                        </div>
-                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
+                        </a>
+                        <a href="mddnb.html" class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
                             <h3 class="text-2xl font-bold text-gray-800">MD / DNB</h3>
                             <p class="mt-2 text-gray-600">Master your final year exams with our targeted content.</p>
-                        </div>
-                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
+                        </a>
+                        <a href="anatomy.html" class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
                             <h3 class="text-2xl font-bold text-gray-800">Anatomy</h3>
                             <p class="mt-2 text-gray-600">Detailed anatomical modules to build a strong foundation.</p>
-                        </div>
-                         <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
+                        </a>
+                         <a href="micr.html" class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
                             <h3 class="text-2xl font-bold text-gray-800">MICR</h3>
                             <p class="mt-2 text-gray-600">Practice with MCQs tailored for the MICR examination.</p>
-                        </div>
-                         <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
+                        </a>
+                         <a href="superspeciality.html" class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
                             <h3 class="text-2xl font-bold text-gray-800">Superspeciality</h3>
                             <p class="mt-2 text-gray-600">Prepare for NEET SS & INICET SS with high-yield questions.</p>
-                        </div>
-                         <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
+                        </a>
+                         <a href="fellowship.html" class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
                             <h3 class="text-2xl font-bold text-gray-800">Fellowship Exams</h3>
                             <p class="mt-2 text-gray-600">Excel in your fellowship exams with our specialized modules.</p>
-                        </div>
+                        </a>
                     </div>
                 </div>
             </section>
 
             <!-- Features Section -->
-            <section id="features" class="py-20 bg-white">
+            <section id="features" class="py-20 bg-white fade-in-section">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
                         <h2 class="text-4xl font-bold text-gray-900">Why RadMentor?</h2>
@@ -192,27 +223,109 @@
                     </div>
                 </div>
             </section>
-
-            <!-- About Us Section -->
-            <section id="about" class="py-20">
+            
+            <!-- Question of the Day Section -->
+            <section id="qotd" class="py-20 fade-in-section">
                 <div class="container mx-auto px-6">
-                      <div class="text-center mb-12">
-                        <h2 class="text-4xl font-bold text-gray-900">Built by Doctors, for Doctors</h2>
+                    <div class="text-center mb-12">
+                        <h2 class="text-4xl font-bold text-gray-900">Question of the Day</h2>
+                        <p class="mt-4 text-lg text-gray-600">Test your knowledge with a daily challenge.</p>
                     </div>
-                    <div class="max-w-4xl mx-auto bg-white p-10 rounded-xl shadow-lg text-center">
-                        <p class="text-lg text-gray-600">
-                            We are two radiologists trained at one of India’s premier medical institutes, united by a shared vision: to make high-quality radiology education accessible, affordable, and reliable for all. Every question, explanation, and update is curated by us, backed by evidence, and rooted in real-world radiology practice.
-                        </p>
-                          <p class="mt-4 text-lg font-semibold text-gray-800">Welcome to a community built with precision and care.</p>
+                    <div class="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+                        <p class="text-lg font-semibold text-gray-800">A 55-year-old male presents with right upper quadrant pain. An ultrasound reveals a well-defined, hyperechoic mass in the liver. What is the most likely diagnosis?</p>
+                        <div id="qotd-options" class="mt-6 space-y-3">
+                            <button data-answer="A" class="qotd-option w-full text-left p-4 rounded-lg border border-gray-300 hover:bg-gray-100 transition-colors">A) Hepatocellular carcinoma</button>
+                            <button data-answer="B" class="qotd-option w-full text-left p-4 rounded-lg border border-gray-300 hover:bg-gray-100 transition-colors">B) Hepatic adenoma</button>
+                            <button data-answer="C" class="qotd-option w-full text-left p-4 rounded-lg border border-gray-300 hover:bg-gray-100 transition-colors">C) Hemangioma</button>
+                            <button data-answer="D" class="qotd-option w-full text-left p-4 rounded-lg border border-gray-300 hover:bg-gray-100 transition-colors">D) Focal nodular hyperplasia</button>
+                        </div>
+                        <div id="qotd-answer" class="hidden mt-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-800 rounded-r-lg">
+                            <p><strong>Correct Answer: C) Hemangioma.</strong> Hemangiomas are the most common benign liver tumors and typically appear as well-defined, hyperechoic masses on ultrasound.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Spotter of the Day Section -->
+            <section id="spotter" class="py-20 bg-white fade-in-section">
+                <div class="container mx-auto px-6">
+                    <div class="text-center mb-12">
+                        <h2 class="text-4xl font-bold text-gray-900">Spotter of the Day</h2>
+                        <p class="mt-4 text-lg text-gray-600">Can you identify the finding?</p>
+                    </div>
+                    <div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg flex flex-col md:flex-row gap-8 items-center">
+                        <!-- Image -->
+                        <div class="w-full md:w-1/2">
+                            <img src="https://prod-images-static.radiopaedia.org/images/1998718/3a3d670226e00552b9a501abeeab0b_gallery.jpg" alt="Spotter of the day - Mammogram" class="rounded-lg shadow-md w-full">
+                        </div>
+                        <!-- Content -->
+                        <div class="w-full md:w-1/2">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-4">What is the key finding in this right breast MLO view?</h3>
+                            <button id="reveal-spotter-btn" class="rad-gradient text-white font-bold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow w-full">Reveal Diagnosis</button>
+                            <div id="spotter-answer" class="hidden mt-6 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-800 rounded-r-lg">
+                                <p><strong>Diagnosis:</strong> Fibroadenolipoma (Hamartoma) of the Breast.</p>
+                                <p class="mt-2"><strong>Finding:</strong> This view demonstrates a large, well-circumscribed mass containing both fat (radiolucent) and glandular tissue (radiopaque), creating a "breast within a breast" appearance, which is classic for a fibroadenolipoma.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pricing Section -->
+            <section id="pricing" class="py-20 fade-in-section">
+                <div class="container mx-auto px-6">
+                    <div class="text-center mb-12">
+                        <h2 class="text-4xl font-bold text-gray-900">Choose Your Plan</h2>
+                        <p class="mt-4 text-lg text-gray-600">Start for free and upgrade when you're ready.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                        <!-- Free Plan -->
+                        <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200 flex flex-col">
+                            <h3 class="text-2xl font-bold text-gray-800">Free Plan</h3>
+                            <p class="mt-2 text-gray-600">Get a taste of our platform.</p>
+                            <p class="text-4xl font-extrabold my-6">₹0</p>
+                            <ul class="space-y-3 text-gray-600 mb-8">
+                                <li class="flex items-center"><i data-feather="check" class="w-5 h-5 text-green-500 mr-2"></i>Limited Mock Content</li>
+                                <li class="flex items-center"><i data-feather="check" class="w-5 h-5 text-green-500 mr-2"></i>Basic Performance Analytics</li>
+                            </ul>
+                            <button onclick="showAuthModal('signup')" class="mt-auto w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-lg hover:bg-gray-300 transition-colors">Get Started</button>
+                        </div>
+                        <!-- Qbank Plan -->
+                        <div class="bg-white p-8 rounded-xl shadow-2xl border-2 border-blue-600 flex flex-col relative">
+                             <div class="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-sm font-bold px-4 py-1 rounded-full">MOST POPULAR</div>
+                            <h3 class="text-2xl font-bold text-gray-800">Qbank</h3>
+                            <p class="mt-2 text-gray-600">Unlock the entire question bank.</p>
+                            <p class="text-4xl font-extrabold my-6">₹4999 <span class="text-lg font-medium text-gray-500">/year</span></p>
+                            <ul class="space-y-3 text-gray-600 mb-8">
+                                <li class="flex items-center"><i data-feather="check" class="w-5 h-5 text-green-500 mr-2"></i>Full Qbank Access</li>
+                                <li class="flex items-center"><i data-feather="check" class="w-5 h-5 text-green-500 mr-2"></i>Unlimited Mock Tests</li>
+                                <li class="flex items-center"><i data-feather="check" class="w-5 h-5 text-green-500 mr-2"></i>Detailed Explanations</li>
+                                <li class="flex items-center"><i data-feather="check" class="w-5 h-5 text-green-500 mr-2"></i>Advanced Analytics</li>
+                            </ul>
+                            <button onclick="showAuthModal('signup')" class="mt-auto w-full rad-gradient text-white font-bold py-3 rounded-lg hover:shadow-lg transition-shadow">Choose Qbank</button>
+                        </div>
+                        <!-- All Access Pass -->
+                        <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200 flex flex-col">
+                            <h3 class="text-2xl font-bold text-gray-800">All Access Pass</h3>
+                            <p class="mt-2 text-gray-600">The ultimate preparation tool.</p>
+                            <p class="text-4xl font-extrabold my-6">₹9999 <span class="text-lg font-medium text-gray-500">/year</span></p>
+                            <ul class="space-y-3 text-gray-600 mb-8">
+                                <li class="flex items-center"><i data-feather="check" class="w-5 h-5 text-green-500 mr-2"></i>Everything in Qbank</li>
+                                <li class="flex items-center"><i data-feather="check" class="w-5 h-5 text-green-500 mr-2"></i>Video Lectures</li>
+                                <li class="flex items-center"><i data-feather="check" class="w-5 h-5 text-green-500 mr-2"></i>Personal Mentorship</li>
+                                <li class="flex items-center"><i data-feather="check" class="w-5 h-5 text-green-500 mr-2"></i>Live Doubt Solving</li>
+                            </ul>
+                           <button onclick="showAuthModal('signup')" class="mt-auto w-full bg-gray-800 text-white font-bold py-3 rounded-lg hover:bg-gray-900 transition-colors">Choose All Access</button>
+                        </div>
                     </div>
                 </div>
             </section>
         </main>
 
         <!-- Footer -->
-        <footer class="bg-gray-900 text-white">
+        <footer id="contact" class="bg-gray-900 text-white">
             <div class="container mx-auto px-6 py-12">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div>
                         <h3 class="text-xl font-bold">RadMentor</h3>
                         <p class="mt-2 text-gray-400">The future of radiology education.</p>
@@ -222,7 +335,15 @@
                         <ul class="mt-2 space-y-2">
                             <li><a href="#courses" class="text-gray-400 hover:text-white">Courses</a></li>
                             <li><a href="#features" class="text-gray-400 hover:text-white">Features</a></li>
+                             <li><a href="#pricing" class="text-gray-400 hover:text-white">Pricing</a></li>
                             <li><a href="#" onclick="showAuthModal('signup')" class="text-gray-400 hover:text-white">Sign Up</a></li>
+                        </ul>
+                    </div>
+                     <div>
+                        <h3 class="text-lg font-semibold">Legal</h3>
+                        <ul class="mt-2 space-y-2">
+                            <li><a href="#" class="text-gray-400 hover:text-white">Terms of Service</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white">Privacy Policy</a></li>
                         </ul>
                     </div>
                     <div>
@@ -237,9 +358,8 @@
         </footer>
     </div>
 
-    <!-- AUTHENTICATION MODAL, PROFILE FORM -->
-    <!-- These sections are the same as before -->
-    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden">
+    <!-- AUTHENTICATION & PROFILE FORMS -->
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[60] flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
             <button onclick="hideAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
                 <i data-feather="x" class="w-7 h-7"></i>
@@ -261,7 +381,7 @@
             </div>
         </div>
     </div>
-    <div id="profile-form-container" class="fixed inset-0 bg-gray-100 z-50 p-4 hidden overflow-y-auto">
+    <div id="profile-form-container" class="fixed inset-0 bg-gray-100 z-[60] p-4 hidden overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-auto my-8 p-8 md:p-12">
              <h1 class="text-3xl font-bold text-gray-900 text-center">Complete Your Profile</h1>
              <p class="text-gray-600 text-center mb-8">Please provide a few more details to get started.</p>
@@ -310,12 +430,12 @@
         <!-- Dashboard Topbar -->
         <div class="fixed top-0 left-0 right-0 bg-white shadow-md z-40">
             <div class="container mx-auto px-6 h-16 flex justify-between items-center">
-                <div class="flex items-center cursor-pointer" onclick="showLandingPage()">
+                <div class="flex items-center cursor-pointer" onclick="showDashboardSection('main')">
                     <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-8"/>
                     <span class="text-xl font-bold text-gray-800 ml-2">RadMentor</span>
                 </div>
                 <div class="flex items-center">
-                    <span class="hidden sm:block text-gray-700 mr-4">Hi, <span id="user-greeting-name">Doctor</span>!</span>
+                    <span class="hidden sm:block text-gray-700 mr-4">Welcome, <span id="user-greeting-name">Doctor</span>!</span>
                     <button id="dashboard-menu-button" class="text-gray-700">
                         <i data-feather="menu" class="w-6 h-6"></i>
                     </button>
@@ -329,8 +449,9 @@
                 <button id="close-sidebar-button" class="text-gray-600 hover:text-gray-900"><i data-feather="x"></i></button>
             </div>
             <nav class="space-y-2">
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 bg-blue-100 font-semibold" onclick="showDashboardSection('main')"><i data-feather="home" class="mr-3 w-5 h-5"></i>Home</a>
+                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 bg-blue-100 font-semibold" onclick="showDashboardSection('main')"><i data-feather="grid" class="mr-3 w-5 h-5"></i>Dashboard</a>
                 <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('profile')"><i data-feather="user" class="mr-3 w-5 h-5"></i>Profile</a>
+                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('bookmarks')"><i data-feather="bookmark" class="mr-3 w-5 h-5"></i>Bookmarks</a>
                 <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('subscription')"><i data-feather="credit-card" class="mr-3 w-5 h-5"></i>Subscription</a>
                 <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('settings')"><i data-feather="settings" class="mr-3 w-5 h-5"></i>Settings</a>
                 <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="logout()"><i data-feather="log-out" class="mr-3 w-5 h-5"></i>Logout</a>
@@ -341,7 +462,7 @@
             <div class="container mx-auto px-6">
                 <!-- Main Dashboard View -->
                 <div id="dashboard-main-content">
-                    <h1 class="text-3xl font-bold text-gray-900">Welcome to RadMentor</h1>
+                    <h1 class="text-3xl font-bold text-gray-900">Features</h1>
                     <p class="mt-2 text-lg text-gray-600">Select a category to start your preparation.</p>
                     <div id="access-level-notice"></div>
                     <div id="main-dashboard-grid" class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -354,7 +475,7 @@
                              <i data-feather="file-text" class="w-10 h-10 text-blue-600 mb-4"></i>
                             <h3 class="text-2xl font-bold text-gray-800">MICR</h3>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='anatomy/'">
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='anatomy.html'">
                              <i data-feather="activity" class="w-10 h-10 text-blue-600 mb-4"></i>
                             <h3 class="text-2xl font-bold text-gray-800">Anatomy</h3>
                         </div>
@@ -404,18 +525,62 @@
                         <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='frcr/Part 1/Anatomy/'">
                             <h3 class="text-2xl font-bold text-gray-800">FRCR Anatomy</h3>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='frcr/Part 1/Physics/'">
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='physics.html'">
                             <h3 class="text-2xl font-bold text-gray-800">FRCR Physics</h3>
                         </div>
                     </div>
                 </div>
 
-                <div id="profile-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
+                <div id="profile-section" class="hidden"></div>
+                <div id="bookmarks-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
                 <div id="subscription-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
                 <div id="settings-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
             </div>
         </div>
     </div>
+    
+    <!-- Profile Edit Modal -->
+    <div id="edit-profile-modal" class="fixed inset-0 bg-black bg-opacity-60 z-[70] flex items-center justify-center p-4 hidden">
+        <div id="edit-profile-form-container" class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-auto my-8 p-8 md:p-12 relative">
+            <button onclick="hideEditProfileModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800"><i data-feather="x"></i></button>
+            <h1 class="text-3xl font-bold text-gray-900 text-center">Edit Your Profile</h1>
+            <p class="text-gray-600 text-center mb-8">Keep your information up to date.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2"><input type="text" id="edit-name" placeholder="Full Name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
+                <div>
+                    <label class="font-medium text-gray-700">Date of Birth</label>
+                    <input type="date" id="edit-dob" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="font-medium text-gray-700">Sex</label>
+                    <select id="edit-sex" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option>Male</option><option>Female</option><option>Other</option>
+                    </select>
+                </div>
+                 <div>
+                    <label class="font-medium text-gray-700">Position</label>
+                    <select id="edit-position" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option>Intern</option><option>Junior Resident</option><option>Senior Resident</option><option>Consultant</option>
+                    </select>
+                </div>
+                 <div>
+                    <label class="font-medium text-gray-700">Exam Pursuing</label>
+                    <select id="edit-exam_pursuing" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option>Final year exam</option><option>DNB</option><option>FRCR</option><option>NEET SS</option><option>INICET SS</option><option>MICR</option><option>Fellowship exams</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                      <label class="font-medium text-gray-700">Medical College</label>
+                      <input list="colleges" id="edit-college" placeholder="Type to search your college" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <div class="flex gap-4 mt-8">
+                <button onclick="hideEditProfileModal()" class="w-full bg-gray-200 text-gray-800 font-bold py-3 rounded-lg hover:bg-gray-300 transition-colors">Cancel</button>
+                <button onclick="saveProfileChanges()" class="w-full rad-gradient text-white font-bold py-3 rounded-lg hover:shadow-lg transition-shadow">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -458,6 +623,7 @@
         const profileFormContainer = document.getElementById('profile-form-container');
         const headerLoggedOut = document.getElementById('header-logged-out');
         const headerLoggedIn = document.getElementById('header-logged-in');
+        const headerLoginTab = document.getElementById('header-login-tab');
         const userGreetingHeader = document.getElementById('user-greeting-header');
         const mobileMenuButton = document.getElementById('mobile-menu-button');
         const mobileMenu = document.getElementById('mobile-menu');
@@ -466,12 +632,27 @@
         const mainDashboardContent = document.getElementById('dashboard-main-content');
         const frcrPartsView = document.getElementById('frcr-parts-view');
         const frcrPart1SubjectsView = document.getElementById('frcr-part1-subjects-view');
+        const userMenuButton = document.getElementById('user-menu-button');
+        const userMenuDropdown = document.getElementById('user-menu-dropdown');
+        const editProfileModal = document.getElementById('edit-profile-modal');
 
 
         // --- Event Listeners ---
         mobileMenuButton.addEventListener('click', () => {
             mobileMenu.classList.toggle('hidden');
         });
+        
+        userMenuButton.addEventListener('click', () => {
+            userMenuDropdown.classList.toggle('hidden');
+        });
+        
+        // Close dropdown if clicked outside
+        window.addEventListener('click', function(e) {
+            if (!headerLoggedIn.contains(e.target)) {
+                userMenuDropdown.classList.add('hidden');
+            }
+        });
+
 
         // --- Auth Modal Logic ---
         function showAuthModal(mode = 'signin') {
@@ -566,7 +747,8 @@
                 .then(() => {
                     currentUserData = { ...currentUserData, ...profileData };
                     profileFormContainer.classList.add('hidden');
-                    setupLoggedInState(currentUserData); // Go back to landing page with logged-in header
+                    setupLoggedInState(currentUserData);
+                    showDashboard(); // Directly show dashboard after profile completion
                 })
                 .catch(err => alert("Error saving profile: " + err.message));
         }
@@ -581,18 +763,23 @@
                     return;
                 }
                 
-                db.collection('users').doc(user.uid).get().then(doc => {
+                const userRef = db.collection('users').doc(user.uid);
+                
+                userRef.onSnapshot(doc => {
                     hideAuthModal();
                     if (doc.exists) {
                         currentUserData = doc.data();
                         if (currentUserData.name && currentUserData.dob) {
                             setupLoggedInState(currentUserData);
+                            showDashboard();
                         } else {
                             profileFormContainer.classList.remove('hidden');
                             landingPage.classList.add('hidden');
                             dashboard.classList.add('hidden');
                         }
                     }
+                }, err => {
+                    console.log(`Encountered error: ${err}`);
                 });
 
             } else {
@@ -603,26 +790,26 @@
         });
 
         function setupLoggedInState(userData) {
-            headerLoggedOut.classList.add('hidden');
+            headerLoggedOut.style.display = 'none';
+            headerLoginTab.style.display = 'none';
             headerLoggedIn.classList.remove('hidden');
             mobileLoggedOut.classList.add('hidden');
             mobileLoggedIn.classList.remove('hidden');
             userGreetingHeader.textContent = userData.name.split(' ')[0];
             
-            landingPage.classList.remove('hidden');
-            dashboard.classList.add('hidden');
             feather.replace();
         }
-
+        
         function setupLoggedOutState() {
-            headerLoggedOut.classList.remove('hidden');
+            headerLoggedOut.style.display = 'flex';
+            headerLoginTab.style.display = 'block';
             headerLoggedIn.classList.add('hidden');
             mobileLoggedOut.classList.remove('hidden');
             mobileLoggedIn.classList.add('hidden');
 
-            landingPage.classList.remove('hidden');
-            dashboard.classList.add('hidden');
             profileFormContainer.classList.add('hidden');
+            dashboard.classList.add('hidden');
+            landingPage.classList.remove('hidden');
             hideAuthModal();
         }
         
@@ -643,14 +830,9 @@
                     <p>You have access to all features. Happy learning!</p>
                 </div>`;
             }
-            showMainDashboard();
+            showDashboardSection('main');
         }
         
-        function showLandingPage() {
-            dashboard.classList.add('hidden');
-            landingPage.classList.remove('hidden');
-        }
-
         function logout() {
             auth.signOut();
         }
@@ -670,28 +852,31 @@
             frcrPartsView.classList.add('hidden');
             frcrPart1SubjectsView.classList.add('hidden');
 
-            ['profile-section', 'subscription-section', 'settings-section'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
+            ['profile-section', 'bookmarks-section', 'subscription-section', 'settings-section'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
             });
             
-            const sectionToShow = document.getElementById(`${sectionId}-section`) || mainDashboardContent;
-            sectionToShow.classList.remove('hidden');
+            if (sectionId === 'main') {
+                mainDashboardContent.classList.remove('hidden');
+            } else {
+                const sectionToShow = document.getElementById(`${sectionId}-section`);
+                if(sectionToShow) sectionToShow.classList.remove('hidden');
+            }
             
-            if (sectionId === 'main') showMainDashboard();
             if (sectionId === 'profile') populateProfileDetails();
+            if (sectionId === 'bookmarks') populateBookmarksDetails();
             if (sectionId === 'subscription') populateSubscriptionDetails();
             if (sectionId === 'settings') populateSettingsDetails();
 
-            sidebar.classList.add('translate-x-full');
+            sidebar.classList.add('translate-x-full'); // Close sidebar on nav
+            userMenuDropdown.classList.add('hidden'); // Close user menu
             feather.replace();
         }
 
-        // --- NEW Dashboard View Functions ---
+        // --- Dashboard View Functions ---
         function showMainDashboard() {
-            mainDashboardContent.classList.remove('hidden');
-            frcrPartsView.classList.add('hidden');
-            frcrPart1SubjectsView.classList.add('hidden');
-            feather.replace();
+            showDashboardSection('main');
         }
 
         function showFrcrParts() {
@@ -708,37 +893,206 @@
             feather.replace();
         }
         
-        function populateProfileDetails() {
+        function populateProfileDetails(activeTab = 'my-profile') {
             const section = document.getElementById('profile-section');
             section.innerHTML = `
-                <h2 class="text-2xl font-bold mb-6">Your Profile</h2>
-                <div class="space-y-4">
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Name:</strong> ${currentUserData.name || 'Not set'}</div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Email:</strong> ${currentUserData.email || 'Not set'}</div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Date of Birth:</strong> ${currentUserData.dob || 'Not set'}</div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Position:</strong> ${currentUserData.position || 'Not set'}</div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>College:</strong> ${currentUserData.college || 'Not set'}</div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Exam Pursuing:</strong> ${currentUserData.examPursuing || 'Not set'}</div>
+                <div class="flex flex-col md:flex-row gap-8">
+                    <!-- Profile Sidebar -->
+                    <div class="w-full md:w-1/4">
+                        <div class="bg-white p-4 rounded-lg shadow-md">
+                            <h2 class="text-xl font-bold mb-4">My Account</h2>
+                            <nav class="space-y-2">
+                                <a href="#" data-tab="my-profile" class="profile-sidebar-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-feather="user" class="mr-3 w-5 h-5"></i>My Profile</a>
+                                <a href="#" data-tab="edit-profile" class="profile-sidebar-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-feather="edit" class="mr-3 w-5 h-5"></i>Edit Profile</a>
+                                <a href="#" data-tab="subscription" class="profile-sidebar-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-feather="credit-card" class="mr-3 w-5 h-5"></i>Subscription</a>
+                                <a href="#" data-tab="settings" class="profile-sidebar-link flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100"><i data-feather="settings" class="mr-3 w-5 h-5"></i>Settings</a>
+                            </nav>
+                        </div>
+                    </div>
+                    <!-- Profile Content -->
+                    <div class="w-full md:w-3/4">
+                        <div id="profile-content-area" class="bg-white p-8 rounded-lg shadow-md">
+                            <!-- Content will be injected here -->
+                        </div>
+                    </div>
                 </div>
             `;
+            
+            // Add event listeners to new sidebar links
+            section.querySelectorAll('.profile-sidebar-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    populateProfileDetails(link.dataset.tab);
+                });
+            });
+
+            // Set active tab
+            section.querySelector(`.profile-sidebar-link[data-tab="${activeTab}"]`).classList.add('active');
+            
+            // Populate content area based on active tab
+            const contentArea = document.getElementById('profile-content-area');
+            if (activeTab === 'my-profile') {
+                contentArea.innerHTML = `
+                    <h2 class="text-2xl font-bold mb-6">My Profile</h2>
+                    <div class="space-y-4 text-lg">
+                        <div class="p-4 bg-gray-50 rounded-lg flex justify-between"><strong>Name:</strong> <span>${currentUserData.name || 'Not set'}</span></div>
+                        <div class="p-4 bg-gray-50 rounded-lg flex justify-between"><strong>Email:</strong> <span>${currentUserData.email || 'Not set'}</span></div>
+                        <div class="p-4 bg-gray-50 rounded-lg flex justify-between"><strong>Date of Birth:</strong> <span>${currentUserData.dob || 'Not set'}</span></div>
+                        <div class="p-4 bg-gray-50 rounded-lg flex justify-between"><strong>Position:</strong> <span>${currentUserData.position || 'Not set'}</span></div>
+                        <div class="p-4 bg-gray-50 rounded-lg flex justify-between"><strong>College:</strong> <span>${currentUserData.college || 'Not set'}</span></div>
+                        <div class="p-4 bg-gray-50 rounded-lg flex justify-between"><strong>Exam Pursuing:</strong> <span>${currentUserData.examPursuing || 'Not set'}</span></div>
+                    </div>
+                `;
+            } else if (activeTab === 'edit-profile') {
+                showEditProfileModal(); // We can reuse the modal for this
+                populateProfileDetails('my-profile'); // Revert to showing profile after opening modal
+            } else if (activeTab === 'subscription') {
+                populateSubscriptionDetails(contentArea);
+            } else if (activeTab === 'settings') {
+                populateSettingsDetails(contentArea);
+            }
+            
+            feather.replace();
+        }
+        
+        function populateBookmarksDetails() {
+            const section = document.getElementById('bookmarks-section');
+              section.innerHTML = `
+                <h2 class="text-2xl font-bold mb-6">Your Bookmarks</h2>
+                <div class="text-center py-12 bg-gray-50 rounded-lg">
+                    <i data-feather="bookmark" class="w-16 h-16 mx-auto text-gray-400"></i>
+                    <p class="mt-4 text-gray-600">You haven't bookmarked any questions yet.</p>
+                    <p class="text-gray-500">This feature is coming soon!</p>
+                </div>
+              `;
+            feather.replace();
         }
 
-        function populateSubscriptionDetails() {
-              const section = document.getElementById('subscription-section');
-              section.innerHTML = `
+        function populateSubscriptionDetails(container = null) {
+              const content = `
                 <h2 class="text-2xl font-bold mb-6">Subscription</h2>
                 <p class="text-gray-600">Your current plan: <span class="font-bold text-blue-600">${currentUserData.accessLevel.toUpperCase()}</span></p>
                 <p class="mt-4">Subscription management features coming soon!</p>
               `;
+              if (container) {
+                  container.innerHTML = content;
+              } else {
+                  document.getElementById('subscription-section').innerHTML = content;
+              }
         }
         
-        function populateSettingsDetails() {
-            const section = document.getElementById('settings-section');
-              section.innerHTML = `
+        function populateSettingsDetails(container = null) {
+            const content = `
                 <h2 class="text-2xl font-bold mb-6">Settings</h2>
                 <p class="text-gray-600">Settings page is under construction.</p>
               `;
+            if (container) {
+                  container.innerHTML = content;
+              } else {
+                  document.getElementById('settings-section').innerHTML = content;
+              }
         }
+        
+        // --- Profile Edit Modal Functions ---
+        function showEditProfileModal() {
+            if (!currentUserData) return;
+            document.getElementById('edit-name').value = currentUserData.name || '';
+            document.getElementById('edit-dob').value = currentUserData.dob || '';
+            document.getElementById('edit-sex').value = currentUserData.sex || '';
+            document.getElementById('edit-position').value = currentUserData.position || '';
+            document.getElementById('edit-college').value = currentUserData.college || '';
+            document.getElementById('edit-exam_pursuing').value = currentUserData.examPursuing || '';
+            editProfileModal.classList.remove('hidden');
+            feather.replace();
+        }
+
+        function hideEditProfileModal() {
+            editProfileModal.classList.add('hidden');
+        }
+
+        function saveProfileChanges() {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const updatedProfileData = {
+                name: document.getElementById('edit-name').value,
+                dob: document.getElementById('edit-dob').value,
+                sex: document.getElementById('edit-sex').value,
+                position: document.getElementById('edit-position').value,
+                college: document.getElementById('edit-college').value,
+                examPursuing: document.getElementById('edit-exam_pursuing').value,
+            };
+
+            db.collection('users').doc(user.uid).update(updatedProfileData)
+                .then(() => {
+                    hideEditProfileModal();
+                    alert("Profile updated successfully!");
+                })
+                .catch(err => {
+                    alert("Error updating profile: " + err.message);
+                });
+        }
+        
+        // --- Homepage Interactivity ---
+        function setupQOTD() {
+            const options = document.querySelectorAll('.qotd-option');
+            options.forEach(option => {
+                option.addEventListener('click', checkQOTDAnswer);
+            });
+        }
+
+        function checkQOTDAnswer(event) {
+            const selectedOption = event.currentTarget;
+            const selectedAnswer = selectedOption.dataset.answer;
+            const correctAnswer = 'C';
+            const options = document.querySelectorAll('.qotd-option');
+
+            options.forEach(option => {
+                option.disabled = true;
+                option.classList.remove('hover:bg-gray-100');
+                const answer = option.dataset.answer;
+
+                if (answer === correctAnswer) {
+                    option.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                }
+
+                if (answer === selectedAnswer && selectedAnswer !== correctAnswer) {
+                    option.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
+                }
+            });
+
+            document.getElementById('qotd-answer').classList.remove('hidden');
+        }
+
+        function setupSpotter() {
+            const revealBtn = document.getElementById('reveal-spotter-btn');
+            if(revealBtn) {
+                revealBtn.addEventListener('click', () => {
+                    document.getElementById('spotter-answer').classList.remove('hidden');
+                    revealBtn.style.display = 'none'; // Hide button after revealing
+                });
+            }
+        }
+
+        const sections = document.querySelectorAll('.fade-in-section');
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        sections.forEach(section => {
+            observer.observe(section);
+        });
+
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', () => {
+            setupQOTD();
+            setupSpotter();
+        });
+
 
         // Populate datalist for colleges
         const collegeDatalist = document.getElementById('colleges');
