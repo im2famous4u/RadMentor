@@ -33,18 +33,6 @@
             background-clip: text;
             text-fill-color: transparent;
         }
-        .exam-session-card {
-            background-color: white;
-            border-radius: 0.5rem; /* rounded-lg */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* shadow-md */
-            transition: all 0.2s ease-in-out;
-            cursor: pointer;
-        }
-        .exam-session-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
-            border-color: #3b82f6; /* border-blue-500 */
-        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -59,7 +47,7 @@
                 <a href="/" class="text-gray-600 hover:text-blue-600">Dashboard</a>
                 <a href="/anatomy/mri-anatomy/test_shoulder/index.html" class="text-gray-600 hover:text-blue-600">Anatomy Viewer</a>
                 <a href="#" class="text-gray-600 hover:text-blue-600">Courses</a>
-                <a href="/MD_DNB/index.html" class="text-blue-600 font-semibold">MD / DNB Exams</a> </nav>
+                <a href="#" class="text-blue-600 font-semibold">MD / DNB Exams</a> </nav>
             <a href="/dashboard.html" class="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition-colors hidden md:block">
                 Dashboard
             </a>
@@ -74,7 +62,7 @@
             Master your residency exams with meticulously curated content. Learn from the best, practice with confidence, and achieve your dreams.
         </p>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mb-16">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
             <a href="#" class="rad-gradient-box block rounded-lg overflow-hidden shadow-lg p-6 text-white text-center">
                 <div class="flex flex-col items-center">
                     <i class="fas fa-graduation-cap text-5xl mb-4 opacity-80"></i>
@@ -88,78 +76,18 @@
                 </div>
             </a>
 
-            </div>
-
-        <div class="w-full max-w-5xl">
-            <h2 class="text-3xl font-bold text-center mb-6 rad-gradient-text">
-                DNB Previous Year Questions
-            </h2>
-            <p class="text-md text-gray-600 text-center max-w-2xl mx-auto mb-12">
-                Access a comprehensive collection of DNB previous year examination questions. Practice by session to perfect your preparation.
-            </p>
-
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 w-full">
-                <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
-                    <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
-                    <h3 class="text-xl font-bold text-gray-800">June 2020</h3>
-                    <p class="text-sm text-gray-600">Session Q&A</p>
-                </a>
-                <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
-                    <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
-                    <h3 class="text-xl font-bold text-gray-800">Dec 2020</h3>
-                    <p class="text-sm text-gray-600">Session Q&A</p>
-                </a>
-                <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
-                    <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
-                    <h3 class="text-xl font-bold text-gray-800">June 2021</h3>
-                    <p class="text-sm text-gray-600">Session Q&A</p>
-                </a>
-                <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
-                    <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
-                    <h3 class="text-xl font-bold text-gray-800">Dec 2021</h3>
-                    <p class="text-sm text-gray-600">Session Q&A</p>
-                </a>
-                <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
-                    <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
-                    <h3 class="text-xl font-bold text-gray-800">June 2022</h3>
-                    <p class="text-sm text-gray-600">Session Q&A</p>
-                </a>
-                <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
-                    <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
-                    <h3 class="text-xl font-bold text-gray-800">Dec 2022</h3>
-                    <p class="text-sm text-gray-600">Session Q&A</p>
-                </a>
-                <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
-                    <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
-                    <h3 class="text-xl font-bold text-gray-800">June 2023</h3>
-                    <p class="text-sm text-gray-600">Session Q&A</p>
-                </a>
-                <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
-                    <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
-                    <h3 class="text-xl font-bold text-gray-800">Dec 2023</h3>
-                    <p class="text-sm text-gray-600">Session Q&A</p>
-                </a>
-                <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
-                    <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
-                    <h3 class="text-xl font-bold text-gray-800">June 2024</h3>
-                    <p class="text-sm text-gray-600">Session Q&A</p>
-                </a>
-                <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
-                    <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
-                    <h3 class="text-xl font-bold text-gray-800">Dec 2024</h3>
-                    <p class="text-sm text-gray-600">Session Q&A</p>
-                </a>
-                <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
-                    <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
-                    <h3 class="text-xl font-bold text-gray-800">June 2025</h3>
-                    <p class="text-sm text-gray-600">Session Q&A</p>
-                </a>
-                <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
-                    <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
-                    <h3 class="text-xl font-bold text-gray-800">Dec 2025</h3>
-                    <p class="text-sm text-gray-600">Session Q&A</p>
-                </a>
-            </div>
+            <a href="#" class="rad-gradient-box block rounded-lg overflow-hidden shadow-lg p-6 text-white text-center">
+                <div class="flex flex-col items-center">
+                    <i class="fas fa-certificate text-5xl mb-4 opacity-80"></i>
+                    <h2 class="text-3xl font-bold mb-2">DNB (Diplomate of National Board) Exam</h2>
+                    <p class="text-base mb-4 opacity-90">
+                        In-depth study material and practice questions designed specifically for the DNB certification.
+                    </p>
+                    <span class="inline-block bg-white text-blue-600 font-semibold px-6 py-2 rounded-full text-lg hover:bg-blue-50 transition-colors">
+                        Start DNB Journey
+                    </span>
+                </div>
+            </a>
         </div>
     </main>
 
