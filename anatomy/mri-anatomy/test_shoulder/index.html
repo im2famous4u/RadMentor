@@ -1,64 +1,53 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Shoulder MRI Viewer</title>
-  <script src="https://unpkg.com/cornerstone-core@2/dist/cornerstone.js"></script>
-  <script src="https://unpkg.com/cornerstone-tools"></script>
-  <script src="https://unpkg.com/cornerstone-wado-image-loader"></script>
-  <script src="https://unpkg.com/dicom-parser"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+  <meta charset="UTF-8">
+  <title>Fast Shoulder MRI Viewer</title>
+  <script src="https://unpkg.com/cornerstone-core/dist/cornerstone.js"></script>
+  <script src="https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoader.js"></script>
+  <script src="https://unpkg.com/dicom-parser/dist/dicomParser.js"></script>
   <style>
-    body { margin: 0; background: #000; color: #fff; }
-    #dicomImage { width: 100vw; height: 100vh; }
+    body { margin: 0; background: black; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    #dicomImage { width: 90%; height: 90%; background: black; }
   </style>
 </head>
 <body>
   <div id="dicomImage"></div>
+
   <script>
     cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
-    cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
 
     const element = document.getElementById('dicomImage');
     cornerstone.enable(element);
 
-    async function loadMRI() {
-      const url = 'https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/shoulder.zip';
-      
-      console.log("Downloading ZIP...");
-      const response = await fetch(url);
-      const arrayBuffer = await response.arrayBuffer();
+    // Correct base path to DICOM files hosted on GitHub Pages (raw link)
+    const basePath = 'https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/';
 
-      console.log("Unzipping...");
-      const zip = await JSZip.loadAsync(arrayBuffer);
+    const totalSlices = 280; // adjust as per your series
+    let currentIndex = 1;
 
-      const fileNames = Object.keys(zip.files).sort(); // Ensure correct order
-      let imageIds = [];
-
-      // Load first 5 slices instantly
-      for (let i = 0; i < fileNames.length; i++) {
-        const fileData = await zip.files[fileNames[i]].async("arraybuffer");
-        const blob = new Blob([fileData], { type: "application/dicom" });
-        const imageId = cornerstoneWADOImageLoader.wadouri.fileManager.add(blob);
-        imageIds.push(imageId);
-
-        if (i === 4) {
-          console.log("Displaying first slice...");
-          const image = await cornerstone.loadImage(imageIds[0]);
-          cornerstone.displayImage(element, image);
-        }
+    async function loadAndDisplayImage(index) {
+      const fileName = `IMG${String(index).padStart(4, '0')}.dcm`;
+      const imageId = `wadouri:${basePath}${fileName}`;
+      try {
+        const image = await cornerstone.loadImage(imageId);
+        cornerstone.displayImage(element, image);
+      } catch (err) {
+        console.error(`Error loading ${fileName}:`, err);
       }
-
-      console.log("All slices ready. You can scroll.");
-      cornerstoneTools.init();
-      const stack = { currentImageIdIndex: 0, imageIds };
-      cornerstoneTools.addStackStateManager(element, ["stack"]);
-      cornerstoneTools.addToolState(element, "stack", stack);
-      cornerstoneTools.setToolActive("StackScrollMouseWheel", {});
-
     }
 
-    loadMRI();
+    loadAndDisplayImage(currentIndex);
+
+    document.addEventListener('keydown', function(evt) {
+      if (evt.key === 'ArrowUp' && currentIndex < totalSlices) {
+        currentIndex++;
+        loadAndDisplayImage(currentIndex);
+      } else if (evt.key === 'ArrowDown' && currentIndex > 1) {
+        currentIndex--;
+        loadAndDisplayImage(currentIndex);
+      }
+    });
   </script>
 </body>
 </html>
