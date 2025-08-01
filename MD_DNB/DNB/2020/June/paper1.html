@@ -128,7 +128,7 @@
         <h1 class="text-4xl font-extrabold text-center mb-6 rad-gradient-text">
             June 2020 DNB - Paper 1 </h1>
         <p class="text-lg text-gray-600 text-center max-w-2xl mb-12">
-            View questions and answers for this paper.
+            Practice questions from this exam paper.
         </p>
 
         <div id="pdf-viewer-outer-container" class="w-full">
@@ -197,8 +197,9 @@
         
         watermarkLogo.onload = () => {
             logoLoaded = true;
+            // If PDF is already loaded, re-render the current page to apply logo watermark
             if (pdfDoc && !pageRendering) {
-                renderPage(pageNum); // Re-render current page to apply logo if PDF already loaded
+                renderPage(pageNum);
             }
         };
         watermarkLogo.onerror = () => {
@@ -308,18 +309,22 @@
         }
 
         function onFitWidth() {
-            const viewportWidth = pdfCanvasContainer.clientWidth - 20; // Account for some padding
+            // This needs to be calculated dynamically based on the actual rendered page size
+            // We need to get the actual canvas width and compute the scale based on it.
+            const currentCanvas = pdfCanvasContainer.querySelector('canvas');
+            if (!currentCanvas) return;
+            const containerWidth = currentCanvas.clientWidth; // Get the currently rendered canvas width
             const page = pdfDoc.getPage(pageNum);
             page.then(page => {
                 const initialViewport = page.getViewport({ scale: 1.0, rotation: rotation });
-                scale = viewportWidth / initialViewport.width;
+                scale = containerWidth / initialViewport.width;
                 queueRenderPage(pageNum);
             });
         }
 
         function onFitPage() {
-            const containerHeight = pdfCanvasContainer.clientHeight - 20; // Account for some padding
-            const containerWidth = pdfCanvasContainer.clientWidth - 20;
+            const containerHeight = pdfViewerOuterContainer.clientHeight - 100; // Account for toolbar/nav height
+            const containerWidth = pdfCanvasContainer.clientWidth - 20; // Account for some padding
             const page = pdfDoc.getPage(pageNum);
             page.then(page => {
                 const initialViewport = page.getViewport({ scale: 1.0, rotation: rotation });
@@ -342,86 +347,63 @@
         }
 
         // --- Download and Print Handlers ---
-        async function onDownloadPdf() {
-            if (!pdfDoc) return;
-            // Create a temporary canvas to render all pages with watermark for download/print
-            const tempPdfDoc = await pdfjsLib.getDocument({ data: await pdfDoc.getData() }).promise;
-            
-            const pdfBlob = await renderPdfWithWatermarkToBlob(tempPdfDoc);
-            const url = URL.createObjectURL(pdfBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Watermarked_${pdfFileName}`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
+        // For these to work, you MUST include PDF-LIB.js library:
+        // Add this line in your HTML <head> section, before your main script:
+        // <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+        // If you don't include it, these buttons will not work as expected.
 
-        async function onPrintPdf() {
-            if (!pdfDoc) return;
-            const tempPdfDoc = await pdfjsLib.getDocument({ data: await pdfDoc.getData() }).promise;
-            const pdfBlob = await renderPdfWithWatermarkToBlob(tempPdfDoc);
-            const url = URL.createObjectURL(pdfBlob);
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = url;
-            document.body.appendChild(iframe);
-            iframe.onload = () => {
-                iframe.contentWindow.print();
-                document.body.removeChild(iframe);
-                URL.revokeObjectURL(url);
-            };
-        }
-
-        // Helper function to render entire PDF with watermark to a new PDF Blob
         async function renderPdfWithWatermarkToBlob(originalPdfDoc) {
-            const { PDFDocument, rgb } = PDFLib; // Ensure PDF-LIB is available if not already.
-            // For browser-side PDF generation, PDF-LIB (https://pdf-lib.js.org/) is commonly used.
-            // If you want to enable this download/print feature, you would need to include PDF-LIB:
-            // <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-            // For now, this function is illustrative. Without PDF-LIB, it just downloads the original.
+            // Check if PDFLib is available
+            if (typeof PDFLib === 'undefined' || typeof PDFLib.PDFDocument === 'undefined') {
+                console.error("PDF-LIB.js is not loaded. Download/Print functionality is disabled.");
+                alert("Download/Print functionality requires an additional library (PDF-LIB.js). Please load it in the HTML.");
+                return null; // Return null if PDF-LIB is not available
+            }
 
+            const { PDFDocument, rgb } = PDFLib;
             const newPdfDoc = await PDFDocument.create();
-            const pages = originalPdfDoc.numPages;
+            
+            // Embed logo image once
+            let embeddedLogo = null;
+            if (logoLoaded) {
+                // Fetch the image data as array buffer to embed it
+                try {
+                    const response = await fetch(watermarkLogoSrc);
+                    const logoBytes = await response.arrayBuffer();
+                    embeddedLogo = await newPdfDoc.embedPng(logoBytes);
+                } catch (e) {
+                    console.error("Failed to embed watermark logo:", e);
+                    logoLoaded = false; // Prevent further attempts if failed
+                }
+            }
 
-            for (let i = 1; i <= pages; i++) {
+            for (let i = 1; i <= originalPdfDoc.numPages; i++) {
                 const page = await originalPdfDoc.getPage(i);
-                const pageBytes = await page.renderToImage({ format: 'png' }); // Render page to image
-                const [newPdfPage] = newPdfDoc.addPage();
-                const pngImage = await newPdfDoc.embedPng(pageBytes);
+                // Render page to a temporary canvas first to get its image data
+                const tempCanvas = document.createElement('canvas');
+                const tempContext = tempCanvas.getContext('2d');
+                const tempViewport = page.getViewport({ scale: 1.0 }); // Render at 1.0 scale
+                tempCanvas.width = tempViewport.width;
+                tempCanvas.height = tempViewport.height;
+
+                await page.render({ canvasContext: tempContext, viewport: tempViewport }).promise;
                 
+                // Embed the rendered page image into the new PDF
+                const pageImage = await newPdfDoc.embedPng(tempCanvas.toDataURL('image/png'));
+                const [newPdfPage] = newPdfDoc.addPage();
+                
+                // Draw the page image
                 const { width, height } = newPdfPage.getSize();
-                newPdfPage.drawImage(pngImage, {
-                    x: 0,
-                    y: 0,
-                    width,
-                    height,
-                });
+                newPdfPage.drawImage(pageImage, { x: 0, y: 0, width, height });
 
                 // Add watermark to the new page
-                // Text Watermark
-                newPdfPage.drawText(watermarkText, {
-                    x: width / 2,
-                    y: height / 2,
-                    font: await newPdfDoc.embedFont('Helvetica-Bold'),
-                    size: width / 20,
-                    color: rgb(0, 0, 0),
-                    opacity: 0.1,
-                    rotate: {
-                        angle: Math.PI / 4,
-                        x: width / 2,
-                        y: height / 2,
-                    },
-                });
-
                 // Logo Watermark
-                if (logoLoaded) {
+                if (logoLoaded && embeddedLogo) {
                     const logoOriginalAspectRatio = watermarkLogo.naturalWidth / watermarkLogo.naturalHeight;
-                    const targetLogoWidth = width * 0.3;
+                    const targetLogoWidth = width * 0.3; // Logo takes up 30% of page width
                     const targetLogoHeight = targetLogoWidth / logoOriginalAspectRatio;
-                    const logoImage = await newPdfDoc.embedPng(watermarkLogo.src); // Re-embed from URL/Blob if needed
-                    newPdfPage.drawImage(logoImage, {
+
+                    newPdfPage.drawImage(embeddedLogo, {
                         x: (width - targetLogoWidth) / 2,
                         y: (height - targetLogoHeight) / 2,
                         width: targetLogoWidth,
@@ -429,10 +411,74 @@
                         opacity: 0.05,
                     });
                 }
+
+                // Text Watermark (only if you want it back for download/print)
+                // newPdfPage.drawText(watermarkText, {
+                //     x: width / 2,
+                //     y: height / 2,
+                //     font: await newPdfDoc.embedFont('Helvetica-Bold'),
+                //     size: width / 20,
+                //     color: rgb(0, 0, 0),
+                //     opacity: 0.1,
+                //     rotate: {
+                //         angle: Math.PI / 4,
+                //         x: width / 2,
+                //         y: height / 2,
+                //     },
+                // });
             }
 
             return newPdfDoc.save();
         }
+
+        async function onDownloadPdf() {
+            if (!pdfDoc) return;
+            pdfLoader.style.display = 'block'; // Show loader for download/print generation
+            try {
+                const pdfBlob = await renderPdfWithWatermarkToBlob(pdfDoc);
+                if (pdfBlob) {
+                    const url = URL.createObjectURL(new Blob([pdfBlob], { type: 'application/pdf' }));
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `Watermarked_${pdfFileName}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+            } catch (error) {
+                console.error("Error generating watermarked PDF for download:", error);
+                alert("Error generating PDF for download. Check console for details.");
+            } finally {
+                pdfLoader.style.display = 'none'; // Hide loader
+            }
+        }
+
+        async function onPrintPdf() {
+            if (!pdfDoc) return;
+            pdfLoader.style.display = 'block'; // Show loader for download/print generation
+            try {
+                const pdfBlob = await renderPdfWithWatermarkToBlob(pdfDoc);
+                if (pdfBlob) {
+                    const url = URL.createObjectURL(new Blob([pdfBlob], { type: 'application/pdf' }));
+                    const iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    iframe.src = url;
+                    document.body.appendChild(iframe);
+                    iframe.onload = () => {
+                        iframe.contentWindow.print();
+                        document.body.removeChild(iframe);
+                        URL.revokeObjectURL(url);
+                    };
+                }
+            } catch (error) {
+                console.error("Error generating watermarked PDF for print:", error);
+                alert("Error generating PDF for print. Check console for details.");
+            } finally {
+                pdfLoader.style.display = 'none'; // Hide loader
+            }
+        }
+
 
         // --- Event Listeners for Toolbar ---
         zoomInBtn.addEventListener('click', onZoomIn);
@@ -441,9 +487,8 @@
         fitPageBtn.addEventListener('click', onFitPage);
         rotateLeftBtn.addEventListener('click', onRotateLeft);
         rotateRightBtn.addEventListener('click', onRotateRight);
-        // Temporarily disable Download/Print if PDF-LIB is not included
-        // downloadBtn.addEventListener('click', onDownloadPdf);
-        // printBtn.addEventListener('click', onPrintPdf);
+        downloadBtn.addEventListener('click', onDownloadPdf);
+        printBtn.addEventListener('click', onPrintPdf);
 
 
         // --- Load the PDF Document ---
@@ -457,14 +502,12 @@
                 renderPage(pageNum);
             } catch (error) {
                 console.error('Error loading PDF:', error);
-                alert('Failed to load PDF document. Please check the PDF path and ensure it\'s accessible.');
+                alert('Failed to load PDF document. Please check the PDF path and ensure it\'s accessible. Error: ' + error.message);
                 pdfLoader.style.display = 'none'; // Hide loader on error
             }
         }
 
         // --- Main Execution ---
-        // The PDF file is in the SAME folder as this HTML file.
-        // E.g., RadMentor/MD_DNB/DNB/2020/june/paper1.html and RadMentor/MD_DNB/DNB/2020/june/DNB JUNE 2020 Paper 1.pdf
         const pdfFileName = "DNB JUNE 2020 Paper 1.pdf"; // UPDATE THIS FOR EACH PAPER!
         const pdfUrl = pdfFileName; 
 
