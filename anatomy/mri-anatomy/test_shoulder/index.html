@@ -1,90 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Shoulder MRI Viewer with Annotations</title>
-  <script src="https://unpkg.com/cornerstone-core@2/dist/cornerstone.js"></script>
-  <script src="https://unpkg.com/cornerstone-tools@4/dist/cornerstoneTools.js"></script>
-  <script src="https://unpkg.com/cornerstone-wado-image-loader@4/dist/cornerstoneWADOImageLoader.js"></script>
-  <script src="https://unpkg.com/dicom-parser/dist/dicomParser.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shoulder MRI Viewer</title>
   <style>
-    html, body { margin:0; height:100%; background:black; }
-    #dicomImage { width:100%; height:100%; }
-    .annotation-label {
-      position:absolute;
-      color:lime;
-      font-size:14px;
-      font-family:Arial, sans-serif;
+    body {
+      margin: 0;
+      background: black;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    #dicomImage {
+      width: 512px;
+      height: 512px;
+      margin: 20px auto;
+      background-color: black;
     }
   </style>
 </head>
 <body>
-  <div id="dicomImage"></div>
-  <script>
-    const element = document.getElementById('dicomImage');
-    cornerstone.enable(element);
 
-    // Configure WADO Image Loader
-    cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
-    cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
+<h2 style="text-align:center;">Shoulder MRI Viewer</h2>
+<div id="dicomImage"></div>
 
-    const basePath = "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/";
-    const slices = [];
-    for (let i = 1; i <= 280; i++) {
-      slices.push(`wadouri:${basePath}IMG${String(i).padStart(4,'0')}.dcm`);
+<!-- ✅ Load libraries in the correct order -->
+<script src="https://unpkg.com/cornerstone-core@2/dist/cornerstone.js"></script>
+<script src="https://unpkg.com/dicom-parser/dist/dicomParser.js"></script>
+<script src="https://unpkg.com/cornerstone-wado-image-loader@4/dist/cornerstoneWADOImageLoader.js"></script>
+<script src="https://unpkg.com/cornerstone-tools@4/dist/cornerstoneTools.js"></script>
+
+<!-- ✅ Your script -->
+<script>
+  // Link cornerstoneWADOImageLoader with cornerstone
+  cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
+  cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
+
+  // Set web worker path for WADO loader
+  cornerstoneWADOImageLoader.webWorkerManager.initialize({
+    webWorkerPath: 'https://unpkg.com/cornerstone-wado-image-loader@4/dist/cornerstoneWADOImageLoaderWebWorker.js',
+    taskConfiguration: {
+      decodeTask: {
+        codecsPath: 'https://unpkg.com/cornerstone-wado-image-loader@4/dist/cornerstoneWADOImageLoaderCodecs.js'
+      }
     }
+  });
 
-    // Load first slice
-    let currentIndex = 0;
-    loadAndDisplayImage(slices[currentIndex]);
+  const element = document.getElementById('dicomImage');
+  cornerstone.enable(element);
 
-    function loadAndDisplayImage(imageId) {
-      cornerstone.loadAndCacheImage(imageId).then(image => {
-        cornerstone.displayImage(element, image);
-        drawAnnotations(currentIndex);
-      });
-    }
+  // Change this to your actual DICOM URL
+  const dicomImageUrl = 'wadouri:http://localhost/dicoms/shoulder.dcm';
 
-    // Load MRK JSON & parse
-    const labelFiles = ['Deltoid.mrk.json', 'Humerus.mrk.json', 'Scapula.mrk.json'];
-    let annotations = [];
+  cornerstone.loadImage(dicomImageUrl).then(function(image) {
+    cornerstone.displayImage(element, image);
+  }).catch(function(err) {
+    console.error('Error loading DICOM image:', err);
+  });
+</script>
 
-    Promise.all(labelFiles.map(file => fetch(basePath + file).then(r => r.json())))
-      .then(data => {
-        data.forEach(json => {
-          json.markups[0].controlPoints.forEach(pt => {
-            annotations.push({
-              label: pt.label,
-              pos: pt.position // [L, P, S] in mm
-            });
-          });
-        });
-      });
-
-    function drawAnnotations(sliceIndex) {
-      // Clear old labels
-      document.querySelectorAll('.annotation-label').forEach(el => el.remove());
-
-      // For now, simple match by Z position approx
-      annotations.forEach(pt => {
-        const zPos = Math.round(pt.pos[2]); // S coordinate
-        if (Math.abs(zPos - sliceIndex) < 1) {
-          const labelDiv = document.createElement('div');
-          labelDiv.className = 'annotation-label';
-          labelDiv.style.left = (element.clientWidth/2) + 'px';
-          labelDiv.style.top = (element.clientHeight/2) + 'px';
-          labelDiv.innerText = pt.label;
-          document.body.appendChild(labelDiv);
-        }
-      });
-    }
-
-    // Mouse wheel scroll
-    element.addEventListener('wheel', e => {
-      if (e.deltaY > 0 && currentIndex < slices.length - 1) currentIndex++;
-      else if (e.deltaY < 0 && currentIndex > 0) currentIndex--;
-      loadAndDisplayImage(slices[currentIndex]);
-    });
-  </script>
 </body>
 </html>
