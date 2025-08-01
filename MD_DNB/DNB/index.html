@@ -1,1 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNB Previous Year Questions - RadMentor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Tailwind's bg-gray-50 */
+            color: #374151; /* Tailwind's text-gray-700 */
+        }
+        .rad-gradient-text {
+            background: linear-gradient(90deg, #1e40af, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+        .exam-session-card {
+            background-color: white;
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* shadow-md */
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        .exam-session-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+            border-color: #3b82f6; /* border-blue-500 */
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    
+    <header class="bg-white/80 backdrop-blur-lg flex-shrink-0 z-20 shadow-sm">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
+                <span class="text-2xl font-bold text-gray-800">RadMentor</span>
+            </div>
+            <nav class="hidden md:flex items-center space-x-8">
+                <a href="/" class="text-gray-600 hover:text-blue-600">Dashboard</a>
+                <a href="/anatomy/mri-anatomy/test_shoulder/index.html" class="text-gray-600 hover:text-blue-600">Anatomy Viewer</a>
+                <a href="#" class="text-gray-600 hover:text-blue-600">Courses</a>
+                <a href="/MD_DNB/index.html" class="text-blue-600 font-semibold">MD / DNB Exams</a> </nav>
+            <a href="/dashboard.html" class="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition-colors hidden md:block">
+                Dashboard
+            </a>
+        </div>
+    </header>
 
+    <main class="flex-1 container mx-auto px-6 py-8 flex flex-col items-center">
+        <h1 class="text-4xl font-extrabold text-center mb-6 rad-gradient-text">
+            DNB Previous Year Questions
+        </h1>
+        <p class="text-lg text-gray-600 text-center max-w-2xl mb-12">
+            Access a comprehensive collection of DNB previous year examination questions. Practice by session to perfect your preparation.
+        </p>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 w-full max-w-5xl">
+            <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
+                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
+                <h3 class="text-xl font-bold text-gray-800">June 2020</h3>
+                <p class="text-sm text-gray-600">Session Q&A</p>
+            </a>
+            <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
+                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
+                <h3 class="text-xl font-bold text-gray-800">Dec 2020</h3>
+                <p class="text-sm text-gray-600">Session Q&A</p>
+            </a>
+            <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
+                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
+                <h3 class="text-xl font-bold text-gray-800">June 2021</h3>
+                <p class="text-sm text-gray-600">Session Q&A</p>
+            </a>
+            <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
+                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
+                <h3 class="text-xl font-bold text-gray-800">Dec 2021</h3>
+                <p class="text-sm text-gray-600">Session Q&A</p>
+            </a>
+            <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
+                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
+                <h3 class="text-xl font-bold text-gray-800">June 2022</h3>
+                <p class="text-sm text-gray-600">Session Q&A</p>
+            </a>
+            <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
+                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
+                <h3 class="text-xl font-bold text-gray-800">Dec 2022</h3>
+                <p class="text-sm text-gray-600">Session Q&A</p>
+            </a>
+            <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
+                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
+                <h3 class="text-xl font-bold text-gray-800">June 2023</h3>
+                <p class="text-sm text-gray-600">Session Q&A</p>
+            </a>
+            <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
+                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
+                <h3 class="text-xl font-bold text-gray-800">Dec 2023</h3>
+                <p class="text-sm text-gray-600">Session Q&A</p>
+            </a>
+            <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
+                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
+                <h3 class="text-xl font-bold text-gray-800">June 2024</h3>
+                <p class="text-sm text-gray-600">Session Q&A</p>
+            </a>
+            <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
+                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
+                <h3 class="text-xl font-bold text-gray-800">Dec 2024</h3>
+                <p class="text-sm text-gray-600">Session Q&A</p>
+            </a>
+            <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
+                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
+                <h3 class="text-xl font-bold text-gray-800">June 2025</h3>
+                <p class="text-sm text-gray-600">Session Q&A</p>
+            </a>
+            <a href="#" class="exam-session-card p-4 flex flex-col items-center justify-center border border-gray-200">
+                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
+                <h3 class="text-xl font-bold text-gray-800">Dec 2025</h3>
+                <p class="text-sm text-gray-600">Session Q&A</p>
+            </a>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white text-center py-4 mt-8 flex-shrink-0">
+        <p>&copy; 2025 RadMentor. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>
