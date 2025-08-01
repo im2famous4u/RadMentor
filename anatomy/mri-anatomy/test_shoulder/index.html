@@ -198,14 +198,15 @@
         </aside>
     </div>
 
-    <script src="./js/dicomParser.min.js"></script> 
+    <script src="/js/dicomParser.min.js"></script> 
     
     <script type="module">
         // Cornerstone.js libraries: These files need to be in your 'js' folder
-        import * as cornerstone3D from './js/cornerstone-core.min.js';
-        import * as cornerstoneTools from './js/cornerstone-tools.min.js';
-        import dicomLoader from './js/dicom-image-loader.min.js';
-        import { init as initProviders } from './js/streaming-image-volume-loader.min.js';
+        // Paths are now absolute from the website root.
+        import * as cornerstone3D from '/js/cornerstone-core.min.js';
+        import * as cornerstoneTools from '/js/cornerstone-tools.min.js';
+        import dicomLoader from '/js/dicom-image-loader.min.js';
+        import { init as initProviders } from '/js/streaming-image-volume-loader.min.js';
         
         const { RenderingEngine, Enums, volumeLoader, utilities } = cornerstone3D;
         const { PanTool, WindowLevelTool, StackScrollMouseWheelTool, ZoomTool, ToolGroupManager, MPRCrosshairsTool } = cornerstoneTools;
@@ -294,10 +295,15 @@
             toolGroup.addViewport(viewportIds.coronal, renderingEngineId);
 
             // --- Load DICOM Volume from GitHub ---
+            // The path to your DICOM files remains the same (relative to RadMentor root)
+            // But now we use an absolute path for the logo as well for consistency
+            document.querySelector('header img').src = '/logo.png'; // Assuming logo is also at the root
+
             const githubUsername = "im2famous4u";
             const githubRepoName = "RadMentor"; // Confirmed: Your repository name is RadMentor
             const githubBranch = "main"; // Confirmed: Your branch name is main
-            const dicomFolderPath = "anatomy/mri-anatomy/test_shoulder/shoulder-dicom/"; // Confirmed: Your folder path
+            // This path needs to be correct from the ROOT of the GitHub repo.
+            const dicomFolderPath = "anatomy/mri-anatomy/test_shoulder/shoulder-dicom/"; 
 
             const baseUrl = `https://raw.githubusercontent.com/${githubUsername}/${githubRepoName}/${githubBranch}/${dicomFolderPath}`;
             
