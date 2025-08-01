@@ -205,12 +205,15 @@
         // Paths are now absolute from the website root.
         import * as cornerstone3D from '/js/cornerstone-core.min.js';
         import * as cornerstoneTools from '/js/cornerstone-tools.min.js';
-        import * as dicomLoader from '/js/dicom-image-loader.min.js'; // Changed to import * as
-        import { init as initProviders } from '/js/streaming-image-volume-loader.min.js';
+        import * as dicomLoader from '/js/dicom-image-loader.min.js';
+        import * as streamingImageVolumeLoaderModule from '/js/streaming-image-volume-loader.min.js'; // Changed to import * as
         
         const { RenderingEngine, Enums, volumeLoader, utilities } = cornerstone3D;
         const { PanTool, WindowLevelTool, StackScrollMouseWheelTool, ZoomTool, ToolGroupManager, MPRCrosshairsTool } = cornerstoneTools;
-        const { cornerstoneStreamingImageVolumeLoader, createImageIdsAndCacheMetaData } = dicomLoader; // Access properties from dicomLoader namespace
+        // Access specific exports from the modules
+        const { cornerstoneStreamingImageVolumeLoader } = streamingImageVolumeLoaderModule; // Get it from the namespace import
+        const { createImageIdsAndCacheMetaData } = dicomLoader; 
+
 
         const loadingIndicator = document.getElementById('loading-indicator');
         const toolbarButtons = document.querySelectorAll('#toolbar .tool-btn');
@@ -245,7 +248,7 @@
             
             dicomLoader.external.cornerstone = cornerstone3D;
             dicomLoader.external.dicomParser = window.dicomParser; // dicomParser is globally available via script tag
-            initProviders(); // Initialize the streaming image volume loader providers
+            streamingImageVolumeLoaderModule.init(); // Call init on the namespace object
 
             const volumeLoaderScheme = 'cornerstoneStreamingImageVolume';
             volumeLoader.registerVolumeLoader(volumeLoaderScheme, cornerstoneStreamingImageVolumeLoader);
