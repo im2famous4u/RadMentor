@@ -48,32 +48,42 @@
         }
         /* Annotation-specific styles */
         .annotation-label {
+            position: absolute;
             background-color: rgba(255, 255, 255, 0.95);
             color: #1e3a8a; /* blue-900 */
             padding: 5px 10px;
             border-radius: 4px;
             font-size: 0.9rem;
             font-weight: 500;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #93c5fd; /* blue-300 */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border: 1px solid #60a5fa; /* blue-400 */
+            z-index: 11;
             cursor: default;
             pointer-events: auto;
             white-space: normal;
-            line-height: 1.3;
-            margin-bottom: 4px; /* Added margin to prevent overlap */
+            max-width: 180px;
+            line-height: 1.2;
+        }
+        .annotation-label.align-right {
+            transform: translate(-100%, -50%);
+            text-align: right;
+        }
+        .annotation-label.align-left {
+            transform: translate(0, -50%);
+            text-align: left;
         }
         .annotation-svg-overlay line {
             stroke: #3b82f6; /* blue-500 */
             stroke-width: 2;
             opacity: 0;
-            transition: opacity 0.2s ease;
+            transition: opacity 0.3s ease;
         }
         .annotation-svg-overlay line.visible-on-hover {
-            opacity: 0.8;
+            opacity: 0.7;
         }
         .annotation-svg-overlay circle {
             fill: #ef4444; /* red-500 */
-            transition: r 0.2s ease;
+            transition: r 0.1s ease;
         }
         .annotation-svg-overlay circle.visible-on-hover-circle {
             r: 6;
@@ -82,52 +92,33 @@
 </head>
 <body class="bg-gray-100">
 
-    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-[1600px]">
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
         <!-- Header -->
-        <div class="text-center mb-6">
+        <div class="text-center mb-8">
             <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900">HRCT Temporal Bone - Axial Section</h1>
             <p class="mt-2 text-lg text-gray-600">Use the slider, your mouse wheel, or arrow keys to navigate slices.</p>
         </div>
 
-        <!-- Viewer Body with 3-column layout -->
-        <div id="viewer-body" class="relative flex items-start justify-center gap-4">
-            
-            <!-- Left Annotations Column -->
-            <div id="left-annotations-column" class="w-64 flex-shrink-0 flex flex-col items-end">
-                <!-- Labels will be dynamically inserted here -->
-            </div>
-
-            <!-- Central Image Wrapper -->
-            <div id="image-wrapper" class="relative flex-grow bg-black rounded-lg shadow-lg overflow-hidden">
+        <!-- Viewer Body -->
+        <div id="viewer-body" class="relative w-full">
+            <div id="image-wrapper" class="relative mx-auto bg-black rounded-lg shadow-lg overflow-hidden" style="max-width: 1250px;">
                 <img id="temporalBoneSliceImage" src="" alt="HRCT Temporal Bone Axial Slice" class="block w-full h-auto">
                 <svg class="annotation-svg-overlay absolute top-0 left-0 w-full h-full pointer-events-none" id="annotationSvgOverlay"></svg>
-            </div>
-
-            <!-- Right Annotations Column -->
-            <div id="right-annotations-column" class="w-64 flex-shrink-0 flex flex-col items-start">
-                <!-- Labels will be dynamically inserted here -->
+                <!-- Labels will be positioned relative to viewer-body -->
             </div>
         </div>
         
         <!-- Controls -->
-        <div class="controls w-full max-w-4xl mx-auto mt-6 space-y-4">
+        <div class="controls w-full max-w-4xl mx-auto mt-8 space-y-4">
             <input type="range" id="sliceSlider" min="1" max="131" value="1">
             <div id="sliceNumberDisplay" class="text-center font-semibold text-gray-700 text-lg">Slice: 1 / 131</div>
-        </div>
-
-        <!-- NEW: Bottom Annotations Container -->
-        <div id="bottom-annotations-container" class="w-full max-w-5xl mx-auto mt-8 hidden">
-            <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Additional Structures</h3>
-            <div id="bottom-annotations-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                <!-- Additional labels will be dynamically inserted here -->
-            </div>
         </div>
 
         <!-- Back Button -->
         <div class="mt-8 text-center">
             <button onclick="history.back()" class="inline-flex items-center text-gray-600 hover:text-blue-600 font-semibold py-2 px-4 rounded-lg transition-colors duration-200 bg-gray-200 hover:bg-gray-300">
                 <i data-feather="arrow-left" class="mr-2 h-5 w-5"></i>
-                <span>Back to CT Anatomy</span>
+                <span>Back to HRCT Menu</span>
             </button>
         </div>
     </div>
@@ -145,7 +136,8 @@
         const PADDING_LEFT = 400;
         const IMAGE_FILE_WIDTH = 1250;
         const IMAGE_FILE_HEIGHT = 600;
-        const MAX_SIDE_LABELS = 16;
+        const LABEL_OFFSET_FROM_ANATOMY_EDGE = 20;
+        const LABEL_VERTICAL_SPACING = 10;
         
         // --- DOM ELEMENTS ---
         const viewerBody = document.getElementById('viewer-body');
@@ -154,14 +146,10 @@
         const sliceSlider = document.getElementById('sliceSlider');
         const sliceNumberDisplay = document.getElementById('sliceNumberDisplay');
         const annotationSvgOverlay = document.getElementById('annotationSvgOverlay');
-        const leftAnnotationsColumn = document.getElementById('left-annotations-column');
-        const rightAnnotationsColumn = document.getElementById('right-annotations-column');
-        const bottomAnnotationsContainer = document.getElementById('bottom-annotations-container');
-        const bottomAnnotationsGrid = document.getElementById('bottom-annotations-grid');
 
         let allAnnotations = [];
 
-        // --- CORE LOGIC (REBUILT FOR NEW LAYOUT) ---
+        // --- CORE LOGIC (REVERTED TO PREVIOUS WORKING VERSION) ---
         async function loadAnnotations() {
             try {
                 const response = await fetch(`${annotationJsonPath}all_annotations.json`);
@@ -188,49 +176,112 @@
             sliceNumberDisplay.textContent = `Slice: ${currentSlice} / ${imageCount}`;
 
             // Clear previous annotations
-            leftAnnotationsColumn.innerHTML = '';
-            rightAnnotationsColumn.innerHTML = '';
-            bottomAnnotationsGrid.innerHTML = '';
-            bottomAnnotationsContainer.classList.add('hidden');
+            document.querySelectorAll('.annotation-label').forEach(el => el.remove());
             annotationSvgOverlay.innerHTML = '';
 
             const placeAnnotations = () => {
+                const imageDisplayWidth = temporalBoneSliceImage.offsetWidth;
+                const imageDisplayHeight = temporalBoneSliceImage.offsetHeight;
+
+                const scaleX = imageDisplayWidth / IMAGE_FILE_WIDTH;
+                const scaleY = imageDisplayHeight / IMAGE_FILE_HEIGHT;
+                
                 const annotationsForCurrentSlice = allAnnotations
                     .filter(ann => ann.slice === currentSlice)
                     .sort((a, b) => a.pointY_mm - b.pointY_mm);
 
-                const sideAnnotations = annotationsForCurrentSlice.slice(0, MAX_SIDE_LABELS);
-                const bottomAnnotations = annotationsForCurrentSlice.slice(MAX_SIDE_LABELS);
-                
-                const midpoint = Math.ceil(sideAnnotations.length / 2);
+                let placedLabelsLeft = [];
+                let placedLabelsRight = [];
 
-                sideAnnotations.forEach((annotation, index) => {
+                const checkOverlap = (testY, height, placedLabels) => {
+                    const top1 = testY - height / 2;
+                    const bottom1 = testY + height / 2;
+                    for (const label of placedLabels) {
+                        if (top1 < (label.bottom + LABEL_VERTICAL_SPACING) && bottom1 > (label.top - LABEL_VERTICAL_SPACING)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                };
+
+                annotationsForCurrentSlice.forEach((annotation) => {
+                    const x_in_anatomy = annotation.pointX_mm;
+                    const y_in_anatomy = annotation.pointY_mm;
+                    
+                    const x_in_file = x_in_anatomy + PADDING_LEFT;
+                    const y_in_file = y_in_anatomy + PADDING_TOP;
+                    
+                    const pX_px = x_in_file * scaleX;
+                    const pY_px = y_in_file * scaleY;
+
                     const labelDiv = document.createElement('div');
                     labelDiv.className = 'annotation-label';
                     labelDiv.textContent = annotation.text;
-                    labelDiv.id = `label-${index}`; 
+                    viewerBody.appendChild(labelDiv);
 
-                    if (index < midpoint) {
-                        labelDiv.classList.add('text-right');
-                        leftAnnotationsColumn.appendChild(labelDiv);
-                    } else {
-                        rightAnnotationsColumn.appendChild(labelDiv);
+                    const labelHeight = labelDiv.offsetHeight;
+                    
+                    const pointIsOnLeftSide = x_in_anatomy < (ANATOMY_DATA_WIDTH / 2);
+                    const targetColumn = pointIsOnLeftSide ? placedLabelsLeft : placedLabelsRight;
+                    
+                    let bestY = pY_px;
+                    let foundFit = false;
+
+                    if (bestY - labelHeight / 2 >= 0 && bestY + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(bestY, labelHeight, targetColumn)) {
+                        foundFit = true;
                     }
+                    if (!foundFit) {
+                        for (let offset = 10; offset < imageDisplayHeight / 2; offset += 5) {
+                            let tryUp = pY_px - offset;
+                            if (tryUp - labelHeight / 2 >= 0 && !checkOverlap(tryUp, labelHeight, targetColumn)) { bestY = tryUp; foundFit = true; break; }
+                            let tryDown = pY_px + offset;
+                            if (tryDown + labelHeight / 2 <= imageDisplayHeight && !checkOverlap(tryDown, labelHeight, targetColumn)) { bestY = tryDown; foundFit = true; break; }
+                        }
+                    }
+                    if (!foundFit) {
+                        for (let scanY = (labelHeight / 2) + 5; scanY < imageDisplayHeight - (labelHeight / 2); scanY += 5) {
+                            if (!checkOverlap(scanY, labelHeight, targetColumn)) { bestY = scanY; break; }
+                        }
+                    }
+                    bestY = Math.max(bestY, labelHeight / 2);
+                    bestY = Math.min(bestY, imageDisplayHeight - labelHeight / 2);
+                    
+                    let labelTargetX_px, lineEndX_px;
+                    const imageRect = imageWrapper.getBoundingClientRect();
+                    const bodyRect = document.body.getBoundingClientRect();
+
+                    if (pointIsOnLeftSide) {
+                        labelDiv.classList.add('align-right');
+                        labelTargetX_px = imageRect.left - bodyRect.left - LABEL_OFFSET_FROM_ANATOMY_EDGE;
+                        lineEndX_px = pX_px - (pX_px - (labelTargetX_px + labelDiv.offsetWidth));
+                    } else {
+                        labelDiv.classList.add('align-left');
+                        labelTargetX_px = imageRect.right - bodyRect.left + LABEL_OFFSET_FROM_ANATOMY_EDGE;
+                        lineEndX_px = pX_px + (labelTargetX_px - pX_px);
+                    }
+
+                    labelDiv.style.left = `${labelTargetX_px}px`;
+                    labelDiv.style.top = `${bestY}px`;
+                    targetColumn.push({ top: bestY - labelHeight / 2, bottom: bestY + labelHeight / 2 });
+
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', pX_px);
+                    line.setAttribute('y1', pY_px);
+                    line.setAttribute('x2', pointIsOnLeftSide ? lineEndX_px + labelDiv.offsetWidth : lineEndX_px);
+                    line.setAttribute('y2', bestY);
+                    annotationSvgOverlay.appendChild(line);
+
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', pX_px);
+                    circle.setAttribute('cy', pY_px);
+                    circle.setAttribute('r', 4);
+                    annotationSvgOverlay.appendChild(circle);
+
+                    const activate = () => { line.classList.add('visible-on-hover'); circle.classList.add('visible-on-hover-circle'); };
+                    const deactivate = () => { line.classList.remove('visible-on-hover'); circle.classList.remove('visible-on-hover-circle'); };
+                    labelDiv.onmouseover = circle.onmouseover = activate;
+                    labelDiv.onmouseout = circle.onmouseout = deactivate;
                 });
-
-                if (bottomAnnotations.length > 0) {
-                    bottomAnnotationsContainer.classList.remove('hidden');
-                    bottomAnnotations.forEach(annotation => {
-                        const labelDiv = document.createElement('div');
-                        labelDiv.className = 'annotation-label text-center';
-                        labelDiv.textContent = annotation.text;
-                        bottomAnnotationsGrid.appendChild(labelDiv);
-                    });
-                }
-
-                setTimeout(() => {
-                    drawAnnotationLines(sideAnnotations);
-                }, 100); // A small delay to ensure labels are rendered
             };
             
             if (temporalBoneSliceImage.complete && temporalBoneSliceImage.naturalHeight !== 0) {
@@ -238,48 +289,6 @@
             } else {
                 temporalBoneSliceImage.onload = placeAnnotations;
             }
-        }
-
-        function drawAnnotationLines(annotations) {
-            const imageDisplayWidth = temporalBoneSliceImage.offsetWidth;
-            const imageDisplayHeight = temporalBoneSliceImage.offsetHeight;
-            const scaleX = imageDisplayWidth / IMAGE_FILE_WIDTH;
-            const scaleY = imageDisplayHeight / IMAGE_FILE_HEIGHT;
-            
-            const svgRect = annotationSvgOverlay.getBoundingClientRect();
-            const midpoint = Math.ceil(annotations.length / 2);
-
-            annotations.forEach((annotation, index) => {
-                const labelDiv = document.getElementById(`label-${index}`);
-                if (!labelDiv) return;
-
-                const pX_px = (annotation.pointX_mm + PADDING_LEFT) * scaleX;
-                const pY_px = (annotation.pointY_mm + PADDING_TOP) * scaleY;
-
-                const labelRect = labelDiv.getBoundingClientRect();
-                const isOnLeftColumn = index < midpoint;
-                
-                const lineEndY = labelRect.top - svgRect.top + (labelRect.height / 2);
-                const lineEndX = isOnLeftColumn ? (labelRect.right - svgRect.left) : (labelRect.left - svgRect.left);
-
-                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                line.setAttribute('x1', pX_px);
-                line.setAttribute('y1', pY_px);
-                line.setAttribute('x2', lineEndX);
-                line.setAttribute('y2', lineEndY);
-                annotationSvgOverlay.appendChild(line);
-
-                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                circle.setAttribute('cx', pX_px);
-                circle.setAttribute('cy', pY_px);
-                circle.setAttribute('r', 4);
-                annotationSvgOverlay.appendChild(circle);
-
-                const activate = () => { line.classList.add('visible-on-hover'); circle.classList.add('visible-on-hover-circle'); };
-                const deactivate = () => { line.classList.remove('visible-on-hover'); circle.classList.remove('visible-on-hover-circle'); };
-                labelDiv.onmouseover = circle.onmouseover = activate;
-                labelDiv.onmouseout = circle.onmouseout = deactivate;
-            });
         }
         
         // --- EVENT LISTENERS ---
