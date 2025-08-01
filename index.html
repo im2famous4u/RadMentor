@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RadMentor - Comprehensive Radiology Learning Source</title>
+    <title>FRCR Preparation - RadMentor</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,7 +17,7 @@
     <script src="https://unpkg.com/feather-icons"></script>
 
     <style>
-        /* Custom styles to complement Tailwind */
+        /* Custom styles to match main website */
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f8fafc; /* Light gray background */
@@ -33,733 +33,263 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* Styles for the dashboard part */
-        .dashboard-grid-item {
+        /* Card hover effects matching main website */
+        .frcr-card {
             transition: all 0.2s ease-in-out;
             border: 1px solid #e5e7eb;
         }
-        .dashboard-grid-item:hover {
+        .frcr-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             border-color: #3b82f6;
         }
-        .sidebar {
-            transition: transform 0.3s ease-in-out;
+
+        /* Expandable section styles */
+        .expandable-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        .expandable-content.expanded {
+            max-height: 500px;
+        }
+
+        /* Coming soon badge */
+        .coming-soon {
+            position: relative;
+            opacity: 0.6;
+        }
+        .coming-soon::after {
+            content: 'Coming Soon';
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: #fbbf24;
+            color: #92400e;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
         }
     </style>
 </head>
 <body class="text-gray-800">
 
-    <!-- This header is now persistent and changes based on login state -->
+    <!-- Header matching main website -->
     <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
         <div class="container mx-auto px-6 py-3 flex justify-between items-center">
             <div class="flex items-center">
                 <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
                 <span class="text-2xl font-bold text-gray-800">RadMentor</span>
             </div>
-            <nav id="main-nav" class="hidden md:flex items-center space-x-8">
-                <a href="#courses" class="text-gray-600 hover:text-blue-600">Courses</a>
-                <a href="#features" class="text-gray-600 hover:text-blue-600">Features</a>
-                <a href="#about" class="text-gray-600 hover:text-blue-600">About Us</a>
+            <nav class="hidden md:flex items-center space-x-8">
+                <a href="../index.html" class="text-gray-600 hover:text-blue-600">Home</a>
+                <a href="../index.html#courses" class="text-gray-600 hover:text-blue-600">Courses</a>
+                <a href="../index.html#features" class="text-gray-600 hover:text-blue-600">Features</a>
+                <a href="../index.html#about" class="text-gray-600 hover:text-blue-600">About Us</a>
             </nav>
             <div class="flex items-center">
-                <!-- Logged Out Buttons -->
-                <div id="header-logged-out" class="flex items-center">
-                    <button onclick="showAuthModal('signin')" class="hidden md:block text-gray-600 hover:text-blue-600 mr-6">Login</button>
-                    <button onclick="showAuthModal('signup')" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                        Sign Up
-                    </button>
-                </div>
-                <!-- Logged In Buttons -->
-                <div id="header-logged-in" class="hidden items-center">
-                     <span class="hidden sm:block text-gray-700 mr-4">Hi, <span id="user-greeting-header"></span>!</span>
-                     <button onclick="showDashboard()" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                        Dashboard
-                    </button>
-                    <button onclick="logout()" class="ml-4 text-gray-600 hover:text-blue-600" title="Logout">
-                        <i data-feather="log-out"></i>
-                    </button>
-                </div>
+                <button onclick="window.location.href='../index.html'" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                    Back to Home
+                </button>
                 <button id="mobile-menu-button" class="md:hidden ml-4 text-gray-700">
                     <i data-feather="menu"></i>
                 </button>
             </div>
         </div>
-          <!-- Mobile Menu -->
+        <!-- Mobile Menu -->
         <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
-            <a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a>
-            <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a>
-            <a href="#about" class="block py-2 text-gray-600 hover:text-blue-600">About Us</a>
-            <!-- Mobile Logged Out -->
-            <div id="mobile-logged-out">
-                <button onclick="showAuthModal('signin')" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Login</button>
-            </div>
-             <!-- Mobile Logged In -->
-            <div id="mobile-logged-in" class="hidden">
-                <button onclick="showDashboard()" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Dashboard</button>
-                <button onclick="logout()" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Logout</button>
-            </div>
+            <a href="../index.html" class="block py-2 text-gray-600 hover:text-blue-600">Home</a>
+            <a href="../index.html#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a>
+            <a href="../index.html#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a>
+            <a href="../index.html#about" class="block py-2 text-gray-600 hover:text-blue-600">About Us</a>
         </div>
     </header>
 
-    <!-- =================================================
-    LANDING PAGE SECTION
-    ================================================== -->
-    <div id="landing-page">
-        <main>
-            <!-- Hero Section -->
-            <section class="bg-white pt-32 pb-20">
-                <div class="container mx-auto px-6 text-center">
-                    <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
-                        The World’s Most Comprehensive <br class="hidden md:block" /> <span class="rad-gradient-text">Radiology Learning Source</span>
-                    </h1>
-                    <p class="mt-6 text-lg text-gray-600 max-w-3xl mx-auto">
-                        Master radiology with our expert-curated Q-banks, mock exams, and in-depth content. Built by radiologists, for future radiologists.
-                    </p>
-                    <div class="mt-8 flex justify-center gap-4">
-                        <button onclick="showAuthModal('signup')" class="rad-gradient text-white font-bold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-lg">
-                            Get Started for Free
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Courses Section -->
-            <section id="courses" class="py-20">
-                <div class="container mx-auto px-6">
-                    <div class="text-center mb-12">
-                        <h2 class="text-4xl font-bold text-gray-900">Prepare for Any Exam</h2>
-                        <p class="mt-4 text-lg text-gray-600">Targeted preparation for all major radiology exams.</p>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
-                            <h3 class="text-2xl font-bold text-gray-800">FRCR</h3>
-                            <p class="mt-2 text-gray-600">Comprehensive question banks and mock tests for the FRCR exam.</p>
-                        </div>
-                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
-                            <h3 class="text-2xl font-bold text-gray-800">MD / DNB</h3>
-                            <p class="mt-2 text-gray-600">Master your final year exams with our targeted content.</p>
-                        </div>
-                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
-                            <h3 class="text-2xl font-bold text-gray-800">Anatomy</h3>
-                            <p class="mt-2 text-gray-600">Detailed anatomical modules to build a strong foundation.</p>
-                        </div>
-                         <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
-                            <h3 class="text-2xl font-bold text-gray-800">MICR</h3>
-                            <p class="mt-2 text-gray-600">Practice with MCQs tailored for the MICR examination.</p>
-                        </div>
-                         <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
-                            <h3 class="text-2xl font-bold text-gray-800">Superspeciality</h3>
-                            <p class="mt-2 text-gray-600">Prepare for NEET SS & INICET SS with high-yield questions.</p>
-                        </div>
-                         <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100">
-                            <h3 class="text-2xl font-bold text-gray-800">Fellowship Exams</h3>
-                            <p class="mt-2 text-gray-600">Excel in your fellowship exams with our specialized modules.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Features Section -->
-            <section id="features" class="py-20 bg-white">
-                <div class="container mx-auto px-6">
-                    <div class="text-center mb-12">
-                        <h2 class="text-4xl font-bold text-gray-900">Why RadMentor?</h2>
-                        <p class="mt-4 text-lg text-gray-600">Everything you need to succeed, all in one place.</p>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
-                        <div class="p-6">
-                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg">
-                                <i data-feather="award" class="text-white"></i>
-                            </div>
-                            <h3 class="mt-6 text-xl font-bold">Expert-Curated Content</h3>
-                            <p class="mt-2 text-gray-600">All questions and explanations are created and verified by top radiologists.</p>
-                        </div>
-                        <div class="p-6">
-                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg">
-                                <i data-feather="target" class="text-white"></i>
-                            </div>
-                            <h3 class="mt-6 text-xl font-bold">Realistic Exam Simulation</h3>
-                            <p class="mt-2 text-gray-600">Experience the real exam environment with our timed mock tests.</p>
-                        </div>
-                        <div class="p-6">
-                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg">
-                                <i data-feather="bar-chart-2" class="text-white"></i>
-                            </div>
-                            <h3 class="mt-6 text-xl font-bold">Performance Analytics</h3>
-                            <p class="mt-2 text-gray-600">Track your progress, identify weak areas, and improve your scores.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- About Us Section -->
-            <section id="about" class="py-20">
-                <div class="container mx-auto px-6">
-                      <div class="text-center mb-12">
-                        <h2 class="text-4xl font-bold text-gray-900">Built by Doctors, for Doctors</h2>
-                    </div>
-                    <div class="max-w-4xl mx-auto bg-white p-10 rounded-xl shadow-lg text-center">
-                        <p class="text-lg text-gray-600">
-                            We are two radiologists trained at one of India’s premier medical institutes, united by a shared vision: to make high-quality radiology education accessible, affordable, and reliable for all. Every question, explanation, and update is curated by us, backed by evidence, and rooted in real-world radiology practice.
-                        </p>
-                          <p class="mt-4 text-lg font-semibold text-gray-800">Welcome to a community built with precision and care.</p>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <!-- Footer -->
-        <footer class="bg-gray-900 text-white">
-            <div class="container mx-auto px-6 py-12">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div>
-                        <h3 class="text-xl font-bold">RadMentor</h3>
-                        <p class="mt-2 text-gray-400">The future of radiology education.</p>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold">Quick Links</h3>
-                        <ul class="mt-2 space-y-2">
-                            <li><a href="#courses" class="text-gray-400 hover:text-white">Courses</a></li>
-                            <li><a href="#features" class="text-gray-400 hover:text-white">Features</a></li>
-                            <li><a href="#" onclick="showAuthModal('signup')" class="text-gray-400 hover:text-white">Sign Up</a></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold">Contact</h3>
-                         <p class="mt-2 text-gray-400">Email: <a href="mailto:support@radmentor.com" class="hover:text-white">support@radmentor.com</a></p>
-                    </div>
-                </div>
-                <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-500">
-                    &copy; 2024 RadMentor. All Rights Reserved.
+    <!-- Main Content -->
+    <main class="pt-32 pb-20">
+        <!-- Hero Section -->
+        <section class="bg-white">
+            <div class="container mx-auto px-6 text-center py-16">
+                <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
+                    <span class="rad-gradient-text">FRCR</span> Preparation
+                </h1>
+                <p class="mt-6 text-lg text-gray-600 max-w-3xl mx-auto">
+                    Comprehensive preparation for the Fellowship of the Royal College of Radiologists exam. 
+                    Master all parts with our expert-curated content and practice questions.
+                </p>
+                
+                <!-- Breadcrumb -->
+                <div class="mt-8 flex justify-center">
+                    <nav class="flex items-center space-x-2 text-sm text-gray-500">
+                        <a href="../index.html" class="hover:text-blue-600">Home</a>
+                        <i data-feather="chevron-right" class="w-4 h-4"></i>
+                        <span class="text-gray-900 font-medium">FRCR</span>
+                    </nav>
                 </div>
             </div>
-        </footer>
-    </div>
+        </section>
 
-    <!-- AUTHENTICATION MODAL, PROFILE FORM -->
-    <!-- These sections are the same as before -->
-    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
-            <button onclick="hideAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
-                <i data-feather="x" class="w-7 h-7"></i>
-            </button>
-            <div class="p-8 md:p-12">
-                <div id="auth-container">
-                    <h1 id="auth-title" class="text-3xl font-bold text-gray-900 text-center mb-2">Login to RadMentor</h1>
-                    <p id="auth-subtitle" class="text-gray-600 text-center mb-8">Welcome back!</p>
-                    <div class="space-y-4">
-                        <input type="email" id="email" placeholder="Email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <input type="password" id="password" placeholder="Password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <button onclick="handleAuth()" id="auth-btn" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Sign In</button>
-                    <div class="text-center mt-6">
-                        <button onclick="toggleAuth()" id="toggle-btn" class="text-blue-600 hover:underline">Don't have an account? Sign up</button>
-                    </div>
-                    <p id="auth-message" class="text-red-500 text-center mt-4 font-medium"></p>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="profile-form-container" class="fixed inset-0 bg-gray-100 z-50 p-4 hidden overflow-y-auto">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-auto my-8 p-8 md:p-12">
-             <h1 class="text-3xl font-bold text-gray-900 text-center">Complete Your Profile</h1>
-             <p class="text-gray-600 text-center mb-8">Please provide a few more details to get started.</p>
-             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="md:col-span-2"><input type="text" id="name" placeholder="Full Name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
-                <div>
-                    <label class="font-medium text-gray-700">Date of Birth</label>
-                    <input type="date" id="dob" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="font-medium text-gray-700">Sex</label>
-                    <select id="sex" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="" disabled selected>Select Sex</option>
-                        <option>Male</option><option>Female</option><option>Other</option>
-                    </select>
-                </div>
-                 <div>
-                    <label class="font-medium text-gray-700">Position</label>
-                    <select id="position" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="" disabled selected>Select Position</option>
-                        <option>Intern</option><option>Junior Resident</option><option>Senior Resident</option><option>Consultant</option>
-                    </select>
-                </div>
-                 <div>
-                    <label class="font-medium text-gray-700">Exam Pursuing</label>
-                    <select id="exam_pursuing" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="" disabled selected>Select Exam</option>
-                        <option>Final year exam</option><option>DNB</option><option>FRCR</option><option>NEET SS</option><option>INICET SS</option><option>MICR</option><option>Fellowship exams</option>
-                    </select>
-                </div>
-                <div class="md:col-span-2">
-                      <label class="font-medium text-gray-700">Medical College</label>
-                      <input list="colleges" id="college" placeholder="Type to search your college" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      <datalist id="colleges">
-                      </datalist>
-                </div>
-             </div>
-             <button onclick="submitProfile()" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Submit Profile</button>
-        </div>
-    </div>
-
-    <!-- =================================================
-    DASHBOARD SECTION
-    ================================================== -->
-    <div id="dashboard" class="hidden">
-        <!-- Dashboard Topbar -->
-        <div class="fixed top-0 left-0 right-0 bg-white shadow-md z-40">
-            <div class="container mx-auto px-6 h-16 flex justify-between items-center">
-                <div class="flex items-center cursor-pointer" onclick="showLandingPage()">
-                    <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-8"/>
-                    <span class="text-xl font-bold text-gray-800 ml-2">RadMentor</span>
-                </div>
-                <div class="flex items-center">
-                    <span class="hidden sm:block text-gray-700 mr-4">Hi, <span id="user-greeting-name">Doctor</span>!</span>
-                    <button id="dashboard-menu-button" class="text-gray-700">
-                        <i data-feather="menu" class="w-6 h-6"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <!-- Dashboard Sidebar -->
-        <div id="sidebar" class="fixed top-0 right-0 h-full bg-white shadow-xl z-50 w-72 p-6 transform translate-x-full">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-xl font-bold">Menu</h2>
-                <button id="close-sidebar-button" class="text-gray-600 hover:text-gray-900"><i data-feather="x"></i></button>
-            </div>
-            <nav class="space-y-2">
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 bg-blue-100 font-semibold" onclick="showDashboardSection('main')"><i data-feather="home" class="mr-3 w-5 h-5"></i>Home</a>
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('profile')"><i data-feather="user" class="mr-3 w-5 h-5"></i>Profile</a>
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('subscription')"><i data-feather="credit-card" class="mr-3 w-5 h-5"></i>Subscription</a>
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('settings')"><i data-feather="settings" class="mr-3 w-5 h-5"></i>Settings</a>
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="logout()"><i data-feather="log-out" class="mr-3 w-5 h-5"></i>Logout</a>
-            </nav>
-        </div>
-        <!-- Dashboard Main Content -->
-        <div class="pt-24 pb-12 bg-gray-50 min-h-screen">
+        <!-- FRCR Parts Section -->
+        <section class="py-20">
             <div class="container mx-auto px-6">
-                <!-- Main Dashboard View -->
-                <div id="dashboard-main-content">
-                    <h1 class="text-3xl font-bold text-gray-900">Welcome to RadMentor</h1>
-                    <p class="mt-2 text-lg text-gray-600">Select a category to start your preparation.</p>
-                    <div id="access-level-notice"></div>
-                    <div id="main-dashboard-grid" class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <!-- Items are now larger and more stylish -->
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="showFrcrParts()">
-                            <i data-feather="award" class="w-10 h-10 text-blue-600 mb-4"></i>
-                            <h3 class="text-2xl font-bold text-gray-800">FRCR</h3>
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold text-gray-900">Choose Your FRCR Part</h2>
+                    <p class="mt-4 text-lg text-gray-600">Select the part of the FRCR exam you want to prepare for.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    <!-- Part 1 -->
+                    <div class="frcr-card bg-white rounded-xl shadow-lg p-8 cursor-pointer" onclick="togglePart1()">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="rad-gradient w-16 h-16 rounded-full flex items-center justify-center shadow-lg">
+                                <i data-feather="book-open" class="text-white w-8 h-8"></i>
+                            </div>
+                            <i data-feather="chevron-down" id="part1-chevron" class="text-gray-400 w-6 h-6 transition-transform"></i>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('MICR MCQs coming soon!')">
-                             <i data-feather="file-text" class="w-10 h-10 text-blue-600 mb-4"></i>
-                            <h3 class="text-2xl font-bold text-gray-800">MICR</h3>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Part 1</h3>
+                        <p class="text-gray-600 mb-6">Foundation knowledge in anatomy and physics essential for radiology practice.</p>
+                        
+                        <!-- Expandable Part 1 Content -->
+                        <div id="part1-content" class="expandable-content">
+                            <div class="border-t border-gray-200 pt-6 space-y-4">
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer" onclick="event.stopPropagation(); window.location.href='Part 1/Anatomy/'">
+                                    <div class="flex items-center">
+                                        <i data-feather="user" class="text-blue-600 w-5 h-5 mr-3"></i>
+                                        <span class="font-semibold text-gray-800">FRCR Anatomy</span>
+                                    </div>
+                                    <i data-feather="arrow-right" class="text-gray-400 w-4 h-4"></i>
+                                </div>
+                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer" onclick="event.stopPropagation(); window.location.href='Part 1/Physics/'">
+                                    <div class="flex items-center">
+                                        <i data-feather="zap" class="text-blue-600 w-5 h-5 mr-3"></i>
+                                        <span class="font-semibold text-gray-800">FRCR Physics</span>
+                                    </div>
+                                    <i data-feather="arrow-right" class="text-gray-400 w-4 h-4"></i>
+                                </div>
+                            </div>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='anatomy/'">
-                             <i data-feather="activity" class="w-10 h-10 text-blue-600 mb-4"></i>
-                            <h3 class="text-2xl font-bold text-gray-800">Anatomy</h3>
+                    </div>
+
+                    <!-- Part 2A -->
+                    <div class="frcr-card bg-white rounded-xl shadow-lg p-8 coming-soon">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="rad-gradient w-16 h-16 rounded-full flex items-center justify-center shadow-lg">
+                                <i data-feather="image" class="text-white w-8 h-8"></i>
+                            </div>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='MD_DNB/'">
-                             <i data-feather="book-open" class="w-10 h-10 text-blue-600 mb-4"></i>
-                            <h3 class="text-2xl font-bold text-gray-800">MD / DNB</h3>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Part 2A</h3>
+                        <p class="text-gray-600 mb-6">Rapid reporting and image interpretation skills across all imaging modalities.</p>
+                        <div class="text-center">
+                            <button class="bg-gray-300 text-gray-500 font-semibold px-6 py-3 rounded-lg cursor-not-allowed" disabled>
+                                Available Soon
+                            </button>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('Superspeciality MCQs coming soon!')">
-                             <i data-feather="star" class="w-10 h-10 text-blue-600 mb-4"></i>
-                            <h3 class="text-2xl font-bold text-gray-800">Superspeciality</h3>
+                    </div>
+
+                    <!-- Part 2B -->
+                    <div class="frcr-card bg-white rounded-xl shadow-lg p-8 coming-soon">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="rad-gradient w-16 h-16 rounded-full flex items-center justify-center shadow-lg">
+                                <i data-feather="clipboard" class="text-white w-8 h-8"></i>
+                            </div>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('Fellowship Exams MCQs coming soon!')">
-                             <i data-feather="award" class="w-10 h-10 text-blue-600 mb-4"></i>
-                            <h3 class="text-2xl font-bold text-gray-800">Fellowship Exams</h3>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Part 2B</h3>
+                        <p class="text-gray-600 mb-6">Long case reporting and viva examination preparation with detailed case studies.</p>
+                        <div class="text-center">
+                            <button class="bg-gray-300 text-gray-500 font-semibold px-6 py-3 rounded-lg cursor-not-allowed" disabled>
+                                Available Soon
+                            </button>
                         </div>
                     </div>
                 </div>
+            </div>
+        </section>
 
-                <!-- FRCR Parts View (hidden by default) -->
-                <div id="frcr-parts-view" class="hidden">
-                    <button onclick="showMainDashboard()" class="flex items-center text-gray-600 hover:text-blue-600 mb-6">
-                        <i data-feather="arrow-left" class="mr-2"></i> Back to Dashboard
-                    </button>
-                    <h1 class="text-3xl font-bold text-gray-900">FRCR Preparation</h1>
-                    <p class="mt-2 text-lg text-gray-600">Select which part of the exam you want to practice.</p>
-                    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="showFrcrPart1Subjects()">
-                            <h3 class="text-2xl font-bold text-gray-800">Part 1</h3>
+        <!-- Additional Information Section -->
+        <section class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="max-w-4xl mx-auto text-center">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-8">About FRCR Preparation</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="p-6">
+                            <div class="rad-gradient w-12 h-12 rounded-full mx-auto flex items-center justify-center shadow-lg mb-4">
+                                <i data-feather="target" class="text-white w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">Structured Learning</h3>
+                            <p class="text-gray-600">Follow a systematic approach designed specifically for FRCR success.</p>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('Part 2A is coming soon!')">
-                            <h3 class="text-2xl font-bold text-gray-800">Part 2A</h3>
+                        <div class="p-6">
+                            <div class="rad-gradient w-12 h-12 rounded-full mx-auto flex items-center justify-center shadow-lg mb-4">
+                                <i data-feather="award" class="text-white w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">Expert Content</h3>
+                            <p class="text-gray-600">All materials created and reviewed by qualified radiologists.</p>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('Part 2B is coming soon!')">
-                            <h3 class="text-2xl font-bold text-gray-800">Part 2B</h3>
+                        <div class="p-6">
+                            <div class="rad-gradient w-12 h-12 rounded-full mx-auto flex items-center justify-center shadow-lg mb-4">
+                                <i data-feather="trending-up" class="text-white w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-xl font-bold mb-2">Track Progress</h3>
+                            <p class="text-gray-600">Monitor your preparation with detailed analytics and feedback.</p>
                         </div>
                     </div>
                 </div>
+            </div>
+        </section>
+    </main>
 
-                <!-- FRCR Part 1 Subjects View (hidden by default) -->
-                <div id="frcr-part1-subjects-view" class="hidden">
-                     <button onclick="showFrcrParts()" class="flex items-center text-gray-600 hover:text-blue-600 mb-6">
-                        <i data-feather="arrow-left" class="mr-2"></i> Back to FRCR Parts
-                    </button>
-                    <h1 class="text-3xl font-bold text-gray-900">FRCR Part 1</h1>
-                    <p class="mt-2 text-lg text-gray-600">Select a subject to begin.</p>
-                    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='frcr/Part 1/Anatomy/'">
-                            <h3 class="text-2xl font-bold text-gray-800">FRCR Anatomy</h3>
-                        </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='frcr/Part 1/Physics/'">
-                            <h3 class="text-2xl font-bold text-gray-800">FRCR Physics</h3>
-                        </div>
-                    </div>
+    <!-- Footer matching main website -->
+    <footer class="bg-gray-900 text-white">
+        <div class="container mx-auto px-6 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold">RadMentor</h3>
+                    <p class="mt-2 text-gray-400">The future of radiology education.</p>
                 </div>
-
-                <div id="profile-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
-                <div id="subscription-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
-                <div id="settings-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
+                <div>
+                    <h3 class="text-lg font-semibold">Quick Links</h3>
+                    <ul class="mt-2 space-y-2">
+                        <li><a href="../index.html#courses" class="text-gray-400 hover:text-white">Courses</a></li>
+                        <li><a href="../index.html#features" class="text-gray-400 hover:text-white">Features</a></li>
+                        <li><a href="../index.html" class="text-gray-400 hover:text-white">Home</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold">Contact</h3>
+                    <p class="mt-2 text-gray-400">Email: <a href="mailto:support@radmentor.com" class="hover:text-white">support@radmentor.com</a></p>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-500">
+                &copy; 2024 RadMentor. All Rights Reserved.
             </div>
         </div>
-    </div>
-
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    </footer>
 
     <script>
-        // --- Feather Icons Initialization ---
+        // Initialize Feather Icons
         feather.replace();
 
-        // --- Firebase Configuration ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
-            authDomain: "radiology-mcqs.firebaseapp.com",
-            projectId: "radiology-mcqs",
-            storageBucket: "radiology-mcqs.appspot.com",
-            messagingSenderId: "862300415358",
-            appId: "1:862300415358:web:097d5e413f388e30587f2f",
-            measurementId: "G-0V1SD1H95V"
-        };
-
-        // --- Firebase Initialization ---
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        // --- Global State ---
-        let authMode = 'signin';
-        let currentUserData = null;
-
-        // --- UI Elements ---
-        const authModal = document.getElementById('auth-modal');
-        const authTitle = document.getElementById('auth-title');
-        const authSubtitle = document.getElementById('auth-subtitle');
-        const authBtn = document.getElementById('auth-btn');
-        const toggleBtn = document.getElementById('toggle-btn');
-        const authMessage = document.getElementById('auth-message');
-        const landingPage = document.getElementById('landing-page');
-        const dashboard = document.getElementById('dashboard');
-        const profileFormContainer = document.getElementById('profile-form-container');
-        const headerLoggedOut = document.getElementById('header-logged-out');
-        const headerLoggedIn = document.getElementById('header-logged-in');
-        const userGreetingHeader = document.getElementById('user-greeting-header');
-        const mobileMenuButton = document.getElementById('mobile-menu-button');
-        const mobileMenu = document.getElementById('mobile-menu');
-        const mobileLoggedOut = document.getElementById('mobile-logged-out');
-        const mobileLoggedIn = document.getElementById('mobile-logged-in');
-        const mainDashboardContent = document.getElementById('dashboard-main-content');
-        const frcrPartsView = document.getElementById('frcr-parts-view');
-        const frcrPart1SubjectsView = document.getElementById('frcr-part1-subjects-view');
-
-
-        // --- Event Listeners ---
-        mobileMenuButton.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
         });
 
-        // --- Auth Modal Logic ---
-        function showAuthModal(mode = 'signin') {
-            authMode = mode;
-            updateAuthModalUI();
-            authModal.classList.remove('hidden');
-        }
-
-        function hideAuthModal() {
-            authModal.classList.add('hidden');
-            authMessage.textContent = '';
-        }
-
-        function toggleAuth() {
-            authMode = authMode === 'signin' ? 'signup' : 'signin';
-            updateAuthModalUI();
-        }
-
-        function updateAuthModalUI() {
-            if (authMode === 'signin') {
-                authTitle.textContent = 'Login to RadMentor';
-                authSubtitle.textContent = 'Welcome back!';
-                authBtn.textContent = 'Sign In';
-                toggleBtn.textContent = "Don't have an account? Sign up";
-            } else {
-                authTitle.textContent = 'Create Your Account';
-                authSubtitle.textContent = 'Start your journey with us today.';
-                authBtn.textContent = 'Sign Up';
-                toggleBtn.textContent = 'Already have an account? Sign in';
-            }
-            authMessage.textContent = '';
-        }
-
-        // --- Authentication Logic ---
-        function handleAuth() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            authMessage.textContent = '';
-
-            if (!email || !password) {
-                authMessage.textContent = "Please enter both email and password.";
-                return;
-            }
-
-            if (authMode === 'signin') {
-                auth.signInWithEmailAndPassword(email, password)
-                    .catch(err => {
-                        authMessage.textContent = err.message;
-                    });
-            } else { // signup
-                auth.createUserWithEmailAndPassword(email, password)
-                    .then(userCredential => {
-                        const user = userCredential.user;
-                        return user.sendEmailVerification().then(() => {
-                            auth.signOut();
-                            authMode = 'signin';
-                            updateAuthModalUI();
-                            authMessage.textContent = "Verification email sent! Please check your inbox and verify your email before signing in.";
-                            return db.collection('users').doc(user.uid).set({
-                                email: user.email,
-                                accessLevel: 'restricted',
-                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            });
-                        });
-                    })
-                    .catch(err => {
-                        authMessage.textContent = err.message;
-                    });
-            }
-        }
-
-        // --- Profile Logic ---
-        function submitProfile() {
-            const user = auth.currentUser;
-            if (!user) return;
-
-            const profileData = {
-                name: document.getElementById('name').value,
-                dob: document.getElementById('dob').value,
-                sex: document.getElementById('sex').value,
-                position: document.getElementById('position').value,
-                college: document.getElementById('college').value,
-                examPursuing: document.getElementById('exam_pursuing').value,
-            };
-
-            if (Object.values(profileData).some(val => !val)) {
-                alert("Please fill in all profile fields.");
-                return;
-            }
-
-            db.collection('users').doc(user.uid).update(profileData)
-                .then(() => {
-                    currentUserData = { ...currentUserData, ...profileData };
-                    profileFormContainer.classList.add('hidden');
-                    setupLoggedInState(currentUserData); // Go back to landing page with logged-in header
-                })
-                .catch(err => alert("Error saving profile: " + err.message));
-        }
-
-        // --- Main Application Flow & State Changes ---
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                if (!user.emailVerified) {
-                    auth.signOut();
-                    showAuthModal('signin');
-                    authMessage.textContent = "Please verify your email before logging in.";
-                    return;
-                }
-                
-                db.collection('users').doc(user.uid).get().then(doc => {
-                    hideAuthModal();
-                    if (doc.exists) {
-                        currentUserData = doc.data();
-                        if (currentUserData.name && currentUserData.dob) {
-                            setupLoggedInState(currentUserData);
-                        } else {
-                            profileFormContainer.classList.remove('hidden');
-                            landingPage.classList.add('hidden');
-                            dashboard.classList.add('hidden');
-                        }
-                    }
-                });
-
-            } else {
-                // User is signed out
-                currentUserData = null;
-                setupLoggedOutState();
-            }
-        });
-
-        function setupLoggedInState(userData) {
-            headerLoggedOut.classList.add('hidden');
-            headerLoggedIn.classList.remove('hidden');
-            mobileLoggedOut.classList.add('hidden');
-            mobileLoggedIn.classList.remove('hidden');
-            userGreetingHeader.textContent = userData.name.split(' ')[0];
+        // Part 1 expandable functionality
+        function togglePart1() {
+            const content = document.getElementById('part1-content');
+            const chevron = document.getElementById('part1-chevron');
             
-            landingPage.classList.remove('hidden');
-            dashboard.classList.add('hidden');
-            feather.replace();
+            content.classList.toggle('expanded');
+            chevron.classList.toggle('rotate-180');
         }
 
-        function setupLoggedOutState() {
-            headerLoggedOut.classList.remove('hidden');
-            headerLoggedIn.classList.add('hidden');
-            mobileLoggedOut.classList.remove('hidden');
-            mobileLoggedIn.classList.add('hidden');
-
-            landingPage.classList.remove('hidden');
-            dashboard.classList.add('hidden');
-            profileFormContainer.classList.add('hidden');
-            hideAuthModal();
-        }
-        
-        function showDashboard() {
-            landingPage.classList.add('hidden');
-            dashboard.classList.remove('hidden');
-            document.getElementById('user-greeting-name').textContent = currentUserData.name.split(' ')[0];
-            
-            const noticeDiv = document.getElementById('access-level-notice');
-            if(currentUserData.accessLevel === 'restricted') {
-                noticeDiv.innerHTML = `<div class="mt-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-r-lg">
-                    <p class="font-bold">Restricted Access</p>
-                    <p>Some content is locked. <a href="#" onclick="showDashboardSection('subscription')" class="underline">Subscribe</a> for full access.</p>
-                </div>`;
-            } else {
-                 noticeDiv.innerHTML = `<div class="mt-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded-r-lg">
-                    <p class="font-bold">Full Access Granted</p>
-                    <p>You have access to all features. Happy learning!</p>
-                </div>`;
+        // Prevent card click when clicking on subsection links
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.expandable-content a, .expandable-content [onclick]')) {
+                e.stopPropagation();
             }
-            showMainDashboard();
-        }
-        
-        function showLandingPage() {
-            dashboard.classList.add('hidden');
-            landingPage.classList.remove('hidden');
-        }
-
-        function logout() {
-            auth.signOut();
-        }
-        
-        // --- Dashboard Navigation & Sidebar ---
-        const sidebar = document.getElementById('sidebar');
-        document.getElementById('dashboard-menu-button').addEventListener('click', () => {
-            sidebar.classList.remove('translate-x-full');
         });
-        document.getElementById('close-sidebar-button').addEventListener('click', () => {
-            sidebar.classList.add('translate-x-full');
-        });
-
-        function showDashboardSection(sectionId) {
-            // Hide all dashboard views
-            mainDashboardContent.classList.add('hidden');
-            frcrPartsView.classList.add('hidden');
-            frcrPart1SubjectsView.classList.add('hidden');
-
-            ['profile-section', 'subscription-section', 'settings-section'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
-            
-            const sectionToShow = document.getElementById(`${sectionId}-section`) || mainDashboardContent;
-            sectionToShow.classList.remove('hidden');
-            
-            if (sectionId === 'main') showMainDashboard();
-            if (sectionId === 'profile') populateProfileDetails();
-            if (sectionId === 'subscription') populateSubscriptionDetails();
-            if (sectionId === 'settings') populateSettingsDetails();
-
-            sidebar.classList.add('translate-x-full');
-            feather.replace();
-        }
-
-        // --- NEW Dashboard View Functions ---
-        function showMainDashboard() {
-            mainDashboardContent.classList.remove('hidden');
-            frcrPartsView.classList.add('hidden');
-            frcrPart1SubjectsView.classList.add('hidden');
-            feather.replace();
-        }
-
-        function showFrcrParts() {
-            mainDashboardContent.classList.add('hidden');
-            frcrPartsView.classList.remove('hidden');
-            frcrPart1SubjectsView.classList.add('hidden');
-            feather.replace();
-        }
-
-        function showFrcrPart1Subjects() {
-            mainDashboardContent.classList.add('hidden');
-            frcrPartsView.classList.add('hidden');
-            frcrPart1SubjectsView.classList.remove('hidden');
-            feather.replace();
-        }
-        
-        function populateProfileDetails() {
-            const section = document.getElementById('profile-section');
-            section.innerHTML = `
-                <h2 class="text-2xl font-bold mb-6">Your Profile</h2>
-                <div class="space-y-4">
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Name:</strong> ${currentUserData.name || 'Not set'}</div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Email:</strong> ${currentUserData.email || 'Not set'}</div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Date of Birth:</strong> ${currentUserData.dob || 'Not set'}</div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Position:</strong> ${currentUserData.position || 'Not set'}</div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>College:</strong> ${currentUserData.college || 'Not set'}</div>
-                    <div class="p-4 bg-gray-50 rounded-lg"><strong>Exam Pursuing:</strong> ${currentUserData.examPursuing || 'Not set'}</div>
-                </div>
-            `;
-        }
-
-        function populateSubscriptionDetails() {
-              const section = document.getElementById('subscription-section');
-              section.innerHTML = `
-                <h2 class="text-2xl font-bold mb-6">Subscription</h2>
-                <p class="text-gray-600">Your current plan: <span class="font-bold text-blue-600">${currentUserData.accessLevel.toUpperCase()}</span></p>
-                <p class="mt-4">Subscription management features coming soon!</p>
-              `;
-        }
-        
-        function populateSettingsDetails() {
-            const section = document.getElementById('settings-section');
-              section.innerHTML = `
-                <h2 class="text-2xl font-bold mb-6">Settings</h2>
-                <p class="text-gray-600">Settings page is under construction.</p>
-              `;
-        }
-
-        // Populate datalist for colleges
-        const collegeDatalist = document.getElementById('colleges');
-        const colleges = [
-            "All India Institute of Medical Sciences, New Delhi", 
-            "Postgraduate Institute of Medical Education and Research, Chandigarh", 
-            "Christian Medical College, Vellore",
-            "National Institute of Mental Health and Neuro Sciences, Bangalore",
-            "Jawaharlal Institute of Postgraduate Medical Education & Research, Puducherry",
-            "Amrita Vishwa Vidyapeetham, Coimbatore",
-            "Sanjay Gandhi Postgraduate Institute of Medical Sciences, Lucknow",
-            "Banaras Hindu University, Varanasi",
-            "Kasturba Medical College, Manipal",
-            "King George's Medical University, Lucknow"
-        ];
-        colleges.forEach(college => {
-            const option = document.createElement('option');
-            option.value = college;
-            collegeDatalist.appendChild(option);
-        });
-
     </script>
 
 </body>
