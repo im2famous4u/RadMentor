@@ -198,15 +198,14 @@
         </aside>
     </div>
 
-    <script src="https://unpkg.com/dicom-parser@1.8.1/dist/dicomParser.min.js"></script> 
+    <script src="./js/dicomParser.min.js"></script> 
     
     <script type="module">
-        // Updated CDN imports using unpkg and targeting the package's main file (often a UMD bundle)
-        // This is the most standard way to import for direct browser use via unpkg
-        import * as cornerstone3D from 'https://unpkg.com/@cornerstonejs/core@1.74.2/dist/umd/index.js'; // Note: removed .min.js suffix
-        import * as cornerstoneTools from 'https://unpkg.com/@cornerstonejs/tools@1.74.2/dist/umd/index.js'; // Note: removed .min.js suffix
-        import dicomLoader from 'https://unpkg.com/@cornerstonejs/dicom-image-loader@1.74.2/dist/umd/index.js'; // Note: removed .min.js suffix
-        import { init as initProviders } from 'https://unpkg.com/@cornerstonejs/streaming-image-volume-loader@1.74.2/dist/umd/index.js'; // Note: removed .min.js suffix
+        // Cornerstone.js libraries: These files need to be in your 'js' folder
+        import * as cornerstone3D from './js/cornerstone-core.min.js';
+        import * as cornerstoneTools from './js/cornerstone-tools.min.js';
+        import dicomLoader from './js/dicom-image-loader.min.js';
+        import { init as initProviders } from './js/streaming-image-volume-loader.min.js';
         
         const { RenderingEngine, Enums, volumeLoader, utilities } = cornerstone3D;
         const { PanTool, WindowLevelTool, StackScrollMouseWheelTool, ZoomTool, ToolGroupManager, MPRCrosshairsTool } = cornerstoneTools;
