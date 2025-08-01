@@ -92,18 +92,18 @@
         <div id="viewer-body" class="relative flex items-start justify-center gap-4">
             
             <!-- Left Annotations Column -->
-            <div id="left-annotations-column" class="w-1/5 space-y-2 flex flex-col items-end">
+            <div id="left-annotations-column" class="w-64 flex-shrink-0 space-y-2 flex flex-col items-end">
                 <!-- Labels will be dynamically inserted here -->
             </div>
 
             <!-- Central Image Wrapper -->
-            <div id="image-wrapper" class="relative w-3/5 max-w-[1250px] bg-black rounded-lg shadow-lg overflow-hidden">
+            <div id="image-wrapper" class="relative flex-grow bg-black rounded-lg shadow-lg overflow-hidden">
                 <img id="temporalBoneSliceImage" src="" alt="HRCT Temporal Bone Axial Slice" class="block w-full h-auto">
                 <svg class="annotation-svg-overlay absolute top-0 left-0 w-full h-full pointer-events-none" id="annotationSvgOverlay"></svg>
             </div>
 
             <!-- Right Annotations Column -->
-            <div id="right-annotations-column" class="w-1/5 space-y-2 flex flex-col items-start">
+            <div id="right-annotations-column" class="w-64 flex-shrink-0 space-y-2 flex flex-col items-start">
                 <!-- Labels will be dynamically inserted here -->
             </div>
         </div>
@@ -118,7 +118,7 @@
         <div class="mt-8 text-center">
             <button onclick="history.back()" class="inline-flex items-center text-gray-600 hover:text-blue-600 font-semibold py-2 px-4 rounded-lg transition-colors duration-200 bg-gray-200 hover:bg-gray-300">
                 <i data-feather="arrow-left" class="mr-2 h-5 w-5"></i>
-                <span>Back to HRCT Menu</span>
+                <span>Back to CT Anatomy</span>
             </button>
         </div>
     </div>
@@ -181,12 +181,6 @@
             annotationSvgOverlay.innerHTML = '';
 
             const placeAnnotations = () => {
-                const imageDisplayWidth = temporalBoneSliceImage.offsetWidth;
-                const imageDisplayHeight = temporalBoneSliceImage.offsetHeight;
-
-                const scaleX = imageDisplayWidth / IMAGE_FILE_WIDTH;
-                const scaleY = imageDisplayHeight / IMAGE_FILE_HEIGHT;
-                
                 const annotationsForCurrentSlice = allAnnotations
                     .filter(ann => ann.slice === currentSlice)
                     .sort((a, b) => a.pointY_mm - b.pointY_mm);
@@ -209,7 +203,7 @@
 
                 // Use a timeout to allow the browser to render the labels and calculate their heights
                 setTimeout(() => {
-                    drawAnnotationLines(annotationsForCurrentSlice, scaleX, scaleY);
+                    drawAnnotationLines(annotationsForCurrentSlice);
                 }, 0);
             };
             
@@ -220,23 +214,31 @@
             }
         }
 
-        function drawAnnotationLines(annotations, scaleX, scaleY) {
-            const imageRect = imageWrapper.getBoundingClientRect();
+        function drawAnnotationLines(annotations) {
+            const imageDisplayWidth = temporalBoneSliceImage.offsetWidth;
+            const imageDisplayHeight = temporalBoneSliceImage.offsetHeight;
+            const scaleX = imageDisplayWidth / IMAGE_FILE_WIDTH;
+            const scaleY = imageDisplayHeight / IMAGE_FILE_HEIGHT;
+            
             const svgRect = annotationSvgOverlay.getBoundingClientRect();
 
             annotations.forEach(annotation => {
+                // Find the corresponding label div in the side columns
                 const labelDiv = document.querySelector(`.annotation-label[data-text="${annotation.text}"]`);
                 if (!labelDiv) return;
 
+                // Calculate the position of the annotation point on the image
                 const pX_px = (annotation.pointX_mm + PADDING_LEFT) * scaleX;
                 const pY_px = (annotation.pointY_mm + PADDING_TOP) * scaleY;
 
                 const labelRect = labelDiv.getBoundingClientRect();
                 const pointIsOnLeftSide = annotation.pointX_mm < (ANATOMY_DATA_WIDTH / 2);
                 
-                const lineEndX = pointIsOnLeftSide ? (imageRect.left - svgRect.left) : (imageRect.right - svgRect.left);
+                // Calculate the line's end point (Y is middle of label, X is edge of label)
                 const lineEndY = labelRect.top - svgRect.top + (labelRect.height / 2);
+                const lineEndX = pointIsOnLeftSide ? (labelRect.right - svgRect.left) : (labelRect.left - svgRect.left);
 
+                // Create and draw the line
                 const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 line.setAttribute('x1', pX_px);
                 line.setAttribute('y1', pY_px);
@@ -244,12 +246,14 @@
                 line.setAttribute('y2', lineEndY);
                 annotationSvgOverlay.appendChild(line);
 
+                // Create and draw the circle on the image
                 const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 circle.setAttribute('cx', pX_px);
                 circle.setAttribute('cy', pY_px);
                 circle.setAttribute('r', 4);
                 annotationSvgOverlay.appendChild(circle);
 
+                // Add hover effects
                 const activate = () => { line.classList.add('visible-on-hover'); circle.classList.add('visible-on-hover-circle'); };
                 const deactivate = () => { line.classList.remove('visible-on-hover'); circle.classList.remove('visible-on-hover-circle'); };
                 labelDiv.onmouseover = circle.onmouseover = activate;
