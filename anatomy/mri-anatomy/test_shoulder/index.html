@@ -1,174 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Shoulder MRI MPR Viewer</title>
-
-  <!-- Cornerstone3D & dependencies -->
-  <script src="https://unpkg.com/@cornerstonejs/core@1.16.2/dist/cornerstone3D.min.js"></script>
-  <script src="https://unpkg.com/@cornerstonejs/tools@1.16.2/dist/cornerstone3DTools.min.js"></script>
-  <script src="https://unpkg.com/dicom-parser/dist/dicomParser.min.js"></script>
-  <script src="https://unpkg.com/@cornerstonejs/dicom-image-loader@1.16.2/dist/dicomImageLoader.min.js"></script>
-  <script src="https://unpkg.com/hammerjs/hammer.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MRI Shoulder Viewer - RadMentor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Cornerstone Libraries -->
+  <script src="https://unpkg.com/cornerstone-core"></script>
+  <script src="https://unpkg.com/cornerstone-tools"></script>
+  <script src="https://unpkg.com/dicom-parser"></script>
+  <script src="https://unpkg.com/cornerstone-wado-image-loader"></script>
 
   <style>
     body {
-      font-family: sans-serif;
-      background-color: #f5f6fa;
-      margin: 0;
-      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
     }
-    h1 {
-      text-align: center;
-      margin: 20px;
-    }
-    .tabs {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      border-bottom: 1px solid #ddd;
-    }
-    .tabs button {
-      background: none;
-      border: none;
-      font-size: 16px;
-      padding: 10px 20px;
-      cursor: pointer;
-      outline: none;
-    }
-    .tabs button.active {
-      font-weight: bold;
-      border-bottom: 3px solid #2d6cdf;
-    }
-    .viewer-container {
-      display: flex;
-      justify-content: center;
-      margin-top: 10px;
-    }
-    .cornerstone-element {
+    .dicom-viewer {
       width: 512px;
       height: 512px;
       background-color: black;
     }
-    .slider-container {
-      text-align: center;
-      margin-top: 10px;
-    }
-    input[type=range] {
-      width: 80%;
-    }
   </style>
 </head>
-<body>
-  <h1>Shoulder MRI MPR Viewer</h1>
-  <div class="tabs">
-    <button id="coronalTab" class="active">Coronal</button>
-    <button id="sagittalTab">Sagittal</button>
-    <button id="axialTab">Axial</button>
+<body class="text-gray-800">
+
+<!-- Header -->
+<div class="flex justify-between items-center px-6 py-4 bg-white shadow">
+  <h1 class="text-2xl font-bold text-gray-900">MRI Shoulder Viewer</h1>
+  <button id="toggleMode" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+    Switch to Side-by-Side
+  </button>
+</div>
+
+<!-- Tabbed Mode -->
+<div id="tabbedMode" class="p-6">
+  <div class="mb-4 border-b border-gray-200">
+    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+      <button data-plane="coronal" class="tab-btn text-blue-600 border-blue-600 border-b-2 py-2 px-1 text-sm font-medium">Coronal</button>
+      <button data-plane="sagittal" class="tab-btn text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">Sagittal</button>
+      <button data-plane="axial" class="tab-btn text-gray-500 hover:text-gray-700 py-2 px-1 text-sm font-medium">Axial</button>
+    </nav>
   </div>
-
-  <div class="viewer-container">
-    <div id="cornerstoneElement" class="cornerstone-element"></div>
+  <div class="flex justify-center">
+    <div id="tabViewer" class="dicom-viewer"></div>
   </div>
+</div>
 
-  <div class="slider-container">
-    <input type="range" id="sliceSlider" min="0" max="100" value="0">
-    <p>Scroll through slices using mouse wheel, arrow keys, or slider</p>
+<!-- Side-by-Side Mode -->
+<div id="sideBySideMode" class="p-6 hidden">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 justify-items-center">
+    <div id="viewerCoronal" class="dicom-viewer"></div>
+    <div id="viewerSagittal" class="dicom-viewer"></div>
+    <div id="viewerAxial" class="dicom-viewer"></div>
   </div>
+</div>
 
-  <script>
-    const cs = cornerstone3D;
-    const tools = cornerstone3DTools;
-    const dicomImageLoader = cornerstoneDICOMImageLoader;
+<!-- Slider -->
+<div class="flex justify-center p-4">
+  <input type="range" id="sliceSlider" min="0" max="279" value="0" class="w-1/2">
+</div>
+<p class="text-center text-gray-600">Use mouse wheel, arrow keys, or slider to navigate slices</p>
 
-    // Register external dependencies
-    dicomImageLoader.external.cornerstone = cs;
-
-    const element = document.getElementById("cornerstoneElement");
-    cs.init();
-
-    // Replace with your single 3D DICOM file URL
-    const dicomUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
-    let activePlane = 'coronal';
-    let volumeId;
-    let actorUID;
-    let sliceIndex = 0;
-
-    async function loadVolume() {
-      const volume = await cs.volumeLoader.createAndCacheVolumeFromUrl('volumeId', dicomUrl);
-      volumeId = volume.volumeId;
-      await volume.load();
-      setupRenderer(volume);
+<script>
+  // Cornerstone setup
+  cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
+  cornerstoneWADOImageLoader.webWorkerManager.initialize({
+    webWorkerPath : 'https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoaderWebWorker.min.js',
+    taskConfiguration: {
+      decodeTask: {
+        codecsPath: 'https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoaderCodecs.min.js'
+      }
     }
+  });
 
-    function setupRenderer(volume) {
-      const renderingEngineId = 'mprRenderingEngine';
-      const renderingEngine = new cs.RenderingEngine(renderingEngineId);
+  const baseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
+  const imageIds = [];
+  for (let i = 1; i <= 280; i++) {
+    const num = String(i).padStart(4, '0');
+    imageIds.push(`wadouri:${baseUrl}IMG${num}.dcm`);
+  }
 
-      const viewportId = 'mprViewport';
-      const viewportInput = {
-        viewportId,
-        type: cs.Enums.ViewportType.ORTHOGRAPHIC,
-        element,
-        defaultOptions: { orientation: cs.Enums.OrientationAxis.CORONAL }
-      };
+  let currentImageIndex = 0;
+  const slider = document.getElementById('sliceSlider');
+  const tabViewer = document.getElementById('tabViewer');
+  const viewerCoronal = document.getElementById('viewerCoronal');
+  const viewerSagittal = document.getElementById('viewerSagittal');
+  const viewerAxial = document.getElementById('viewerAxial');
+  const tabButtons = document.querySelectorAll('.tab-btn');
 
-      renderingEngine.setViewports([viewportInput]);
-      renderingEngine.setVolumes([{ volumeId, callback: cs.setVolumesForViewports }]);
+  [tabViewer, viewerCoronal, viewerSagittal, viewerAxial].forEach(v => cornerstone.enable(v));
 
-      actorUID = renderingEngine.getViewport(viewportId).getActors()[0].uid;
-      renderingEngine.render();
+  function loadImage(index, element) {
+    cornerstone.loadAndCacheImage(imageIds[index]).then(image => {
+      cornerstone.displayImage(element, image);
+    }).catch(err => console.error(err));
+  }
 
-      setupEvents(renderingEngine, viewportId);
+  function updateAllViewers(index) {
+    loadImage(index, tabViewer);
+    loadImage(index, viewerCoronal);
+    loadImage(index, viewerSagittal);
+    loadImage(index, viewerAxial);
+    slider.value = index;
+  }
+
+  // Initial load
+  updateAllViewers(0);
+
+  // Slider control
+  slider.addEventListener('input', () => {
+    currentImageIndex = parseInt(slider.value);
+    updateAllViewers(currentImageIndex);
+  });
+
+  // Mouse wheel + keyboard navigation
+  document.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    currentImageIndex += (e.deltaY < 0) ? -1 : 1;
+    if (currentImageIndex < 0) currentImageIndex = 0;
+    if (currentImageIndex >= imageIds.length) currentImageIndex = imageIds.length - 1;
+    updateAllViewers(currentImageIndex);
+  }, { passive: false });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowRight') currentImageIndex++;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') currentImageIndex--;
+    if (currentImageIndex < 0) currentImageIndex = 0;
+    if (currentImageIndex >= imageIds.length) currentImageIndex = imageIds.length - 1;
+    updateAllViewers(currentImageIndex);
+  });
+
+  // Tab switching
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabButtons.forEach(b => b.classList.remove('text-blue-600', 'border-blue-600', 'border-b-2'));
+      btn.classList.add('text-blue-600', 'border-blue-600', 'border-b-2');
+    });
+  });
+
+  // Mode toggle
+  const toggleBtn = document.getElementById('toggleMode');
+  const tabbedMode = document.getElementById('tabbedMode');
+  const sideBySideMode = document.getElementById('sideBySideMode');
+
+  toggleBtn.addEventListener('click', () => {
+    if (tabbedMode.classList.contains('hidden')) {
+      tabbedMode.classList.remove('hidden');
+      sideBySideMode.classList.add('hidden');
+      toggleBtn.textContent = "Switch to Side-by-Side";
+    } else {
+      tabbedMode.classList.add('hidden');
+      sideBySideMode.classList.remove('hidden');
+      toggleBtn.textContent = "Switch to Tabbed Mode";
     }
+  });
+</script>
 
-    function setupEvents(renderingEngine, viewportId) {
-      const slider = document.getElementById('sliceSlider');
-      slider.addEventListener('input', () => {
-        sliceIndex = parseInt(slider.value);
-        updateSlice(renderingEngine, viewportId);
-      });
-
-      element.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        sliceIndex += e.deltaY > 0 ? 1 : -1;
-        updateSlice(renderingEngine, viewportId);
-        slider.value = sliceIndex;
-      });
-
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowUp' || e.key === 'ArrowRight') sliceIndex++;
-        if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') sliceIndex--;
-        updateSlice(renderingEngine, viewportId);
-        slider.value = sliceIndex;
-      });
-
-      document.getElementById('coronalTab').addEventListener('click', () => changePlane(renderingEngine, viewportId, cs.Enums.OrientationAxis.CORONAL, 'coronal'));
-      document.getElementById('sagittalTab').addEventListener('click', () => changePlane(renderingEngine, viewportId, cs.Enums.OrientationAxis.SAGITTAL, 'sagittal'));
-      document.getElementById('axialTab').addEventListener('click', () => changePlane(renderingEngine, viewportId, cs.Enums.OrientationAxis.AXIAL, 'axial'));
-    }
-
-    function updateSlice(renderingEngine, viewportId) {
-      const viewport = renderingEngine.getViewport(viewportId);
-      const { slice } = viewport.getCamera();
-      viewport.setCamera({ slice: sliceIndex });
-      renderingEngine.render();
-    }
-
-    function changePlane(renderingEngine, viewportId, orientation, planeName) {
-      activePlane = planeName;
-      document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(`${planeName}Tab`).classList.add('active');
-
-      const viewport = renderingEngine.getViewport(viewportId);
-      viewport.setOrientation(orientation);
-      sliceIndex = 0;
-      document.getElementById('sliceSlider').value = 0;
-      renderingEngine.render();
-    }
-
-    loadVolume();
-  </script>
 </body>
 </html>
