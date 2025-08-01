@@ -5,15 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RadMentor - Comprehensive Radiology Learning Source</title>
 
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Feather Icons -->
     <script src="https://unpkg.com/feather-icons"></script>
 
     <style>
@@ -50,7 +47,6 @@
 </head>
 <body class="text-gray-800">
 
-    <!-- This header is now persistent and changes based on login state -->
     <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
         <div class="container mx-auto px-6 py-3 flex justify-between items-center">
             <div class="flex items-center">
@@ -63,17 +59,15 @@
                 <a href="#about" class="text-gray-600 hover:text-blue-600">About Us</a>
             </nav>
             <div class="flex items-center">
-                <!-- Logged Out Buttons -->
                 <div id="header-logged-out" class="flex items-center">
                     <button onclick="showAuthModal('signin')" class="hidden md:block text-gray-600 hover:text-blue-600 mr-6">Login</button>
                     <button onclick="showAuthModal('signup')" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                         Sign Up
                     </button>
                 </div>
-                <!-- Logged In Buttons -->
                 <div id="header-logged-in" class="hidden items-center">
-                     <span class="hidden sm:block text-gray-700 mr-4">Hi, <span id="user-greeting-header"></span>!</span>
-                     <button onclick="showDashboard()" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                    <span class="hidden sm:block text-gray-700 mr-4">Hi, <span id="user-greeting-header"></span>!</span>
+                    <button onclick="showDashboard()" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                         Dashboard
                     </button>
                     <button onclick="logout()" class="ml-4 text-gray-600 hover:text-blue-600" title="Logout">
@@ -85,16 +79,13 @@
                 </button>
             </div>
         </div>
-          <!-- Mobile Menu -->
         <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
             <a href="#courses" class="block py-2 text-gray-600 hover:text-blue-600">Courses</a>
             <a href="#features" class="block py-2 text-gray-600 hover:text-blue-600">Features</a>
             <a href="#about" class="block py-2 text-gray-600 hover:text-blue-600">About Us</a>
-            <!-- Mobile Logged Out -->
             <div id="mobile-logged-out">
                 <button onclick="showAuthModal('signin')" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Login</button>
             </div>
-             <!-- Mobile Logged In -->
             <div id="mobile-logged-in" class="hidden">
                 <button onclick="showDashboard()" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Dashboard</button>
                 <button onclick="logout()" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Logout</button>
@@ -102,12 +93,8 @@
         </div>
     </header>
 
-    <!-- =================================================
-    LANDING PAGE SECTION
-    ================================================== -->
     <div id="landing-page">
         <main>
-            <!-- Hero Section -->
             <section class="bg-white pt-32 pb-20">
                 <div class="container mx-auto px-6 text-center">
                     <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
@@ -124,7 +111,6 @@
                 </div>
             </section>
 
-            <!-- Courses Section -->
             <section id="courses" class="py-20">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
@@ -136,23 +122,24 @@
                             <h3 class="text-2xl font-bold text-gray-800">FRCR</h3>
                             <p class="mt-2 text-gray-600">Comprehensive question banks and mock tests for the FRCR exam.</p>
                         </div>
-                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 cursor-pointer" onclick="window.location.href='MD_DNB/'">
+                        <a href="MD_DNB/index.html" class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 flex flex-col items-center justify-center text-center">
+                             <i data-feather="book-open" class="w-10 h-10 text-blue-600 mb-4"></i>
                             <h3 class="text-2xl font-bold text-gray-800">MD / DNB</h3>
                             <p class="mt-2 text-gray-600">Master your final year exams with our targeted content.</p>
-                        </div>
+                        </a>
                         <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 cursor-pointer" onclick="window.location.href='anatomy/'">
                             <h3 class="text-2xl font-bold text-gray-800">Anatomy</h3>
                             <p class="mt-2 text-gray-600">Detailed anatomical modules to build a strong foundation.</p>
                         </div>
-                         <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 cursor-pointer" onclick="alert('MICR content coming soon!')">
+                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 cursor-pointer" onclick="alert('MICR content coming soon!')">
                             <h3 class="text-2xl font-bold text-gray-800">MICR</h3>
                             <p class="mt-2 text-gray-600">Practice with MCQs tailored for the MICR examination.</p>
                         </div>
-                         <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 cursor-pointer" onclick="alert('Superspeciality content coming soon!')">
+                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 cursor-pointer" onclick="alert('Superspeciality content coming soon!')">
                             <h3 class="text-2xl font-bold text-gray-800">Superspeciality</h3>
                             <p class="mt-2 text-gray-600">Prepare for NEET SS & INICET SS with high-yield questions.</p>
                         </div>
-                         <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 cursor-pointer" onclick="alert('Fellowship Exams content coming soon!')">
+                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 cursor-pointer" onclick="alert('Fellowship Exams content coming soon!')">
                             <h3 class="text-2xl font-bold text-gray-800">Fellowship Exams</h3>
                             <p class="mt-2 text-gray-600">Excel in your fellowship exams with our specialized modules.</p>
                         </div>
@@ -160,7 +147,6 @@
                 </div>
             </section>
 
-            <!-- Features Section -->
             <section id="features" class="py-20 bg-white">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
@@ -193,23 +179,21 @@
                 </div>
             </section>
 
-            <!-- About Us Section -->
             <section id="about" class="py-20">
                 <div class="container mx-auto px-6">
-                      <div class="text-center mb-12">
+                    <div class="text-center mb-12">
                         <h2 class="text-4xl font-bold text-gray-900">Built by Doctors, for Doctors</h2>
                     </div>
                     <div class="max-w-4xl mx-auto bg-white p-10 rounded-xl shadow-lg text-center">
                         <p class="text-lg text-gray-600">
                             We are two radiologists trained at one of India’s premier medical institutes, united by a shared vision: to make high-quality radiology education accessible, affordable, and reliable for all. Every question, explanation, and update is curated by us, backed by evidence, and rooted in real-world radiology practice.
                         </p>
-                          <p class="mt-4 text-lg font-semibold text-gray-800">Welcome to a community built with precision and care.</p>
+                        <p class="mt-4 text-lg font-semibold text-gray-800">Welcome to a community built with precision and care.</p>
                     </div>
                 </div>
             </section>
         </main>
 
-        <!-- Footer -->
         <footer class="bg-gray-900 text-white">
             <div class="container mx-auto px-6 py-12">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -227,7 +211,7 @@
                     </div>
                     <div>
                         <h3 class="text-lg font-semibold">Contact</h3>
-                         <p class="mt-2 text-gray-400">Email: <a href="mailto:support@radmentor.com" class="hover:text-white">support@radmentor.com</a></p>
+                        <p class="mt-2 text-gray-400">Email: <a href="mailto:support@radmentor.com" class="hover:text-white">support@radmentor.com</a></p>
                     </div>
                 </div>
                 <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-500">
@@ -237,8 +221,6 @@
         </footer>
     </div>
 
-    <!-- AUTHENTICATION MODAL, PROFILE FORM -->
-    <!-- These sections are the same as before -->
     <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
             <button onclick="hideAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
@@ -263,9 +245,9 @@
     </div>
     <div id="profile-form-container" class="fixed inset-0 bg-gray-100 z-50 p-4 hidden overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-auto my-8 p-8 md:p-12">
-             <h1 class="text-3xl font-bold text-gray-900 text-center">Complete Your Profile</h1>
-             <p class="text-gray-600 text-center mb-8">Please provide a few more details to get started.</p>
-             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <h1 class="text-3xl font-bold text-gray-900 text-center">Complete Your Profile</h1>
+            <p class="text-gray-600 text-center mb-8">Please provide a few more details to get started.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="md:col-span-2"><input type="text" id="name" placeholder="Full Name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
                 <div>
                     <label class="font-medium text-gray-700">Date of Birth</label>
@@ -278,36 +260,32 @@
                         <option>Male</option><option>Female</option><option>Other</option>
                     </select>
                 </div>
-                 <div>
+                <div>
                     <label class="font-medium text-gray-700">Position</label>
                     <select id="position" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="" disabled selected>Select Position</option>
                         <option>Intern</option><option>Junior Resident</option><option>Senior Resident</option><option>Consultant</option>
                     </select>
                 </div>
-                 <div>
+                <div>
                     <label class="font-medium text-gray-700">Exam Pursuing</label>
                     <select id="exam_pursuing" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="" disabled selected>Select Exam</option>
-                        <option>Final year exam</option><option>DNB</option><option>FRCR</option><option>NEET SS</option><option>INICET SS</option><option>MICR</option><option>Fellowship exams</option>
+                        <option>Final year exam</option><option>DNB</option><option>FRCR</option><option>NEET SS</option><option>INICET SS</option><option>Fellowship exams</option>
                     </select>
                 </div>
                 <div class="md:col-span-2">
-                      <label class="font-medium text-gray-700">Medical College</label>
-                      <input list="colleges" id="college" placeholder="Type to search your college" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      <datalist id="colleges">
-                      </datalist>
+                    <label class="font-medium text-gray-700">Medical College</label>
+                    <input list="colleges" id="college" placeholder="Type to search your college" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <datalist id="colleges">
+                    </datalist>
                 </div>
-             </div>
-             <button onclick="submitProfile()" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Submit Profile</button>
+            </div>
+            <button onclick="submitProfile()" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Submit Profile</button>
         </div>
     </div>
 
-    <!-- =================================================
-    DASHBOARD SECTION
-    ================================================== -->
     <div id="dashboard" class="hidden">
-        <!-- Dashboard Topbar -->
         <div class="fixed top-0 left-0 right-0 bg-white shadow-md z-40">
             <div class="container mx-auto px-6 h-16 flex justify-between items-center">
                 <div class="flex items-center cursor-pointer" onclick="showLandingPage()">
@@ -322,7 +300,6 @@
                 </div>
             </div>
         </div>
-        <!-- Dashboard Sidebar -->
         <div id="sidebar" class="fixed top-0 right-0 h-full bg-white shadow-xl z-50 w-72 p-6 transform translate-x-full">
             <div class="flex justify-between items-center mb-8">
                 <h2 class="text-xl font-bold">Menu</h2>
@@ -336,44 +313,45 @@
                 <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="logout()"><i data-feather="log-out" class="mr-3 w-5 h-5"></i>Logout</a>
             </nav>
         </div>
-        <!-- Dashboard Main Content -->
         <div class="pt-24 pb-12 bg-gray-50 min-h-screen">
             <div class="container mx-auto px-6">
-                <!-- Main Dashboard View -->
                 <div id="dashboard-main-content">
                     <h1 class="text-3xl font-bold text-gray-900">Welcome to RadMentor</h1>
                     <p class="mt-2 text-lg text-gray-600">Select a category to start your preparation.</p>
                     <div id="access-level-notice"></div>
                     <div id="main-dashboard-grid" class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <!-- Items are now larger and more stylish -->
                         <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="showFrcrParts()">
                             <i data-feather="award" class="w-10 h-10 text-blue-600 mb-4"></i>
                             <h3 class="text-2xl font-bold text-gray-800">FRCR</h3>
+                            <p class="mt-2 text-gray-600">Comprehensive question banks and mock tests for the FRCR exam.</p>
+                        </div>
+                        <a href="MD_DNB/index.html" class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center">
+                            <i data-feather="book-open" class="w-10 h-10 text-blue-600 mb-4"></i>
+                            <h3 class="text-2xl font-bold text-gray-800">MD / DNB</h3>
+                            <p class="mt-2 text-gray-600">Master your final year exams with our targeted content.</p>
+                        </a>
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='anatomy/'">
+                            <i data-feather="activity" class="w-10 h-10 text-blue-600 mb-4"></i>
+                            <h3 class="text-2xl font-bold text-gray-800">Anatomy</h3>
+                            <p class="mt-2 text-gray-600">Detailed anatomical modules to build a strong foundation.</p>
                         </div>
                         <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('MICR MCQs coming soon!')">
-                             <i data-feather="file-text" class="w-10 h-10 text-blue-600 mb-4"></i>
                             <h3 class="text-2xl font-bold text-gray-800">MICR</h3>
+                            <p class="mt-2 text-gray-600">Practice with MCQs tailored for the MICR examination.</p>
                         </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='anatomy/'">
-                             <i data-feather="activity" class="w-10 h-10 text-blue-600 mb-4"></i>
-                            <h3 class="text-2xl font-bold text-gray-800">Anatomy</h3>
-                        </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href=MD_DNB'">
-                             <i data-feather="book-open" class="w-10 h-10 text-blue-600 mb-4"></i>
-                            <h3 class="text-2xl font-bold text-gray-800">MD / DNB</h3>
-                        </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('Superspeciality MCQs coming soon!')">
-                             <i data-feather="star" class="w-10 h-10 text-blue-600 mb-4"></i>
+                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('Superspeciality content coming soon!')">
+                            <i data-feather="star" class="w-10 h-10 text-blue-600 mb-4"></i>
                             <h3 class="text-2xl font-bold text-gray-800">Superspeciality</h3>
+                            <p class="mt-2 text-gray-600">Prepare for NEET SS & INICET SS with high-yield questions.</p>
                         </div>
                         <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('Fellowship Exams MCQs coming soon!')">
-                             <i data-feather="award" class="w-10 h-10 text-blue-600 mb-4"></i>
+                            <i data-feather="award" class="w-10 h-10 text-blue-600 mb-4"></i>
                             <h3 class="text-2xl font-bold text-gray-800">Fellowship Exams</h3>
+                            <p class="mt-2 text-gray-600">Excel in your fellowship exams with our specialized modules.</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- FRCR Parts View (hidden by default) -->
                 <div id="frcr-parts-view" class="hidden">
                     <button onclick="showMainDashboard()" class="flex items-center text-gray-600 hover:text-blue-600 mb-6">
                         <i data-feather="arrow-left" class="mr-2"></i> Back to Dashboard
@@ -393,9 +371,8 @@
                     </div>
                 </div>
 
-                <!-- FRCR Part 1 Subjects View (hidden by default) -->
                 <div id="frcr-part1-subjects-view" class="hidden">
-                     <button onclick="showFrcrParts()" class="flex items-center text-gray-600 hover:text-blue-600 mb-6">
+                    <button onclick="showFrcrParts()" class="flex items-center text-gray-600 hover:text-blue-600 mb-6">
                         <i data-feather="arrow-left" class="mr-2"></i> Back to FRCR Parts
                     </button>
                     <h1 class="text-3xl font-bold text-gray-900">FRCR Part 1</h1>
@@ -417,7 +394,6 @@
         </div>
     </div>
 
-    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
@@ -496,7 +472,7 @@
                 authSubtitle.textContent = 'Welcome back!';
                 authBtn.textContent = 'Sign In';
                 toggleBtn.textContent = "Don't have an account? Sign up";
-            } else {
+            } else { // signup
                 authTitle.textContent = 'Create Your Account';
                 authSubtitle.textContent = 'Start your journey with us today.';
                 authBtn.textContent = 'Sign Up';
@@ -638,7 +614,7 @@
                     <p>Some content is locked. <a href="#" onclick="showDashboardSection('subscription')" class="underline">Subscribe</a> for full access.</p>
                 </div>`;
             } else {
-                 noticeDiv.innerHTML = `<div class="mt-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded-r-lg">
+                noticeDiv.innerHTML = `<div class="mt-6 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 rounded-r-lg">
                     <p class="font-bold">Full Access Granted</p>
                     <p>You have access to all features. Happy learning!</p>
                 </div>`;
@@ -724,20 +700,20 @@
         }
 
         function populateSubscriptionDetails() {
-              const section = document.getElementById('subscription-section');
-              section.innerHTML = `
+            const section = document.getElementById('subscription-section');
+            section.innerHTML = `
                 <h2 class="text-2xl font-bold mb-6">Subscription</h2>
                 <p class="text-gray-600">Your current plan: <span class="font-bold text-blue-600">${currentUserData.accessLevel.toUpperCase()}</span></p>
                 <p class="mt-4">Subscription management features coming soon!</p>
-              `;
+            `;
         }
         
         function populateSettingsDetails() {
             const section = document.getElementById('settings-section');
-              section.innerHTML = `
+            section.innerHTML = `
                 <h2 class="text-2xl font-bold mb-6">Settings</h2>
                 <p class="text-gray-600">Settings page is under construction.</p>
-              `;
+            `;
         }
 
         // Populate datalist for colleges
