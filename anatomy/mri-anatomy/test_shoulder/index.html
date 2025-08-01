@@ -1,167 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shoulder MRI MPR Viewer</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Cornerstone3D -->
-  <script type="module">
-  import * as cornerstone3D from 'https://cdn.jsdelivr.net/npm/@cornerstonejs/core@1.11.8/dist/esm/index.js';
-  import * as cornerstoneTools from 'https://cdn.jsdelivr.net/npm/@cornerstonejs/tools@1.11.8/dist/esm/index.js';
-  import * as cornerstoneStreaming from 'https://cdn.jsdelivr.net/npm/@cornerstonejs/streaming-image-volume-loader@1.11.8/dist/esm/index.js';
-
-    const { RenderingEngine, Enums, volumeLoader, setVolumesForViewports, init, utilities } = cornerstone3D;
-
-    await init();
-
-    // Register the loader
-    volumeLoader.registerVolumeLoader('cornerstoneStreamingImageVolume', cornerstoneStreamingImageVolumeLoader.load);
-
-    const renderingEngineId = 'mprEngine';
-    const renderingEngine = new RenderingEngine(renderingEngineId);
-
-    const viewportIds = {
-      axial: 'AXIAL_VIEW',
-      sagittal: 'SAGITTAL_VIEW',
-      coronal: 'CORONAL_VIEW'
-    };
-
-    const elementAxial = document.getElementById('axial');
-    const elementSagittal = document.getElementById('sagittal');
-    const elementCoronal = document.getElementById('coronal');
-
-    // GitHub DICOM path
-    const baseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
-    const imageIds = [];
-    for (let i = 1; i <= 280; i++) {
-      const num = String(i).padStart(4, '0');
-      imageIds.push(`wadouri:${baseUrl}IMG${num}.dcm`);
-    }
-
-    const volumeId = 'shoulderVolume';
-    const volume = await volumeLoader.createAndCacheVolume(volumeId, {
-      imageIds,
-      type: 'cornerstoneStreamingImageVolume'
-    });
-    await volume.load();
-
-    renderingEngine.setViewports([
-      {
-        viewportId: viewportIds.axial,
-        element: elementAxial,
-        type: Enums.ViewportType.ORTHOGRAPHIC,
-        defaultOptions: {
-          orientation: Enums.OrientationAxis.AXIAL
-        }
-      },
-      {
-        viewportId: viewportIds.sagittal,
-        element: elementSagittal,
-        type: Enums.ViewportType.ORTHOGRAPHIC,
-        defaultOptions: {
-          orientation: Enums.OrientationAxis.SAGITTAL
-        }
-      },
-      {
-        viewportId: viewportIds.coronal,
-        element: elementCoronal,
-        type: Enums.ViewportType.ORTHOGRAPHIC,
-        defaultOptions: {
-          orientation: Enums.OrientationAxis.CORONAL
-        }
-      }
-    ]);
-
-    await setVolumesForViewports(renderingEngine, [{ volumeId }], [
-      viewportIds.axial, viewportIds.sagittal, viewportIds.coronal
-    ]);
-
-    renderingEngine.renderViewports([
-      viewportIds.axial, viewportIds.sagittal, viewportIds.coronal
-    ]);
-
-    // Sync scrolling
-    const syncScroll = utilities.scrollSynchronizer();
-    syncScroll.add(viewportIds.axial, renderingEngine);
-    syncScroll.add(viewportIds.sagittal, renderingEngine);
-    syncScroll.add(viewportIds.coronal, renderingEngine);
-
-    // Toggle layout
-    const toggleBtn = document.getElementById('toggleView');
-    const tabContainer = document.getElementById('tabbed-view');
-    const sideContainer = document.getElementById('side-by-side');
-
-    toggleBtn.addEventListener('click', () => {
-      const sideVisible = !sideContainer.classList.contains('hidden');
-      if (sideVisible) {
-        sideContainer.classList.add('hidden');
-        tabContainer.classList.remove('hidden');
-        toggleBtn.textContent = 'Switch to Side-by-Side';
-      } else {
-        sideContainer.classList.remove('hidden');
-        tabContainer.classList.add('hidden');
-        toggleBtn.textContent = 'Switch to Tabbed';
-      }
-    });
-  </script>
-
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f8fafc;
+    body { background-color: #f8fafc; }
+    .viewer-container {
+      width: 32%;
+      background: black;
+      display: inline-block;
+      margin: 0 1%;
+      vertical-align: top;
     }
-    .dicom-canvas {
+    .viewport {
       width: 100%;
-      height: 500px;
-      background-color: black;
+      height: 512px;
     }
   </style>
 </head>
-<body class="text-gray-800">
+<body class="p-4">
 
-  <div class="p-4 flex justify-between items-center">
-    <h1 class="text-2xl font-bold">Shoulder MRI MPR Viewer</h1>
-    <button id="toggleView" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">
-      Switch to Tabbed
-    </button>
+  <h1 class="text-2xl font-bold mb-4">Shoulder MRI MPR Viewer</h1>
+
+  <div id="axial" class="viewer-container">
+    <p class="text-center text-lg text-black">Axial</p>
+    <div id="axial-viewport" class="viewport"></div>
   </div>
 
-  <!-- Side-by-Side Layout -->
-  <div id="side-by-side" class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
-    <div>
-      <h2 class="text-center font-semibold">Axial</h2>
-      <div id="axial" class="dicom-canvas"></div>
-    </div>
-    <div>
-      <h2 class="text-center font-semibold">Sagittal</h2>
-      <div id="sagittal" class="dicom-canvas"></div>
-    </div>
-    <div>
-      <h2 class="text-center font-semibold">Coronal</h2>
-      <div id="coronal" class="dicom-canvas"></div>
-    </div>
+  <div id="sagittal" class="viewer-container">
+    <p class="text-center text-lg text-black">Sagittal</p>
+    <div id="sagittal-viewport" class="viewport"></div>
   </div>
 
-  <!-- Tabbed Layout -->
-  <div id="tabbed-view" class="hidden p-4">
-    <div class="flex space-x-4 mb-4">
-      <button onclick="showTab('axial-tab')" class="px-4 py-2 bg-gray-200 rounded">Axial</button>
-      <button onclick="showTab('sagittal-tab')" class="px-4 py-2 bg-gray-200 rounded">Sagittal</button>
-      <button onclick="showTab('coronal-tab')" class="px-4 py-2 bg-gray-200 rounded">Coronal</button>
-    </div>
-    <div id="axial-tab" class="dicom-canvas"></div>
-    <div id="sagittal-tab" class="dicom-canvas hidden"></div>
-    <div id="coronal-tab" class="dicom-canvas hidden"></div>
+  <div id="coronal" class="viewer-container">
+    <p class="text-center text-lg text-black">Coronal</p>
+    <div id="coronal-viewport" class="viewport"></div>
   </div>
 
-  <script>
-    function showTab(id) {
-      document.querySelectorAll('#tabbed-view > div.dicom-canvas').forEach(div => div.classList.add('hidden'));
-      document.getElementById(id).classList.remove('hidden');
+  <script type="module">
+    import * as cornerstone3D from "https://cdn.jsdelivr.net/npm/@cornerstonejs/core@1.11.8/dist/cornerstone-core.min.js";
+    import * as cornerstoneStreaming from "https://cdn.jsdelivr.net/npm/@cornerstonejs/streaming-image-volume-loader@1.11.8/dist/cornerstone-streaming-image-volume-loader.min.js";
+
+    const { RenderingEngine, Enums, volumeLoader } = cornerstone3D;
+
+    // Register loader
+    volumeLoader.registerVolumeLoader(
+      "cornerstoneStreamingImageVolume",
+      cornerstoneStreaming.streamingImageVolumeLoader
+    );
+
+    async function init() {
+      await cornerstone3D.init();
+
+      const renderingEngineId = "mprEngine";
+      const renderingEngine = new RenderingEngine(renderingEngineId);
+
+      const viewportIds = ["AXIAL", "SAGITTAL", "CORONAL"];
+
+      // Set up viewports
+      renderingEngine.setViewports([
+        {
+          viewportId: viewportIds[0],
+          type: Enums.ViewportType.ORTHOGRAPHIC,
+          element: document.getElementById("axial-viewport"),
+          defaultOptions: { orientation: Enums.OrientationAxis.AXIAL }
+        },
+        {
+          viewportId: viewportIds[1],
+          type: Enums.ViewportType.ORTHOGRAPHIC,
+          element: document.getElementById("sagittal-viewport"),
+          defaultOptions: { orientation: Enums.OrientationAxis.SAGITTAL }
+        },
+        {
+          viewportId: viewportIds[2],
+          type: Enums.ViewportType.ORTHOGRAPHIC,
+          element: document.getElementById("coronal-viewport"),
+          defaultOptions: { orientation: Enums.OrientationAxis.CORONAL }
+        }
+      ]);
+
+      // Load your DICOM series (replace with your image IDs)
+      const volumeId = "cornerstoneStreamingImageVolume:myMRI";
+      const imageIds = [
+        // Replace with your actual WADO-URI or local file URLs
+        "wadouri:https://your-server/dicom/file1.dcm",
+        "wadouri:https://your-server/dicom/file2.dcm",
+        "wadouri:https://your-server/dicom/file3.dcm"
+      ];
+
+      const volume = await volumeLoader.createAndCacheVolume(volumeId, { imageIds });
+      await volume.load();
+
+      viewportIds.forEach(vpId => {
+        const vp = renderingEngine.getViewport(vpId);
+        vp.setVolumes([{ volumeId }]);
+        vp.render();
+      });
     }
+
+    init();
   </script>
 </body>
 </html>
