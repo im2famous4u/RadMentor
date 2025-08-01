@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shoulder MRI MPR Viewer - RadMentor</title>
+    <title>Shoulder MRI Viewer - RadMentor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,8 +18,7 @@
             height: 100%;
             background-color: black;
             border-radius: 0.375rem; /* rounded-md */
-            position: relative; /* Essential for crosshairs and overlays */
-            overflow: hidden; /* Hide anything outside */
+            position: relative; /* For overlays like text */
         }
         .rad-gradient {
             background: linear-gradient(90deg, #1e40af, #3b82f6);
@@ -78,30 +77,6 @@
             cursor: pointer;
             border-radius: 50%;
         }
-        .mpr-crosshairs {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none; /* Allows interaction with viewport underneath */
-        }
-        .mpr-crosshairs-horizontal,
-        .mpr-crosshairs-vertical {
-            position: absolute;
-            background-color: rgba(255, 0, 0, 0.7); /* Red crosshair for visibility */
-            z-index: 10;
-        }
-        .mpr-crosshairs-horizontal {
-            width: 100%;
-            height: 1px;
-            left: 0;
-        }
-        .mpr-crosshairs-vertical {
-            height: 100%;
-            width: 1px;
-            top: 0;
-        }
     </style>
 </head>
 <body class="text-gray-800 flex flex-col h-screen overflow-hidden">
@@ -122,15 +97,13 @@
 
     <div class="flex flex-1 overflow-hidden">
         <aside class="w-24 bg-white p-3 flex flex-col items-center space-y-4 border-r border-gray-200">
-            <div class="w-full p-1 border-2 border-blue-500 rounded-md bg-black">
-                <div id="view-axial" class="w-full h-20 bg-black"></div>
+            <p class="text-xs text-gray-500">Image Stack</p>
+            <div class="w-full h-auto text-center text-sm text-gray-700">
+                <span id="current-slice-info">--/--</span>
             </div>
-            <div class="w-full p-1 border-2 border-gray-300 rounded-md bg-black">
-                <div id="view-sagittal" class="w-full h-20 bg-black"></div>
-            </div>
-            <div class="w-full p-1 border-2 border-gray-300 rounded-md bg-black">
-                <div id="view-coronal" class="w-full h-20 bg-black"></div>
-            </div>
+             <div class="w-full p-1 border-2 border-gray-300 rounded-md bg-black h-20"></div>
+            <div class="w-full p-1 border-2 border-gray-300 rounded-md bg-black h-20"></div>
+            <div class="w-full p-1 border-2 border-gray-300 rounded-md bg-black h-20"></div>
         </aside>
 
         <main class="flex-1 bg-black flex flex-col items-center p-2 relative overflow-hidden">
@@ -139,24 +112,14 @@
                 <button id="pan-btn" class="tool-btn p-2 rounded-md" title="Pan"><i class="fas fa-arrows-alt"></i></button>
                 <button id="zoom-btn" class="tool-btn p-2 rounded-md" title="Zoom"><i class="fas fa-search-plus"></i></button>
                 <button id="ww-wc-btn" class="tool-btn p-2 rounded-md" title="Window/Contrast"><i class="fas fa-adjust"></i></button>
+                <button id="stack-scroll-btn" class="tool-btn p-2 rounded-md" title="Scroll through slices"><i class="fas fa-scroll"></i></button>
                 <button id="reset-btn" class="tool-btn p-2 rounded-md" title="Reset View"><i class="fas fa-sync-alt"></i></button>
             </div>
-            <div id="viewer-container" class="w-full flex-1 grid grid-cols-1 md:grid-cols-3 gap-2 min-h-0">
-                <div class="flex flex-col items-center">
-                    <h2 class="text-center font-semibold text-gray-300 text-sm">Axial</h2>
-                    <div id="axial-viewport" class="viewport w-full h-full"></div>
-                </div>
-                <div class="flex flex-col items-center">
-                    <h2 class="text-center font-semibold text-gray-300 text-sm">Sagittal</h2>
-                    <div id="sagittal-viewport" class="viewport w-full h-full"></div>
-                </div>
-                <div class="flex flex-col items-center">
-                    <h2 class="text-center font-semibold text-gray-300 text-sm">Coronal</h2>
-                    <div id="coronal-viewport" class="viewport w-full h-full"></div>
-                </div>
+            <div id="viewer-container" class="w-full flex-1 flex justify-center items-center min-h-0">
+                <div id="dicom-viewport" class="viewport max-w-full max-h-full aspect-square"></div>
             </div>
             <div id="loading-indicator" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 text-white z-20">
-                <p>Loading DICOM Volume...</p>
+                <p>Loading DICOM Image...</p>
             </div>
             
             <div id="anatomy-panel" class="absolute top-0 left-0 h-full bg-white/95 backdrop-blur-sm p-4 w-64 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out z-30 flex flex-col">
@@ -199,20 +162,22 @@
     </div>
 
     <script src="/js/dicomParser.min.js"></script> 
-    
     <script src="/js/cornerstone.min.js"></script> 
 
     <script>
-        // Now, we access Cornerstone properties directly from the global scope
-        // because cornerstone.min.js loads everything into window.cornerstone, etc.
+        // Access global Cornerstone and dicomParser objects
+        const cornerstone = window.cornerstone;
+        const cornerstoneTools = window.cornerstoneTools;
+        const cornerstoneDICOMImageLoader = window.cornerstoneDICOMImageLoader;
+
+        // Destructure necessary parts from the global objects
         const {
             RenderingEngine,
             Enums,
-            volumeLoader,
             utilities,
-            set, // Ensure 'set' is imported or accessed from cornerstone3D
-            // Add any other specific exports you might need from cornerstone3D
-        } = cornerstone; // Access global 'cornerstone' object
+            set,
+            volumeLoader
+        } = cornerstone;
 
         const {
             PanTool,
@@ -220,171 +185,110 @@
             StackScrollMouseWheelTool,
             ZoomTool,
             ToolGroupManager,
-            MPRCrosshairsTool,
-            // Access other tools from global 'cornerstoneTools' object
-        } = cornerstoneTools; 
-
-        // For dicom-image-loader and streaming-image-volume-loader, they set up global components
-        // or register loaders that cornerstone.min.js (if it includes them) will use.
-        // We no longer need explicit 'import' statements for them.
-
-        // cornerstoneDICOMImageLoader and cornerstoneStreamingImageVolumeLoader
-        // are expected to be available globally or registered by the bundle.
-        const cornerstoneDICOMImageLoader = cornerstoneDICOMImageLoader; // Global access
-        const cornerstoneStreamingImageVolumeLoader = cornerstoneStreamingImageVolumeLoader; // Global access
+            // Removed MPRCrosshairsTool as it's for MPR
+        } = cornerstoneTools;
 
         const loadingIndicator = document.getElementById('loading-indicator');
         const toolbarButtons = document.querySelectorAll('#toolbar .tool-btn');
         const weightingsButtons = document.querySelectorAll('#weightings-buttons button');
+        const currentSliceInfo = document.getElementById('current-slice-info');
 
-        // Global variables for Cornerstone instances
         let renderingEngine;
         let toolGroup;
-        let volumeId;
+        let imageIds = []; // This will now store the image IDs for the stack
+        let viewport; // Reference to the single main viewport
+        let currentImageIdIndex = 0; // To track current slice for stack scrolling
 
-        const viewportIds = {
-            axial: 'AXIAL_VIEWPORT',
-            sagittal: 'SAGITTAL_VIEWPORT',
-            coronal: 'CORONAL_VIEWPORT',
-        };
-
-        const viewElements = {
-            axial: document.getElementById('axial-viewport'),
-            sagittal: document.getElementById('sagittal-viewport'),
-            coronal: document.getElementById('coronal-viewport'),
-            // Small preview viewports
-            viewAxial: document.getElementById('view-axial'),
-            viewSagittal: document.getElementById('view-sagittal'),
-            viewCoronal: document.getElementById('view-coronal'),
-        };
+        const viewportId = 'DICOM_VIEWPORT';
+        const viewportElement = document.getElementById('dicom-viewport');
 
         // --- Core Initialization ---
         async function initializeCornerstone() {
             loadingIndicator.style.display = 'flex';
             
-            // Initialize cornerstone and cornerstoneTools from their global objects
             await cornerstone.init();
             await cornerstoneTools.init();
             
-            // External dependencies for dicomLoader
-            cornerstoneDICOMImageLoader.external.cornerstone = cornerstone; // Global cornerstone object
-            cornerstoneDICOMImageLoader.external.dicomParser = window.dicomParser; // dicomParser is globally available
+            // Set up external dependencies for the DICOM image loader
+            cornerstoneDICOMImageLoader.external.cornerstone = cornerstone;
+            cornerstoneDICOMImageLoader.external.dicomParser = window.dicomParser;
 
-            // The streaming image volume loader might have its own init, or it might just register its capabilities
-            // If cornerstone.min.js bundles it, its init might be called internally.
-            // If not, we might need a separate call if it exports one globally.
-            // For now, assume it's set up by the main bundle.
+            // Configure the DICOM image loader
+            cornerstoneDICOMImageLoader.configure({
+                use: 'native',
+                decode: true,
+                maxWebWorkers: 1,
+                strict: true,
+            });
 
-            const volumeLoaderScheme = 'cornerstoneStreamingImageVolume';
-            volumeLoader.registerVolumeLoader(volumeLoaderScheme, cornerstoneStreamingImageVolumeLoader);
-
-            // Add Tools
+            // Add Tools for the single viewport
             cornerstoneTools.addTool(PanTool);
             cornerstoneTools.addTool(WindowLevelTool);
             cornerstoneTools.addTool(StackScrollMouseWheelTool);
             cornerstoneTools.addTool(ZoomTool);
-            cornerstoneTools.addTool(MPRCrosshairsTool); // Add MPR Crosshairs Tool
             
-            // Define a tool group
-            const toolGroupId = 'MAIN_VIEWER_TOOL_GROUP';
+            // Define a tool group for the single viewport
+            const toolGroupId = 'SINGLE_VIEWER_TOOL_GROUP';
             toolGroup = ToolGroupManager.createToolGroup(toolGroupId);
 
-            // Add tools to the group
             toolGroup.addTool(WindowLevelTool.toolName);
             toolGroup.addTool(PanTool.toolName);
             toolGroup.addTool(ZoomTool.toolName);
-            toolGroup.addTool(StackScrollMouseWheelTool.toolName);
-            toolGroup.addTool(MPRCrosshairsTool.toolName); // Add crosshairs tool to the group
+            toolGroup.addTool(StackScrollMouseWheelTool.toolName); // Enable stack scrolling
 
-            // Set initial active tool (Window/Level)
+            // Set initial active tools
             toolGroup.setToolActive(WindowLevelTool.toolName, { bindings: [{ mouseButton: Enums.MouseBindings.Primary }] });
             toolGroup.setToolActive(PanTool.toolName, { bindings: [{ mouseButton: Enums.MouseBindings.Auxiliary }] }); // Middle mouse button
             toolGroup.setToolActive(ZoomTool.toolName, { bindings: [{ mouseButton: Enums.MouseBindings.Secondary }] }); // Right mouse button
-            // StackScrollMouseWheelTool is active by default for mouse wheel
-            toolGroup.setToolActive(MPRCrosshairsTool.toolName, { bindings: [{ mouseButton: Enums.MouseBindings.Primary, modifierKey: Enums.KeyboardModifiers.Ctrl }] }); // Ctrl + Left Click for Crosshairs
+            toolGroup.setToolActive(StackScrollMouseWheelTool.toolName); // Active for mouse wheel
 
             // Setup Rendering Engine
-            const renderingEngineId = 'mprRenderingEngine';
+            const renderingEngineId = 'singleViewerEngine';
             renderingEngine = new RenderingEngine(renderingEngineId);
 
+            // Set up the single viewport
             renderingEngine.setViewports([
-                { viewportId: viewportIds.axial, type: Enums.ViewportType.ORTHOGRAPHIC, element: viewElements.axial, defaultOptions: { orientation: Enums.OrientationAxis.AXIAL, background: [0, 0, 0] } },
-                { viewportId: viewportIds.sagittal, type: Enums.ViewportType.ORTHOGRAPHIC, element: viewElements.sagittal, defaultOptions: { orientation: Enums.OrientationAxis.SAGITTAL, background: [0, 0, 0] } },
-                { viewportId: viewportIds.coronal, type: Enums.ViewportType.ORTHOGRAPHIC, element: viewElements.coronal, defaultOptions: { orientation: Enums.OrientationAxis.CORONAL, background: [0, 0, 0] } },
-                // Small preview viewports - these will be set up as separate rendering engines or simply copy images if performance is an issue
-                { viewportId: 'PREVIEW_AXIAL_VP', type: Enums.ViewportType.ORTHOGRAPHIC, element: viewElements.viewAxial, defaultOptions: { orientation: Enums.OrientationAxis.AXIAL, background: [0, 0, 0] } },
-                { viewportId: 'PREVIEW_SAGITTAL_VP', type: Enums.ViewportType.ORTHOGRAPHIC, element: viewElements.viewSagittal, defaultOptions: { orientation: Enums.OrientationAxis.SAGITTAL, background: [0, 0, 0] } },
-                { viewportId: 'PREVIEW_CORONAL_VP', type: Enums.ViewportType.ORTHOGRAPHIC, element: viewElements.viewCoronal, defaultOptions: { orientation: Enums.OrientationAxis.CORONAL, background: [0, 0, 0] } },
+                { viewportId: viewportId, type: Enums.ViewportType.STACK, element: viewportElement, defaultOptions: { background: [0, 0, 0] } },
             ]);
-            
-            // Add viewports to the tool group
-            toolGroup.addViewport(viewportIds.axial, renderingEngineId);
-            toolGroup.addViewport(viewportIds.sagittal, renderingEngineId);
-            toolGroup.addViewport(viewportIds.coronal, renderingEngineId);
 
-            // --- Load DICOM Volume from GitHub ---
+            viewport = renderingEngine.getViewport(viewportId); // Get reference to the viewport
+            toolGroup.addViewport(viewportId, renderingEngineId); // Add viewport to tool group
+
+            // --- Load DICOM Images (Stack) from GitHub ---
             document.querySelector('header img').src = '/logo.png'; // Assuming logo is also at the root
 
             const githubUsername = "im2famous4u";
-            const githubRepoName = "RadMentor"; // Confirmed: Your repository name is RadMentor
-            const githubBranch = "main"; // Confirmed: Your branch name is main
+            const githubRepoName = "RadMentor"; 
+            const githubBranch = "main";
             const dicomFolderPath = "anatomy/mri-anatomy/test_shoulder/shoulder-dicom/"; 
 
             const baseUrl = `https://raw.githubusercontent.com/${githubUsername}/${githubRepoName}/${githubBranch}/${dicomFolderPath}`;
             
-            const imageIds = [];
+            // Generate all 280 image IDs for the stack
             for (let i = 1; i <= 280; i++) {
                 const filename = `IMG${String(i).padStart(4, '0')}.dcm`;
                 imageIds.push(`wadouri:${baseUrl}${filename}`);
             }
 
-            volumeId = `cornerstoneStreamingImageVolume:shoulder-mri`; // Unique ID for our volume
+            // Set the stack of images for the viewport
             try {
-                const volume = await volumeLoader.createAndCacheVolume(volumeId, { imageIds });
-                await volume.load(); // Ensure volume data is loaded before rendering
+                await viewport.setStack(imageIds);
+                currentImageIdIndex = viewport.getCurrentImageIdIndex(); // Get initial index
+                currentSliceInfo.textContent = `${currentImageIdIndex + 1}/${imageIds.length}`; // Update UI
 
-                await setVolumesForViewports(renderingEngine, [{ volumeId }], [ // Use setVolumesForViewports from global cornerstone
-                    viewportIds.axial, 
-                    viewportIds.sagittal, 
-                    viewportIds.coronal,
-                    'PREVIEW_AXIAL_VP',
-                    'PREVIEW_SAGITTAL_VP',
-                    'PREVIEW_CORONAL_VP'
-                ]);
+                viewport.render(); // Initial render
 
-                // Synchronize main viewports for MPR crosshairs
-                const synchronizer = utilities.create.Synchronizer( // utilities.create from global cornerstone
-                    'MPR_SYNCHRONIZER_ID'
-                );
-                synchronizer.add({
-                    renderingEngineId,
-                    viewportId: viewportIds.axial,
+                loadingIndicator.style.display = 'none';
+
+                // Add event listener for stack scroll to update slice info
+                viewportElement.addEventListener(cornerstone.EVENTS.IMAGE_RENDERED, (evt) => {
+                    const { imageIdIndex } = evt.detail.viewport;
+                    currentSliceInfo.textContent = `${imageIdIndex + 1}/${imageIds.length}`;
                 });
-                synchronizer.add({
-                    renderingEngineId,
-                    viewportId: viewportIds.sagittal,
-                });
-                synchronizer.add({
-                    renderingEngineId,
-                    viewportId: viewportIds.coronal,
-                });
-
-                // Initial render
-                renderingEngine.renderViewports([
-                    viewportIds.axial, 
-                    viewportIds.sagittal, 
-                    viewportIds.coronal,
-                    'PREVIEW_AXIAL_VP',
-                    'PREVIEW_SAGITTAL_VP',
-                    'PREVIEW_CORONAL_VP'
-                ]);
-
-                // Set initial active tool button
-                document.getElementById('ww-wc-btn').classList.add('active');
 
             } catch (error) {
-                console.error("Error loading DICOM volume from GitHub:", error);
-                alert("Failed to load DICOM volume. Please ensure your GitHub repository is public, the paths are correct, and check for CORS issues. For best results, consider a dedicated DICOM server.");
+                console.error("Error loading DICOM image stack from GitHub:", error);
+                alert("Failed to load DICOM images. Please ensure your GitHub repository is public, paths are correct, and check for CORS issues. For best results, consider a dedicated DICOM server.");
             } finally {
                 loadingIndicator.style.display = 'none';
             }
@@ -405,25 +309,19 @@
             toolGroup.setToolActive(ZoomTool.toolName, { bindings: [{ mouseButton: Enums.MouseBindings.Primary }] });
             setActiveToolbarButton('zoom-btn');
         });
+        
+        document.getElementById('stack-scroll-btn').addEventListener('click', () => {
+            toolGroup.setToolActive(StackScrollMouseWheelTool.toolName, { bindings: [{ mouseButton: Enums.MouseBindings.Primary }] });
+            setActiveToolbarButton('stack-scroll-btn');
+        });
 
         document.getElementById('reset-btn').addEventListener('click', async () => {
-            // Reset main viewports
-            const mainViewportElements = [viewElements.axial, viewElements.sagittal, viewElements.coronal];
-            for (const element of mainViewportElements) {
-                const viewport = renderingEngine.getViewport(element.id.replace('-viewport', '_VIEWPORT').toUpperCase());
-                if (viewport) {
-                    await viewport.resetCamera();
-                    viewport.render();
-                }
-            }
-            // Reset preview viewports
-            const previewViewportElements = [viewElements.viewAxial, viewElements.viewSagittal, viewElements.viewCoronal];
-            for (const element of previewViewportElements) {
-                const viewport = renderingEngine.getViewport(element.id.replace('view-', 'PREVIEW_').toUpperCase() + '_VP');
-                 if (viewport) {
-                    await viewport.resetCamera();
-                    viewport.render();
-                }
+            if (viewport) {
+                await viewport.resetCamera();
+                // To reset to first image in stack if desired
+                // await viewport.setStack(imageIds, 0); 
+                viewport.render();
+                currentSliceInfo.textContent = `${viewport.getCurrentImageIdIndex() + 1}/${imageIds.length}`;
             }
         });
 
@@ -438,31 +336,23 @@
         // Weightings buttons (demonstrate tool switching)
         weightingsButtons.forEach(button => {
             button.addEventListener('click', () => {
-                // Remove active class from all weightings buttons
                 weightingsButtons.forEach(btn => btn.classList.remove('active', 'rad-gradient', 'text-white'));
                 weightingsButtons.forEach(btn => btn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300'));
 
-                // Add active class to clicked button
                 button.classList.add('active', 'rad-gradient', 'text-white');
                 button.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
 
-                // Simulate changing tool based on data-tool attribute
                 const toolName = button.dataset.tool;
                 if (toolName && cornerstoneTools[toolName]) {
                     toolGroup.setToolActive(cornerstoneTools[toolName].toolName, { bindings: [{ mouseButton: Enums.MouseBindings.Primary }] });
-                    // Map the tool name back to the toolbar button ID
                     const toolbarButtonIdMap = {
                         [WindowLevelTool.toolName]: 'ww-wc-btn',
                         [PanTool.toolName]: 'pan-btn',
                         [ZoomTool.toolName]: 'zoom-btn',
-                        // Add more mappings if you add more specific buttons
+                        [StackScrollMouseWheelTool.toolName]: 'stack-scroll-btn',
                     };
                     setActiveToolbarButton(toolbarButtonIdMap[cornerstoneTools[toolName].toolName] || '');
-                } else if (toolName === "StackScrollMouseWheelTool") {
-                    // StackScrollMouseWheelTool usually doesn't need a primary mouse binding
-                    toolGroup.setToolActive(StackScrollMouseWheelTool.toolName); 
-                    // No direct toolbar button for this, so don't activate a main toolbar button for it
-                }
+                } 
             });
         });
 
@@ -500,38 +390,22 @@
         // --- Viewport Resizing ---
         const resizeObserver = new ResizeObserver(entries => {
             for (let entry of entries) {
-                // Get the actual viewport element ID
-                const elementId = entry.target.id;
-                let viewportId;
-
-                // Map element ID to Cornerstone viewport ID
-                if (elementId === 'axial-viewport') viewportId = viewportIds.axial;
-                else if (elementId === 'sagittal-viewport') viewportId = viewportIds.sagittal;
-                else if (elementId === 'coronal-viewport') viewportId = viewportIds.coronal;
-                else if (elementId === 'view-axial') viewportId = 'PREVIEW_AXIAL_VP';
-                else if (elementId === 'view-sagittal') viewportId = 'PREVIEW_SAGITTAL_VP';
-                else if (elementId === 'view-coronal') viewportId = 'PREVIEW_CORONAL_VP';
-
-                if (viewportId) {
+                // For the single main viewport
+                if (entry.target.id === 'dicom-viewport') {
                     const viewport = renderingEngine.getViewport(viewportId);
                     if (viewport) {
                         viewport.resize();
-                        // Only re-render if it's visible (has dimensions)
                         if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
                             viewport.render();
                         }
                     }
                 }
+                // No need to resize preview viewports as they are not active now.
             }
         });
 
-        // Observe all relevant viewports for resizing
-        resizeObserver.observe(viewElements.axial);
-        resizeObserver.observe(viewElements.sagittal);
-        resizeObserver.observe(viewElements.coronal);
-        resizeObserver.observe(viewElements.viewAxial);
-        resizeObserver.observe(viewElements.viewSagittal);
-        resizeObserver.observe(viewElements.viewCoronal);
+        // Observe only the main DICOM viewport for resizing
+        resizeObserver.observe(viewportElement);
 
 
         // --- Run Initialization ---
