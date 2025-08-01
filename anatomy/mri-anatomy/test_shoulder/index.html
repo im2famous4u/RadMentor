@@ -3,30 +3,49 @@
 <head>
   <meta charset="utf-8">
   <title>Shoulder MRI Viewer</title>
+
+  <!-- Cornerstone Libraries -->
   <script src="https://unpkg.com/cornerstone-core"></script>
   <script src="https://unpkg.com/cornerstone-tools"></script>
   <script src="https://unpkg.com/dicom-parser"></script>
   <script src="https://unpkg.com/cornerstone-wado-image-loader"></script>
+
   <style>
     #dicomImage {
       width: 512px;
       height: 512px;
       background-color: black;
+      margin: auto;
+      display: block;
     }
   </style>
 </head>
 <body>
+  <h2 style="text-align:center;">Shoulder MRI Viewer</h2>
   <div id="dicomImage"></div>
+
   <script>
-    // Link Cornerstone and WADO loader
+    // Link Cornerstone with the WADO Image Loader
     cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
 
-    // Enable the element
+    // Configure Web Worker paths
+    cornerstoneWADOImageLoader.webWorkerManager.initialize({
+      webWorkerPath : 'https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoaderWebWorker.min.js',
+      taskConfiguration: {
+        decodeTask: {
+          codecsPath: 'https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoaderCodecs.min.js'
+        }
+      }
+    });
+
+    // Enable DICOM element
     const element = document.getElementById('dicomImage');
     cornerstone.enable(element);
 
-    // Generate the list of all 280 slice URLs
+    // Base GitHub raw path to your files
     const baseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/";
+
+    // Generate all image IDs
     const imageIds = [];
     for (let i = 1; i <= 280; i++) {
       const num = String(i).padStart(4, '0'); // IMG0001 format
@@ -35,26 +54,29 @@
 
     let currentImageIndex = 0;
 
-    // Function to display the current image
+    // Function to load and display an image
     function loadAndViewImage(index) {
-      const imageId = imageIds[index];
-      cornerstone.loadAndCacheImage(imageId).then(function(image) {
-        cornerstone.displayImage(element, image);
-      }).catch(err => console.error(err));
+      cornerstone.loadAndCacheImage(imageIds[index])
+        .then(image => {
+          cornerstone.displayImage(element, image);
+        })
+        .catch(err => {
+          console.error("Error loading image:", imageIds[index], err);
+        });
     }
 
-    // Initial load
+    // Initial image
     loadAndViewImage(currentImageIndex);
 
-    // Auto-play through all images once
-    let playInterval = setInterval(() => {
+    // Auto-play sequence
+    const playInterval = setInterval(() => {
       currentImageIndex++;
       if (currentImageIndex >= imageIds.length) {
         clearInterval(playInterval);
       } else {
         loadAndViewImage(currentImageIndex);
       }
-    }, 100); // 100 ms per slice
+    }, 100); // 100ms between slices
   </script>
 </body>
 </html>
