@@ -1,46 +1,72 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Shoulder MRI MPR Viewer with Annotations</title>
-  <script src="https://cdn.jsdelivr.net/npm/papaya-viewer@latest/release/current/standard/papaya.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/papaya-viewer@latest/release/current/standard/papaya.css" />
+  <title>Shoulder MRI MPR Viewer with Annotations (CornerstoneJS)</title>
   <style>
     html, body {
       margin: 0;
       height: 100%;
       background-color: black;
+      display: flex;
+      flex-direction: column;
     }
-    #papayaContainer {
-      width: 100%;
-      height: 100%;
+    #viewer {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .viewport {
+      flex: 1 1 50%;
+      min-width: 50%;
+      min-height: 50%;
+      border: 1px solid #333;
     }
   </style>
+  <!-- CornerstoneJS dependencies -->
+  <script src="https://unpkg.com/cornerstone-core/dist/cornerstone.min.js"></script>
+  <script src="https://unpkg.com/cornerstone-math/dist/cornerstoneMath.min.js"></script>
+  <script src="https://unpkg.com/cornerstone-tools/dist/cornerstoneTools.min.js"></script>
+  <script src="https://unpkg.com/dicom-parser/dist/dicomParser.min.js"></script>
+  <script src="https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoader.min.js"></script>
 </head>
 <body>
-  <div id="papayaContainer"></div>
+  <h2 style="color:white; text-align:center;">Shoulder MRI MPR Viewer with Annotations</h2>
+  <div id="viewer">
+    <div id="axial" class="viewport"></div>
+    <div id="sagittal" class="viewport"></div>
+    <div id="coronal" class="viewport"></div>
+  </div>
   <script>
     const basePath = "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/";
+    const numSlices = 280;
 
-    const slices = [];
-    for (let i = 1; i <= 280; i++) {
-      slices.push(basePath + `IMG${String(i).padStart(4, '0')}.dcm`);
+    cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
+    cornerstoneWADOImageLoader.configure({ beforeSend: function(xhr) { /* CORS config if needed */ } });
+
+    // Enable all viewports
+    ['axial', 'sagittal', 'coronal'].forEach(id => {
+      const element = document.getElementById(id);
+      cornerstone.enable(element);
+    });
+
+    async function loadSeries() {
+      const imageIds = [];
+      for (let i = 1; i <= numSlices; i++) {
+        imageIds.push(`wadouri:${basePath}IMG${String(i).padStart(4, '0')}.dcm`);
+      }
+
+      // Load the first image into each viewport for now
+      const firstImage = await cornerstone.loadAndCacheImage(imageIds[0]);
+      cornerstone.displayImage(document.getElementById('axial'), firstImage);
+      cornerstone.displayImage(document.getElementById('sagittal'), firstImage);
+      cornerstone.displayImage(document.getElementById('coronal'), firstImage);
+
+      // TODO: Implement true MPR by reslicing the volume (requires additional libraries like AMI.js or VTK.js)
+      // TODO: Fetch JSON annotations and draw overlays
     }
 
-    const labels = [
-      basePath + 'Deltoid.mrk.json',
-      basePath + 'Humerus.mrk.json',
-      basePath + 'Scapula.mrk.json'
-    ];
-
-    window.onload = function() {
-      papaya.Container.addViewer("papayaContainer", {
-        images: slices,
-        overlays: labels,
-        worldSpace: true,
-        combineParametric: true
-      });
-    };
+    loadSeries();
   </script>
 </body>
 </html>
