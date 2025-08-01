@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>June 2020 DNB Paper 1 - RadMentor</title> <script src="https://cdn.tailwindcss.com"></script>
+    <title>June 2020 DNB Papers - RadMentor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
@@ -20,60 +21,24 @@
             background-clip: text;
             text-fill-color: transparent;
         }
-        /* PDF Viewer Specific Styles */
-        #pdf-viewer-container {
+        .paper-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #e2e8f0; /* bg-gray-200 */
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 1rem;
-            max-width: calc(100vw - 4rem); /* Adjust based on padding/margin */
-            margin: 0 auto;
-            overflow: hidden; /* To keep inner scrollable */
-            height: calc(100vh - 180px); /* Adjust height to fit viewport, considering header/footer/margins */
+            justify-content: center;
+            min-height: 120px;
+            border: 1px solid transparent;
         }
-        #pdf-canvas-container {
-            flex-grow: 1;
-            width: 100%;
-            height: 100%;
-            overflow: auto; /* Enable scrolling for PDF content */
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* Center the canvas horizontally */
-            background-color: white; /* Canvas background */
-            border-radius: 0.25rem;
-        }
-        canvas {
-            border: 1px solid #cbd5e0; /* border-gray-300 */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-            max-width: 100%; /* Ensure canvas doesn't overflow */
-            height: auto;
-            display: block; /* Remove extra space below canvas */
-            margin: 10px 0; /* Space between pages */
-        }
-        .pdf-nav-buttons button {
-            @apply px-4 py-2 rounded-md font-semibold text-white; /* Apply common styles with Tailwind */
-            background: linear-gradient(90deg, #1e40af, #3b82f6); /* rad-gradient */
-            transition: background-color 0.2s ease;
-        }
-        .pdf-nav-buttons button:hover {
-            background: linear-gradient(90deg, #3b82f6, #1e40af); /* Slightly change gradient on hover */
-        }
-        .pdf-nav-buttons button:disabled {
-            @apply bg-gray-300 text-gray-500 cursor-not-allowed;
-            background: #cbd5e0; /* bg-gray-300 */
-        }
-        .text-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: transparent; /* Makes it visually transparent */
-            z-index: 10; /* Ensures it's above the canvas */
-            pointer-events: none; /* Allows clicks/interactions to pass through to the canvas */
+        .paper-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+            border-color: #3b82f6;
         }
     </style>
 </head>
@@ -99,214 +64,39 @@
 
     <main class="flex-1 container mx-auto px-6 py-8 flex flex-col items-center">
         <h1 class="text-4xl font-extrabold text-center mb-6 rad-gradient-text">
-            June 2020 DNB Paper 1 </h1>
+            June 2020 DNB Exam Papers
+        </h1>
         <p class="text-lg text-gray-600 text-center max-w-2xl mb-12">
-            Practice questions from this exam paper.
+            Select a paper to view its questions.
         </p>
 
-        <div id="pdf-viewer-container" class="w-full">
-            <div id="pdf-canvas-container" class="relative">
-                </div>
-            <div class="pdf-nav-buttons flex items-center justify-center space-x-6 mt-4">
-                <button id="prev-page">Previous</button>
-                <span class="text-lg font-semibold text-gray-800">Page: <span id="page-num">1</span> / <span id="page-count">--</span></span>
-                <button id="next-page">Next</button>
-            </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-4xl">
+            <a href="paper1.html" class="paper-card p-4 border border-gray-200">
+                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
+                <h3 class="text-2xl font-bold text-gray-800">Paper 1</h3>
+                <p class="text-sm text-gray-600">View Questions</p>
+            </a>
+            <a href="paper2.html" class="paper-card p-4 border border-gray-200">
+                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
+                <h3 class="text-2xl font-bold text-gray-800">Paper 2</h3>
+                <p class="text-sm text-gray-600">View Questions</p>
+            </a>
+            <a href="paper3.html" class="paper-card p-4 border border-gray-200">
+                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
+                <h3 class="text-2xl font-bold text-gray-800">Paper 3</h3>
+                <p class="text-sm text-gray-600">View Questions</p>
+            </a>
+            <a href="paper4.html" class="paper-card p-4 border border-gray-200">
+                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
+                <h3 class="text-2xl font-bold text-gray-800">Paper 4</h3>
+                <p class="text-sm text-gray-600">View Questions</p>
+            </a>
         </div>
-
     </main>
 
     <footer class="bg-gray-800 text-white text-center py-4 mt-8 flex-shrink-0">
         <p>&copy; 2025 RadMentor. All rights reserved.</p>
     </footer>
 
-    <script src="/js/pdf.min.js"></script>
-
-    <script>
-        // Set up the worker source
-        pdfjsLib.GlobalWorkerOptions.workerSrc = '/js/pdf.worker.min.js';
-
-        let pdfDoc = null;
-        let pageNum = 1;
-        let pageRendering = false;
-        let pageNumPending = null;
-        let scale = 1.5; // Controls PDF rendering quality/size. Adjust as needed.
-
-        const pdfViewerContainer = document.getElementById('pdf-viewer-container');
-        const pdfCanvasContainer = document.getElementById('pdf-canvas-container');
-        const pageNumSpan = document.getElementById('page-num');
-        const pageCountSpan = document.getElementById('page-count');
-        const prevPageBtn = document.getElementById('prev-page');
-        const nextPageBtn = document.getElementById('next-page');
-
-        // --- Watermark Configuration ---
-        const watermarkText = "RadMentor - For Educational Use Only";
-        // Corrected logo path: points to /logo.png at the root
-        const watermarkLogoSrc = "/logo.png"; 
-        let watermarkLogo = new Image();
-        let logoLoaded = false;
-        
-        watermarkLogo.onload = () => {
-            logoLoaded = true;
-            // If PDF is already loaded, re-render the current page to apply logo watermark
-            if (pdfDoc && !pageRendering) {
-                renderPage(pageNum);
-            }
-        };
-        watermarkLogo.onerror = () => {
-            console.warn("Watermark logo failed to load. PDF will display without logo watermark. Path tried: " + watermarkLogoSrc);
-            logoLoaded = false;
-        };
-        watermarkLogo.src = watermarkLogoSrc;
-
-
-        async function renderPage(num) {
-            pageRendering = true;
-            pageNumSpan.textContent = num; // Update page number immediately
-
-            // Fetch the page
-            const page = await pdfDoc.getPage(num);
-            const viewport = page.getViewport({ scale: scale });
-
-            // Clear previous content
-            pdfCanvasContainer.innerHTML = '';
-
-            // Create a canvas for the PDF page rendering
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            canvas.classList.add('pdf-page-canvas'); // Add class for potential styling if needed
-
-            pdfCanvasContainer.appendChild(canvas);
-
-            // --- PDF Rendering Options for Copy Protection ---
-            // By omitting `textDivs` and `annotationLayer`, and typically by default
-            // when rendering to canvas, PDF.js renders text as non-selectable glyphs.
-            // This is the primary mechanism for copy protection.
-            const renderContext = {
-                canvasContext: context,
-                viewport: viewport,
-                // You can add more options if needed:
-                // renderText: true, // If true, might render a hidden text layer for selection (which we want to avoid for copy protection)
-                                   // For copy protection, you want text to be rendered as paths/shapes, not selectable HTML text.
-                                   // The default canvas render often achieves this without a separate text layer.
-            };
-
-            const renderTask = page.render(renderContext);
-
-            await renderTask.promise; // Wait for PDF page to render
-
-            // --- Apply Watermark ---
-            context.save(); // Save the state before drawing watermark
-            
-            // Text Watermark
-            context.fillStyle = "rgba(0, 0, 0, 0.1)"; // Semi-transparent black
-            context.font = "bold " + (viewport.width / 20) + "px Inter"; // Adjust font size dynamically
-            context.textAlign = "center";
-            context.textBaseline = "middle";
-            context.translate(canvas.width / 2, canvas.height / 2); // Move origin to center
-            context.rotate(-Math.PI / 4); // Rotate 45 degrees
-            context.fillText(watermarkText, 0, 0);
-            context.restore(); // Restore context to original state (origin and rotation)
-
-            // Logo Watermark (Hologram effect: centered, semi-transparent)
-            if (logoLoaded) {
-                context.save(); // Save context for logo
-                context.globalAlpha = 0.15; // Set opacity for logo (15%)
-                
-                const logoOriginalAspectRatio = watermarkLogo.naturalWidth / watermarkLogo.naturalHeight;
-                const targetLogoWidth = viewport.width * 0.4; // Logo takes up 40% of page width
-                const targetLogoHeight = (watermarkLogo.naturalHeight / watermarkLogo.naturalWidth) * targetLogoWidth; // Calculate height based on aspect ratio
-
-                context.drawImage(watermarkLogo, 
-                                (canvas.width - targetLogoWidth) / 2, // Center horizontally
-                                (canvas.height - targetLogoHeight) / 2, // Center vertically
-                                targetLogoWidth, targetLogoHeight);
-                
-                context.restore(); // Restore globalAlpha and other settings
-            }
-
-            // --- Copy Protection Layer (Visual only, text is typically flattened by canvas render) ---
-            // If the PDF is rendered to canvas without a separate text layer, text is not selectable.
-            // A transparent overlay div adds an extra layer that catches pointer events,
-            // preventing selection, but also potentially preventing any other canvas interaction.
-            // Since we're trying to prevent text selection that is inherently handled by how PDF.js
-            // renders to canvas (if it doesn't create a hidden text layer), a visible/pointer-blocking
-            // overlay might not be strictly necessary, but can be added for extra measure or to
-            // indicate content is protected.
-            // For now, no explicit div is added as the canvas render itself is the primary protection.
-
-
-            pageRendering = false;
-            if (pageNumPending !== null) {
-                renderPage(pageNumPending);
-                pageNumPending = null;
-            }
-        }
-
-        function queueRenderPage(num) {
-            if (pageRendering) {
-                pageNumPending = num;
-            } else {
-                renderPage(num);
-            }
-        }
-
-        function onPrevPage() {
-            if (pageNum <= 1) return;
-            pageNum--;
-            queueRenderPage(pageNum);
-        }
-
-        function onNextPage() {
-            if (pageNum >= pdfDoc.numPages) return;
-            pageNum++;
-            queueRenderPage(pageNum);
-        }
-
-        // Event Listeners for Page Navigation
-        prevPageBtn.addEventListener('click', onPrevPage);
-        nextPageBtn.addEventListener('click', onNextPage);
-
-        // --- Highlight Functionality (Basic Visual Only) ---
-        // This remains a simple visual rectangle drawing.
-        // True interactive text highlighting requires PDF.js text layer.
-        function highlightArea(x, y, width, height, pageScale) {
-            const canvas = document.querySelector('.pdf-page-canvas');
-            if (!canvas) return;
-            const context = canvas.getContext('2d');
-            
-            context.save();
-            context.globalAlpha = 0.4; // Transparency for highlight
-            context.fillStyle = 'yellow'; // Highlight color
-            context.fillRect(x * pageScale, y * pageScale, width * pageScale, height * pageScale);
-            context.restore();
-        }
-
-        // --- Load the PDF Document ---
-        async function loadPdfDocument(pdfUrl) {
-            try {
-                const loadingTask = pdfjsLib.getDocument(pdfUrl);
-                pdfDoc = await loadingTask.promise;
-                pageCountSpan.textContent = pdfDoc.numPages;
-                pageNum = 1; // Start from first page
-                renderPage(pageNum);
-            } catch (error) {
-                console.error('Error loading PDF:', error);
-                alert('Failed to load PDF document. Please check the PDF path and ensure it\'s accessible.');
-            }
-        }
-
-        // --- Main Execution ---
-        // The PDF file is in the SAME folder as this index.html file.
-        // E.g., RadMentor/MD_DNB/DNB/2020/june/index.html and RadMentor/MD_DNB/DNB/2020/june/DNB JUNE 2020 Paper 1.pdf
-        const pdfFileName = "DNB JUNE 2020 Paper 1.pdf"; // This is the file you uploaded
-        const pdfUrl = pdfFileName; // Relative path to the PDF within its own directory
-
-        // Call the function to load your PDF
-        loadPdfDocument(pdfUrl);
-
-    </script>
 </body>
 </html>
