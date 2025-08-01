@@ -1,30 +1,28 @@
+ 
+app.js
+Original file line number	Diff line number	Diff line change
 // =================================================================
 // RadMentor Application Logic (app.js)
 // =================================================================
-
 // --- Firebase Configuration ---
 // This configuration now points to your Firebase project.
 const firebaseConfig = {
-  apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
-  authDomain: "radiology-mcqs.firebaseapp.com",
-  projectId: "radiology-mcqs",
-  storageBucket: "radiology-mcqs.appspot.com", // Corrected storage bucket URL
-  messagingSenderId: "862300415358",
-  appId: "1:862300415358:web:097d5e413f388e30587f2f"
+  apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
+  authDomain: "radiology-mcqs.firebaseapp.com",
+  projectId: "radiology-mcqs",
+  storageBucket: "radiology-mcqs.appspot.com", // Corrected storage bucket URL
+  messagingSenderId: "862300415358",
+  appId: "1:862300415358:web:097d5e413f388e30587f2f"
 };
-
-
 // --- Initialize Firebase ---
 // The app uses the compat libraries loaded in the HTML file,
 // which creates a global `firebase` object.
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-
 // --- Global State ---
 let isSignIn = true; // Tracks if the auth modal is in 'signin' or 'signup' mode
 let currentUserData = null; // To store the logged-in user's profile data
-
 // --- DOM Element Selectors ---
 const landingPage = document.getElementById('landing-page');
 const dashboard = document.getElementById('dashboard');
@@ -52,34 +50,25 @@ const settingsSection = document.getElementById('settings-section');
 const accessLevelNotice = document.getElementById('access-level-notice');
 const adminSection = document.getElementById('admin-section');
 const userList = document.getElementById('user-list');
-
-
 // =================================================================
 // EVENT LISTENERS
 // =================================================================
-
 document.addEventListener('DOMContentLoaded', initApp);
-
 userMenuButton.addEventListener('click', (e) => {
     e.stopPropagation();
     userMenu.classList.toggle('hidden');
 });
-
 mobileMenuButton.addEventListener('click', () => {
     mobileMenu.classList.toggle('hidden');
 });
-
 window.addEventListener('click', (e) => {
     if (!userMenu.classList.contains('hidden') && !userMenuButton.contains(e.target)) {
         userMenu.classList.add('hidden');
     }
 });
-
-
 // =================================================================
 // INITIALIZATION
 // =================================================================
-
 /**
  * Main app initialization function.
  */
@@ -87,9 +76,7 @@ function initApp() {
     // Apply saved theme on initial load
     const savedTheme = localStorage.getItem('theme') || 'light'; // Default to light
     applyTheme(savedTheme);
-
     feather.replace(); // Initialize Feather Icons
-
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             try {
@@ -111,12 +98,9 @@ function initApp() {
         }
     });
 }
-
-
 // =================================================================
 // THEME MANAGEMENT
 // =================================================================
-
 /**
  * Applies the selected theme by adding/removing the 'dark' class.
  * @param {string} theme - The theme to apply ('dark' or 'light').
@@ -130,7 +114,6 @@ function applyTheme(theme) {
     // Ensure feather icons are re-rendered on theme change if colors are dynamic
     setTimeout(() => feather.replace(), 0);
 }
-
 /**
  * Toggles the theme and saves the preference to localStorage.
  */
@@ -140,12 +123,9 @@ window.toggleTheme = () => {
     localStorage.setItem('theme', newTheme);
     applyTheme(newTheme);
 };
-
-
 // =================================================================
 // UI UPDATE FUNCTIONS
 // =================================================================
-
 function updateUIAfterLogin(user, userData) {
     landingPage.classList.add('hidden');
     dashboard.classList.remove('hidden');
@@ -153,24 +133,19 @@ function updateUIAfterLogin(user, userData) {
     loggedInNav.classList.remove('hidden');
     mobileLoggedOutNav.parentElement.classList.add('hidden');
     mobileLoggedInNav.classList.remove('hidden');
-
     const firstName = userData.name ? userData.name.split(' ')[0] : 'User';
     userGreetingHeader.textContent = firstName;
-
     populateProfileSection(userData);
     populateSettingsSection(user, userData);
     displayAccessLevel(userData.accessLevel);
-
     if (userData.accessLevel === 'admin') {
         addAdminLink();
         loadAdminDashboard();
     }
-
     hideAuthModal();
     profileFormContainer.classList.add('hidden');
     showDashboardSection('main');
 }
-
 function updateUIAfterLogout() {
     landingPage.classList.remove('hidden');
     dashboard.classList.add('hidden');
@@ -181,7 +156,6 @@ function updateUIAfterLogout() {
     userGreetingHeader.textContent = '';
     removeAdminLink();
 }
-
 function displayAccessLevel(accessLevel) {
     let noticeHTML = '';
     if (accessLevel) {
@@ -194,28 +168,22 @@ function displayAccessLevel(accessLevel) {
     }
     accessLevelNotice.innerHTML = noticeHTML;
 }
-
-
 // =================================================================
 // AUTHENTICATION MODAL & LOGIC
 // =================================================================
-
 window.showAuthModal = (mode) => {
     isSignIn = (mode === 'signin');
     authModal.classList.remove('hidden');
     updateAuthModalUI();
 };
-
 window.hideAuthModal = () => {
     authModal.classList.add('hidden');
     authMessage.textContent = '';
 };
-
 window.toggleAuth = () => {
     isSignIn = !isSignIn;
     updateAuthModalUI();
 };
-
 function updateAuthModalUI() {
     authMessage.textContent = '';
     if (isSignIn) {
@@ -230,7 +198,6 @@ function updateAuthModalUI() {
         toggleBtn.textContent = 'Already have an account? Sign in';
     }
 }
-
 window.handleAuth = () => {
     const email = emailInput.value;
     const password = passwordInput.value;
@@ -240,11 +207,9 @@ window.handleAuth = () => {
     }
     authBtn.disabled = true;
     authBtn.textContent = 'Processing...';
-
     const authPromise = isSignIn
         ? auth.signInWithEmailAndPassword(email, password)
         : auth.createUserWithEmailAndPassword(email, password);
-
     authPromise
         .then(async (userCredential) => {
             if (isSignIn) {
@@ -259,32 +224,25 @@ window.handleAuth = () => {
             updateAuthModalUI();
         });
 };
-
 function handleAuthError(error) {
     console.error("Authentication Error:", error);
     authMessage.textContent = error.message;
 }
-
 window.logout = () => {
     auth.signOut().catch(error => console.error("Logout Error:", error));
 };
-
-
 // =================================================================
 // PROFILE COMPLETION & DASHBOARD SECTIONS
 // =================================================================
-
 function showProfileForm() {
     hideAuthModal();
     landingPage.classList.add('hidden');
     dashboard.classList.add('hidden');
     profileFormContainer.classList.remove('hidden');
 }
-
 window.submitProfile = () => {
     const user = auth.currentUser;
     if (!user) return;
-
     const profileData = {
         name: document.getElementById('name').value,
         dob: document.getElementById('dob').value,
@@ -296,12 +254,10 @@ window.submitProfile = () => {
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         accessLevel: 'free'
     };
-
     if (!profileData.name || !profileData.dob || !profileData.position) {
         alert("Please fill out all required fields: Name, Date of Birth, and Position.");
         return;
     }
-
     db.collection('users').doc(user.uid).set(profileData)
         .then(() => {
             logUserActivity(user.email, 'profile_created', { accessLevel: profileData.accessLevel });
@@ -312,7 +268,6 @@ window.submitProfile = () => {
             alert("There was an error saving your profile.");
         });
 };
-
 window.showDashboardSection = (sectionId) => {
     allDashboardSections.forEach(section => section.classList.add('hidden'));
     const sectionToShow = document.getElementById(`${sectionId}-section`) || document.getElementById('dashboard-main-content');
@@ -321,7 +276,6 @@ window.showDashboardSection = (sectionId) => {
         mobileMenu.classList.add('hidden');
     }
 };
-
 /**
  * Calculates age from a date of birth string.
  * @param {string} dobString - The date of birth (e.g., "YYYY-MM-DD").
@@ -338,7 +292,6 @@ function calculateAge(dobString) {
     }
     return age;
 }
-
 /**
  * Populates the profile section with the new required fields.
  * @param {object} userData - The user's data from Firestore.
@@ -347,7 +300,6 @@ function populateProfileSection(userData) {
     const age = calculateAge(userData.dob);
     const joinDate = userData.membershipJoiningDate ? new Date(userData.membershipJoiningDate.seconds * 1000).toLocaleDateString() : null;
     const endDate = userData.membershipEndingDate ? new Date(userData.membershipEndingDate.seconds * 1000).toLocaleDateString() : null;
-
     let membershipInfo = '';
     if (joinDate && endDate) {
         membershipInfo = `
@@ -357,7 +309,6 @@ function populateProfileSection(userData) {
     } else {
         membershipInfo = `<p><strong>Membership:</strong> <span class="font-semibold text-yellow-500 dark:text-yellow-400">No active subscription</span></p>`;
     }
-
     profileSection.innerHTML = `
         <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">My Profile</h2>
         <div class="space-y-4 text-gray-700 dark:text-gray-300">
@@ -368,7 +319,6 @@ function populateProfileSection(userData) {
         </div>
     `;
 }
-
 /**
  * Populates the settings section with account info and the new theme toggle.
  * @param {object} user - The Firebase user object.
@@ -402,7 +352,6 @@ function populateSettingsSection(user) {
         </div>
     `;
 }
-
 window.sendPasswordReset = () => {
     const user = auth.currentUser;
     if (user) {
@@ -411,12 +360,9 @@ window.sendPasswordReset = () => {
             .catch(error => alert("Could not send password reset email. " + error.message));
     }
 };
-
-
 // =================================================================
 // ADMIN FUNCTIONALITY
 // =================================================================
-
 function addAdminLink() {
     if (document.getElementById('admin-nav-link')) return;
     const adminLink = document.createElement('a');
@@ -427,12 +373,10 @@ function addAdminLink() {
     adminLink.onclick = () => showDashboardSection('admin');
     userMenu.insertBefore(adminLink, userMenu.firstChild);
 }
-
 function removeAdminLink() {
     const adminLink = document.getElementById('admin-nav-link');
     if (adminLink) adminLink.remove();
 }
-
 async function loadAdminDashboard() {
     try {
         const usersSnapshot = await db.collection('users').get();
@@ -443,7 +387,6 @@ async function loadAdminDashboard() {
         adminSection.innerHTML = '<p class="text-red-500">Could not load admin data.</p>';
     }
 }
-
 function populateUserList(users) {
     userList.innerHTML = '';
     users.forEach(user => {
@@ -468,7 +411,6 @@ function populateUserList(users) {
         userList.appendChild(row);
     });
 }
-
 window.updateUserAccess = (userId) => {
     const newLevel = document.getElementById(`access-${userId}`).value;
     db.collection('users').doc(userId).update({ accessLevel: newLevel })
@@ -481,9 +423,38 @@ window.updateUserAccess = (userId) => {
 
 
 // =================================================================
-// UTILITY FUNCTIONS
+// LAYOUT INTEGRATION FUNCTIONS
 // =================================================================
 
+// Function to load landing page content (used by layout manager)
+window.loadLandingPageContent = function(container) {
+    // This function will be called by the layout manager to load the home page content
+    // The content is already in the HTML, so we just need to ensure it's visible
+    const landingContent = document.querySelector('#page-content');
+    if (landingContent) {
+        container.innerHTML = landingContent.innerHTML;
+    }
+};
+
+// Function to show dashboard (updated for new layout)
+window.showDashboard = function() {
+    if (window.layoutManager) {
+        window.location.hash = '#dashboard';
+        window.layoutManager.handleRouteChange();
+    }
+};
+
+// Function to show landing page (updated for new layout)
+window.showLandingPage = function() {
+    if (window.layoutManager) {
+        window.location.hash = '#home';
+        window.layoutManager.handleRouteChange();
+    }
+};
+
+// =================================================================
+// UTILITY FUNCTIONS
+// =================================================================
 function logUserActivity(userEmail, action, details) {
     db.collection('activityLogs').add({
         userEmail: userEmail,
