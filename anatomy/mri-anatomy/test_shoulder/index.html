@@ -198,13 +198,15 @@
         </aside>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/dicom-parser/dist/dicomParser.min.js"></script>
+    <script src="https://unpkg.com/dicom-parser@1.8.1/dist/dicomParser.min.js"></script> 
+    
     <script type="module">
-        // Updated CDN imports for better reliability
-        import * as cornerstone3D from 'https://cdn.jsdelivr.net/npm/@cornerstonejs/core@latest/dist/umd/index.js';
-        import * as cornerstoneTools from 'https://cdn.jsdelivr.net/npm/@cornerstonejs/tools@latest/dist/umd/index.js';
-        import dicomLoader from 'https://cdn.jsdelivr.net/npm/@cornerstonejs/dicom-image-loader@latest/dist/umd/index.js';
-        import { init as initProviders } from 'https://cdn.jsdelivr.net/npm/@cornerstonejs/streaming-image-volume-loader@latest/dist/umd/index.js';
+        // Updated CDN imports using unpkg and targeting the package's main file (often a UMD bundle)
+        // This is the most standard way to import for direct browser use via unpkg
+        import * as cornerstone3D from 'https://unpkg.com/@cornerstonejs/core@1.74.2/dist/umd/index.js'; // Note: removed .min.js suffix
+        import * as cornerstoneTools from 'https://unpkg.com/@cornerstonejs/tools@1.74.2/dist/umd/index.js'; // Note: removed .min.js suffix
+        import dicomLoader from 'https://unpkg.com/@cornerstonejs/dicom-image-loader@1.74.2/dist/umd/index.js'; // Note: removed .min.js suffix
+        import { init as initProviders } from 'https://unpkg.com/@cornerstonejs/streaming-image-volume-loader@1.74.2/dist/umd/index.js'; // Note: removed .min.js suffix
         
         const { RenderingEngine, Enums, volumeLoader, utilities } = cornerstone3D;
         const { PanTool, WindowLevelTool, StackScrollMouseWheelTool, ZoomTool, ToolGroupManager, MPRCrosshairsTool } = cornerstoneTools;
