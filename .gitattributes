@@ -1,1 +1,4 @@
 *.dcm filter=lfs diff=lfs merge=lfs -text
+anatomy/mri-anatomy/test_shoulder/DICOM/*.dcmgit filter=lfs diff=lfs merge=lfs -text
+add filter=lfs diff=lfs merge=lfs -text
+. filter=lfs diff=lfs merge=lfs -text
