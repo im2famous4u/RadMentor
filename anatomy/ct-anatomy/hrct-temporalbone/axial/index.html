@@ -114,6 +114,14 @@
             <div id="sliceNumberDisplay" class="text-center font-semibold text-gray-700 text-lg">Slice: 1 / 131</div>
         </div>
 
+        <!-- NEW: Bottom Annotations Container -->
+        <div id="bottom-annotations-container" class="w-full max-w-5xl mx-auto mt-8 hidden">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Additional Structures</h3>
+            <div id="bottom-annotations-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                <!-- Additional labels will be dynamically inserted here -->
+            </div>
+        </div>
+
         <!-- Back Button -->
         <div class="mt-8 text-center">
             <button onclick="history.back()" class="inline-flex items-center text-gray-600 hover:text-blue-600 font-semibold py-2 px-4 rounded-lg transition-colors duration-200 bg-gray-200 hover:bg-gray-300">
@@ -136,6 +144,7 @@
         const PADDING_LEFT = 400;
         const IMAGE_FILE_WIDTH = 1250;
         const IMAGE_FILE_HEIGHT = 600;
+        const MAX_SIDE_LABELS = 16;
         
         // --- DOM ELEMENTS ---
         const viewerBody = document.getElementById('viewer-body');
@@ -146,6 +155,8 @@
         const annotationSvgOverlay = document.getElementById('annotationSvgOverlay');
         const leftAnnotationsColumn = document.getElementById('left-annotations-column');
         const rightAnnotationsColumn = document.getElementById('right-annotations-column');
+        const bottomAnnotationsContainer = document.getElementById('bottom-annotations-container');
+        const bottomAnnotationsGrid = document.getElementById('bottom-annotations-grid');
 
         let allAnnotations = [];
 
@@ -178,6 +189,8 @@
             // Clear previous annotations
             leftAnnotationsColumn.innerHTML = '';
             rightAnnotationsColumn.innerHTML = '';
+            bottomAnnotationsGrid.innerHTML = '';
+            bottomAnnotationsContainer.classList.add('hidden');
             annotationSvgOverlay.innerHTML = '';
 
             const placeAnnotations = () => {
@@ -185,17 +198,17 @@
                     .filter(ann => ann.slice === currentSlice)
                     .sort((a, b) => a.pointY_mm - b.pointY_mm);
 
-                // ** NEW LOGIC: Divide annotations into top and bottom halves **
-                const midpoint = Math.ceil(annotationsForCurrentSlice.length / 2);
+                const sideAnnotations = annotationsForCurrentSlice.slice(0, MAX_SIDE_LABELS);
+                const bottomAnnotations = annotationsForCurrentSlice.slice(MAX_SIDE_LABELS);
+                
+                const midpoint = Math.ceil(sideAnnotations.length / 2);
 
-                annotationsForCurrentSlice.forEach((annotation, index) => {
+                sideAnnotations.forEach((annotation, index) => {
                     const labelDiv = document.createElement('div');
                     labelDiv.className = 'annotation-label';
                     labelDiv.textContent = annotation.text;
-                    // Use a unique ID for each label to ensure correct line drawing
                     labelDiv.id = `label-${index}`; 
 
-                    // Place top half on the left, bottom half on the right
                     if (index < midpoint) {
                         labelDiv.classList.add('text-right');
                         leftAnnotationsColumn.appendChild(labelDiv);
@@ -204,9 +217,18 @@
                     }
                 });
 
-                // Use a timeout to allow the browser to render the labels and calculate their heights
+                if (bottomAnnotations.length > 0) {
+                    bottomAnnotationsContainer.classList.remove('hidden');
+                    bottomAnnotations.forEach(annotation => {
+                        const labelDiv = document.createElement('div');
+                        labelDiv.className = 'annotation-label text-center';
+                        labelDiv.textContent = annotation.text;
+                        bottomAnnotationsGrid.appendChild(labelDiv);
+                    });
+                }
+
                 setTimeout(() => {
-                    drawAnnotationLines(annotationsForCurrentSlice);
+                    drawAnnotationLines(sideAnnotations);
                 }, 0);
             };
             
@@ -227,23 +249,18 @@
             const midpoint = Math.ceil(annotations.length / 2);
 
             annotations.forEach((annotation, index) => {
-                // Find the corresponding label div using its unique ID
                 const labelDiv = document.getElementById(`label-${index}`);
                 if (!labelDiv) return;
 
-                // Calculate the position of the annotation point on the image
                 const pX_px = (annotation.pointX_mm + PADDING_LEFT) * scaleX;
                 const pY_px = (annotation.pointY_mm + PADDING_TOP) * scaleY;
 
                 const labelRect = labelDiv.getBoundingClientRect();
-                // ** NEW LOGIC: Check if the label is in the top or bottom half **
                 const isOnLeftColumn = index < midpoint;
                 
-                // Calculate the line's end point (Y is middle of label, X is edge of label)
                 const lineEndY = labelRect.top - svgRect.top + (labelRect.height / 2);
                 const lineEndX = isOnLeftColumn ? (labelRect.right - svgRect.left) : (labelRect.left - svgRect.left);
 
-                // Create and draw the line
                 const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 line.setAttribute('x1', pX_px);
                 line.setAttribute('y1', pY_px);
@@ -251,14 +268,12 @@
                 line.setAttribute('y2', lineEndY);
                 annotationSvgOverlay.appendChild(line);
 
-                // Create and draw the circle on the image
                 const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 circle.setAttribute('cx', pX_px);
                 circle.setAttribute('cy', pY_px);
                 circle.setAttribute('r', 4);
                 annotationSvgOverlay.appendChild(circle);
 
-                // Add hover effects
                 const activate = () => { line.classList.add('visible-on-hover'); circle.classList.add('visible-on-hover-circle'); };
                 const deactivate = () => { line.classList.remove('visible-on-hover'); circle.classList.remove('visible-on-hover-circle'); };
                 labelDiv.onmouseover = circle.onmouseover = activate;
