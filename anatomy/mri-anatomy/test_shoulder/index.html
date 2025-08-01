@@ -3,149 +3,173 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Shoulder MRI MPR Viewer - RadMentor</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/feather-icons"></script>
+  <title>Shoulder MRI MPR Viewer</title>
+
+  <!-- Cornerstone3D & dependencies -->
+  <script src="https://unpkg.com/@cornerstonejs/core@1.16.2/dist/cornerstone3D.min.js"></script>
+  <script src="https://unpkg.com/@cornerstonejs/tools@1.16.2/dist/cornerstone3DTools.min.js"></script>
+  <script src="https://unpkg.com/dicom-parser/dist/dicomParser.min.js"></script>
+  <script src="https://unpkg.com/@cornerstonejs/dicom-image-loader@1.16.2/dist/dicomImageLoader.min.js"></script>
+  <script src="https://unpkg.com/hammerjs/hammer.min.js"></script>
+
   <style>
     body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f8fafc;
+      font-family: sans-serif;
+      background-color: #f5f6fa;
+      margin: 0;
+      padding: 0;
     }
-    .viewer-container {
-      background-color: #111827; /* dark background */
+    h1 {
+      text-align: center;
+      margin: 20px;
+    }
+    .tabs {
       display: flex;
       justify-content: center;
-      align-items: center;
-      height: 500px;
+      gap: 20px;
+      border-bottom: 1px solid #ddd;
     }
-    img.mri-slice {
-      max-height: 100%;
-      max-width: 100%;
-      object-fit: contain;
+    .tabs button {
+      background: none;
+      border: none;
+      font-size: 16px;
+      padding: 10px 20px;
+      cursor: pointer;
+      outline: none;
     }
-    input[type="range"] {
-      accent-color: #2563eb; /* Tailwind blue-600 */
+    .tabs button.active {
+      font-weight: bold;
+      border-bottom: 3px solid #2d6cdf;
+    }
+    .viewer-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    .cornerstone-element {
+      width: 512px;
+      height: 512px;
+      background-color: black;
+    }
+    .slider-container {
+      text-align: center;
+      margin-top: 10px;
+    }
+    input[type=range] {
+      width: 80%;
     }
   </style>
 </head>
-<body class="text-gray-800">
-
-<div class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
-  <div class="w-full max-w-5xl">
-    
-    <!-- Header -->
-    <div class="text-center mb-6">
-      <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900">Shoulder MRI MPR Viewer</h1>
-      <p class="mt-3 text-lg text-gray-600">Scroll through slices in Coronal, Sagittal, and Axial planes.</p>
-    </div>
-
-    <!-- Tabs -->
-    <div class="mb-4 border-b border-gray-200">
-      <ul id="tabs" class="flex -mb-px text-sm font-medium text-center">
-        <li class="mr-2">
-          <button data-tab="coronal" class="tab-link inline-block p-4 border-b-2 rounded-t-lg border-blue-600 text-blue-600">Coronal</button>
-        </li>
-        <li class="mr-2">
-          <button data-tab="sagittal" class="tab-link inline-block p-4 border-b-2 rounded-t-lg border-transparent hover:text-gray-600 hover:border-gray-300">Sagittal</button>
-        </li>
-        <li>
-          <button data-tab="axial" class="tab-link inline-block p-4 border-b-2 rounded-t-lg border-transparent hover:text-gray-600 hover:border-gray-300">Axial</button>
-        </li>
-      </ul>
-    </div>
-
-    <!-- Viewer Containers -->
-    <div id="viewer-coronal" class="viewer-container">
-      <img id="img-coronal" class="mri-slice" src="coronal/1.jpg" alt="Coronal Slice">
-    </div>
-    <div id="viewer-sagittal" class="viewer-container hidden">
-      <img id="img-sagittal" class="mri-slice" src="sagittal/1.jpg" alt="Sagittal Slice">
-    </div>
-    <div id="viewer-axial" class="viewer-container hidden">
-      <img id="img-axial" class="mri-slice" src="axial/1.jpg" alt="Axial Slice">
-    </div>
-
-    <!-- Slider -->
-    <div class="mt-4">
-      <input id="slice-slider" type="range" min="1" max="100" value="1" class="w-full">
-      <p class="text-center text-sm text-gray-500 mt-2">Use mouse wheel, arrow keys, or slider to navigate slices</p>
-    </div>
-
-    <!-- Back Button -->
-    <div class="mt-8 text-center">
-      <button onclick="history.back()" class="flex items-center text-gray-600 hover:text-blue-600 mx-auto">
-        <i data-feather="arrow-left" class="mr-2"></i>
-        <span>Back to Anatomy Modules</span>
-      </button>
-    </div>
-
+<body>
+  <h1>Shoulder MRI MPR Viewer</h1>
+  <div class="tabs">
+    <button id="coronalTab" class="active">Coronal</button>
+    <button id="sagittalTab">Sagittal</button>
+    <button id="axialTab">Axial</button>
   </div>
-</div>
 
-<script>
-feather.replace();
+  <div class="viewer-container">
+    <div id="cornerstoneElement" class="cornerstone-element"></div>
+  </div>
 
-// Settings
-const totalSlices = 100; // change to actual number of slices
-let currentSlice = 1;
+  <div class="slider-container">
+    <input type="range" id="sliceSlider" min="0" max="100" value="0">
+    <p>Scroll through slices using mouse wheel, arrow keys, or slider</p>
+  </div>
 
-// Image paths
-function getSlicePath(orientation, slice) {
-  return `${orientation}/${slice}.jpg`;
-}
+  <script>
+    const cs = cornerstone3D;
+    const tools = cornerstone3DTools;
+    const dicomImageLoader = cornerstoneDICOMImageLoader;
 
-// Update all views
-function updateSlices(slice) {
-  document.getElementById('img-coronal').src = getSlicePath('coronal', slice);
-  document.getElementById('img-sagittal').src = getSlicePath('sagittal', slice);
-  document.getElementById('img-axial').src = getSlicePath('axial', slice);
-  document.getElementById('slice-slider').value = slice;
-}
+    // Register external dependencies
+    dicomImageLoader.external.cornerstone = cs;
 
-// Tab switching
-document.querySelectorAll('.tab-link').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-link').forEach(b => {
-      b.classList.remove('border-blue-600', 'text-blue-600');
-      b.classList.add('border-transparent');
-    });
-    btn.classList.add('border-blue-600', 'text-blue-600');
+    const element = document.getElementById("cornerstoneElement");
+    cs.init();
 
-    document.querySelectorAll('.viewer-container').forEach(v => v.classList.add('hidden'));
-    document.getElementById(`viewer-${btn.dataset.tab}`).classList.remove('hidden');
-  });
-});
+    // Replace with your single 3D DICOM file URL
+    const dicomUrl = "wadouri:https://YOUR_SERVER/your_3d_file.dcm";
 
-// Slider control
-document.getElementById('slice-slider').addEventListener('input', (e) => {
-  currentSlice = parseInt(e.target.value);
-  updateSlices(currentSlice);
-});
+    let activePlane = 'coronal';
+    let volumeId;
+    let actorUID;
+    let sliceIndex = 0;
 
-// Keyboard control
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
-    if (currentSlice < totalSlices) currentSlice++;
-    updateSlices(currentSlice);
-  } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
-    if (currentSlice > 1) currentSlice--;
-    updateSlices(currentSlice);
-  }
-});
-
-// Mouse wheel control
-document.querySelectorAll('.viewer-container').forEach(viewer => {
-  viewer.addEventListener('wheel', (e) => {
-    if (e.deltaY < 0 && currentSlice < totalSlices) {
-      currentSlice++;
-    } else if (e.deltaY > 0 && currentSlice > 1) {
-      currentSlice--;
+    async function loadVolume() {
+      const volume = await cs.volumeLoader.createAndCacheVolumeFromUrl('volumeId', dicomUrl);
+      volumeId = volume.volumeId;
+      await volume.load();
+      setupRenderer(volume);
     }
-    updateSlices(currentSlice);
-  });
-});
-</script>
 
+    function setupRenderer(volume) {
+      const renderingEngineId = 'mprRenderingEngine';
+      const renderingEngine = new cs.RenderingEngine(renderingEngineId);
+
+      const viewportId = 'mprViewport';
+      const viewportInput = {
+        viewportId,
+        type: cs.Enums.ViewportType.ORTHOGRAPHIC,
+        element,
+        defaultOptions: { orientation: cs.Enums.OrientationAxis.CORONAL }
+      };
+
+      renderingEngine.setViewports([viewportInput]);
+      renderingEngine.setVolumes([{ volumeId, callback: cs.setVolumesForViewports }]);
+
+      actorUID = renderingEngine.getViewport(viewportId).getActors()[0].uid;
+      renderingEngine.render();
+
+      setupEvents(renderingEngine, viewportId);
+    }
+
+    function setupEvents(renderingEngine, viewportId) {
+      const slider = document.getElementById('sliceSlider');
+      slider.addEventListener('input', () => {
+        sliceIndex = parseInt(slider.value);
+        updateSlice(renderingEngine, viewportId);
+      });
+
+      element.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        sliceIndex += e.deltaY > 0 ? 1 : -1;
+        updateSlice(renderingEngine, viewportId);
+        slider.value = sliceIndex;
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowRight') sliceIndex++;
+        if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') sliceIndex--;
+        updateSlice(renderingEngine, viewportId);
+        slider.value = sliceIndex;
+      });
+
+      document.getElementById('coronalTab').addEventListener('click', () => changePlane(renderingEngine, viewportId, cs.Enums.OrientationAxis.CORONAL, 'coronal'));
+      document.getElementById('sagittalTab').addEventListener('click', () => changePlane(renderingEngine, viewportId, cs.Enums.OrientationAxis.SAGITTAL, 'sagittal'));
+      document.getElementById('axialTab').addEventListener('click', () => changePlane(renderingEngine, viewportId, cs.Enums.OrientationAxis.AXIAL, 'axial'));
+    }
+
+    function updateSlice(renderingEngine, viewportId) {
+      const viewport = renderingEngine.getViewport(viewportId);
+      const { slice } = viewport.getCamera();
+      viewport.setCamera({ slice: sliceIndex });
+      renderingEngine.render();
+    }
+
+    function changePlane(renderingEngine, viewportId, orientation, planeName) {
+      activePlane = planeName;
+      document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`${planeName}Tab`).classList.add('active');
+
+      const viewport = renderingEngine.getViewport(viewportId);
+      viewport.setOrientation(orientation);
+      sliceIndex = 0;
+      document.getElementById('sliceSlider').value = 0;
+      renderingEngine.render();
+    }
+
+    loadVolume();
+  </script>
 </body>
 </html>
