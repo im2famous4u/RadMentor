@@ -17,42 +17,27 @@
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6; /* gray-100 */
         }
-        /* Override Papaya's default container to fit our layout */
         .papaya-container {
             width: 100% !important;
             height: 100% !important;
         }
-    </style>
-
-    <script type="text/javascript">
-        // --- Configuration ---
-        var params = [];
-        params["worldSpace"] = true;
-        params["showControls"] = true;
-        params["showOrientation"] = true;
-        params["orthogonal"] = "hidden"; // Hide the 3D view, show only MPR
-
-        // --- Generate the list of DICOM file URLs ---
-        const dicomFiles = [];
-        // CORRECTED: Using the correct base URL and filename structure
-        const baseUrl = "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/";
-        const numSlices = 280;
-
-        for (let i = 1; i <= numSlices; i++) {
-            const fileName = `IMG${String(i).padStart(4, '0')}.dcm`;
-            dicomFiles.push(baseUrl + fileName);
+        /* Progress bar style */
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e5e7eb; /* gray-200 */
+            border-radius: 0.5rem;
+            overflow: hidden;
         }
-        params["images"] = dicomFiles;
-
-        // --- Annotation Loading ---
-        const annotationFiles = [
-            "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/Deltoid.mrk.json",
-            "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/Humerus.mrk.json",
-            "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/Scapula.mrk.json"
-        ];
-        params["surfaces"] = annotationFiles;
-
-    </script>
+        .progress-bar {
+            width: 0%;
+            height: 1.5rem;
+            background-color: #3b82f6; /* blue-500 */
+            text-align: center;
+            line-height: 1.5rem;
+            color: white;
+            transition: width 0.2s ease-in-out;
+        }
+    </style>
 </head>
 <body class="text-gray-800">
 
@@ -61,7 +46,7 @@
         <div class="flex-shrink-0 flex justify-between items-center mb-4">
             <div>
                 <h1 class="text-3xl font-extrabold text-gray-900">Shoulder MRI Viewer</h1>
-                <p id="status-text" class="text-gray-500">Loading DICOM series via jsDelivr. This may take a moment...</p>
+                <p id="status-text" class="text-gray-500">Initializing viewer...</p>
             </div>
             <button onclick="history.back()" class="inline-flex items-center text-gray-600 hover:text-blue-600 font-semibold py-2 px-4 rounded-lg transition-colors duration-200 bg-gray-200 hover:bg-gray-300">
                 <i data-feather="arrow-left" class="mr-2 h-5 w-5"></i>
@@ -70,16 +55,109 @@
         </div>
 
         <!-- Papaya Viewer Container -->
-        <div class="flex-grow bg-black rounded-lg shadow-md">
-            <div class="papaya" data-params="params"></div>
+        <div id="viewer-container" class="flex-grow bg-black rounded-lg shadow-md hidden">
+            <div class="papaya" data-params="papayaParams"></div>
+        </div>
+        
+        <!-- Loading Container -->
+        <div id="loading-container" class="flex-grow flex flex-col items-center justify-center bg-white rounded-lg shadow-md">
+            <p id="loading-status" class="text-lg font-semibold text-gray-700 mb-4">Preparing to download DICOM series...</p>
+            <div class="w-full max-w-lg progress-bar-container">
+                <div id="progress-bar" class="progress-bar">0%</div>
+            </div>
         </div>
     </div>
 
     <script>
-        feather.replace();
-        // Add a listener to know when the viewer is ready
+        // --- Configuration ---
+        var papayaParams = [];
+        papayaParams["worldSpace"] = true;
+        papayaParams["showControls"] = true;
+        papayaParams["showOrientation"] = true;
+        papayaParams["orthogonal"] = "hidden";
+
+        const statusText = document.getElementById('status-text');
+        const loadingContainer = document.getElementById('loading-container');
+        const loadingStatus = document.getElementById('loading-status');
+        const progressBar = document.getElementById('progress-bar');
+        const viewerContainer = document.getElementById('viewer-container');
+
+        // --- Main Function ---
+        async function loadDicomSeries() {
+            const dicomFileUrls = [];
+            const baseUrl = "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/DICOM/";
+            const numSlices = 280;
+
+            for (let i = 1; i <= numSlices; i++) {
+                const fileName = `IMG-0001-${String(i).padStart(5, '0')}.dcm`;
+                dicomFileUrls.push(baseUrl + fileName);
+            }
+
+            const base64DicomArray = [];
+            let loadedCount = 0;
+
+            // Fetch each file and convert to Base64
+            for (const url of dicomFileUrls) {
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+                    }
+                    const blob = await response.blob();
+                    const base64 = await blobToBase64(blob);
+                    // Papaya expects the base64 string without the data URL prefix
+                    base64DicomArray.push(base64.split(',')[1]);
+                    
+                    loadedCount++;
+                    const progress = Math.round((loadedCount / numSlices) * 100);
+                    loadingStatus.textContent = `Downloading DICOM Images (${loadedCount}/${numSlices})...`;
+                    progressBar.style.width = `${progress}%`;
+                    progressBar.textContent = `${progress}%`;
+
+                } catch (error) {
+                    loadingStatus.textContent = `Error: ${error.message}`;
+                    console.error(error);
+                    return; // Stop the process on error
+                }
+            }
+            
+            loadingStatus.textContent = 'All files downloaded. Preparing viewer...';
+            papayaParams["encodedImages"] = base64DicomArray;
+
+            // --- Annotation Loading ---
+            const annotationFiles = [
+                "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/Deltoid.mrk.json",
+                "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/Humerus.mrk.json",
+                "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/Scapula.mrk.json"
+            ];
+            papayaParams["surfaces"] = annotationFiles;
+
+            // Hide loading container and show viewer
+            loadingContainer.classList.add('hidden');
+            viewerContainer.classList.remove('hidden');
+            
+            // Initialize Papaya
+            papaya.Container.start();
+        }
+
+        // --- Utility function to convert Blob to Base64 ---
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        // --- Run on page load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            feather.replace();
+            loadDicomSeries();
+        });
+
         document.addEventListener('papayaReady', function() {
-            document.getElementById('status-text').textContent = 'Viewer is ready. Use your mouse to explore the images.';
+            statusText.textContent = 'Viewer is ready. Use your mouse to explore the images.';
         });
     </script>
 </body>
