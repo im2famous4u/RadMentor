@@ -109,7 +109,7 @@
     <header class="bg-white/80 backdrop-blur-lg flex-shrink-0 z-20 shadow-sm">
         <div class="container mx-auto px-6 py-3 flex justify-between items-center">
             <div class="flex items-center">
-                <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
+                <img src="/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
                 <span class="text-2xl font-bold text-gray-800">RadMentor</span>
             </div>
             <nav class="hidden md:flex items-center space-x-8">
@@ -205,12 +205,12 @@
         // Paths are now absolute from the website root.
         import * as cornerstone3D from '/js/cornerstone-core.min.js';
         import * as cornerstoneTools from '/js/cornerstone-tools.min.js';
-        import dicomLoader from '/js/dicom-image-loader.min.js';
+        import * as dicomLoader from '/js/dicom-image-loader.min.js'; // Changed to import * as
         import { init as initProviders } from '/js/streaming-image-volume-loader.min.js';
         
         const { RenderingEngine, Enums, volumeLoader, utilities } = cornerstone3D;
         const { PanTool, WindowLevelTool, StackScrollMouseWheelTool, ZoomTool, ToolGroupManager, MPRCrosshairsTool } = cornerstoneTools;
-        const { cornerstoneStreamingImageVolumeLoader } = dicomLoader;
+        const { cornerstoneStreamingImageVolumeLoader, createImageIdsAndCacheMetaData } = dicomLoader; // Access properties from dicomLoader namespace
 
         const loadingIndicator = document.getElementById('loading-indicator');
         const toolbarButtons = document.querySelectorAll('#toolbar .tool-btn');
