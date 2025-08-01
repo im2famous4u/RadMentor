@@ -5,7 +5,17 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
+    ],
+    "headers": [
+      {
+        "source": "**/*.dcm",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/dicom"
+          }
+        ]
+      }
     ]
   }
 }
-
