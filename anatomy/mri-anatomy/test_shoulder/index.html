@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shoulder MRI Viewer - RadMentor</title>
+    <title>HRCT Temporal Bone - Axial - RadMentor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -59,24 +59,6 @@
         .anatomy-item {
             transition: background-color 0.2s;
         }
-        input[type=range].opacity-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            height: 4px;
-            background: #d1d5db;
-            border-radius: 2px;
-            outline: none;
-        }
-        input[type=range].opacity-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            background: #3b82f6;
-            cursor: pointer;
-            border-radius: 50%;
-        }
     </style>
 </head>
 <body class="text-gray-800 flex flex-col h-screen overflow-hidden">
@@ -84,13 +66,12 @@
     <header class="bg-white/80 backdrop-blur-lg flex-shrink-0 z-20 shadow-sm">
         <div class="container mx-auto px-6 py-3 flex justify-between items-center">
             <div class="flex items-center">
-                <img src="/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
-                <span class="text-2xl font-bold text-gray-800">RadMentor</span>
+                <a href="/"><img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/></a>
+                <a href="/"><span class="text-2xl font-bold text-gray-800">RadMentor</span></a>
             </div>
             <nav class="hidden md:flex items-center space-x-8">
-                <a href="#" class="text-gray-600 hover:text-blue-600">Dashboard</a>
+                 <a href="#" onclick="window.location.href = '../../../../index.html#dashboard'" class="text-gray-600 hover:text-blue-600">Dashboard</a>
                 <a href="#" class="text-blue-600 font-semibold">Anatomy Viewer</a>
-                <a href="#" class="text-gray-600 hover:text-blue-600">Courses</a>
             </nav>
         </div>
     </header>
@@ -101,9 +82,11 @@
             <div class="w-full h-auto text-center text-sm text-gray-700">
                 <span id="current-slice-info">--/--</span>
             </div>
-             <div class="w-full p-1 border-2 border-gray-300 rounded-md bg-black h-20"></div>
-            <div class="w-full p-1 border-2 border-gray-300 rounded-md bg-black h-20"></div>
-            <div class="w-full p-1 border-2 border-gray-300 rounded-md bg-black h-20"></div>
+             <div id="preview-canvases" class="space-y-2">
+                <div class="w-full p-1 border-2 border-transparent rounded-md bg-black h-20"></div>
+                <div class="w-full p-1 border-2 border-blue-500 rounded-md bg-black h-20"></div>
+                <div class="w-full p-1 border-2 border-transparent rounded-md bg-black h-20"></div>
+            </div>
         </aside>
 
         <main class="flex-1 bg-black flex flex-col items-center p-2 relative overflow-hidden">
@@ -111,15 +94,16 @@
                 <button id="anatomy-btn" class="tool-btn p-2 rounded-md" title="Show Anatomy"><i class="fas fa-list-ul"></i></button>
                 <button id="pan-btn" class="tool-btn p-2 rounded-md" title="Pan"><i class="fas fa-arrows-alt"></i></button>
                 <button id="zoom-btn" class="tool-btn p-2 rounded-md" title="Zoom"><i class="fas fa-search-plus"></i></button>
-                <button id="ww-wc-btn" class="tool-btn p-2 rounded-md" title="Window/Contrast"><i class="fas fa-adjust"></i></button>
+                <button id="ww-wc-btn" class="tool-btn p-2 rounded-md active" title="Window/Contrast"><i class="fas fa-adjust"></i></button>
                 <button id="stack-scroll-btn" class="tool-btn p-2 rounded-md" title="Scroll through slices"><i class="fas fa-scroll"></i></button>
                 <button id="reset-btn" class="tool-btn p-2 rounded-md" title="Reset View"><i class="fas fa-sync-alt"></i></button>
             </div>
             <div id="viewer-container" class="w-full flex-1 flex justify-center items-center min-h-0">
                 <div id="dicom-viewport" class="viewport max-w-full max-h-full aspect-square"></div>
             </div>
-            <div id="loading-indicator" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 text-white z-20">
+            <div id="loading-indicator" class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-75 text-white z-20">
                 <p>Loading DICOM Image...</p>
+                <p id="loading-progress" class="text-sm mt-2"></p>
             </div>
             
             <div id="anatomy-panel" class="absolute top-0 left-0 h-full bg-white/95 backdrop-blur-sm p-4 w-64 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out z-30 flex flex-col">
@@ -136,280 +120,151 @@
             <div>
                 <h2 class="text-lg font-semibold mb-3 pb-2 text-blue-800">Weightings</h2>
                 <div class="grid grid-cols-2 gap-2" id="weightings-buttons">
-                    <button id="weighting-axial-pd-fs" class="px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm rad-gradient active" data-tool="WindowLevelTool">Axial PD FS</button>
-                    <button id="weighting-coronal-t2" class="px-4 py-2 text-sm font-medium bg-gray-200 text-gray-700 rounded-md shadow-sm hover:bg-gray-300" data-tool="PanTool">Coronal T2</button>
-                    <button id="weighting-sagittal-t1" class="px-4 py-2 text-sm font-medium bg-gray-200 text-gray-700 rounded-md shadow-sm hover:bg-gray-300" data-tool="ZoomTool">Sagittal T1</button>
-                    <button id="weighting-aber" class="px-4 py-2 text-sm font-medium bg-gray-200 text-gray-700 rounded-md shadow-sm hover:bg-gray-300" data-tool="StackScrollMouseWheelTool">ABER</button>
+                    <!-- Buttons will be dynamically added if multiple series are detected -->
                 </div>
             </div>
             <div>
                 <h2 class="text-lg font-semibold mb-3 pb-2 text-blue-800">Anatomical Parts</h2>
-                <div class="space-y-3">
-                    <label for="toggle-rotator" class="flex items-center justify-between cursor-pointer"><span class="text-sm">Rotator Cuff</span><div class="relative"><input type="checkbox" id="toggle-rotator" class="sr-only toggle-checkbox" checked><div class="toggle-label block bg-gray-300 w-10 h-6 rounded-full"></div><div class="toggle-dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div></div></label>
-                    <label for="toggle-bones" class="flex items-center justify-between cursor-pointer"><span class="text-sm">Bones</span><div class="relative"><input type="checkbox" id="toggle-bones" class="sr-only toggle-checkbox" checked><div class="toggle-label block bg-gray-300 w-10 h-6 rounded-full"></div><div class="toggle-dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div></div></label>
-                </div>
-            </div>
-            <div>
-                <h2 class="text-lg font-semibold mb-3 pt-3 border-t border-gray-200 pb-2 text-blue-800">Settings</h2>
-                <div class="space-y-4">
-                    <label for="toggle-practice" class="flex items-center justify-between cursor-pointer"><span class="text-sm flex items-center"><i class="fas fa-question-circle w-6 text-center text-gray-500"></i>Practice</span><div class="relative"><input type="checkbox" id="toggle-practice" class="sr-only toggle-checkbox"><div class="toggle-label block bg-gray-300 w-10 h-6 rounded-full"></div><div class="toggle-dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div></div></label>
-                    <label for="toggle-pins" class="flex items-center justify-between cursor-pointer"><span class="text-sm flex items-center"><i class="fas fa-thumbtack w-6 text-center text-gray-500"></i>Pins</span><div class="relative"><input type="checkbox" id="toggle-pins" class="sr-only toggle-checkbox"><div class="toggle-label block bg-gray-300 w-10 h-6 rounded-full"></div><div class="toggle-dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div></div></label>
-                    <div class="space-y-2"><span class="text-sm">Overlay opacity</span><input type="range" min="0" max="100" value="75" class="opacity-slider"></div>
-                    <button class="w-full flex items-center justify-between p-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm"><span class="flex items-center"><i class="fas fa-camera w-6 text-center text-gray-500"></i>Take a screenshot</span><span class="px-2 py-0.5 bg-gray-400 text-white text-xs rounded">S</span></button>
+                <div class="space-y-3" id="anatomy-toggles">
+                    <!-- Toggles will be dynamically added -->
                 </div>
             </div>
         </aside>
     </div>
 
-    <script src="/js/dicomParser.min.js"></script> 
-    <script src="/js/cornerstone.min.js"></script> 
+    <!-- Cornerstone and DICOM Loader Scripts -->
+    <script src="https://unpkg.com/cornerstone-core@2.3.0/dist/cornerstone.min.js"></script>
+    <script src="https://unpkg.com/cornerstone-tools@4.15.2/dist/cornerstoneTools.min.js"></script>
+    <script src="https://unpkg.com/cornerstone-wado-image-loader@3.1.2/dist/cornerstoneWADOImageLoader.min.js"></script>
+    <script src="https://unpkg.com/dicom-parser@1.8.7/dist/dicomParser.min.js"></script>
 
     <script>
-        // Access global Cornerstone and dicomParser objects
-        const cornerstone = window.cornerstone;
-        const cornerstoneTools = window.cornerstoneTools;
-        const cornerstoneDICOMImageLoader = window.cornerstoneDICOMImageLoader;
+        // --- Cornerstone Setup ---
+        cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
+        cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
+        cornerstoneTools.init({
+            globalToolSyncEnabled: true
+        });
 
-        // Destructure necessary parts from the global objects
-        const {
-            RenderingEngine,
-            Enums,
-            utilities,
-            set,
-            volumeLoader
-        } = cornerstone;
-
-        const {
-            PanTool,
-            WindowLevelTool,
-            StackScrollMouseWheelTool,
-            ZoomTool,
-            ToolGroupManager,
-            // Removed MPRCrosshairsTool as it's for MPR
-        } = cornerstoneTools;
-
-        const loadingIndicator = document.getElementById('loading-indicator');
-        const toolbarButtons = document.querySelectorAll('#toolbar .tool-btn');
-        const weightingsButtons = document.querySelectorAll('#weightings-buttons button');
-        const currentSliceInfo = document.getElementById('current-slice-info');
-
-        let renderingEngine;
-        let toolGroup;
-        let imageIds = []; // This will now store the image IDs for the stack
-        let viewport; // Reference to the single main viewport
-        let currentImageIdIndex = 0; // To track current slice for stack scrolling
-
-        const viewportId = 'DICOM_VIEWPORT';
+        // --- UI Elements ---
         const viewportElement = document.getElementById('dicom-viewport');
-
-        // --- Core Initialization ---
-        async function initializeCornerstone() {
-            loadingIndicator.style.display = 'flex';
-            
-            await cornerstone.init();
-            await cornerstoneTools.init();
-            
-            // Set up external dependencies for the DICOM image loader
-            cornerstoneDICOMImageLoader.external.cornerstone = cornerstone;
-            cornerstoneDICOMImageLoader.external.dicomParser = window.dicomParser;
-
-            // Configure the DICOM image loader
-            cornerstoneDICOMImageLoader.configure({
-                use: 'native',
-                decode: true,
-                maxWebWorkers: 1,
-                strict: true,
-            });
-
-            // Add Tools for the single viewport
-            cornerstoneTools.addTool(PanTool);
-            cornerstoneTools.addTool(WindowLevelTool);
-            cornerstoneTools.addTool(StackScrollMouseWheelTool);
-            cornerstoneTools.addTool(ZoomTool);
-            
-            // Define a tool group for the single viewport
-            const toolGroupId = 'SINGLE_VIEWER_TOOL_GROUP';
-            toolGroup = ToolGroupManager.createToolGroup(toolGroupId);
-
-            toolGroup.addTool(WindowLevelTool.toolName);
-            toolGroup.addTool(PanTool.toolName);
-            toolGroup.addTool(ZoomTool.toolName);
-            toolGroup.addTool(StackScrollMouseWheelTool.toolName); // Enable stack scrolling
-
-            // Set initial active tools
-            toolGroup.setToolActive(WindowLevelTool.toolName, { bindings: [{ mouseButton: Enums.MouseBindings.Primary }] });
-            toolGroup.setToolActive(PanTool.toolName, { bindings: [{ mouseButton: Enums.MouseBindings.Auxiliary }] }); // Middle mouse button
-            toolGroup.setToolActive(ZoomTool.toolName, { bindings: [{ mouseButton: Enums.MouseBindings.Secondary }] }); // Right mouse button
-            toolGroup.setToolActive(StackScrollMouseWheelTool.toolName); // Active for mouse wheel
-
-            // Setup Rendering Engine
-            const renderingEngineId = 'singleViewerEngine';
-            renderingEngine = new RenderingEngine(renderingEngineId);
-
-            // Set up the single viewport
-            renderingEngine.setViewports([
-                { viewportId: viewportId, type: Enums.ViewportType.STACK, element: viewportElement, defaultOptions: { background: [0, 0, 0] } },
-            ]);
-
-            viewport = renderingEngine.getViewport(viewportId); // Get reference to the viewport
-            toolGroup.addViewport(viewportId, renderingEngineId); // Add viewport to tool group
-
-            // --- Load DICOM Images (Stack) from GitHub ---
-            document.querySelector('header img').src = '/logo.png'; // Assuming logo is also at the root
-
-            const githubUsername = "im2famous4u";
-            const githubRepoName = "RadMentor"; 
-            const githubBranch = "main";
-            const dicomFolderPath = "anatomy/mri-anatomy/test_shoulder/shoulder-dicom/"; 
-
-            const baseUrl = `https://raw.githubusercontent.com/${githubUsername}/${githubRepoName}/${githubBranch}/${dicomFolderPath}`;
-            
-            // Generate all 280 image IDs for the stack
-            for (let i = 1; i <= 280; i++) {
-                const filename = `IMG${String(i).padStart(4, '0')}.dcm`;
-                imageIds.push(`wadouri:${baseUrl}${filename}`);
-            }
-
-            // Set the stack of images for the viewport
-            try {
-                await viewport.setStack(imageIds);
-                currentImageIdIndex = viewport.getCurrentImageIdIndex(); // Get initial index
-                currentSliceInfo.textContent = `${currentImageIdIndex + 1}/${imageIds.length}`; // Update UI
-
-                viewport.render(); // Initial render
-
-                loadingIndicator.style.display = 'none';
-
-                // Add event listener for stack scroll to update slice info
-                viewportElement.addEventListener(cornerstone.EVENTS.IMAGE_RENDERED, (evt) => {
-                    const { imageIdIndex } = evt.detail.viewport;
-                    currentSliceInfo.textContent = `${imageIdIndex + 1}/${imageIds.length}`;
-                });
-
-            } catch (error) {
-                console.error("Error loading DICOM image stack from GitHub:", error);
-                alert("Failed to load DICOM images. Please ensure your GitHub repository is public, paths are correct, and check for CORS issues. For best results, consider a dedicated DICOM server.");
-            } finally {
-                loadingIndicator.style.display = 'none';
-            }
-        }
-
-        // --- UI Event Listeners ---
-        document.getElementById('ww-wc-btn').addEventListener('click', () => {
-            toolGroup.setToolActive(WindowLevelTool.toolName, { bindings: [{ mouseButton: Enums.MouseBindings.Primary }] });
-            setActiveToolbarButton('ww-wc-btn');
-        });
-
-        document.getElementById('pan-btn').addEventListener('click', () => {
-            toolGroup.setToolActive(PanTool.toolName, { bindings: [{ mouseButton: Enums.MouseBindings.Primary }] });
-            setActiveToolbarButton('pan-btn');
-        });
-
-        document.getElementById('zoom-btn').addEventListener('click', () => {
-            toolGroup.setToolActive(ZoomTool.toolName, { bindings: [{ mouseButton: Enums.MouseBindings.Primary }] });
-            setActiveToolbarButton('zoom-btn');
-        });
-        
-        document.getElementById('stack-scroll-btn').addEventListener('click', () => {
-            toolGroup.setToolActive(StackScrollMouseWheelTool.toolName, { bindings: [{ mouseButton: Enums.MouseBindings.Primary }] });
-            setActiveToolbarButton('stack-scroll-btn');
-        });
-
-        document.getElementById('reset-btn').addEventListener('click', async () => {
-            if (viewport) {
-                await viewport.resetCamera();
-                // To reset to first image in stack if desired
-                // await viewport.setStack(imageIds, 0); 
-                viewport.render();
-                currentSliceInfo.textContent = `${viewport.getCurrentImageIdIndex() + 1}/${imageIds.length}`;
-            }
-        });
-
-        // Function to set active state for toolbar buttons
-        function setActiveToolbarButton(activeButtonId) {
-            toolbarButtons.forEach(button => {
-                button.classList.remove('active');
-            });
-            document.getElementById(activeButtonId).classList.add('active');
-        }
-
-        // Weightings buttons (demonstrate tool switching)
-        weightingsButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                weightingsButtons.forEach(btn => btn.classList.remove('active', 'rad-gradient', 'text-white'));
-                weightingsButtons.forEach(btn => btn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300'));
-
-                button.classList.add('active', 'rad-gradient', 'text-white');
-                button.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
-
-                const toolName = button.dataset.tool;
-                if (toolName && cornerstoneTools[toolName]) {
-                    toolGroup.setToolActive(cornerstoneTools[toolName].toolName, { bindings: [{ mouseButton: Enums.MouseBindings.Primary }] });
-                    const toolbarButtonIdMap = {
-                        [WindowLevelTool.toolName]: 'ww-wc-btn',
-                        [PanTool.toolName]: 'pan-btn',
-                        [ZoomTool.toolName]: 'zoom-btn',
-                        [StackScrollMouseWheelTool.toolName]: 'stack-scroll-btn',
-                    };
-                    setActiveToolbarButton(toolbarButtonIdMap[cornerstoneTools[toolName].toolName] || '');
-                } 
-            });
-        });
-
-
-        // --- UI Logic (Anatomy Panel, etc.) ---
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const loadingProgress = document.getElementById('loading-progress');
+        const currentSliceInfo = document.getElementById('current-slice-info');
+        const toolbar = document.getElementById('toolbar');
         const anatomyPanel = document.getElementById('anatomy-panel');
         const anatomyBtn = document.getElementById('anatomy-btn');
         const anatomyListContainer = document.getElementById('anatomy-list');
         const anatomySearchInput = document.getElementById('anatomy-search');
         let hideAnatomyTimeout;
-        const shoulderAnatomy = [ "Humerus", "Scapula", "Clavicle", "Acromion", "Coracoid process", "Glenoid", "Supraspinatus muscle", "Infraspinatus muscle", "Teres minor muscle", "Subscapularis muscle", "Supraspinatus tendon", "Infraspinatus tendon", "Teres minor tendon", "Subscapularis tendon", "Biceps tendon (long head)", "Deltoid muscle", "Pectoralis major muscle", "Superior labrum", "Inferior labrum", "Anterior labrum", "Posterior labrum", "Acromioclavicular joint", "Glenohumeral joint", "Coracoacromial ligament" ];
         
-        const populateAnatomyList = (filter = '') => {
-            anatomyListContainer.innerHTML = '';
-            const filteredAnatomy = shoulderAnatomy.filter(item => item.toLowerCase().includes(filter.toLowerCase()));
-            if (filteredAnatomy.length === 0) {
-                anatomyListContainer.innerHTML = `<p class="text-sm text-gray-500 p-2">No results found.</p>`;
-                return;
-            }
-            filteredAnatomy.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'anatomy-item text-sm text-gray-700 p-2 rounded-md hover:bg-gray-100 cursor-pointer';
-                div.textContent = item;
-                anatomyListContainer.appendChild(div);
-            });
-        };
-        
-        anatomyBtn.addEventListener('mouseenter', () => { clearTimeout(hideAnatomyTimeout); anatomyPanel.classList.remove('-translate-x-full'); });
-        anatomyBtn.addEventListener('mouseleave', () => { hideAnatomyTimeout = setTimeout(() => { anatomyPanel.classList.add('-translate-x-full'); }, 300); });
-        anatomyPanel.addEventListener('mouseenter', () => { clearTimeout(hideAnatomyTimeout); });
-        anatomyPanel.addEventListener('mouseleave', () => { hideAnatomyTimeout = setTimeout(() => { anatomyPanel.classList.add('-translate-x-full'); }, 300); });
-        anatomySearchInput.addEventListener('input', (e) => { populateAnatomyList(e.target.value); });
-        populateAnatomyList();
+        // --- Configuration ---
+        const numSlices = 280;
+        const baseUrl = "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/DICOM/";
+        const imageIds = [];
+        for (let i = 1; i <= numSlices; i++) {
+            const fileName = `IMG-0001-${String(i).padStart(5, '0')}.dcm`;
+            imageIds.push(`wadouri:${baseUrl}${fileName}`);
+        }
 
-        // --- Viewport Resizing ---
-        const resizeObserver = new ResizeObserver(entries => {
-            for (let entry of entries) {
-                // For the single main viewport
-                if (entry.target.id === 'dicom-viewport') {
-                    const viewport = renderingEngine.getViewport(viewportId);
-                    if (viewport) {
-                        viewport.resize();
-                        if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
-                            viewport.render();
-                        }
-                    }
+        // --- Main Logic ---
+        async function loadAndDisplayImage() {
+            cornerstone.enable(viewportElement);
+
+            const stack = {
+                currentImageIdIndex: 0,
+                imageIds: imageIds,
+            };
+
+            // Load images with progress tracking
+            let loadedCount = 0;
+            const loadImagePromises = imageIds.map(imageId => {
+                return cornerstone.loadAndCacheImage(imageId).then(() => {
+                    loadedCount++;
+                    loadingProgress.textContent = `(${loadedCount}/${numSlices})`;
+                });
+            });
+
+            await Promise.all(loadImagePromises);
+            
+            loadingIndicator.style.display = 'none';
+
+            cornerstone.displayImage(viewportElement, imageIds[0]);
+            cornerstoneTools.addStackStateManager(viewportElement, ['stack']);
+            cornerstoneTools.addToolState(viewportElement, 'stack', stack);
+
+            setupTools();
+            setupAnatomyPanel();
+        }
+
+        function setupTools() {
+            // Add Tools
+            cornerstoneTools.addTool(cornerstoneTools.StackScrollMouseWheelTool);
+            cornerstoneTools.addTool(cornerstoneTools.PanTool);
+            cornerstoneTools.addTool(cornerstoneTools.ZoomTool);
+            cornerstoneTools.addTool(cornerstoneTools.WwwcTool);
+
+            // Set initial active tool
+            cornerstoneTools.setToolActive('StackScrollMouseWheel', {});
+            cornerstoneTools.setToolActive('Wwwc', { mouseButtonMask: 1 }); // Left mouse
+
+            // Toolbar button listeners
+            document.getElementById('pan-btn').addEventListener('click', () => activateTool('Pan'));
+            document.getElementById('zoom-btn').addEventListener('click', () => activateTool('Zoom'));
+            document.getElementById('ww-wc-btn').addEventListener('click', () => activateTool('Wwwc'));
+            document.getElementById('stack-scroll-btn').addEventListener('click', () => activateTool('StackScroll'));
+            document.getElementById('reset-btn').addEventListener('click', () => cornerstone.reset(viewportElement));
+        }
+
+        function activateTool(toolName) {
+            // Deactivate all tools first
+            cornerstoneTools.setToolDisabled('Pan');
+            cornerstoneTools.setToolDisabled('Zoom');
+            cornerstoneTools.setToolDisabled('Wwwc');
+            cornerstoneTools.setToolDisabled('StackScroll');
+
+            // Activate the selected tool
+            cornerstoneTools.setToolActive(toolName, { mouseButtonMask: 1 });
+
+            // Update toolbar UI
+            document.querySelectorAll('#toolbar .tool-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`${toolName.toLowerCase().replace('stackscroll', 'stack-scroll')}-btn`).classList.add('active');
+        }
+        
+        function setupAnatomyPanel() {
+             const shoulderAnatomy = [ "Humerus", "Scapula", "Clavicle", "Acromion", "Coracoid process", "Glenoid", "Supraspinatus muscle", "Infraspinatus muscle", "Teres minor muscle", "Subscapularis muscle", "Supraspinatus tendon", "Infraspinatus tendon", "Teres minor tendon", "Subscapularis tendon", "Biceps tendon (long head)", "Deltoid muscle", "Pectoralis major muscle", "Superior labrum", "Inferior labrum", "Anterior labrum", "Posterior labrum", "Acromioclavicular joint", "Glenohumeral joint", "Coracoacromial ligament" ];
+
+             const populateAnatomyList = (filter = '') => {
+                anatomyListContainer.innerHTML = '';
+                const filteredAnatomy = shoulderAnatomy.filter(item => item.toLowerCase().includes(filter.toLowerCase()));
+                if (filteredAnatomy.length === 0) {
+                    anatomyListContainer.innerHTML = `<p class="text-sm text-gray-500 p-2">No results found.</p>`;
+                    return;
                 }
-                // No need to resize preview viewports as they are not active now.
-            }
+                filteredAnatomy.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'anatomy-item text-sm text-gray-700 p-2 rounded-md hover:bg-gray-100 cursor-pointer';
+                    div.textContent = item;
+                    anatomyListContainer.appendChild(div);
+                });
+            };
+            
+            anatomyBtn.addEventListener('mouseenter', () => { clearTimeout(hideAnatomyTimeout); anatomyPanel.classList.remove('-translate-x-full'); });
+            anatomyBtn.addEventListener('mouseleave', () => { hideAnatomyTimeout = setTimeout(() => { anatomyPanel.classList.add('-translate-x-full'); }, 300); });
+            anatomyPanel.addEventListener('mouseenter', () => { clearTimeout(hideAnatomyTimeout); });
+            anatomyPanel.addEventListener('mouseleave', () => { hideAnatomyTimeout = setTimeout(() => { anatomyPanel.classList.add('-translate-x-full'); }, 300); });
+            anatomySearchInput.addEventListener('input', (e) => { populateAnatomyList(e.target.value); });
+            populateAnatomyList();
+        }
+
+        // --- Event Listeners ---
+        viewportElement.addEventListener('cornerstoneimagerendered', (event) => {
+            const viewport = cornerstone.getViewport(event.target);
+            currentSliceInfo.textContent = `${viewport.imageIdIndex + 1}/${imageIds.length}`;
         });
 
-        // Observe only the main DICOM viewport for resizing
-        resizeObserver.observe(viewportElement);
-
-
-        // --- Run Initialization ---
-        initializeCornerstone();
+        // --- Start the application ---
+        loadAndDisplayImage();
     </script>
 </body>
 </html>
