@@ -34,18 +34,17 @@
 
         // --- Generate the list of DICOM file URLs ---
         const dicomFiles = [];
-        // UPDATED: Using jsDelivr CDN for faster, more reliable loading
-        const baseUrl = "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/DICOM/";
+        // CORRECTED: Using the correct base URL and filename structure
+        const baseUrl = "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/";
         const numSlices = 280;
 
         for (let i = 1; i <= numSlices; i++) {
-            const fileName = `IMG-0001-${String(i).padStart(5, '0')}.dcm`;
+            const fileName = `IMG${String(i).padStart(4, '0')}.dcm`;
             dicomFiles.push(baseUrl + fileName);
         }
         params["images"] = dicomFiles;
 
         // --- Annotation Loading ---
-        // This will load your .mrk.json files as overlays.
         const annotationFiles = [
             "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/Deltoid.mrk.json",
             "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/Humerus.mrk.json",
