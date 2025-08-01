@@ -96,7 +96,6 @@
             volumeLoader,
             setVolumesForViewports,
             utilities: csUtilities,
-            imageLoader,
         } = cornerstone;
         const {
             ToolGroupManager,
@@ -121,7 +120,7 @@
         const sagittalViewportId = 'sagittal-viewport-id';
         const coronalViewportId = 'coronal-viewport-id';
         const toolGroupId = 'mpr-tool-group';
-        const volumeId = 'cornerstoneStreamingImageVolume:myVolume'; // Prefix is important
+        const volumeId = 'cornerstoneStreamingImageVolume:myVolume';
 
         const annotationFiles = [
             'Deltoid.mrk.json',
@@ -131,90 +130,104 @@
 
         // --- Main Application Logic ---
         async function run() {
-            // 1. Initialize Cornerstone
-            await cornerstone.init();
+            try {
+                // 1. Initialize Cornerstone
+                await cornerstone.init();
 
-            // 2. Configure DICOM Loader
-            wadoImageLoader.external.cornerstone = cornerstone;
-            wadoImageLoader.external.dicomParser = dicomParser;
-            wadoImageLoader.configure({
-                useWebWorkers: true,
-                decodeConfig: {
-                    convertFloatPixelDataToInt: false,
-                },
-            });
+                // 2. Configure DICOM Loader
+                wadoImageLoader.external.cornerstone = cornerstone;
+                wadoImageLoader.external.dicomParser = dicomParser;
+                await wadoImageLoader.configure({
+                    useWebWorkers: true,
+                    decodeConfig: {
+                        convertFloatPixelDataToInt: false,
+                    },
+                });
 
-            // 3. Configure Volume Loader
-            volumeLoader.registerVolumeLoader(
-                'cornerstoneStreamingImageVolume',
-                cornerstoneStreamingImageVolumeLoader
-            );
+                // 3. Configure Volume Loader
+                volumeLoader.registerVolumeLoader(
+                    'cornerstoneStreamingImageVolume',
+                    cornerstoneStreamingImageVolumeLoader
+                );
 
-            // 4. Get the list of DICOM image IDs
-            // This assumes your DICOM files are numbered sequentially.
-            // Adjust the range if your file names are different.
-            const imageIds = [];
-            for (let i = 1; i <= 160; i++) { // Assuming 160 slices
-                const imageId = `wadors:./DICOM/IMG-${String(i).padStart(4, '0')}.dcm`;
-                imageIds.push(imageId);
+                // 4. Get the list of DICOM image IDs from your GitHub repo
+                const numSlices = 280; // Correct number of slices from screenshot
+                const imageIds = [];
+                // Construct the full URL to the raw files on GitHub
+                const baseUrl = 'https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/DICOM/';
+
+                for (let i = 1; i <= numSlices; i++) {
+                    // Corrected file naming convention based on screenshot
+                    const fileName = `IMG-0001-${String(i).padStart(5, '0')}.dcm`;
+                    const imageUrl = `${baseUrl}${fileName}`;
+                    const imageId = `wadors:${imageUrl}`;
+                    imageIds.push(imageId);
+                }
+                
+                // 5. Setup Rendering Engine and Viewports
+                const renderingEngine = new RenderingEngine(renderingEngineId);
+                const viewportInputArray = [
+                    { viewportId: axialViewportId, element: document.getElementById('axial-viewport'), type: csEnums.ViewportType.ORTHOGRAPHIC, defaultOptions: { orientation: csEnums.OrientationAxis.AXIAL } },
+                    { viewportId: sagittalViewportId, element: document.getElementById('sagittal-viewport'), type: csEnums.ViewportType.ORTHOGRAPHIC, defaultOptions: { orientation: csEnums.OrientationAxis.SAGITTAL } },
+                    { viewportId: coronalViewportId, element: document.getElementById('coronal-viewport'), type: csEnums.ViewportType.ORTHOGRAPHIC, defaultOptions: { orientation: csEnums.OrientationAxis.CORONAL } },
+                ];
+                renderingEngine.setViewports(viewportInputArray);
+
+                // 6. Setup Tools
+                addTool(PanTool);
+                addTool(ZoomTool);
+                addTool(StackScrollMouseWheelTool);
+                addTool(CrosshairsTool);
+                addTool(WindowLevelTool);
+                addTool(PointSetTool);
+
+                const toolGroup = ToolGroupManager.createToolGroup(toolGroupId);
+                toolGroup.addTool(PanTool.toolName);
+                toolGroup.addTool(ZoomTool.toolName);
+                toolGroup.addTool(StackScrollMouseWheelTool.toolName);
+                toolGroup.addTool(WindowLevelTool.toolName);
+                toolGroup.addTool(CrosshairsTool.toolName, { groupName: toolGroupId });
+                toolGroup.addTool(PointSetTool.toolName);
+
+                toolGroup.setToolActive(WindowLevelTool.toolName, { bindings: [{ mouseButton: csToolsEnums.MouseBindings.Primary }] });
+                toolGroup.setToolActive(PanTool.toolName, { bindings: [{ mouseButton: csToolsEnums.MouseBindings.Auxiliary }] });
+                toolGroup.setToolActive(ZoomTool.toolName, { bindings: [{ mouseButton: csToolsEnums.MouseBindings.Secondary }] });
+                toolGroup.setToolActive(StackScrollMouseWheelTool.toolName);
+                toolGroup.setToolActive(CrosshairsTool.toolName);
+
+                toolGroup.addViewport(axialViewportId, renderingEngineId);
+                toolGroup.addViewport(sagittalViewportId, renderingEngineId);
+                toolGroup.addViewport(coronalViewportId, renderingEngineId);
+
+                // 7. Load the DICOM volume
+                document.getElementById('status-text').textContent = 'Loading DICOM volume... This may take a moment.';
+                const volume = await volumeLoader.createAndCacheVolume(volumeId, {
+                    imageIds
+                });
+                volume.load();
+
+                // 8. Set the volume on the viewports
+                document.getElementById('status-text').textContent = 'Setting volume on viewports...';
+                await setVolumesForViewports(renderingEngine, [{
+                    volumeId
+                }], [axialViewportId, sagittalViewportId, coronalViewportId]);
+                
+                // 9. Load and display annotations
+                document.getElementById('status-text').textContent = 'Loading annotations...';
+                await loadAndDisplayAnnotations();
+                
+                // 10. Render the scene
+                renderingEngine.renderViewports([axialViewportId, sagittalViewportId, coronalViewportId]);
+
+                // Hide loading overlay
+                document.getElementById('loading-overlay').style.display = 'none';
+                document.getElementById('status-text').textContent = 'Scroll to zoom, drag to pan, and move the crosshairs to explore.';
+
+            } catch (error) {
+                console.error('Error during viewer setup:', error);
+                document.getElementById('loading-overlay').style.display = 'none';
+                document.getElementById('status-text').textContent = `Error: ${error.message}. Check console for details.`;
             }
-            
-            // 5. Setup Rendering Engine and Viewports
-            const renderingEngine = new RenderingEngine(renderingEngineId);
-
-            const viewportInputArray = [
-                { viewportId: axialViewportId, element: document.getElementById('axial-viewport'), type: csEnums.ViewportType.ORTHOGRAPHIC, defaultOptions: { orientation: csEnums.OrientationAxis.AXIAL } },
-                { viewportId: sagittalViewportId, element: document.getElementById('sagittal-viewport'), type: csEnums.ViewportType.ORTHOGRAPHIC, defaultOptions: { orientation: csEnums.OrientationAxis.SAGITTAL } },
-                { viewportId: coronalViewportId, element: document.getElementById('coronal-viewport'), type: csEnums.ViewportType.ORTHOGRAPHIC, defaultOptions: { orientation: csEnums.OrientationAxis.CORONAL } },
-            ];
-            renderingEngine.setViewports(viewportInputArray);
-
-            // 6. Setup Tools
-            addTool(PanTool);
-            addTool(ZoomTool);
-            addTool(StackScrollMouseWheelTool);
-            addTool(CrosshairsTool);
-            addTool(WindowLevelTool);
-            addTool(PointSetTool);
-
-            const toolGroup = ToolGroupManager.createToolGroup(toolGroupId);
-            toolGroup.addTool(PanTool.toolName);
-            toolGroup.addTool(ZoomTool.toolName);
-            toolGroup.addTool(StackScrollMouseWheelTool.toolName);
-            toolGroup.addTool(WindowLevelTool.toolName);
-            toolGroup.addTool(CrosshairsTool.toolName, { groupName: toolGroupId });
-            toolGroup.addTool(PointSetTool.toolName);
-
-            toolGroup.setToolActive(WindowLevelTool.toolName, { bindings: [{ mouseButton: csToolsEnums.MouseBindings.Primary }] });
-            toolGroup.setToolActive(PanTool.toolName, { bindings: [{ mouseButton: csToolsEnums.MouseBindings.Auxiliary }] });
-            toolGroup.setToolActive(ZoomTool.toolName, { bindings: [{ mouseButton: csToolsEnums.MouseBindings.Secondary }] });
-            toolGroup.setToolActive(StackScrollMouseWheelTool.toolName);
-            toolGroup.setToolActive(CrosshairsTool.toolName);
-
-            toolGroup.addViewport(axialViewportId, renderingEngineId);
-            toolGroup.addViewport(sagittalViewportId, renderingEngineId);
-            toolGroup.addViewport(coronalViewportId, renderingEngineId);
-
-            // 7. Load the DICOM volume
-            const volume = await volumeLoader.createAndCacheVolume(volumeId, {
-                imageIds
-            });
-            volume.load();
-
-            // 8. Set the volume on the viewports
-            await setVolumesForViewports(renderingEngine, [{
-                volumeId
-            }], [axialViewportId, sagittalViewportId, coronalViewportId]);
-            
-            // 9. Load and display annotations
-            await loadAndDisplayAnnotations();
-            
-            // 10. Render the scene
-            renderingEngine.renderViewports([axialViewportId, sagittalViewportId, coronalViewportId]);
-
-            // Hide loading overlay
-            document.getElementById('loading-overlay').style.display = 'none';
-            document.getElementById('status-text').textContent = 'Scroll to zoom, drag to pan, and move the crosshairs to explore.';
         }
 
         async function loadAndDisplayAnnotations() {
