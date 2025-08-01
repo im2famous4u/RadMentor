@@ -18,17 +18,26 @@
       margin: auto;
       display: block;
     }
+    #controls {
+      text-align: center;
+      margin-top: 10px;
+    }
+    input[type=range] {
+      width: 500px;
+    }
   </style>
 </head>
 <body>
   <h2 style="text-align:center;">Shoulder MRI Viewer</h2>
   <div id="dicomImage"></div>
 
-  <script>
-    // Link Cornerstone with the WADO Image Loader
-    cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
+  <div id="controls">
+    <input type="range" id="sliceSlider" min="0" max="279" value="0">
+    <p>Use mouse wheel, arrow keys, or slider to navigate slices</p>
+  </div>
 
-    // Configure Web Worker paths
+  <script>
+    cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
     cornerstoneWADOImageLoader.webWorkerManager.initialize({
       webWorkerPath : 'https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoaderWebWorker.min.js',
       taskConfiguration: {
@@ -38,45 +47,56 @@
       }
     });
 
-    // Enable DICOM element
     const element = document.getElementById('dicomImage');
     cornerstone.enable(element);
 
-    // Direct GitHub raw path to your DICOM files
     const baseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
-
-    // Generate all image IDs
     const imageIds = [];
     for (let i = 1; i <= 280; i++) {
-      const num = String(i).padStart(4, '0'); // IMG0001 format
+      const num = String(i).padStart(4, '0');
       imageIds.push(`wadouri:${baseUrl}IMG${num}.dcm`);
     }
 
     let currentImageIndex = 0;
+    const slider = document.getElementById('sliceSlider');
 
-    // Function to load and display an image
     function loadAndViewImage(index) {
+      if (index < 0 || index >= imageIds.length) return;
+      currentImageIndex = index;
+      slider.value = index;
       cornerstone.loadAndCacheImage(imageIds[index])
         .then(image => {
           cornerstone.displayImage(element, image);
         })
-        .catch(err => {
-          console.error("Error loading image:", imageIds[index], err);
-        });
+        .catch(err => console.error("Error loading image:", err));
     }
 
-    // Initial image
-    loadAndViewImage(currentImageIndex);
-
-    // Auto-play sequence
-    const playInterval = setInterval(() => {
-      currentImageIndex++;
-      if (currentImageIndex >= imageIds.length) {
-        clearInterval(playInterval);
+    // Mouse wheel scrolling
+    element.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        loadAndViewImage(currentImageIndex - 1);
       } else {
-        loadAndViewImage(currentImageIndex);
+        loadAndViewImage(currentImageIndex + 1);
       }
-    }, 100); // 100ms between slices
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+        loadAndViewImage(currentImageIndex + 1);
+      } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+        loadAndViewImage(currentImageIndex - 1);
+      }
+    });
+
+    // Slider control
+    slider.addEventListener('input', () => {
+      loadAndViewImage(parseInt(slider.value));
+    });
+
+    // Initial load
+    loadAndViewImage(0);
   </script>
 </body>
 </html>
