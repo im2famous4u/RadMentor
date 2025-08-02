@@ -163,22 +163,22 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/cornerstone-core@2.6.1/dist/cornerstone.min.js"></script>
-    <script src="https://unpkg.com/dicom-parser@1.8.10/dist/dicomParser.min.js"></script>
-    <script src="https://unpkg.com/cornerstone-wado-image-loader@2.3.2/dist/cornerstoneWADOImageLoader.min.js"></script>
-    <script src="https://unpkg.com/cornerstone-tools@6.0.4/dist/cornerstoneTools.min.js"></script>
+    <script src="js/cornerstone-core.min.js"></script>
+    <script src="js/dicomParser.min.js"></script>
+    <script src="js/dicom-image-loader.min.js"></script> <script src="js/cornerstone-tools.min.js"></script>
+    
     <script>
-        cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
-        cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
-        // Optionally configure how images are loaded, e.g., for Web Workers
-        // cornerstoneWADOImageLoader.webWorkerManager.initialize({
-        //     webWorkerPath: 'https://unpkg.com/cornerstone-wado-image-loader@2.3.2/dist/cornerstoneWADOImageLoaderWebWorker.min.js',
-        //     taskConfiguration: {
-        //         decodeTask: {
-        //             codecsPath: 'https://unpkg.com/cornerstone-wado-image-loader@2.3.2/dist/cornerstoneWADOImageLoaderCodecs.min.js'
-        //         }
-        //     }
-        // });
+        // Check if dicomImageLoader is defined (this is the global variable from dicom-image-loader.min.js)
+        if (typeof dicomImageLoader !== 'undefined') {
+            dicomImageLoader.external.cornerstone = cornerstone;
+            dicomImageLoader.external.dicomParser = dicomParser;
+        } else if (typeof cornerstoneWADOImageLoader !== 'undefined') {
+            // Fallback for an older or differently named version, though less likely now
+            cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
+            cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
+        } else {
+            console.error("Neither 'dicomImageLoader' nor 'cornerstoneWADOImageLoader' is defined. Make sure the correct WADO image loader JS file is loaded and exposes a global variable.");
+        }
     </script>
 
     <script>
@@ -201,7 +201,9 @@
             cornerstone.enable(canvasElement);
 
             // Initialize CornerstoneTools for each viewport
-            cornerstoneTools.init();
+            // cornerstoneTools.init() should only be called once, so we'll move it outside the loop
+            // For now, let's just make sure tools are activated on the element
+            
             imageStack[viewportId] = {
                 currentImageIdIndex: 0,
                 imageIds: []
@@ -236,6 +238,9 @@
             });
         });
 
+        // Initialize CornerstoneTools once after all elements are enabled
+        cornerstoneTools.init();
+
         // Function to display an image on a specific viewport
         function displayImage(viewportId) {
             const element = elements[viewportId];
@@ -244,7 +249,8 @@
 
             if (imageId) {
                 cornerstone.loadImage(imageId).then(function(image) {
-                    cornerstone.displayImage(element, image);
+                    const viewport = cornerstone.getDefaultViewport(element, image);
+                    cornerstone.displayImage(element, image, viewport);
                     updateStatus(viewportId, `Slice ${stack.currentImageIdIndex + 1}/${stack.imageIds.length}`);
 
                     // Activate tools after image is displayed
@@ -334,7 +340,7 @@
         function setToolActiveForAllViewports(toolName) {
             viewports.forEach(viewportId => {
                 const element = elements[viewportId];
-                cornerstoneTools.setToolActive(toolName, { mouseButtonMask: 1 }); // Left mouse button
+                cornerstoneTools.setToolActiveForElement(element, toolName, { mouseButtonMask: 1 }); // Apply tool to specific element
                 // You can add other button masks if needed for specific tools
             });
             // Deactivate other tools
@@ -342,7 +348,7 @@
             allTools.forEach(tool => {
                 if (tool !== toolName) {
                     viewports.forEach(viewportId => {
-                        cornerstoneTools.setToolPassive(tool, { mouseButtonMask: 1 });
+                        cornerstoneTools.setToolPassiveForElement(element, tool, { mouseButtonMask: 1 }); // Pass element to setToolPassiveForElement
                     });
                 }
             });
