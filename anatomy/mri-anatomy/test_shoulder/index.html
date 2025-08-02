@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MRI Shouder - Axial - RadMentor</title>
+    <title>Shoulder MRI Viewer - RadMentor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -66,11 +66,11 @@
     <header class="bg-white/80 backdrop-blur-lg flex-shrink-0 z-20 shadow-sm">
         <div class="container mx-auto px-6 py-3 flex justify-between items-center">
             <div class="flex items-center">
-                <a href="/"><img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/></a>
-                <a href="/"><span class="text-2xl font-bold text-gray-800">RadMentor</span></a>
+                <a href="../../../../"><img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/></a>
+                <a href="../../../../"><span class="text-2xl font-bold text-gray-800">RadMentor</span></a>
             </div>
             <nav class="hidden md:flex items-center space-x-8">
-                 <a href="#" onclick="window.location.href = '../../../../index.html#dashboard'" class="text-gray-600 hover:text-blue-600">Dashboard</a>
+                 <a href="../../../../" class="text-gray-600 hover:text-blue-600">Dashboard</a>
                 <a href="#" class="text-blue-600 font-semibold">Anatomy Viewer</a>
             </nav>
         </div>
@@ -83,10 +83,7 @@
                 <span id="current-slice-info">--/--</span>
             </div>
              <div id="preview-canvases" class="space-y-2">
-                <div class="w-full p-1 border-2 border-transparent rounded-md bg-black h-20"></div>
-                <div class="w-full p-1 border-2 border-blue-500 rounded-md bg-black h-20"></div>
-                <div class="w-full p-1 border-2 border-transparent rounded-md bg-black h-20"></div>
-            </div>
+                </div>
         </aside>
 
         <main class="flex-1 bg-black flex flex-col items-center p-2 relative overflow-hidden">
@@ -102,7 +99,7 @@
                 <div id="dicom-viewport" class="viewport max-w-full max-h-full aspect-square"></div>
             </div>
             <div id="loading-indicator" class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-75 text-white z-20">
-                <p>Loading DICOM Image...</p>
+                <p>Loading DICOM Series...</p>
                 <p id="loading-progress" class="text-sm mt-2"></p>
             </div>
             
@@ -120,19 +117,22 @@
             <div>
                 <h2 class="text-lg font-semibold mb-3 pb-2 text-blue-800">Weightings</h2>
                 <div class="grid grid-cols-2 gap-2" id="weightings-buttons">
-                    <!-- Buttons will be dynamically added if multiple series are detected -->
+                    <button class="px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm rad-gradient active">Axial PD FS</button>
+                    <button class="px-4 py-2 text-sm font-medium bg-gray-200 text-gray-700 rounded-md shadow-sm hover:bg-gray-300">Coronal T2</button>
+                    <button class="px-4 py-2 text-sm font-medium bg-gray-200 text-gray-700 rounded-md shadow-sm hover:bg-gray-300">Sagittal T1</button>
+                    <button class="px-4 py-2 text-sm font-medium bg-gray-200 text-gray-700 rounded-md shadow-sm hover:bg-gray-300">ABER</button>
                 </div>
             </div>
             <div>
                 <h2 class="text-lg font-semibold mb-3 pb-2 text-blue-800">Anatomical Parts</h2>
                 <div class="space-y-3" id="anatomy-toggles">
-                    <!-- Toggles will be dynamically added -->
+                    <label for="toggle-rotator" class="flex items-center justify-between cursor-pointer"><span class="text-sm">Rotator Cuff</span><div class="relative"><input type="checkbox" id="toggle-rotator" class="sr-only toggle-checkbox" checked><div class="toggle-label block bg-gray-300 w-10 h-6 rounded-full"></div><div class="toggle-dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div></div></label>
+                    <label for="toggle-bones" class="flex items-center justify-between cursor-pointer"><span class="text-sm">Bones</span><div class="relative"><input type="checkbox" id="toggle-bones" class="sr-only toggle-checkbox" checked><div class="toggle-label block bg-gray-300 w-10 h-6 rounded-full"></div><div class="toggle-dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div></div></label>
                 </div>
             </div>
         </aside>
     </div>
 
-    <!-- Cornerstone and DICOM Loader Scripts -->
     <script src="https://unpkg.com/cornerstone-core@2.3.0/dist/cornerstone.min.js"></script>
     <script src="https://unpkg.com/cornerstone-tools@4.15.2/dist/cornerstoneTools.min.js"></script>
     <script src="https://unpkg.com/cornerstone-wado-image-loader@3.1.2/dist/cornerstoneWADOImageLoader.min.js"></script>
@@ -142,16 +142,13 @@
         // --- Cornerstone Setup ---
         cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
         cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
-        cornerstoneTools.init({
-            globalToolSyncEnabled: true
-        });
+        cornerstoneTools.init({ globalToolSyncEnabled: true });
 
         // --- UI Elements ---
         const viewportElement = document.getElementById('dicom-viewport');
         const loadingIndicator = document.getElementById('loading-indicator');
         const loadingProgress = document.getElementById('loading-progress');
         const currentSliceInfo = document.getElementById('current-slice-info');
-        const toolbar = document.getElementById('toolbar');
         const anatomyPanel = document.getElementById('anatomy-panel');
         const anatomyBtn = document.getElementById('anatomy-btn');
         const anatomyListContainer = document.getElementById('anatomy-list');
@@ -168,7 +165,7 @@
         }
 
         // --- Main Logic ---
-        async function loadAndDisplayImage() {
+        async function loadAndDisplayImageStack() {
             cornerstone.enable(viewportElement);
 
             const stack = {
@@ -182,9 +179,9 @@
                 return cornerstone.loadAndCacheImage(imageId).then(() => {
                     loadedCount++;
                     loadingProgress.textContent = `(${loadedCount}/${numSlices})`;
-                });
+                }).catch(err => console.error(`Failed to load ${imageId}:`, err));
             });
-
+            
             await Promise.all(loadImagePromises);
             
             loadingIndicator.style.display = 'none';
@@ -206,7 +203,7 @@
 
             // Set initial active tool
             cornerstoneTools.setToolActive('StackScrollMouseWheel', {});
-            cornerstoneTools.setToolActive('Wwwc', { mouseButtonMask: 1 }); // Left mouse
+            activateTool('Wwwc'); // Activate Wwwc by default
 
             // Toolbar button listeners
             document.getElementById('pan-btn').addEventListener('click', () => activateTool('Pan'));
@@ -217,18 +214,24 @@
         }
 
         function activateTool(toolName) {
-            // Deactivate all tools first
-            cornerstoneTools.setToolDisabled('Pan');
-            cornerstoneTools.setToolDisabled('Zoom');
-            cornerstoneTools.setToolDisabled('Wwwc');
-            cornerstoneTools.setToolDisabled('StackScroll');
+            const toolMap = {
+                'Pan': { tool: 'Pan', buttonId: 'pan-btn' },
+                'Zoom': { tool: 'Zoom', buttonId: 'zoom-btn' },
+                'Wwwc': { tool: 'Wwwc', buttonId: 'ww-wc-btn' },
+                'StackScroll': { tool: 'StackScroll', buttonId: 'stack-scroll-btn' }
+            };
 
-            // Activate the selected tool
+            // Deactivate all mouse-based tools
+            Object.values(toolMap).forEach(t => cornerstoneTools.setToolDisabled(t.tool));
+
+            // Activate the selected tool for the left mouse button
             cornerstoneTools.setToolActive(toolName, { mouseButtonMask: 1 });
 
             // Update toolbar UI
             document.querySelectorAll('#toolbar .tool-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`${toolName.toLowerCase().replace('stackscroll', 'stack-scroll')}-btn`).classList.add('active');
+            if(toolMap[toolName]) {
+                document.getElementById(toolMap[toolName].buttonId).classList.add('active');
+            }
         }
         
         function setupAnatomyPanel() {
@@ -259,12 +262,18 @@
 
         // --- Event Listeners ---
         viewportElement.addEventListener('cornerstoneimagerendered', (event) => {
-            const viewport = cornerstone.getViewport(event.target);
-            currentSliceInfo.textContent = `${viewport.imageIdIndex + 1}/${imageIds.length}`;
+            try {
+                const viewport = cornerstone.getViewport(event.target);
+                if (viewport) {
+                    currentSliceInfo.textContent = `${viewport.imageIdIndex + 1}/${imageIds.length}`;
+                }
+            } catch (e) {
+                // Ignore errors if viewport is not ready yet
+            }
         });
 
         // --- Start the application ---
-        loadAndDisplayImage();
+        loadAndDisplayImageStack();
     </script>
 </body>
 </html>
