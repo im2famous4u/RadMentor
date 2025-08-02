@@ -57,22 +57,24 @@
         // 3. Add listeners for DWV's loading events to provide feedback
         app.addEventListener("load-start", () => {
             statusDiv.innerHTML = "<b>Loading series, please wait...</b>";
-            loadSeriesBtn.disabled = true; // Disable button while loading
+            loadSeriesBtn.disabled = true;
         });
         app.addEventListener("load-end", () => {
             statusDiv.innerHTML = "<b>Loading complete.</b> Use your mouse scroll to cycle through images.";
-            loadSeriesBtn.disabled = false; // Re-enable button
+            loadSeriesBtn.disabled = false;
         });
 
         // 4. Set up the event listener for the "Load Shoulder MRI" button
         loadSeriesBtn.addEventListener("click", () => {
             // --- Generate the list of DICOM URLs ---
-            const basePath = "anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
+            
+            // FIX: Added a leading slash "/" to make the path absolute from the site root.
+            const basePath = "/anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
+            
             const numberOfFiles = 280;
             const dicomUrls = [];
 
             for (let i = 1; i <= numberOfFiles; i++) {
-                // Pad the number with leading zeros (e.g., 1 -> "0001", 10 -> "0010")
                 const paddedNumber = String(i).padStart(4, '0');
                 const fileName = `IMG${paddedNumber}.dcm`;
                 dicomUrls.push(basePath + fileName);
@@ -86,7 +88,6 @@
 
         // 5. Set up the event listener for loading JSON annotations
         loadJsonBtn.addEventListener("click", () => {
-            // Check if an image is loaded before trying to add annotations
             if (!app.isLoaded()) {
                 alert("Please load the DICOM series before loading annotations.");
                 return;
