@@ -1,1 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>June 2020 DNB Papers - RadMentor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .rad-gradient-text {
+            background: linear-gradient(90deg, #4f46e5, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+        /* --- NEW STYLES for a more modern look --- */
+        .paper-card {
+            background-color: rgba(255, 255, 255, 0.6); /* Semi-transparent white for glass effect */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem; /* rounded-xl */
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 160px;
+        }
+        .paper-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 32px 0 rgba(79, 70, 229, 0.25); /* Shadow with indigo color */
+            border-color: rgba(79, 70, 229, 0.4);
+        }
+        /* Subtle shine effect on hover */
+        .paper-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-25deg);
+            transition: left 0.6s ease;
+        }
+        .paper-card:hover::before {
+            left: 150%;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 flex flex-col min-h-screen">
+    
+    <header class="bg-white/90 backdrop-blur-lg flex-shrink-0 z-20 shadow-sm border-b border-slate-200 sticky top-0">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
+                <span class="text-2xl font-bold text-slate-800">RadMentor</span>
+            </div>
+            <nav class="hidden md:flex items-center space-x-6">
+                <a href="javascript:history.back()" class="text-slate-600 hover:text-indigo-600 flex items-center transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </a>
+                <a href="/dashboard.html" class="text-slate-600 hover:text-indigo-600 transition-colors">Dashboard</a>
+                <a href="/anatomy/index.html" class="text-slate-600 hover:text-indigo-600 transition-colors">Anatomy Viewer</a>
+                <a href="#" class="text-slate-600 hover:text-indigo-600 transition-colors">Courses</a>
+                <a href="../../../index.html" class="text-indigo-600 font-semibold">DNB Questions</a> 
+            </nav>
+            <a href="/index.html" class="bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 transition-colors hidden md:block">
+                My Dashboard
+            </a>
+        </div>
+    </header>
 
+    <main class="flex-1 container mx-auto px-6 py-12 flex flex-col items-center">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-center mb-4 rad-gradient-text">
+            June 2020 DNB Exam Papers
+        </h1>
+        <p class="text-lg text-slate-600 text-center max-w-2xl mb-12">
+            Select a paper to begin your practice session.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-5xl">
+            <a href="paper1.html" class="paper-card p-6">
+                <i class="fas fa-file-alt text-5xl text-indigo-500 mb-4 drop-shadow-sm"></i>
+                <h3 class="text-2xl font-bold text-slate-800">Paper 1</h3>
+                <p class="text-sm text-slate-600 mt-1">View Questions</p>
+            </a>
+            <a href="paper2.html" class="paper-card p-6">
+                <i class="fas fa-file-invoice text-5xl text-indigo-500 mb-4 drop-shadow-sm"></i>
+                <h3 class="text-2xl font-bold text-slate-800">Paper 2</h3>
+                <p class="text-sm text-slate-600 mt-1">View Questions</p>
+            </a>
+            <a href="paper3.html" class="paper-card p-6">
+                <i class="fas fa-file-signature text-5xl text-indigo-500 mb-4 drop-shadow-sm"></i>
+                <h3 class="text-2xl font-bold text-slate-800">Paper 3</h3>
+                <p class="text-sm text-slate-600 mt-1">View Questions</p>
+            </a>
+            <a href="paper4.html" class="paper-card p-6">
+                <i class="fas fa-file-medical text-5xl text-indigo-500 mb-4 drop-shadow-sm"></i>
+                <h3 class="text-2xl font-bold text-slate-800">Paper 4</h3>
+                <p class="text-sm text-slate-600 mt-1">View Questions</p>
+            </a>
+        </div>
+    </main>
+
+    <footer class="bg-slate-800 text-slate-300 text-center py-4 mt-12 flex-shrink-0">
+        <p>&copy; 2025 RadMentor. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>
