@@ -3,332 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DICOM 2D Viewer (Cornerstone.js)</title>
-    
+    <title>Shoulder MRI Viewer</title>
+    <script src="https://unpkg.com/dwv@0.31.0/dist/dwv.min.js"></script>
     <style>
-        body {
+        /* Basic styles to make the viewer fill the page */
+        html, body {
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-        }
-        .container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-        .toolbar {
-            padding: 10px;
-            background-color: #2c3e50;
-            color: white;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        .toolbar h1 {
-            margin: 0;
-            font-size: 1.5em;
-            margin-right: 20px;
-        }
-        .toolbar button {
-            margin-right: 10px;
-            padding: 8px 15px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .toolbar button:hover {
-            background-color: #2980b9;
-        }
-        .toolbar button.active {
-            background-color: #e74c3c;
-        }
-        .viewer-container {
-            display: flex;
-            flex: 1;
+            height: 100%;
             overflow: hidden;
+            font-family: sans-serif;
+            background-color: #181818;
         }
-        .viewport {
-            flex: 1;
-            position: relative;
-            border: 1px solid #bdc3c7;
-            margin: 5px;
-            background-color: #34495e;
-            overflow: hidden;
-        }
-        .viewport-title {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background-color: rgba(0,0,0,0.7);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            z-index: 10;
-            font-weight: bold;
-        }
-        /* Canvas will be rendered inside the viewport */
-        .dicom-canvas {
+        #dwv-container {
             width: 100%;
             height: 100%;
-            display: block; /* Important for canvas to fill container */
+            position: relative;
         }
-        .controls {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
+        /* Style for the 'drop here' box */
+        .drop-zone {
+            border: 4px dashed #ccc;
+            color: #ccc;
             display: flex;
+            align-items: center;
             justify-content: center;
-            z-index: 10;
-        }
-        .controls button {
-            margin: 0 5px;
-            padding: 5px 10px;
-            background-color: rgba(52, 73, 94, 0.8);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .controls button:hover {
-            background-color: rgba(44, 62, 80, 0.9);
-        }
-        .status {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background-color: rgba(0,0,0,0.7);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            z-index: 10;
-            font-size: 0.9em;
-        }
-        .loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 1.2em;
-            z-index: 20;
+            font-size: 24px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="toolbar">
-            <h1>DICOM 2D Viewer</h1>
-            <button id="loadSeries">Load Series</button>
-            <button id="scrollTool" class="active">Scroll</button>
-            <button id="windowLevelTool">Window/Level</button>
-            <button id="zoomTool">Zoom</button>
-            <button id="resetView">Reset View</button>
-        </div>
-        <div class="viewer-container">
-            <div class="viewport" id="axial">
-                <div class="viewport-title">Axial</div>
-                <div class="dicom-canvas" id="axialCanvas"></div>
-                <div class="controls">
-                    <button id="prevAxial">Previous</button>
-                    <button id="nextAxial">Next</button>
-                </div>
-                <div class="status" id="axialStatus">Ready</div>
-                <div class="loading" id="axialLoading" style="display: none;">Loading...</div>
-            </div>
-            <div class="viewport" id="sagittal">
-                <div class="viewport-title">Sagittal</div>
-                <div class="dicom-canvas" id="sagittalCanvas"></div>
-                <div class="controls">
-                    <button id="prevSagittal">Previous</button>
-                    <button id="nextSagittal">Next</button>
-                </div>
-                <div class="status" id="sagittalStatus">Ready</div>
-                <div class="loading" id="sagittalLoading" style="display: none;">Loading...</div>
-            </div>
-            <div class="viewport" id="coronal">
-                <div class="viewport-title">Coronal</div>
-                <div class="dicom-canvas" id="coronalCanvas"></div>
-                <div class="controls">
-                    <button id="prevCoronal">Previous</button>
-                    <button id="nextCoronal">Next</button>
-                </div>
-                <div class="status" id="coronalStatus">Ready</div>
-                <div class="loading" id="coronalLoading" style="display: none;">Loading...</div>
-            </div>
-        </div>
-    </div>
 
-    <script src="/RadMentor/js/cornerstone-core.min.js"></script>
-    <script src="/RadMentor/js/dicomParser.min.js"></script>
-    <script src="/RadMentor/js/cornerstoneWADOImageLoader.min.js"></script>
-    <script src="/RadMentor/js/cornerstone-tools.min.js"></script>
-    
+    <div id="dwv-container"></div>
+
     <script>
-        if (typeof cornerstoneWADOImageLoader !== 'undefined') {
-            cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
-            cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
-            
-            // Optionally initialize Web Worker for better performance for large studies
-            // (You would need to ensure these worker files are also uploaded to your js/ folder and are accessible via absolute paths)
-            // cornerstoneWADOImageLoader.webWorkerManager.initialize({
-            //     webWorkerPath: '/RadMentor/js/cornerstoneWADOImageLoaderWebWorker.min.js', 
-            //     taskConfiguration: {
-            //         decodeTask: {
-            //             codecsPath: '/RadMentor/js/cornerstoneWADOImageLoaderCodecs.min.js' 
-            //         }
-            //     }
-            // });
-        } else {
-            console.error("CRITICAL ERROR: 'cornerstoneWADOImageLoader' is not defined. Please verify that the 'cornerstoneWADOImageLoader.min.js' file is present in your GitHub 'js/' folder AND accessible via the absolute path '/RadMentor/js/cornerstoneWADOImageLoader.min.js' on your GitHub Pages site.");
+        // create the DWV app
+        const app = new dwv.App();
+
+        // --- AUTOMATIC FILE LIST GENERATION ---
+        // This code automatically creates the list of your 280 DICOM files.
+        // You don't need to type them all out!
+        const myDicomFiles = [];
+        for (let i = 1; i <= 280; i++) {
+            // Formats the number to have 4 digits (e.g., 1 becomes "0001")
+            const fileNumber = i.toString().padStart(4, '0');
+            // Creates the full path like "shoulder-dicom/IMG0001.dcm"
+            const filePath = `shoulder-dicom/IMG${fileNumber}.dcm`;
+            myDicomFiles.push(filePath);
         }
+
+        // initialise the app
+        app.init({
+            containerDivId: 'dwv-container',
+            tools: ['Scroll', 'ZoomAndPan', 'WindowLevel', 'Draw'],
+            gui: ['tool', 'load', 'help'],
+            loadOnDrop: true,
+            dropZoneText: "Drop DICOM files here"
+        });
+
+        // load the automatically generated list of DICOM files
+        app.loadURLs(myDicomFiles);
     </script>
 
-    <script>
-        // Your S3 bucket URL in eu-north-1 (Stockholm) where DICOM files are stored
-        const bucketUrl = 'https://radmentor.s3.eu-north-1.amazonaws.com/'; 
-        const totalSlices = 280; // Total number of DICOM files
-
-        const viewports = ['axial', 'sagittal', 'coronal'];
-        const elements = {}; // To store the HTML canvas elements where images are drawn
-        const imageIds = []; // To store Cornerstone image IDs (e.g., 'wadoURI:...')
-        const imageStack = {}; // To store the image stack and current index for each viewport
-        
-        // This array will hold the actual loaded Cornerstone image objects after successful fetch
-        let loadedImages = []; 
-
-        // Initialize Cornerstone elements and enable them for rendering
-        viewports.forEach(viewportId => {
-            const canvasElement = document.getElementById(`${viewportId}Canvas`);
-            elements[viewportId] = canvasElement;
-            
-            // Enable the canvas element for Cornerstone to render on
-            cornerstone.enable(canvasElement);
-
-            // Initialize image stack properties for each viewport
-            imageStack[viewportId] = {
-                currentImageIdIndex: 0,
-                imageIds: [] // This will be populated with the global imageIds array
-            };
-
-            // Add event listeners for slice navigation buttons
-            document.getElementById(`prev${viewportId.charAt(0).toUpperCase() + viewportId.slice(1)}`).addEventListener('click', () => {
-                const stack = imageStack[viewportId];
-                if (stack.currentImageIdIndex > 0) {
-                    stack.currentImageIdIndex--;
-                    displayImage(viewportId);
-                }
-            });
-            
-            document.getElementById(`next${viewportId.charAt(0).toUpperCase() + viewportId.slice(1)}`).addEventListener('click', () => {
-                const stack = imageStack[viewportId];
-                if (stack.currentImageIdIndex < stack.imageIds.length - 1) {
-                    stack.currentImageIdIndex++;
-                    displayImage(viewportId);
-                }
-            });
-            
-            // Add mouse wheel listener for scrolling through slices
-            canvasElement.addEventListener('wheel', (e) => { // Using 'wheel' for modern browsers
-                const direction = e.deltaY > 0 ? 1 : -1; // +1 for scroll down, -1 for scroll up
-                const stack = imageStack[viewportId];
-                if (stack.imageIds.length > 0) {
-                    stack.currentImageIdIndex = Math.min(Math.max(0, stack.currentImageIdIndex + direction), stack.imageIds.length - 1);
-                    displayImage(viewportId);
-                }
-                e.preventDefault(); // Prevent page scrolling when using mouse wheel on viewer
-            });
-        });
-
-        // Initialize CornerstoneTools once after all elements are enabled
-        cornerstoneTools.init();
-
-        // Function to display an image on a specific viewport
-        function displayImage(viewportId) {
-            const element = elements[viewportId];
-            const stack = imageStack[viewportId];
-            const imageId = stack.imageIds[stack.currentImageIdIndex];
-
-            if (imageId) {
-                // Load the image using Cornerstone
-                cornerstone.loadImage(imageId).then(function(image) {
-                    // Get default viewport settings for the image
-                    const viewport = cornerstone.getDefaultViewport(element, image);
-                    // Display the image on the element with the viewport settings
-                    cornerstone.displayImage(element, image, viewport);
-                    updateStatus(viewportId, `Slice ${stack.currentImageIdIndex + 1}/${stack.imageIds.length}`);
-
-                    // Activate common tools after image is displayed
-                    // mouseButtonMask: 1 = Left, 2 = Middle, 4 = Right
-                    cornerstoneTools.setToolActiveForElement(element, 'Wwwc', { mouseButtonMask: 1 }); // Window/Level on Left click+drag
-                    cornerstoneTools.setToolActiveForElement(element, 'Pan', { mouseButtonMask: 2 }); // Pan on Middle click+drag
-                    cornerstoneTools.setToolActiveForElement(element, 'Zoom', { mouseButtonMask: 4 }); // Zoom on Right click+drag
-                    cornerstoneTools.setToolActiveForElement(element, 'Scroll', { mouseButtonMask: 0 }); // Scroll with mouse wheel (no button needed)
-
-                }).catch(function(err) {
-                    console.error(`Error loading or displaying image ${imageId}:`, err);
-                    updateStatus(viewportId, 'Error displaying image');
-                });
-            }
-        }
-
-        // Function to update status text in the viewport footer
-        function updateStatus(viewportId, text) {
-            document.getElementById(`${viewportId}Status`).textContent = text;
-        }
-
-        // Function to show/hide loading indicator
-        function toggleLoading(viewportId, show) {
-            document.getElementById(`${viewportId}Loading`).style.display = show ? 'block' : 'none';
-        }
-
-        // Load the DICOM series when the "Load Series" button is clicked
-        document.getElementById('loadSeries').addEventListener('click', () => {
-            loadedImages = []; // Clear previous loaded images
-            imageIds.length = 0; // Clear global image IDs
-            
-            // Generate Cornerstone imageIds using the wadoURI protocol
-            for (let i = 1; i <= totalSlices; i++) {
-                const num = i.toString().padStart(5, '0');
-                const dicomUrl = `${bucketUrl}IMG-0001-${num}.dcm`;
-                imageIds.push(`wadoURI:${dicomUrl}`); 
-            }
-
-            // Show loading indicators for all viewports
-            viewports.forEach(viewportId => toggleLoading(viewportId, true));
-
-            // Load all images (this can be slow for many files)
-            // Promise.all waits for all image loading promises to resolve.
-            const loadPromises = imageIds.map(imageId => cornerstone.loadImage(imageId));
-
-            Promise.all(loadPromises)
-                .then(images => {
-                    loadedImages = images; // Store all loaded image objects
-                    viewports.forEach(viewportId => {
-                        imageStack[viewportId].imageIds = imageIds; // Assign all imageIds to each viewport's stack
-                        imageStack[viewportId].currentImageIdIndex = 0; // Start at the first image
-                        displayImage(viewportId); // Display the first image
-                        toggleLoading(viewportId, false);
-                    });
-                    console.log('All images loaded successfully and first slices displayed!');
-                })
-                .catch(error => {
-                    console.error('Error loading DICOM series:', error);
-                    viewports.forEach(viewportId => {
-                        toggleLoading(viewportId, false);
-                        updateStatus(viewportId, 'Error loading series (check console)');
-                    });
-                });
-        });
-
-        // Tool selection logic (activate tool on all viewports)
-        document.getElementById('scrollTool').addEventListener('click', () => {
-            setToolActiveForAllViewports('Scroll');
-            setActiveButton('scrollTool');
-        });
-        document.getElementById('windowLevelTool').addEventListener('click', () => {
-            setToolActiveForAllV
+</body>
+</html>
