@@ -170,6 +170,8 @@
     
     <script>
         // Use the global variable exposed by cornerstone-wado-image-loader.min.js from CDN
+        // This block needs to run AFTER the above script tags have loaded the libraries
+        // (which they do by default, but errors can happen if not fully loaded/defined)
         if (typeof cornerstoneWADOImageLoader !== 'undefined') {
             cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
             cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
@@ -185,7 +187,8 @@
             //     }
             // });
         } else {
-            console.error("Error: 'cornerstoneWADOImageLoader' is not defined. Ensure the WADO image loader JS file is loaded correctly from CDN.");
+            // This error indicates the cornerstoneWADOImageLoader.min.js script itself might not have loaded or defined its global.
+            console.error("CRITICAL ERROR: 'cornerstoneWADOImageLoader' is not defined. Please check your browser's Network tab for errors loading the script: 'https://unpkg.com/cornerstone-wado-image-loader@2.3.2/dist/cornerstoneWADOImageLoader.min.js'");
         }
     </script>
 
@@ -207,7 +210,7 @@
             const canvasElement = document.getElementById(`${viewportId}Canvas`);
             elements[viewportId] = canvasElement;
             
-            // Enable the canvas element for Cornerstone to render on
+            // Enable the canvas element for Cornerstone
             cornerstone.enable(canvasElement);
 
             // Initialize image stack properties for each viewport
@@ -368,6 +371,7 @@
         }
 
         // Helper function to set the active button style
+        function에도
         function setActiveButton(buttonId) {
             document.querySelectorAll('.toolbar button').forEach(btn => {
                 btn.classList.remove('active');
