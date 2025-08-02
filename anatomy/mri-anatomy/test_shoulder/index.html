@@ -135,10 +135,10 @@
     </div>
 
     <!-- Cornerstone and DICOM Loader Scripts -->
+    <script src="https://unpkg.com/dicom-parser@1.8.7/dist/dicomParser.min.js"></script>
     <script src="https://unpkg.com/cornerstone-core@2.3.0/dist/cornerstone.min.js"></script>
     <script src="https://unpkg.com/cornerstone-tools@4.15.2/dist/cornerstoneTools.min.js"></script>
     <script src="https://unpkg.com/cornerstone-wado-image-loader@3.1.2/dist/cornerstoneWADOImageLoader.min.js"></script>
-    <script src="https://unpkg.com/dicom-parser@1.8.7/dist/dicomParser.min.js"></script>
 
     <script>
         // --- Cornerstone Setup ---
@@ -159,43 +159,47 @@
         
         // --- Configuration ---
         const numSlices = 280;
-        // CORRECTED BASE URL
         const baseUrl = "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
         const imageIds = [];
         for (let i = 1; i <= numSlices; i++) {
-            // CORRECTED FILENAME
             const fileName = `IMG${String(i).padStart(4, '0')}.dcm`;
             imageIds.push(`wadouri:${baseUrl}${fileName}`);
         }
 
         // --- Main Logic ---
         async function loadAndDisplayImageStack() {
-            cornerstone.enable(viewportElement);
+            try {
+                cornerstone.enable(viewportElement);
 
-            const stack = {
-                currentImageIdIndex: 0,
-                imageIds: imageIds,
-            };
+                const stack = {
+                    currentImageIdIndex: 0,
+                    imageIds: imageIds,
+                };
 
-            // Load images with progress tracking
-            let loadedCount = 0;
-            const loadImagePromises = imageIds.map(imageId => {
-                return cornerstone.loadAndCacheImage(imageId).then(() => {
-                    loadedCount++;
-                    loadingProgress.textContent = `(${loadedCount}/${numSlices})`;
-                }).catch(err => console.error(`Failed to load ${imageId}:`, err));
-            });
-            
-            await Promise.all(loadImagePromises);
-            
-            loadingIndicator.style.display = 'none';
+                // Load images with progress tracking
+                let loadedCount = 0;
+                const loadImagePromises = imageIds.map(imageId => {
+                    return cornerstone.loadAndCacheImage(imageId).then(() => {
+                        loadedCount++;
+                        loadingProgress.textContent = `(${loadedCount}/${numSlices})`;
+                    }).catch(err => console.error(`Failed to load ${imageId}:`, err));
+                });
+                
+                await Promise.all(loadImagePromises);
+                
+                loadingIndicator.style.display = 'none';
 
-            cornerstone.displayImage(viewportElement, imageIds[0]);
-            cornerstoneTools.addStackStateManager(viewportElement, ['stack']);
-            cornerstoneTools.addToolState(viewportElement, 'stack', stack);
+                cornerstone.displayImage(viewportElement, imageIds[0]);
+                cornerstoneTools.addStackStateManager(viewportElement, ['stack']);
+                cornerstoneTools.addToolState(viewportElement, 'stack', stack);
 
-            setupTools();
-            setupAnatomyPanel();
+                setupTools();
+                setupAnatomyPanel();
+
+            } catch (error) {
+                console.error("Failed to initialize viewer:", error);
+                loadingIndicator.innerHTML = `<p class="text-red-500">Error: Could not load images. Please check the console for details.</p>`;
+            }
         }
 
         function setupTools() {
@@ -204,8 +208,9 @@
             cornerstoneTools.addTool(cornerstoneTools.PanTool);
             cornerstoneTools.addTool(cornerstoneTools.ZoomTool);
             cornerstoneTools.addTool(cornerstoneTools.WwwcTool);
+            cornerstoneTools.addTool(cornerstoneTools.StackScrollTool);
 
-            // Set initial active tool
+            // Set initial active tool for mouse wheel
             cornerstoneTools.setToolActive('StackScrollMouseWheel', {});
             activateTool('Wwwc'); // Activate Wwwc by default
 
@@ -219,21 +224,23 @@
 
         function activateTool(toolName) {
             const toolMap = {
-                'Pan': { tool: 'PanTool', buttonId: 'pan-btn' },
-                'Zoom': { tool: 'ZoomTool', buttonId: 'zoom-btn' },
-                'Wwwc': { tool: 'WwwcTool', buttonId: 'ww-wc-btn' },
-                'StackScroll': { tool: 'StackScrollTool', buttonId: 'stack-scroll-btn' }
+                'Pan': { tool: 'Pan', buttonId: 'pan-btn' },
+                'Zoom': { tool: 'Zoom', buttonId: 'zoom-btn' },
+                'Wwwc': { tool: 'Wwwc', buttonId: 'ww-wc-btn' },
+                'StackScroll': { tool: 'StackScroll', buttonId: 'stack-scroll-btn' }
             };
 
-            // Deactivate all mouse-based tools
-            Object.values(toolMap).forEach(t => cornerstoneTools.setToolDisabled(t.tool));
+            // Deactivate all mouse-based tools first
+            Object.keys(toolMap).forEach(key => cornerstoneTools.setToolDisabled(key));
 
             // Activate the selected tool for the left mouse button
-            cornerstoneTools.setToolActive(toolMap[toolName].tool, { mouseButtonMask: 1 });
+            cornerstoneTools.setToolActive(toolName, { mouseButtonMask: 1 });
 
             // Update toolbar UI
             document.querySelectorAll('#toolbar .tool-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(toolMap[toolName].buttonId).classList.add('active');
+            if(toolMap[toolName]) {
+                document.getElementById(toolMap[toolName].buttonId).classList.add('active');
+            }
         }
         
         function setupAnatomyPanel() {
@@ -275,7 +282,7 @@
         });
 
         // --- Start the application ---
-        loadAndDisplayImageStack();
+        document.addEventListener('DOMContentLoaded', loadAndDisplayImageStack);
     </script>
 </body>
 </html>
