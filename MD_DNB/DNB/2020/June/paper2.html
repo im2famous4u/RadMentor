@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>June 2020 DNB - Paper 2 - RadMentor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #374151;
+        }
+        .rad-gradient-text {
+            background: linear-gradient(90deg, #1e40af, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+        #pdf-viewer-outer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #e2e8f0;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            max-width: calc(100vw - 4rem);
+            margin: 0 auto;
+            overflow: hidden;
+            height: calc(100vh - 180px);
+        }
+        .pdf-nav-buttons button {
+            background: linear-gradient(90deg, #1e40af, #3b82f6);
+            transition: background-color 0.2s ease;
+        }
+        .pdf-nav-buttons button:hover {
+            background: linear-gradient(90deg, #3b82f6, #1e40af);
+        }
+        .pdf-nav-buttons button:disabled {
+            background: #cbd5e0;
+        }
+        #pdf-canvas-container {
+            flex-grow: 1;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: white;
+            border-radius: 0.25rem;
+            position: relative;
+        }
+        canvas {
+            border: 1px solid #cbd5e0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 10px 0;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+    
+    <header class="bg-white/80 backdrop-blur-lg flex-shrink-0 z-20 shadow-sm">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
+                <span class="text-2xl font-bold text-gray-800">RadMentor</span>
+            </div>
+            <nav class="hidden md:flex items-center space-x-8">
+                <a href="/" class="text-gray-600 hover:text-blue-600">Dashboard</a>
+                <a href="/" class="text-gray-600 hover:text-blue-600">Anatomy Viewer</a>
+                <a href="#" class="text-gray-600 hover:text-blue-600">Courses</a>
+                <a href="../../../index.html" class="text-blue-600 font-semibold">DNB Previous Year Questions</a> 
+            </nav>
+            <a href="/dashboard.html" class="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition-colors hidden md:block">
+                Dashboard
+            </a>
+        </div>
+    </header>
+
+    <main class="flex-1 container mx-auto px-6 py-8 flex flex-col items-center">
+        <h1 class="text-4xl font-extrabold text-center mb-6 rad-gradient-text">
+            June 2020 DNB - Paper 2
+        </h1>
+        <p class="text-lg text-gray-600 text-center max-w-2xl mb-12">
+            Practice questions from this exam paper.
+        </p>
+
+        <div id="pdf-viewer-outer-container" class="w-full">
+            <div id="pdf-viewer-controls" class="flex items-center justify-center space-x-4 mb-4 p-2 bg-gray-100 rounded-md shadow-sm">
+                <button id="zoom-in-btn" class="px-3 py-1.5 rounded-md text-gray-700 bg-white shadow-sm hover:bg-gray-100 transition-colors" title="Zoom In"><i class="fas fa-search-plus text-blue-600"></i></button>
+                <button id="zoom-out-btn" class="px-3 py-1.5 rounded-md text-gray-700 bg-white shadow-sm hover:bg-gray-100 transition-colors" title="Zoom Out"><i class="fas fa-search-minus text-blue-600"></i></button>
+                <button id="fit-width-btn" class="px-3 py-1.5 rounded-md text-gray-700 bg-white shadow-sm hover:bg-gray-100 transition-colors" title="Fit to Width"><i class="fas fa-arrows-alt-h text-blue-600"></i></button>
+                <button id="fit-page-btn" class="px-3 py-1.5 rounded-md text-gray-700 bg-white shadow-sm hover:bg-gray-100 transition-colors" title="Fit to Page"><i class="fas fa-expand-arrows-alt text-blue-600"></i></button>
+                <button id="rotate-left-btn" class="px-3 py-1.5 rounded-md text-gray-700 bg-white shadow-sm hover:bg-gray-100 transition-colors" title="Rotate Left"><i class="fas fa-undo text-blue-600"></i></button>
+                <button id="rotate-right-btn" class="px-3 py-1.5 rounded-md text-gray-700 bg-white shadow-sm hover:bg-gray-100 transition-colors" title="Rotate Right"><i class="fas fa-redo text-blue-600"></i></button>
+            </div>
+
+            <div id="pdf-canvas-container" class="relative">
+                <div class="loader" id="pdf-loader"></div>
+            </div>
+            
+            <div class="pdf-nav-buttons flex items-center justify-center space-x-6 mt-4">
+                <button id="prev-page" class="px-4 py-2 rounded-md font-semibold text-white disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed">Previous</button>
+                <span id="page-controls" class="text-lg font-semibold text-gray-800">Page: <span id="page-num">1</span> / <span id="page-count">--</span></span>
+                <button id="next-page" class="px-4 py-2 rounded-md font-semibold text-white disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed">Next</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white text-center py-4 mt-8 flex-shrink-0">
+        <p>&copy; 2025 RadMentor. All rights reserved.</p>
+    </footer>
+
+    <script src="/js/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/js/pdf.worker.min.js';
+
+        let pdfDoc = null;
+        let pageNum = 1;
+        let pageRendering = false;
+        let pageNumPending = null;
+        let scale = 1.5; // Adjusted initial scale
+        let rotation = 0;
+
+        const pdfCanvasContainer = document.getElementById('pdf-canvas-container');
+        const pageNumSpan = document.getElementById('page-num');
+        const pageCountSpan = document.getElementById('page-count');
+        const prevPageBtn = document.getElementById('prev-page');
+        const nextPageBtn = document.getElementById('next-page');
+        const pdfLoader = document.getElementById('pdf-loader');
+        
+        const zoomInBtn = document.getElementById('zoom-in-btn');
+        const zoomOutBtn = document.getElementById('zoom-out-btn');
+        const fitWidthBtn = document.getElementById('fit-width-btn');
+        const fitPageBtn = document.getElementById('fit-page-btn');
+        const rotateLeftBtn = document.getElementById('rotate-left-btn');
+        const rotateRightBtn = document.getElementById('rotate-right-btn');
+        
+        const watermarkLogoSrc = "/logo.png";
+        let watermarkLogo = new Image();
+        let logoLoaded = false;
+        
+        watermarkLogo.onload = () => {
+            logoLoaded = true;
+            if (pdfDoc && !pageRendering) {
+                renderPage(pageNum);
+            }
+        };
+        watermarkLogo.onerror = () => {
+            console.warn("Watermark logo failed to load.");
+            logoLoaded = false;
+        };
+        watermarkLogo.src = watermarkLogoSrc;
+
+        async function renderPage(num) {
+            if (!pdfDoc) return;
+            
+            pageRendering = true;
+            pdfLoader.style.display = 'block';
+            pageNumSpan.textContent = num;
+            
+            prevPageBtn.disabled = (num <= 1);
+            nextPageBtn.disabled = (num >= pdfDoc.numPages);
+
+            try {
+                const page = await pdfDoc.getPage(num);
+                const viewport = page.getViewport({ scale: scale, rotation: rotation });
+                
+                // --- FIX for blurry text: Render canvas at high resolution ---
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                const devicePixelRatio = window.devicePixelRatio || 1;
+                
+                canvas.width = Math.floor(viewport.width * devicePixelRatio);
+                canvas.height = Math.floor(viewport.height * devicePixelRatio);
+                canvas.style.width = `${Math.floor(viewport.width)}px`;
+                canvas.style.height = `${Math.floor(viewport.height)}px`;
+                
+                context.scale(devicePixelRatio, devicePixelRatio);
+                // --- End of fix ---
+
+                pdfCanvasContainer.innerHTML = '';
+                pdfCanvasContainer.appendChild(canvas);
+
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport,
+                };
+                await page.render(renderContext).promise;
+
+                // --- MODIFIED Watermark ---
+                if (logoLoaded) {
+                    context.save();
+                    context.globalAlpha = 0.08; // Increased opacity
+                    
+                    // Logo Image (Increased size)
+                    const targetLogoWidth = viewport.width * 0.40;
+                    const targetLogoHeight = (watermarkLogo.naturalHeight / watermarkLogo.naturalWidth) * targetLogoWidth;
+                    const logoX = (viewport.width - targetLogoWidth) / 2;
+                    const logoY = (viewport.height - targetLogoHeight) / 2;
+                    context.drawImage(watermarkLogo, logoX, logoY, targetLogoWidth, targetLogoHeight);
+
+                    // Text below logo
+                    const fontSize = viewport.width / 35; // Responsive font size
+                    context.font = `bold ${fontSize}px Inter, sans-serif`;
+                    context.fillStyle = '#000000';
+                    context.textAlign = 'center';
+                    const textY = logoY + targetLogoHeight + fontSize; 
+                    context.fillText('RadMentor', viewport.width / 2, textY);
+                    
+                    context.restore();
+                }
+            } catch (error) {
+                console.error("Error rendering PDF page:", error);
+            } finally {
+                pdfLoader.style.display = 'none';
+                pageRendering = false;
+                if (pageNumPending !== null) {
+                    renderPage(pageNumPending);
+                    pageNumPending = null;
+                }
+            }
+        }
+
+        function queueRenderPage(num) {
+            if (pageRendering) {
+                pageNumPending = num;
+            } else {
+                renderPage(num);
+            }
+        }
+
+        prevPageBtn.addEventListener('click', () => {
+            if (pageNum <= 1) return;
+            pageNum--;
+            queueRenderPage(pageNum);
+        });
+        nextPageBtn.addEventListener('click', () => {
+            if (pageNum >= pdfDoc.numPages) return;
+            pageNum++;
+            queueRenderPage(pageNum);
+        });
+        zoomInBtn.addEventListener('click', () => { scale *= 1.2; queueRenderPage(pageNum); });
+        zoomOutBtn.addEventListener('click', () => { scale /= 1.2; queueRenderPage(pageNum); });
+        rotateLeftBtn.addEventListener('click', () => { rotation = (rotation - 90 + 360) % 360; queueRenderPage(pageNum); });
+        rotateRightBtn.addEventListener('click', () => { rotation = (rotation + 90) % 360; queueRenderPage(pageNum); });
+
+        fitWidthBtn.addEventListener('click', () => {
+            pdfDoc.getPage(pageNum).then(page => {
+                const viewport = page.getViewport({ scale: 1.0, rotation: rotation });
+                const containerWidth = pdfCanvasContainer.clientWidth - 20;
+                scale = containerWidth / viewport.width;
+                queueRenderPage(pageNum);
+            });
+        });
+        fitPageBtn.addEventListener('click', () => {
+            pdfDoc.getPage(pageNum).then(page => {
+                const viewport = page.getViewport({ scale: 1.0, rotation: rotation });
+                const containerHeight = document.getElementById('pdf-viewer-outer-container').clientHeight - 120;
+                const containerWidth = pdfCanvasContainer.clientWidth - 20;
+                const scaleX = containerWidth / viewport.width;
+                const scaleY = containerHeight / viewport.height;
+                scale = Math.min(scaleX, scaleY);
+                queueRenderPage(pageNum);
+            });
+        });
+
+        async function loadPdfDocument(pdfUrl) {
+            try {
+                pdfLoader.style.display = 'block';
+                const loadingTask = pdfjsLib.getDocument(pdfUrl);
+                pdfDoc = await loadingTask.promise;
+                pageCountSpan.textContent = pdfDoc.numPages;
+                pageNum = 1;
+                renderPage(pageNum);
+            } catch (error) {
+                console.error('Error loading PDF:', error);
+                alert(`Failed to load PDF document.\nPath: ${pdfUrl}\nError: ${error.message}`);
+                pdfLoader.style.display = 'none';
+            }
+        }
+        
+        const pdfUrl = "/MD_DNB/DNB/2020/June/DNB JUNE 2020 Paper 2.pdf"; 
+        loadPdfDocument(pdfUrl);
+    </script>
+</body>
+</html>
