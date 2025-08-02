@@ -179,7 +179,11 @@
         const baseConfig = {
             "tools": ["Scroll", "WindowLevel", "ZoomAndPan"],
             "loaders": ["File"],
-            "skipLoadUrl": true
+            "skipLoadUrl": true,
+            // Add these properties to prevent the 'viewOnFirstLoadItem' error
+            "viewOnFirstLoadItem": true, // This explicitly sets the property DWV expects
+            "displaySizeDivId": null,   // Often needed by DWV, can be null if not used
+            "dwvTools": {} // An empty object for custom tools, prevents undefined errors
         };
 
         // Initialize DWV for each viewport
