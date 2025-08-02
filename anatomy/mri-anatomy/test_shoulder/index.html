@@ -7,7 +7,7 @@
     <style>
         body { font-family: sans-serif; margin: 2em; background-color: #f0f0f0; }
         #dwv {
-            height: 80vh; /* Make the viewer taller */
+            height: 80vh; 
             border: 1px solid #ccc;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
@@ -38,25 +38,15 @@
     
     <div class="button-bar">
         <button id="load-series-btn">Load Shoulder MRI</button>
-        
         <button id="load-json-btn">Load Annotations</button>
-
         <div id="status"></div>
     </div>
 
     <script>
-        // 1. Create and initialize the DWV App
         const app = new dwv.App();
         
-        // FIX: Corrected tool names to match the DWV library
-        const tools = [
-            "Scroll",
-            "ZoomAndPan",
-            "WindowLevel",
-            "Draw",
-            "Livewire",
-            "Eraser"
-        ];
+        // Corrected tool names
+        const tools = ["Scroll", "ZoomAndPan", "WindowLevel", "Draw", "Livewire", "Eraser"];
 
         app.init({
             "containerDivId": "dwv",
@@ -64,12 +54,10 @@
             "fitToWindow": true,
         });
 
-        // 2. Get references to our buttons and status div
         const loadSeriesBtn = document.getElementById("load-series-btn");
         const loadJsonBtn = document.getElementById("load-json-btn");
         const statusDiv = document.getElementById("status");
 
-        // 3. Add listeners for DWV's loading events to provide feedback
         app.addEventListener("load-start", () => {
             statusDiv.innerHTML = "<b>Loading series, please wait...</b>";
             loadSeriesBtn.disabled = true;
@@ -83,8 +71,6 @@
             loadSeriesBtn.disabled = false;
         });
 
-
-        // 4. Set up the event listener for the "Load Shoulder MRI" button
         loadSeriesBtn.addEventListener("click", () => {
             const basePath = "/anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
             const numberOfFiles = 280;
@@ -100,9 +86,9 @@
             app.loadURLs(dicomUrls);
         });
 
-        // 5. Set up the event listener for loading JSON annotations
         loadJsonBtn.addEventListener("click", () => {
-            if (!app.isLoaded()) {
+            // FIX: Corrected app.isLoaded() to the new function name app.isMonoSliceDataLoaded()
+            if (!app.isMonoSliceDataLoaded()) {
                 alert("Please load the DICOM series before loading annotations.");
                 return;
             }
