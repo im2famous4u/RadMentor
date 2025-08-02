@@ -190,7 +190,7 @@
             'sagittal': 0,
             'coronal': 0
         };
-        const totalSlices = 280; // Total number of DICOM files
+        const totalSlices = 280; // Total number of DICOM files (as per your data)
 
         viewports.forEach(viewportId => {
             const config = {
@@ -219,12 +219,13 @@
         });
 
         // Load the DICOM files
-        const bucketUrl = 'https://radmentor.s3.amazonaws.com/'; // Replace with your bucket URL
+        // CORRECTED BUCKET URL AND FILE NAMING CONVENTION
+        const bucketUrl = 'https://radmentor.s3.eu-north-1.amazonaws.com/';
         const fileUrls = [];
 
         for (let i = 1; i <= totalSlices; i++) {
-            const num = i.toString().padStart(4, '0');
-            fileUrls.push(`${bucketUrl}IMG${num}.dcm`);
+            const num = i.toString().padStart(5, '0'); // Pad with 5 zeros for the second part (e.g., 00001)
+            fileUrls.push(`${bucketUrl}IMG-0001-${num}.dcm`); // Construct the full filename: IMG-0001-00001.dcm
         }
 
         // Load the series into each viewport
@@ -241,7 +242,12 @@
                 // Load files
                 const promises = fileUrls.map(url => {
                     return fetch(url)
-                        .then(response => response.blob())
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! Status: ${response.status} for ${url}`);
+                            }
+                            return response.blob();
+                        })
                         .then(blob => {
                             const file = new File([blob], url.split('/').pop());
                             return app.loadFiles([file]);
@@ -258,7 +264,7 @@
                     .catch(error => {
                         console.error('Error loading files:', error);
                         document.getElementById(`${viewportId}Loading`).style.display = 'none';
-                        document.getElementById(`${viewportId}Status`).textContent = 'Error loading files';
+                        document.getElementById(`${viewportId}Status`).textContent = 'Error loading files (check console)';
                     });
             });
         });
