@@ -163,53 +163,60 @@
         </div>
     </div>
 
-    <script src="js/cornerstone-core.min.js"></script>
-    <script src="js/dicomParser.min.js"></script>
-    <script src="js/dicom-image-loader.min.js"></script> <script src="js/cornerstone-tools.min.js"></script>
+    <script src="https://unpkg.com/cornerstone-core@2.6.1/dist/cornerstone.min.js"></script>
+    <script src="https://unpkg.com/dicom-parser@1.8.10/dist/dicomParser.min.js"></script>
+    <script src="https://unpkg.com/cornerstone-wado-image-loader@2.3.2/dist/cornerstoneWADOImageLoader.min.js"></script>
+    <script src="https://unpkg.com/cornerstone-tools@6.0.4/dist/cornerstoneTools.min.js"></script>
     
     <script>
-        // Check if dicomImageLoader is defined (this is the global variable from dicom-image-loader.min.js)
-        if (typeof dicomImageLoader !== 'undefined') {
-            dicomImageLoader.external.cornerstone = cornerstone;
-            dicomImageLoader.external.dicomParser = dicomParser;
-        } else if (typeof cornerstoneWADOImageLoader !== 'undefined') {
-            // Fallback for an older or differently named version, though less likely now
+        // Use the global variable exposed by cornerstone-wado-image-loader.min.js from CDN
+        if (typeof cornerstoneWADOImageLoader !== 'undefined') {
             cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
             cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
+            
+            // Optionally initialize Web Worker for better performance for large studies
+            // (You would need to ensure these worker files are accessible via their URLs)
+            // cornerstoneWADOImageLoader.webWorkerManager.initialize({
+            //     webWorkerPath: 'https://unpkg.com/cornerstone-wado-image-loader@2.3.2/dist/cornerstoneWADOImageLoaderWebWorker.min.js',
+            //     taskConfiguration: {
+            //         decodeTask: {
+            //             codecsPath: 'https://unpkg.com/cornerstone-wado-image-loader@2.3.2/dist/cornerstoneWADOImageLoaderCodecs.min.js'
+            //         }
+            //     }
+            // });
         } else {
-            console.error("Neither 'dicomImageLoader' nor 'cornerstoneWADOImageLoader' is defined. Make sure the correct WADO image loader JS file is loaded and exposes a global variable.");
+            console.error("Error: 'cornerstoneWADOImageLoader' is not defined. Ensure the WADO image loader JS file is loaded correctly from CDN.");
         }
     </script>
 
     <script>
-        const bucketUrl = 'https://radmentor.s3.eu-north-1.amazonaws.com/'; // Your S3 bucket URL
+        // Your S3 bucket URL in eu-north-1 (Stockholm)
+        const bucketUrl = 'https://radmentor.s3.eu-north-1.amazonaws.com/'; 
         const totalSlices = 280; // Total number of DICOM files
 
         const viewports = ['axial', 'sagittal', 'coronal'];
-        const elements = {}; // To store the HTML canvas elements
-        const imageIds = []; // To store Cornerstone image IDs (wadoURI:...)
-        const imageStack = {}; // To store the image stack for each viewport
+        const elements = {}; // To store the HTML canvas elements where images are drawn
+        const imageIds = []; // To store Cornerstone image IDs (e.g., 'wadoURI:...')
+        const imageStack = {}; // To store the image stack and current index for each viewport
         
-        let loadedImages = []; // Array to hold all loaded image objects
+        // This array will hold the actual loaded Cornerstone image objects after successful fetch
+        let loadedImages = []; 
 
-        // Initialize Cornerstone elements and enable them
+        // Initialize Cornerstone elements and enable them for rendering
         viewports.forEach(viewportId => {
             const canvasElement = document.getElementById(`${viewportId}Canvas`);
             elements[viewportId] = canvasElement;
             
-            // Enable the canvas element for Cornerstone
+            // Enable the canvas element for Cornerstone to render on
             cornerstone.enable(canvasElement);
 
-            // Initialize CornerstoneTools for each viewport
-            // cornerstoneTools.init() should only be called once, so we'll move it outside the loop
-            // For now, let's just make sure tools are activated on the element
-            
+            // Initialize image stack properties for each viewport
             imageStack[viewportId] = {
                 currentImageIdIndex: 0,
-                imageIds: []
+                imageIds: [] // This will be populated with the global imageIds array
             };
 
-            // Add event listeners for slice navigation
+            // Add event listeners for slice navigation buttons
             document.getElementById(`prev${viewportId.charAt(0).toUpperCase() + viewportId.slice(1)}`).addEventListener('click', () => {
                 const stack = imageStack[viewportId];
                 if (stack.currentImageIdIndex > 0) {
@@ -226,15 +233,15 @@
                 }
             });
             
-            // Add mouse wheel listener for scrolling
-            canvasElement.addEventListener('mousewheel', (e) => {
-                const direction = e.deltaY > 0 ? 1 : -1; // -1 for up, 1 for down
+            // Add mouse wheel listener for scrolling through slices
+            canvasElement.addEventListener('wheel', (e) => { // Using 'wheel' for modern browsers
+                const direction = e.deltaY > 0 ? 1 : -1; // +1 for scroll down, -1 for scroll up
                 const stack = imageStack[viewportId];
                 if (stack.imageIds.length > 0) {
                     stack.currentImageIdIndex = Math.min(Math.max(0, stack.currentImageIdIndex + direction), stack.imageIds.length - 1);
                     displayImage(viewportId);
                 }
-                e.preventDefault(); // Prevent page scrolling
+                e.preventDefault(); // Prevent page scrolling when using mouse wheel on viewer
             });
         });
 
@@ -248,25 +255,29 @@
             const imageId = stack.imageIds[stack.currentImageIdIndex];
 
             if (imageId) {
+                // Load the image using Cornerstone
                 cornerstone.loadImage(imageId).then(function(image) {
+                    // Get default viewport settings for the image
                     const viewport = cornerstone.getDefaultViewport(element, image);
+                    // Display the image on the element with the viewport settings
                     cornerstone.displayImage(element, image, viewport);
                     updateStatus(viewportId, `Slice ${stack.currentImageIdIndex + 1}/${stack.imageIds.length}`);
 
-                    // Activate tools after image is displayed
-                    cornerstoneTools.setToolActive('Wwwc', { mouseButtonMask: 1 }); // Window/Level on left click
-                    cornerstoneTools.setToolActive('Pan', { mouseButtonMask: 2 }); // Pan on middle click
-                    cornerstoneTools.setToolActive('Zoom', { mouseButtonMask: 4 }); // Zoom on right click
-                    cornerstoneTools.setToolActive('Scroll', { mouseButtonMask: 0 }); // Scroll with mouse wheel (no button)
+                    // Activate common tools after image is displayed
+                    // mouseButtonMask: 1 = Left, 2 = Middle, 4 = Right
+                    cornerstoneTools.setToolActiveForElement(element, 'Wwwc', { mouseButtonMask: 1 }); // Window/Level on Left click+drag
+                    cornerstoneTools.setToolActiveForElement(element, 'Pan', { mouseButtonMask: 2 }); // Pan on Middle click+drag
+                    cornerstoneTools.setToolActiveForElement(element, 'Zoom', { mouseButtonMask: 4 }); // Zoom on Right click+drag
+                    cornerstoneTools.setToolActiveForElement(element, 'Scroll', { mouseButtonMask: 0 }); // Scroll with mouse wheel (no button needed)
 
                 }).catch(function(err) {
-                    console.error('Error loading image:', err);
+                    console.error(`Error loading or displaying image ${imageId}:`, err);
                     updateStatus(viewportId, 'Error displaying image');
                 });
             }
         }
 
-        // Function to update status text
+        // Function to update status text in the viewport footer
         function updateStatus(viewportId, text) {
             document.getElementById(`${viewportId}Status`).textContent = text;
         }
@@ -276,16 +287,15 @@
             document.getElementById(`${viewportId}Loading`).style.display = show ? 'block' : 'none';
         }
 
-        // Load the DICOM series
+        // Load the DICOM series when the "Load Series" button is clicked
         document.getElementById('loadSeries').addEventListener('click', () => {
             loadedImages = []; // Clear previous loaded images
             imageIds.length = 0; // Clear global image IDs
             
-            // Generate Cornerstone imageIds
+            // Generate Cornerstone imageIds using the wadoURI protocol
             for (let i = 1; i <= totalSlices; i++) {
                 const num = i.toString().padStart(5, '0');
                 const dicomUrl = `${bucketUrl}IMG-0001-${num}.dcm`;
-                // Use 'wadoURI' prefix for direct HTTP/S DICOM loading
                 imageIds.push(`wadoURI:${dicomUrl}`); 
             }
 
@@ -293,6 +303,7 @@
             viewports.forEach(viewportId => toggleLoading(viewportId, true));
 
             // Load all images (this can be slow for many files)
+            // Promise.all waits for all image loading promises to resolve.
             const loadPromises = imageIds.map(imageId => cornerstone.loadImage(imageId));
 
             Promise.all(loadPromises)
@@ -304,24 +315,24 @@
                         displayImage(viewportId); // Display the first image
                         toggleLoading(viewportId, false);
                     });
-                    console.log('All images loaded successfully!');
+                    console.log('All images loaded successfully and first slices displayed!');
                 })
                 .catch(error => {
                     console.error('Error loading DICOM series:', error);
                     viewports.forEach(viewportId => {
                         toggleLoading(viewportId, false);
-                        updateStatus(viewportId, 'Error loading series');
+                        updateStatus(viewportId, 'Error loading series (check console)');
                     });
                 });
         });
 
-        // Tool selection (activate tool on all viewports)
+        // Tool selection logic (activate tool on all viewports)
         document.getElementById('scrollTool').addEventListener('click', () => {
             setToolActiveForAllViewports('Scroll');
             setActiveButton('scrollTool');
         });
         document.getElementById('windowLevelTool').addEventListener('click', () => {
-            setToolActiveForAllViewports('Wwwc'); // Wwwc for Window/Level
+            setToolActiveForAllViewports('Wwwc'); // Wwwc for Window/Level in CornerstoneTools
             setActiveButton('windowLevelTool');
         });
         document.getElementById('zoomTool').addEventListener('click', () => {
@@ -332,28 +343,31 @@
             viewports.forEach(viewportId => {
                 const element = elements[viewportId];
                 if (element) {
-                    cornerstone.reset(element);
+                    cornerstone.reset(element); // Reset viewport transform, windowing
+                    // Re-display the current image to reflect the reset
+                    displayImage(viewportId); 
                 }
             });
         });
 
+        // Helper function to activate a tool across all viewports
         function setToolActiveForAllViewports(toolName) {
+            const allTools = ['Scroll', 'Wwwc', 'Zoom', 'Pan']; // List all tools you might toggle
             viewports.forEach(viewportId => {
                 const element = elements[viewportId];
-                cornerstoneTools.setToolActiveForElement(element, toolName, { mouseButtonMask: 1 }); // Apply tool to specific element
-                // You can add other button masks if needed for specific tools
-            });
-            // Deactivate other tools
-            const allTools = ['Scroll', 'Wwwc', 'Zoom', 'Pan']; // Add more as needed
-            allTools.forEach(tool => {
-                if (tool !== toolName) {
-                    viewports.forEach(viewportId => {
-                        cornerstoneTools.setToolPassiveForElement(element, tool, { mouseButtonMask: 1 }); // Pass element to setToolPassiveForElement
-                    });
-                }
+                // Deactivate all other tools for this element first
+                allTools.forEach(tool => {
+                    if (tool !== toolName) {
+                        cornerstoneTools.setToolPassiveForElement(element, tool);
+                    }
+                });
+                // Activate the selected tool for this element
+                // mouseButtonMask: 1 = Left, 2 = Middle, 4 = Right (combined for multiple buttons)
+                cornerstoneTools.setToolActiveForElement(element, toolName, { mouseButtonMask: 1 }); 
             });
         }
 
+        // Helper function to set the active button style
         function setActiveButton(buttonId) {
             document.querySelectorAll('.toolbar button').forEach(btn => {
                 btn.classList.remove('active');
@@ -361,7 +375,7 @@
             document.getElementById(buttonId).classList.add('active');
         }
 
-        // Set initial tool
+        // Set initial tool when the page loads
         setToolActiveForAllViewports('Scroll'); // Start with scroll active
     </script>
 </body>
