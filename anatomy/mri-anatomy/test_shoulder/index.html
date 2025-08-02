@@ -4,134 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shoulder MRI Viewer - RadMentor</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-        }
-        .viewport {
+        body, html {
+            margin: 0;
+            padding: 0;
             width: 100%;
             height: 100%;
-            background-color: black;
-            border-radius: 0.375rem; /* rounded-md */
-            position: relative; /* For overlays like text */
+            background-color: #000;
+            color: #fff;
+            font-family: sans-serif;
+            overflow: hidden;
         }
-        .rad-gradient {
-            background: linear-gradient(90deg, #1e40af, #3b82f6);
+        #viewer-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
-        .tool-btn {
-            background-color: #e5e7eb;
-            color: #374151;
-            transition: all 0.2s ease-in-out;
+        #dicom-viewport {
+            flex-grow: 1;
+            position: relative;
         }
-        .tool-btn:hover {
-            background-color: #d1d5db;
+        #controls {
+            padding: 15px;
+            text-align: center;
+            background-color: #111;
+            flex-shrink: 0;
         }
-        .tool-btn.active {
-            background: linear-gradient(90deg, #1e40af, #3b82f6);
-            color: white;
-            box-shadow: 0 4px 14px 0 rgba(0, 118, 255, 0.39);
+        #slice-info {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
         }
-        #anatomy-list {
-            scrollbar-width: thin;
-            scrollbar-color: #9ca3af #e5e7eb;
+        #controls a {
+            color: #87CEEB;
+            text-decoration: none;
+            font-weight: bold;
         }
-        #anatomy-list::-webkit-scrollbar {
-            width: 6px;
-        }
-        #anatomy-list::-webkit-scrollbar-track {
-            background: #e5e7eb;
-        }
-        #anatomy-list::-webkit-scrollbar-thumb {
-            background-color: #9ca3af;
-            border-radius: 4px;
-        }
-        .toggle-checkbox:checked + .toggle-label {
-            background-color: #3b82f6;
-        }
-        .toggle-checkbox:checked + .toggle-label .toggle-dot {
-            transform: translateX(100%);
-        }
-        .anatomy-item {
-            transition: background-color 0.2s;
+        #loading-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0,0,0,0.7);
+            font-size: 1.5rem;
         }
     </style>
 </head>
-<body class="text-gray-800 flex flex-col h-screen overflow-hidden">
-    
-    <header class="bg-white/80 backdrop-blur-lg flex-shrink-0 z-20 shadow-sm">
-        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
-            <div class="flex items-center">
-                <a href="../../../../"><img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/></a>
-                <a href="../../../../"><span class="text-2xl font-bold text-gray-800">RadMentor</span></a>
-            </div>
-            <nav class="hidden md:flex items-center space-x-8">
-                 <a href="../../../../" class="text-gray-600 hover:text-blue-600">Dashboard</a>
-                <a href="#" class="text-blue-600 font-semibold">Anatomy Viewer</a>
-            </nav>
+<body>
+    <div id="viewer-wrapper">
+        <div id="dicom-viewport">
+            <div id="loading-indicator">Loading DICOM series...</div>
         </div>
-    </header>
-
-    <div class="flex flex-1 overflow-hidden">
-        <aside class="w-24 bg-white p-3 flex flex-col items-center space-y-4 border-r border-gray-200">
-            <p class="text-xs text-gray-500">Image Stack</p>
-            <div class="w-full h-auto text-center text-sm text-gray-700">
-                <span id="current-slice-info">--/--</span>
-            </div>
-             <div id="preview-canvases" class="space-y-2">
-                <!-- Preview canvases can be dynamically added here if needed -->
-            </div>
-        </aside>
-
-        <main class="flex-1 bg-black flex flex-col items-center p-2 relative overflow-hidden">
-            <div id="toolbar" class="p-1.5 bg-gray-900/50 backdrop-blur-sm rounded-lg flex items-center justify-center gap-2 shadow-lg z-10 mb-2">
-                <button id="anatomy-btn" class="tool-btn p-2 rounded-md" title="Show Anatomy"><i class="fas fa-list-ul"></i></button>
-                <button id="pan-btn" class="tool-btn p-2 rounded-md" title="Pan"><i class="fas fa-arrows-alt"></i></button>
-                <button id="zoom-btn" class="tool-btn p-2 rounded-md" title="Zoom"><i class="fas fa-search-plus"></i></button>
-                <button id="ww-wc-btn" class="tool-btn p-2 rounded-md active" title="Window/Contrast"><i class="fas fa-adjust"></i></button>
-                <button id="stack-scroll-btn" class="tool-btn p-2 rounded-md" title="Scroll through slices"><i class="fas fa-scroll"></i></button>
-                <button id="reset-btn" class="tool-btn p-2 rounded-md" title="Reset View"><i class="fas fa-sync-alt"></i></button>
-            </div>
-            <div id="viewer-container" class="w-full flex-1 flex justify-center items-center min-h-0">
-                <div id="dicom-viewport" class="viewport max-w-full max-h-full aspect-square"></div>
-            </div>
-            <div id="loading-indicator" class="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-75 text-white z-20">
-                <p>Loading DICOM Series...</p>
-                <p id="loading-progress" class="text-sm mt-2"></p>
-            </div>
-            
-            <div id="anatomy-panel" class="absolute top-0 left-0 h-full bg-white/95 backdrop-blur-sm p-4 w-64 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out z-30 flex flex-col">
-                <h2 class="text-lg font-semibold mb-3 pb-2 text-blue-800 border-b border-gray-200">Anatomy</h2>
-                <div class="relative mb-4">
-                    <input type="text" id="anatomy-search" placeholder="Search anatomy..." class="w-full bg-gray-100 border border-gray-300 rounded-md py-1.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                </div>
-                <div id="anatomy-list" class="flex-1 space-y-1 pr-2 overflow-y-auto"></div>
-            </div>
-        </main>
-
-        <aside class="w-64 bg-white p-4 flex flex-col space-y-6 overflow-y-auto border-l border-gray-200">
-            <div>
-                <h2 class="text-lg font-semibold mb-3 pb-2 text-blue-800">Weightings</h2>
-                <div class="grid grid-cols-2 gap-2" id="weightings-buttons">
-                    <button class="px-4 py-2 text-sm font-medium text-white rounded-md shadow-sm rad-gradient active">Axial PD FS</button>
-                    <button class="px-4 py-2 text-sm font-medium bg-gray-200 text-gray-700 rounded-md shadow-sm hover:bg-gray-300">Coronal T2</button>
-                    <button class="px-4 py-2 text-sm font-medium bg-gray-200 text-gray-700 rounded-md shadow-sm hover:bg-gray-300">Sagittal T1</button>
-                    <button class="px-4 py-2 text-sm font-medium bg-gray-200 text-gray-700 rounded-md shadow-sm hover:bg-gray-300">ABER</button>
-                </div>
-            </div>
-            <div>
-                <h2 class="text-lg font-semibold mb-3 pb-2 text-blue-800">Anatomical Parts</h2>
-                <div class="space-y-3" id="anatomy-toggles">
-                    <label for="toggle-rotator" class="flex items-center justify-between cursor-pointer"><span class="text-sm">Rotator Cuff</span><div class="relative"><input type="checkbox" id="toggle-rotator" class="sr-only toggle-checkbox" checked><div class="toggle-label block bg-gray-300 w-10 h-6 rounded-full"></div><div class="toggle-dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div></div></label>
-                    <label for="toggle-bones" class="flex items-center justify-between cursor-pointer"><span class="text-sm">Bones</span><div class="relative"><input type="checkbox" id="toggle-bones" class="sr-only toggle-checkbox" checked><div class="toggle-label block bg-gray-300 w-10 h-6 rounded-full"></div><div class="toggle-dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform"></div></div></label>
-                </div>
-            </div>
-        </aside>
+        <div id="controls">
+            <p id="slice-info">--/--</p>
+            <a href="../">Back to MRI Anatomy</a>
+        </div>
     </div>
 
     <!-- Cornerstone and DICOM Loader Scripts -->
@@ -144,19 +75,13 @@
         // --- Cornerstone Setup ---
         cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
         cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
-        cornerstoneTools.init({ globalToolSyncEnabled: true });
+        cornerstoneTools.init();
 
         // --- UI Elements ---
         const viewportElement = document.getElementById('dicom-viewport');
+        const sliceInfo = document.getElementById('slice-info');
         const loadingIndicator = document.getElementById('loading-indicator');
-        const loadingProgress = document.getElementById('loading-progress');
-        const currentSliceInfo = document.getElementById('current-slice-info');
-        const anatomyPanel = document.getElementById('anatomy-panel');
-        const anatomyBtn = document.getElementById('anatomy-btn');
-        const anatomyListContainer = document.getElementById('anatomy-list');
-        const anatomySearchInput = document.getElementById('anatomy-search');
-        let hideAnatomyTimeout;
-        
+
         // --- Configuration ---
         const numSlices = 280;
         const baseUrl = "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
@@ -167,7 +92,7 @@
         }
 
         // --- Main Logic ---
-        async function loadAndDisplayImageStack() {
+        async function run() {
             try {
                 cornerstone.enable(viewportElement);
 
@@ -176,113 +101,43 @@
                     imageIds: imageIds,
                 };
 
-                // Load images with progress tracking
-                let loadedCount = 0;
-                const loadImagePromises = imageIds.map(imageId => {
-                    return cornerstone.loadAndCacheImage(imageId).then(() => {
-                        loadedCount++;
-                        loadingProgress.textContent = `(${loadedCount}/${numSlices})`;
-                    }).catch(err => console.error(`Failed to load ${imageId}:`, err));
-                });
-                
-                await Promise.all(loadImagePromises);
-                
-                loadingIndicator.style.display = 'none';
-
+                // Load the first image to display something quickly
+                await cornerstone.loadAndCacheImage(imageIds[0]);
                 cornerstone.displayImage(viewportElement, imageIds[0]);
+
+                // Hide the main loading text
+                loadingIndicator.textContent = 'Loading remaining images...';
+
                 cornerstoneTools.addStackStateManager(viewportElement, ['stack']);
                 cornerstoneTools.addToolState(viewportElement, 'stack', stack);
 
-                setupTools();
-                setupAnatomyPanel();
+                // Add and activate tools, which caused the "autoscrolling"
+                cornerstoneTools.addTool(cornerstoneTools.StackScrollTool);
+                cornerstoneTools.addTool(cornerstoneTools.StackScrollMouseWheelTool);
+                cornerstoneTools.setToolActive('StackScroll', { mouseButtonMask: 1 }); // Left-click drag to scroll
+                cornerstoneTools.setToolActive('StackScrollMouseWheel', {}); // Mouse wheel to scroll
+
+                // Update slice info on scroll
+                viewportElement.addEventListener('cornerstoneimagerendered', (event) => {
+                    const viewport = cornerstone.getViewport(event.target);
+                    if (viewport) {
+                        sliceInfo.textContent = `Slice: ${viewport.imageIdIndex + 1} / ${imageIds.length}`;
+                    }
+                });
+
+                // Pre-load all other images in the background for smooth scrolling
+                await Promise.all(imageIds.slice(1).map(imageId => cornerstone.loadAndCacheImage(imageId)));
+                
+                // Hide the loading indicator completely once all images are cached
+                loadingIndicator.style.display = 'none';
 
             } catch (error) {
-                console.error("Failed to initialize viewer:", error);
-                loadingIndicator.innerHTML = `<p class="text-red-500">Error: Could not load images. Please check the console for details.</p>`;
+                console.error("Error loading DICOM series:", error);
+                loadingIndicator.textContent = "Error: Could not load images.";
             }
         }
 
-        function setupTools() {
-            // Add Tools
-            cornerstoneTools.addTool(cornerstoneTools.StackScrollMouseWheelTool);
-            cornerstoneTools.addTool(cornerstoneTools.PanTool);
-            cornerstoneTools.addTool(cornerstoneTools.ZoomTool);
-            cornerstoneTools.addTool(cornerstoneTools.WwwcTool);
-            cornerstoneTools.addTool(cornerstoneTools.StackScrollTool);
-
-            // Set initial active tool for mouse wheel
-            cornerstoneTools.setToolActive('StackScrollMouseWheel', {});
-            activateTool('Wwwc'); // Activate Wwwc by default
-
-            // Toolbar button listeners
-            document.getElementById('pan-btn').addEventListener('click', () => activateTool('Pan'));
-            document.getElementById('zoom-btn').addEventListener('click', () => activateTool('Zoom'));
-            document.getElementById('ww-wc-btn').addEventListener('click', () => activateTool('Wwwc'));
-            document.getElementById('stack-scroll-btn').addEventListener('click', () => activateTool('StackScroll'));
-            document.getElementById('reset-btn').addEventListener('click', () => cornerstone.reset(viewportElement));
-        }
-
-        function activateTool(toolName) {
-            const toolMap = {
-                'Pan': { tool: 'Pan', buttonId: 'pan-btn' },
-                'Zoom': { tool: 'Zoom', buttonId: 'zoom-btn' },
-                'Wwwc': { tool: 'Wwwc', buttonId: 'ww-wc-btn' },
-                'StackScroll': { tool: 'StackScroll', buttonId: 'stack-scroll-btn' }
-            };
-
-            // Deactivate all mouse-based tools first
-            Object.keys(toolMap).forEach(key => cornerstoneTools.setToolDisabled(key));
-
-            // Activate the selected tool for the left mouse button
-            cornerstoneTools.setToolActive(toolName, { mouseButtonMask: 1 });
-
-            // Update toolbar UI
-            document.querySelectorAll('#toolbar .tool-btn').forEach(btn => btn.classList.remove('active'));
-            if(toolMap[toolName]) {
-                document.getElementById(toolMap[toolName].buttonId).classList.add('active');
-            }
-        }
-        
-        function setupAnatomyPanel() {
-             const shoulderAnatomy = [ "Humerus", "Scapula", "Clavicle", "Acromion", "Coracoid process", "Glenoid", "Supraspinatus muscle", "Infraspinatus muscle", "Teres minor muscle", "Subscapularis muscle", "Supraspinatus tendon", "Infraspinatus tendon", "Teres minor tendon", "Subscapularis tendon", "Biceps tendon (long head)", "Deltoid muscle", "Pectoralis major muscle", "Superior labrum", "Inferior labrum", "Anterior labrum", "Posterior labrum", "Acromioclavicular joint", "Glenohumeral joint", "Coracoacromial ligament" ];
-
-             const populateAnatomyList = (filter = '') => {
-                anatomyListContainer.innerHTML = '';
-                const filteredAnatomy = shoulderAnatomy.filter(item => item.toLowerCase().includes(filter.toLowerCase()));
-                if (filteredAnatomy.length === 0) {
-                    anatomyListContainer.innerHTML = `<p class="text-sm text-gray-500 p-2">No results found.</p>`;
-                    return;
-                }
-                filteredAnatomy.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = 'anatomy-item text-sm text-gray-700 p-2 rounded-md hover:bg-gray-100 cursor-pointer';
-                    div.textContent = item;
-                    anatomyListContainer.appendChild(div);
-                });
-            };
-            
-            anatomyBtn.addEventListener('mouseenter', () => { clearTimeout(hideAnatomyTimeout); anatomyPanel.classList.remove('-translate-x-full'); });
-            anatomyBtn.addEventListener('mouseleave', () => { hideAnatomyTimeout = setTimeout(() => { anatomyPanel.classList.add('-translate-x-full'); }, 300); });
-            anatomyPanel.addEventListener('mouseenter', () => { clearTimeout(hideAnatomyTimeout); });
-            anatomyPanel.addEventListener('mouseleave', () => { hideAnatomyTimeout = setTimeout(() => { anatomyPanel.classList.add('-translate-x-full'); }, 300); });
-            anatomySearchInput.addEventListener('input', (e) => { populateAnatomyList(e.target.value); });
-            populateAnatomyList();
-        }
-
-        // --- Event Listeners ---
-        viewportElement.addEventListener('cornerstoneimagerendered', (event) => {
-            try {
-                const viewport = cornerstone.getViewport(event.target);
-                if (viewport) {
-                    currentSliceInfo.textContent = `${viewport.imageIdIndex + 1}/${imageIds.length}`;
-                }
-            } catch (e) {
-                // Ignore errors if viewport is not ready yet
-            }
-        });
-
-        // --- Start the application ---
-        document.addEventListener('DOMContentLoaded', loadAndDisplayImageStack);
+        document.addEventListener('DOMContentLoaded', run);
     </script>
 </body>
 </html>
