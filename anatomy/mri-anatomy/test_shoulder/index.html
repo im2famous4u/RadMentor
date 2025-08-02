@@ -40,6 +40,69 @@
         <div id="status"></div>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+        // 1. Create and initialize the DWV App
+        const app = new dwv.App();
+        app.init({
+            "containerDivId": "dwv",
+            "tools": ["Scroll", "ZoomAndPan", "WindowLevel", "Draw", "Livewire", "Eraser"],
+            "fitToWindow": true,
+        });
+
+        // 2. Get references to our buttons and status div
+        const loadSeriesBtn = document.getElementById("load-series-btn");
+        const loadJsonBtn = document.getElementById("load-json-btn");
+        const statusDiv = document.getElementById("status");
+
+        // 3. Add listeners for DWV's loading events to provide feedback
+        app.addEventListener("load-start", () => {
+            statusDiv.innerHTML = "<b>Loading series, please wait...</b>";
+            loadSeriesBtn.disabled = true; // Disable button while loading
+        });
+        app.addEventListener("load-end", () => {
+            statusDiv.innerHTML = "<b>Loading complete.</b> Use your mouse scroll to cycle through images.";
+            loadSeriesBtn.disabled = false; // Re-enable button
+        });
+
+        // 4. Set up the event listener for the "Load Shoulder MRI" button
+        loadSeriesBtn.addEventListener("click", () => {
+            // --- Generate the list of DICOM URLs ---
+            const basePath = "anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
+            const numberOfFiles = 280;
+            const dicomUrls = [];
+
+            for (let i = 1; i <= numberOfFiles; i++) {
+                // Pad the number with leading zeros (e.g., 1 -> "0001", 10 -> "0010")
+                const paddedNumber = String(i).padStart(4, '0');
+                const fileName = `IMG${paddedNumber}.dcm`;
+                dicomUrls.push(basePath + fileName);
+            }
+            
+            console.log(`Generated ${dicomUrls.length} URLs to load.`);
+            
+            // --- Load the generated URLs into DWV ---
+            app.loadURLs(dicomUrls);
+        });
+
+        // 5. Set up the event listener for loading JSON annotations
+        loadJsonBtn.addEventListener("click", () => {
+            // Check if an image is loaded before trying to add annotations
+            if (!app.isLoaded()) {
+                alert("Please load the DICOM series before loading annotations.");
+                return;
+            }
+
+            console.log("Loading annotations...");
+            const sampleAnnotationJSON = `[{"type":"livewire","label":"Annotation 1","points":[{"x":150,"y":150},{"x":250,"y":150},{"x":250,"y":250},{"x":150,"y":250},{"x":150,"y":150}],"style":{"color":"#00ff00"}}]`;
+            const drawLayer = app.getDrawLayer(0);
+
+            if (drawLayer) {
+                drawLayer.clear();
+                drawLayer.fromJSON(sampleAnnotationJSON);
+                drawLayer.draw();
+                console.log("Annotations loaded successfully!");
+            }
+        });
+    </script>
 </body>
 </html>
