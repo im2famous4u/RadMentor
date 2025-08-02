@@ -1,94 +1,84 @@
 <!DOCTYPE html>
-<html lang="en">
 <html>
 <head>
-<meta charset="UTF-8">
-  <title>Shoulder MRI MPR Viewer with Annotations (CornerstoneJS)</title>
-  <title>Shoulder MRI Viewer - CornerstoneJS</title>
-  <script src="https://unpkg.com/cornerstone-core/dist/cornerstone.js"></script>
-  <script src="https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoader.js"></script>
-  <script src="https://unpkg.com/dicom-parser/dist/dicomParser.js"></script>
-  <script src="https://unpkg.com/cornerstone-math/dist/cornerstoneMath.js"></script>
-  <script src="https://unpkg.com/cornerstone-tools/dist/cornerstoneTools.js"></script>
+<meta charset="utf-8">
+<title>Shoulder MRI Viewer</title>
+
+<!-- Cornerstone Libraries -->
+<script src="https://unpkg.com/cornerstone-core"></script>
+<script src="https://unpkg.com/cornerstone-tools"></script>
+<script src="https://unpkg.com/dicom-parser"></script>
+<script src="https://unpkg.com/cornerstone-wado-image-loader"></script>
+
 <style>
-html, body {
-margin: 0;
-height: 100%;
+#dicomImage {
+width: 512px;
+height: 512px;
 background-color: black;
-      display: flex;
-      flex-direction: column;
-}
-    #viewer {
-      flex: 1;
-      display: flex;
-      flex-wrap: wrap;
-    }
-    .viewport {
-      flex: 1 1 50%;
-      min-width: 50%;
-      min-height: 50%;
-      border: 1px solid #333;
-    #dicomImage {
-      width: 100%;
-      height: 100%;
-      background-color: black;
+margin: auto;
+display: block;
 }
 </style>
-  <!-- CornerstoneJS dependencies -->
-  <script src="https://unpkg.com/cornerstone-core/dist/cornerstone.min.js"></script>
-  <script src="https://unpkg.com/cornerstone-math/dist/cornerstoneMath.min.js"></script>
-  <script src="https://unpkg.com/cornerstone-tools/dist/cornerstoneTools.min.js"></script>
-  <script src="https://unpkg.com/dicom-parser/dist/dicomParser.min.js"></script>
-  <script src="https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoader.min.js"></script>
 </head>
 <body>
-  <h2 style="color:white; text-align:center;">Shoulder MRI MPR Viewer with Annotations</h2>
-  <div id="viewer">
-    <div id="axial" class="viewport"></div>
-    <div id="sagittal" class="viewport"></div>
-    <div id="coronal" class="viewport"></div>
-  </div>
-  <div id="dicomImage"></div>
+<h2 style="text-align:center;">Shoulder MRI Viewer</h2>
+<div id="dicomImage"></div>
+
 <script>
-    const basePath = "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/";
-    const numSlices = 280;
-
-    // Initialize Cornerstone
+// Link Cornerstone with the WADO Image Loader
 cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
-    cornerstoneWADOImageLoader.configure({ beforeSend: function(xhr) { /* CORS config if needed */ } });
 
-    // Enable all viewports
-    ['axial', 'sagittal', 'coronal'].forEach(id => {
-      const element = document.getElementById(id);
-      cornerstone.enable(element);
-    });
-    const element = document.getElementById('dicomImage');
-    cornerstone.enable(element);
+// Configure Web Worker paths
+cornerstoneWADOImageLoader.webWorkerManager.initialize({
+webWorkerPath : 'https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoaderWebWorker.min.js',
+taskConfiguration: {
+decodeTask: {
+codecsPath: 'https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoaderCodecs.min.js'
+}
+}
+});
 
-    async function loadSeries() {
-      const imageIds = [];
-      for (let i = 1; i <= numSlices; i++) {
-        imageIds.push(`wadouri:${basePath}IMG${String(i).padStart(4, '0')}.dcm`);
-      }
-    const basePath = 'https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/';
-    const firstImageId = `wadouri:${basePath}IMG0001.dcm`;
+// Enable DICOM element
+const element = document.getElementById('dicomImage');
+cornerstone.enable(element);
 
-      // Load the first image into each viewport for now
-      const firstImage = await cornerstone.loadAndCacheImage(imageIds[0]);
-      cornerstone.displayImage(document.getElementById('axial'), firstImage);
-      cornerstone.displayImage(document.getElementById('sagittal'), firstImage);
-      cornerstone.displayImage(document.getElementById('coronal'), firstImage);
+    // Base GitHub raw path to your files
+    const baseUrl = "/shoulder-dicom/";
+    // Direct GitHub raw path to your DICOM files
+    const baseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
 
-      // TODO: Implement true MPR by reslicing the volume (requires additional libraries like AMI.js or VTK.js)
-      // TODO: Fetch JSON annotations and draw overlays
-    }
+// Generate all image IDs
+const imageIds = [];
+for (let i = 1; i <= 280; i++) {
+const num = String(i).padStart(4, '0'); // IMG0001 format
+imageIds.push(`wadouri:${baseUrl}IMG${num}.dcm`);
+}
 
-    loadSeries();
-    cornerstone.loadImage(firstImageId).then(function(image) {
-      cornerstone.displayImage(element, image);
-    }).catch(err => {
-      console.error('Error loading image:', err);
-    });
+let currentImageIndex = 0;
+
+// Function to load and display an image
+function loadAndViewImage(index) {
+cornerstone.loadAndCacheImage(imageIds[index])
+.then(image => {
+cornerstone.displayImage(element, image);
+})
+.catch(err => {
+console.error("Error loading image:", imageIds[index], err);
+});
+}
+
+// Initial image
+loadAndViewImage(currentImageIndex);
+
+// Auto-play sequence
+const playInterval = setInterval(() => {
+currentImageIndex++;
+if (currentImageIndex >= imageIds.length) {
+clearInterval(playInterval);
+} else {
+loadAndViewImage(currentImageIndex);
+}
+}, 100); // 100ms between slices
 </script>
 </body>
 </html>
