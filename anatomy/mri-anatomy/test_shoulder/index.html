@@ -83,7 +83,8 @@
                 <span id="current-slice-info">--/--</span>
             </div>
              <div id="preview-canvases" class="space-y-2">
-                </div>
+                <!-- Preview canvases can be dynamically added here if needed -->
+            </div>
         </aside>
 
         <main class="flex-1 bg-black flex flex-col items-center p-2 relative overflow-hidden">
@@ -133,6 +134,7 @@
         </aside>
     </div>
 
+    <!-- Cornerstone and DICOM Loader Scripts -->
     <script src="https://unpkg.com/cornerstone-core@2.3.0/dist/cornerstone.min.js"></script>
     <script src="https://unpkg.com/cornerstone-tools@4.15.2/dist/cornerstoneTools.min.js"></script>
     <script src="https://unpkg.com/cornerstone-wado-image-loader@3.1.2/dist/cornerstoneWADOImageLoader.min.js"></script>
@@ -157,10 +159,12 @@
         
         // --- Configuration ---
         const numSlices = 280;
+        // CORRECTED BASE URL
         const baseUrl = "https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
         const imageIds = [];
         for (let i = 1; i <= numSlices; i++) {
-            const fileName = `IMG-0001-${String(i).padStart(5, '0')}.dcm`;
+            // CORRECTED FILENAME
+            const fileName = `IMG${String(i).padStart(4, '0')}.dcm`;
             imageIds.push(`wadouri:${baseUrl}${fileName}`);
         }
 
@@ -215,23 +219,21 @@
 
         function activateTool(toolName) {
             const toolMap = {
-                'Pan': { tool: 'Pan', buttonId: 'pan-btn' },
-                'Zoom': { tool: 'Zoom', buttonId: 'zoom-btn' },
-                'Wwwc': { tool: 'Wwwc', buttonId: 'ww-wc-btn' },
-                'StackScroll': { tool: 'StackScroll', buttonId: 'stack-scroll-btn' }
+                'Pan': { tool: 'PanTool', buttonId: 'pan-btn' },
+                'Zoom': { tool: 'ZoomTool', buttonId: 'zoom-btn' },
+                'Wwwc': { tool: 'WwwcTool', buttonId: 'ww-wc-btn' },
+                'StackScroll': { tool: 'StackScrollTool', buttonId: 'stack-scroll-btn' }
             };
 
             // Deactivate all mouse-based tools
             Object.values(toolMap).forEach(t => cornerstoneTools.setToolDisabled(t.tool));
 
             // Activate the selected tool for the left mouse button
-            cornerstoneTools.setToolActive(toolName, { mouseButtonMask: 1 });
+            cornerstoneTools.setToolActive(toolMap[toolName].tool, { mouseButtonMask: 1 });
 
             // Update toolbar UI
             document.querySelectorAll('#toolbar .tool-btn').forEach(btn => btn.classList.remove('active'));
-            if(toolMap[toolName]) {
-                document.getElementById(toolMap[toolName].buttonId).classList.add('active');
-            }
+            document.getElementById(toolMap[toolName].buttonId).classList.add('active');
         }
         
         function setupAnatomyPanel() {
