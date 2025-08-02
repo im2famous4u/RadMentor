@@ -163,29 +163,28 @@
         </div>
     </div>
 
-    <script src="../../../js/cornerstone-core.min.js"></script>
-    <script src="../../../js/dicomParser.min.js"></script>
-    <script src="../../../js/cornerstoneWADOImageLoader.min.js"></script>
-    <script src="../../../js/cornerstoneTools.min.js"></script>
+    <script src="/RadMentor/js/cornerstone-core.min.js"></script>
+    <script src="/RadMentor/js/dicomParser.min.js"></script>
+    <script src="/RadMentor/js/cornerstoneWADOImageLoader.min.js"></script>
+    <script src="/RadMentor/js/cornerstoneTools.min.js"></script>
     
     <script>
-        // Use the global variable exposed by cornerstoneWADOImageLoader.min.js
         if (typeof cornerstoneWADOImageLoader !== 'undefined') {
             cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
             cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
             
             // Optionally initialize Web Worker for better performance for large studies
-            // (You would need to ensure these worker files are also uploaded to your js/ folder and are accessible via relative paths)
+            // (You would need to ensure these worker files are also uploaded to your js/ folder and are accessible via absolute paths)
             // cornerstoneWADOImageLoader.webWorkerManager.initialize({
-            //     webWorkerPath: '../../../js/cornerstoneWADOImageLoaderWebWorker.min.js', 
+            //     webWorkerPath: '/RadMentor/js/cornerstoneWADOImageLoaderWebWorker.min.js', 
             //     taskConfiguration: {
             //         decodeTask: {
-            //             codecsPath: '../../../js/cornerstoneWADOImageLoaderCodecs.min.js' 
+            //             codecsPath: '/RadMentor/js/cornerstoneWADOImageLoaderCodecs.min.js' 
             //         }
             //     }
             // });
         } else {
-            console.error("CRITICAL ERROR: 'cornerstoneWADOImageLoader' is not defined. Please verify that the 'cornerstoneWADOImageLoader.min.js' file is present in your GitHub 'js/' folder and the relative path '../../../js/cornerstoneWADOImageLoader.min.js' is correct.");
+            console.error("CRITICAL ERROR: 'cornerstoneWADOImageLoader' is not defined. Please verify that the 'cornerstoneWADOImageLoader.min.js' file is present in your GitHub 'js/' folder AND accessible via the absolute path '/RadMentor/js/cornerstoneWADOImageLoader.min.js' on your GitHub Pages site.");
         }
     </script>
 
