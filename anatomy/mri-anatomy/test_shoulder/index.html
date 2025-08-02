@@ -1,151 +1,102 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Shoulder MRI MPR Viewer - RadMentor</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/feather-icons"></script>
+  <meta charset="utf-8">
+  <title>Shoulder MRI Viewer</title>
+
+  <!-- Cornerstone Libraries -->
+  <script src="https://unpkg.com/cornerstone-core"></script>
+  <script src="https://unpkg.com/cornerstone-tools"></script>
+  <script src="https://unpkg.com/dicom-parser"></script>
+  <script src="https://unpkg.com/cornerstone-wado-image-loader"></script>
+
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f8fafc;
+    #dicomImage {
+      width: 512px;
+      height: 512px;
+      background-color: black;
+      margin: auto;
+      display: block;
     }
-    .viewer-container {
-      background-color: #111827; /* dark background */
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 500px;
+    #controls {
+      text-align: center;
+      margin-top: 10px;
     }
-    img.mri-slice {
-      max-height: 100%;
-      max-width: 100%;
-      object-fit: contain;
-    }
-    input[type="range"] {
-      accent-color: #2563eb; /* Tailwind blue-600 */
+    input[type=range] {
+      width: 500px;
     }
   </style>
 </head>
-<body class="text-gray-800">
+<body>
+  <h2 style="text-align:center;">Shoulder MRI Viewer</h2>
+  <div id="dicomImage"></div>
 
-<div class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
-  <div class="w-full max-w-5xl">
-    
-    <!-- Header -->
-    <div class="text-center mb-6">
-      <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900">Shoulder MRI MPR Viewer</h1>
-      <p class="mt-3 text-lg text-gray-600">Scroll through slices in Coronal, Sagittal, and Axial planes.</p>
-    </div>
-
-    <!-- Tabs -->
-    <div class="mb-4 border-b border-gray-200">
-      <ul id="tabs" class="flex -mb-px text-sm font-medium text-center">
-        <li class="mr-2">
-          <button data-tab="coronal" class="tab-link inline-block p-4 border-b-2 rounded-t-lg border-blue-600 text-blue-600">Coronal</button>
-        </li>
-        <li class="mr-2">
-          <button data-tab="sagittal" class="tab-link inline-block p-4 border-b-2 rounded-t-lg border-transparent hover:text-gray-600 hover:border-gray-300">Sagittal</button>
-        </li>
-        <li>
-          <button data-tab="axial" class="tab-link inline-block p-4 border-b-2 rounded-t-lg border-transparent hover:text-gray-600 hover:border-gray-300">Axial</button>
-        </li>
-      </ul>
-    </div>
-
-    <!-- Viewer Containers -->
-    <div id="viewer-coronal" class="viewer-container">
-      <img id="img-coronal" class="mri-slice" src="coronal/1.jpg" alt="Coronal Slice">
-    </div>
-    <div id="viewer-sagittal" class="viewer-container hidden">
-      <img id="img-sagittal" class="mri-slice" src="sagittal/1.jpg" alt="Sagittal Slice">
-    </div>
-    <div id="viewer-axial" class="viewer-container hidden">
-      <img id="img-axial" class="mri-slice" src="axial/1.jpg" alt="Axial Slice">
-    </div>
-
-    <!-- Slider -->
-    <div class="mt-4">
-      <input id="slice-slider" type="range" min="1" max="100" value="1" class="w-full">
-      <p class="text-center text-sm text-gray-500 mt-2">Use mouse wheel, arrow keys, or slider to navigate slices</p>
-    </div>
-
-    <!-- Back Button -->
-    <div class="mt-8 text-center">
-      <button onclick="history.back()" class="flex items-center text-gray-600 hover:text-blue-600 mx-auto">
-        <i data-feather="arrow-left" class="mr-2"></i>
-        <span>Back to Anatomy Modules</span>
-      </button>
-    </div>
-
+  <div id="controls">
+    <input type="range" id="sliceSlider" min="0" max="279" value="0">
+    <p>Use mouse wheel, arrow keys, or slider to navigate slices</p>
   </div>
-</div>
 
-<script>
-feather.replace();
-
-// Settings
-const totalSlices = 100; // change to actual number of slices
-let currentSlice = 1;
-
-// Image paths
-function getSlicePath(orientation, slice) {
-  return `${orientation}/${slice}.jpg`;
-}
-
-// Update all views
-function updateSlices(slice) {
-  document.getElementById('img-coronal').src = getSlicePath('coronal', slice);
-  document.getElementById('img-sagittal').src = getSlicePath('sagittal', slice);
-  document.getElementById('img-axial').src = getSlicePath('axial', slice);
-  document.getElementById('slice-slider').value = slice;
-}
-
-// Tab switching
-document.querySelectorAll('.tab-link').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-link').forEach(b => {
-      b.classList.remove('border-blue-600', 'text-blue-600');
-      b.classList.add('border-transparent');
+  <script>
+    cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
+    cornerstoneWADOImageLoader.webWorkerManager.initialize({
+      webWorkerPath : 'https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoaderWebWorker.min.js',
+      taskConfiguration: {
+        decodeTask: {
+          codecsPath: 'https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoaderCodecs.min.js'
+        }
+      }
     });
-    btn.classList.add('border-blue-600', 'text-blue-600');
 
-    document.querySelectorAll('.viewer-container').forEach(v => v.classList.add('hidden'));
-    document.getElementById(`viewer-${btn.dataset.tab}`).classList.remove('hidden');
-  });
-});
+    const element = document.getElementById('dicomImage');
+    cornerstone.enable(element);
 
-// Slider control
-document.getElementById('slice-slider').addEventListener('input', (e) => {
-  currentSlice = parseInt(e.target.value);
-  updateSlices(currentSlice);
-});
-
-// Keyboard control
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
-    if (currentSlice < totalSlices) currentSlice++;
-    updateSlices(currentSlice);
-  } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
-    if (currentSlice > 1) currentSlice--;
-    updateSlices(currentSlice);
-  }
-});
-
-// Mouse wheel control
-document.querySelectorAll('.viewer-container').forEach(viewer => {
-  viewer.addEventListener('wheel', (e) => {
-    if (e.deltaY < 0 && currentSlice < totalSlices) {
-      currentSlice++;
-    } else if (e.deltaY > 0 && currentSlice > 1) {
-      currentSlice--;
+    const baseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
+    const imageIds = [];
+    for (let i = 1; i <= 280; i++) {
+      const num = String(i).padStart(4, '0');
+      imageIds.push(`wadouri:${baseUrl}IMG${num}.dcm`);
     }
-    updateSlices(currentSlice);
-  });
-});
-</script>
 
+    let currentImageIndex = 0;
+    const slider = document.getElementById('sliceSlider');
+
+    function loadAndViewImage(index) {
+      if (index < 0 || index >= imageIds.length) return;
+      currentImageIndex = index;
+      slider.value = index;
+      cornerstone.loadAndCacheImage(imageIds[index])
+        .then(image => {
+          cornerstone.displayImage(element, image);
+        })
+        .catch(err => console.error("Error loading image:", err));
+    }
+
+    // Mouse wheel scrolling
+    element.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        loadAndViewImage(currentImageIndex - 1);
+      } else {
+        loadAndViewImage(currentImageIndex + 1);
+      }
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+        loadAndViewImage(currentImageIndex + 1);
+      } else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+        loadAndViewImage(currentImageIndex - 1);
+      }
+    });
+
+    // Slider control
+    slider.addEventListener('input', () => {
+      loadAndViewImage(parseInt(slider.value));
+    });
+
+    // Initial load
+    loadAndViewImage(0);
+  </script>
 </body>
 </html>
