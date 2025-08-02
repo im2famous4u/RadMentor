@@ -165,28 +165,28 @@
 
     <script src="https://unpkg.com/cornerstone-core@2.6.1/dist/cornerstone.min.js"></script>
     <script src="https://unpkg.com/dicom-parser@1.8.10/dist/dicomParser.min.js"></script>
-    <script src="https://unpkg.com/@clearlycode/cornerstone-wado-image-loader@2.0.0/dist/cornerstoneWADOImageLoader.min.js"></script>
+    <script src="https://app.unpkg.com/cornerstone-wado-image-loader@2.2.4/files/dist/cornerstoneWADOImageLoader.min.js"></script>
     <script src="https://unpkg.com/cornerstone-tools@6.0.4/dist/cornerstoneTools.min.js"></script>
     
     <script>
-        // Use the global variable exposed by cornerstoneWADOImageLoader.min.js from CDN
+        // Use the global variable exposed by cornerstone-wado-image-loader.min.js from CDN
         if (typeof cornerstoneWADOImageLoader !== 'undefined') {
             cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
             cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
             
             // Optionally initialize Web Worker for better performance for large studies
             // (You would need to ensure these worker files are accessible via their URLs)
-            // If you enable this, the worker and codecs paths would also need to be from @clearlycode/
+            // The paths for workers/codecs would also need to be adjusted if using this @2.2.4 structure
             // cornerstoneWADOImageLoader.webWorkerManager.initialize({
-            //     webWorkerPath: 'https://unpkg.com/@clearlycode/cornerstone-wado-image-loader@2.0.0/dist/cornerstoneWADOImageLoaderWebWorker.min.js',
+            //     webWorkerPath: 'https://app.unpkg.com/cornerstone-wado-image-loader@2.2.4/files/dist/cornerstoneWADOImageLoaderWebWorker.min.js', 
             //     taskConfiguration: {
             //         decodeTask: {
-            //             codecsPath: 'https://unpkg.com/@clearlycode/cornerstone-wado-image-loader@2.0.0/dist/cornerstoneWADOImageLoaderCodecs.min.js'
+            //             codecsPath: 'https://app.unpkg.com/cornerstone-wado-image-loader@2.2.4/files/dist/cornerstoneWADOImageLoaderCodecs.min.js' 
             //         }
             //     }
             // });
         } else {
-            console.error("CRITICAL ERROR: 'cornerstoneWADOImageLoader' is not defined. Ensure the WADO image loader JS file is loaded correctly from CDN.");
+            console.error("CRITICAL ERROR: 'cornerstoneWADOImageLoader' is not defined. This is the final primary check. Please verify the script loading from: 'https://app.unpkg.com/cornerstone-wado-image-loader@2.2.4/files/dist/cornerstoneWADOImageLoader.min.js'");
         }
     </script>
 
@@ -337,47 +337,4 @@
             setActiveButton('windowLevelTool');
         });
         document.getElementById('zoomTool').addEventListener('click', () => {
-            setToolActiveForAllViewports('Zoom');
-            setActiveButton('zoomTool');
-        });
-        document.getElementById('resetView').addEventListener('click', () => {
-            viewports.forEach(viewportId => {
-                const element = elements[viewportId];
-                if (element) {
-                    cornerstone.reset(element); // Reset viewport transform, windowing
-                    // Re-display the current image to reflect the reset
-                    displayImage(viewportId); 
-                }
-            });
-        });
-
-        // Helper function to activate a tool across all viewports
-        function setToolActiveForAllViewports(toolName) {
-            const allTools = ['Scroll', 'Wwwc', 'Zoom', 'Pan']; // List all tools you might toggle
-            viewports.forEach(viewportId => {
-                const element = elements[viewportId];
-                // Deactivate all other tools for this element first
-                allTools.forEach(tool => {
-                    if (tool !== toolName) {
-                        cornerstoneTools.setToolPassiveForElement(element, tool);
-                    }
-                });
-                // Activate the selected tool for this element
-                // mouseButtonMask: 1 = Left, 2 = Middle, 4 = Right (combined for multiple buttons)
-                cornerstoneTools.setToolActiveForElement(element, toolName, { mouseButtonMask: 1 }); 
-            });
-        }
-
-        // Helper function to set the active button style
-        function setActiveButton(buttonId) {
-            document.querySelectorAll('.toolbar button').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.getElementById(buttonId).classList.add('active');
-        }
-
-        // Set initial tool when the page loads
-        setToolActiveForAllViewports('Scroll'); // Start with scroll active
-    </script>
-</body>
-</html>
+            setToolActiveForAllV
