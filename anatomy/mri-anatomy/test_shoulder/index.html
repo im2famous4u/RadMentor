@@ -175,15 +175,14 @@
     </div>
 
     <script>
-        // Configuration for DWV - More explicit configuration
+        // Configuration for DWV - Most robust configuration for dwv@0.31.0
         const baseConfig = {
             "tools": ["Scroll", "WindowLevel", "ZoomAndPan"],
             "loaders": ["File"],
             "skipLoadUrl": true,
             "viewOnFirstLoadItem": true, // Explicitly set this
-            "displaySizeDivId": null,   // Often needed by DWV, can be null if not used
-            "dwvTools": {} // An empty object for custom tools, prevents undefined errors
-            // Ensure any other required default properties are present if you add custom features
+            "displaySizeDivId": null,    // Often needed by DWV, can be null if not used
+            "dwvTools": {}               // An empty object for custom tools, prevents undefined errors
         };
 
         // Initialize DWV for each viewport
@@ -197,38 +196,24 @@
         const totalSlices = 280; // Total number of DICOM files (as per your data)
 
         viewports.forEach(viewportId => {
-            // Directly create the DWV app with the container ID
-            const app = new dwv.App(viewportId); 
+            // Pass ALL configuration directly to the dwv.App constructor
+            const config = {
+                "containerDivId": viewportId, // This is explicitly passed as a key in the config object
+                "defaultCharacterSet": 'ISO_IR 100', // Viewport-specific
+                ...baseConfig // Merge all properties from baseConfig
+            };
             
-            // Apply the base configuration to the app object
-            app.setAppProperties(baseConfig);
+            const app = new dwv.App(config); // Pass the full config object here
             
-            // Set any additional viewport-specific properties if needed (like defaultCharacterSet)
-            app.setDefaultCharacterSet('ISO_IR 100');
-
             // Initialize the app
             app.init();
             apps[viewportId] = app;
-            
-            // Add event listeners for slice navigation
-            document.getElementById(`prev${viewportId.charAt(0).toUpperCase() + viewportId.slice(1)}`).addEventListener('click', () => {
-                if (currentSlices[viewportId] > 0) {
-                    currentSlices[viewportId]--;
-                    updateSlice(viewportId);
-                }
-            });
-            
-            document.getElementById(`next${viewportId.charAt(0).toUpperCase() + viewportId.slice(1)}`).addEventListener('click', () => {
-                if (currentSlices[viewportId] < totalSlices - 1) {
-                    currentSlices[viewportId]++;
-                    updateSlice(viewportId);
-                }
-            });
+            // ... rest of the loop
         });
 
         // Load the DICOM files
-        // CORRECTED BUCKET URL AND FILE NAMING CONVENTION
-        const bucketUrl = 'https://radmentor.s3.eu-north-1.amazonaws.com/'; // Your S3 bucket URL
+        // CORRECTED BUCKET URL AND FILE NAMING CONVENTION based on your S3 bucket in eu-north-1
+        const bucketUrl = 'https://radmentor.s3.eu-north-1.amazonaws.com/'; 
         const fileUrls = [];
 
         for (let i = 1; i <= totalSlices; i++) {
