@@ -163,35 +163,34 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/cornerstone-core@2.6.1/dist/cornerstone.min.js"></script>
-    <script src="https://unpkg.com/dicom-parser@1.8.10/dist/dicomParser.min.js"></script>
-    <script src="https://app.unpkg.com/cornerstone-wado-image-loader@2.2.4/files/dist/cornerstoneWADOImageLoader.min.js"></script>
-    <script src="https://unpkg.com/cornerstone-tools@6.0.4/dist/cornerstoneTools.min.js"></script>
+    <script src="../../../js/cornerstone-core.min.js"></script>
+    <script src="../../../js/dicomParser.min.js"></script>
+    <script src="../../../js/cornerstoneWADOImageLoader.min.js"></script>
+    <script src="../../../js/cornerstoneTools.min.js"></script>
     
     <script>
-        // Use the global variable exposed by cornerstone-wado-image-loader.min.js from CDN
+        // Use the global variable exposed by cornerstoneWADOImageLoader.min.js
         if (typeof cornerstoneWADOImageLoader !== 'undefined') {
             cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
             cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
             
             // Optionally initialize Web Worker for better performance for large studies
-            // (You would need to ensure these worker files are accessible via their URLs)
-            // The paths for workers/codecs would also need to be adjusted if using this @2.2.4 structure
+            // (You would need to ensure these worker files are also uploaded to your js/ folder and are accessible via relative paths)
             // cornerstoneWADOImageLoader.webWorkerManager.initialize({
-            //     webWorkerPath: 'https://app.unpkg.com/cornerstone-wado-image-loader@2.2.4/files/dist/cornerstoneWADOImageLoaderWebWorker.min.js', 
+            //     webWorkerPath: '../../../js/cornerstoneWADOImageLoaderWebWorker.min.js', 
             //     taskConfiguration: {
             //         decodeTask: {
-            //             codecsPath: 'https://app.unpkg.com/cornerstone-wado-image-loader@2.2.4/files/dist/cornerstoneWADOImageLoaderCodecs.min.js' 
+            //             codecsPath: '../../../js/cornerstoneWADOImageLoaderCodecs.min.js' 
             //         }
             //     }
             // });
         } else {
-            console.error("CRITICAL ERROR: 'cornerstoneWADOImageLoader' is not defined. This is the final primary check. Please verify the script loading from: 'https://app.unpkg.com/cornerstone-wado-image-loader@2.2.4/files/dist/cornerstoneWADOImageLoader.min.js'");
+            console.error("CRITICAL ERROR: 'cornerstoneWADOImageLoader' is not defined. Please verify that the 'cornerstoneWADOImageLoader.min.js' file is present in your GitHub 'js/' folder and the relative path '../../../js/cornerstoneWADOImageLoader.min.js' is correct.");
         }
     </script>
 
     <script>
-        // Your S3 bucket URL in eu-north-1 (Stockholm)
+        // Your S3 bucket URL in eu-north-1 (Stockholm) where DICOM files are stored
         const bucketUrl = 'https://radmentor.s3.eu-north-1.amazonaws.com/'; 
         const totalSlices = 280; // Total number of DICOM files
 
@@ -333,8 +332,4 @@
             setActiveButton('scrollTool');
         });
         document.getElementById('windowLevelTool').addEventListener('click', () => {
-            setToolActiveForAllViewports('Wwwc'); // Wwwc for Window/Level in CornerstoneTools
-            setActiveButton('windowLevelTool');
-        });
-        document.getElementById('zoomTool').addEventListener('click', () => {
             setToolActiveForAllV
