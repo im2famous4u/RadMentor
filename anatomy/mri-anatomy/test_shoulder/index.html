@@ -165,30 +165,28 @@
 
     <script src="https://unpkg.com/cornerstone-core@2.6.1/dist/cornerstone.min.js"></script>
     <script src="https://unpkg.com/dicom-parser@1.8.10/dist/dicomParser.min.js"></script>
-    <script src="https://unpkg.com/cornerstone-wado-image-loader@2.3.2/dist/cornerstoneWADOImageLoader.min.js"></script>
+    <script src="https://unpkg.com/@clearlycode/cornerstone-wado-image-loader@2.0.0/dist/cornerstoneWADOImageLoader.min.js"></script>
     <script src="https://unpkg.com/cornerstone-tools@6.0.4/dist/cornerstoneTools.min.js"></script>
     
     <script>
-        // Use the global variable exposed by cornerstone-wado-image-loader.min.js from CDN
-        // This block needs to run AFTER the above script tags have loaded the libraries
-        // (which they do by default, but errors can happen if not fully loaded/defined)
+        // Use the global variable exposed by cornerstoneWADOImageLoader.min.js from CDN
         if (typeof cornerstoneWADOImageLoader !== 'undefined') {
             cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
             cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
             
             // Optionally initialize Web Worker for better performance for large studies
             // (You would need to ensure these worker files are accessible via their URLs)
+            // If you enable this, the worker and codecs paths would also need to be from @clearlycode/
             // cornerstoneWADOImageLoader.webWorkerManager.initialize({
-            //     webWorkerPath: 'https://unpkg.com/cornerstone-wado-image-loader@2.3.2/dist/cornerstoneWADOImageLoaderWebWorker.min.js',
+            //     webWorkerPath: 'https://unpkg.com/@clearlycode/cornerstone-wado-image-loader@2.0.0/dist/cornerstoneWADOImageLoaderWebWorker.min.js',
             //     taskConfiguration: {
             //         decodeTask: {
-            //             codecsPath: 'https://unpkg.com/cornerstone-wado-image-loader@2.3.2/dist/cornerstoneWADOImageLoaderCodecs.min.js'
+            //             codecsPath: 'https://unpkg.com/@clearlycode/cornerstone-wado-image-loader@2.0.0/dist/cornerstoneWADOImageLoaderCodecs.min.js'
             //         }
             //     }
             // });
         } else {
-            // This error indicates the cornerstoneWADOImageLoader.min.js script itself might not have loaded or defined its global.
-            console.error("CRITICAL ERROR: 'cornerstoneWADOImageLoader' is not defined. Please check your browser's Network tab for errors loading the script: 'https://unpkg.com/cornerstone-wado-image-loader@2.3.2/dist/cornerstoneWADOImageLoader.min.js'");
+            console.error("CRITICAL ERROR: 'cornerstoneWADOImageLoader' is not defined. Ensure the WADO image loader JS file is loaded correctly from CDN.");
         }
     </script>
 
@@ -210,7 +208,7 @@
             const canvasElement = document.getElementById(`${viewportId}Canvas`);
             elements[viewportId] = canvasElement;
             
-            // Enable the canvas element for Cornerstone
+            // Enable the canvas element for Cornerstone to render on
             cornerstone.enable(canvasElement);
 
             // Initialize image stack properties for each viewport
@@ -371,7 +369,6 @@
         }
 
         // Helper function to set the active button style
-        function에도
         function setActiveButton(buttonId) {
             document.querySelectorAll('.toolbar button').forEach(btn => {
                 btn.classList.remove('active');
