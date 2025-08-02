@@ -11,90 +11,109 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-            color: #374151;
         }
         .rad-gradient-text {
-            background: linear-gradient(90deg, #1e40af, #3b82f6);
+            background: linear-gradient(90deg, #4f46e5, #3b82f6);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             text-fill-color: transparent;
         }
+        /* --- NEW STYLES for a more modern look --- */
         .paper-card {
-            background-color: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            transition: all 0.2s ease-in-out;
-            cursor: pointer;
-            text-align: center;
+            background-color: rgba(255, 255, 255, 0.6); /* Semi-transparent white for glass effect */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 1rem; /* rounded-xl */
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+            position: relative;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 120px;
-            border: 1px solid transparent;
+            min-height: 160px;
         }
         .paper-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
-            border-color: #3b82f6;
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 32px 0 rgba(79, 70, 229, 0.25); /* Shadow with indigo color */
+            border-color: rgba(79, 70, 229, 0.4);
+        }
+        /* Subtle shine effect on hover */
+        .paper-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-25deg);
+            transition: left 0.6s ease;
+        }
+        .paper-card:hover::before {
+            left: 150%;
         }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body class="bg-slate-100 text-slate-800 flex flex-col min-h-screen">
     
-    <header class="bg-white/80 backdrop-blur-lg flex-shrink-0 z-20 shadow-sm">
+    <header class="bg-white/90 backdrop-blur-lg flex-shrink-0 z-20 shadow-sm border-b border-slate-200 sticky top-0">
         <div class="container mx-auto px-6 py-3 flex justify-between items-center">
             <div class="flex items-center">
                 <img src="/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
-                <span class="text-2xl font-bold text-gray-800">RadMentor</span>
+                <span class="text-2xl font-bold text-slate-800">RadMentor</span>
             </div>
-            <nav class="hidden md:flex items-center space-x-8">
-                <a href="/" class="text-gray-600 hover:text-blue-600">Dashboard</a>
-                <a href="/anatomy/mri-anatomy/test_shoulder/index.html" class="text-gray-600 hover:text-blue-600">Anatomy Viewer</a>
-                <a href="#" class="text-gray-600 hover:text-blue-600">Courses</a>
-                <a href="../../../index.html" class="text-blue-600 font-semibold">DNB Previous Year Questions</a> 
+            <nav class="hidden md:flex items-center space-x-6">
+                <a href="javascript:history.back()" class="text-slate-600 hover:text-indigo-600 flex items-center transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </a>
+                <a href="/dashboard.html" class="text-slate-600 hover:text-indigo-600 transition-colors">Dashboard</a>
+                <a href="/anatomy/mri-anatomy/test_shoulder/index.html" class="text-slate-600 hover:text-indigo-600 transition-colors">Anatomy Viewer</a>
+                <a href="#" class="text-slate-600 hover:text-indigo-600 transition-colors">Courses</a>
+                <a href="../../../index.html" class="text-indigo-600 font-semibold">DNB Questions</a> 
             </nav>
-            <a href="/dashboard.html" class="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 transition-colors hidden md:block">
-                Dashboard
+            <a href="/dashboard.html" class="bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 transition-colors hidden md:block">
+                My Dashboard
             </a>
         </div>
     </header>
 
-    <main class="flex-1 container mx-auto px-6 py-8 flex flex-col items-center">
-        <h1 class="text-4xl font-extrabold text-center mb-6 rad-gradient-text">
+    <main class="flex-1 container mx-auto px-6 py-12 flex flex-col items-center">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-center mb-4 rad-gradient-text">
             June 2020 DNB Exam Papers
         </h1>
-        <p class="text-lg text-gray-600 text-center max-w-2xl mb-12">
-            Select a paper to view its questions.
+        <p class="text-lg text-slate-600 text-center max-w-2xl mb-12">
+            Select a paper to begin your practice session.
         </p>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-4xl">
-            <a href="paper1.html" class="paper-card p-4 border border-gray-200">
-                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
-                <h3 class="text-2xl font-bold text-gray-800">Paper 1</h3>
-                <p class="text-sm text-gray-600">View Questions</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-5xl">
+            <a href="paper1.html" class="paper-card p-6">
+                <i class="fas fa-file-alt text-5xl text-indigo-500 mb-4 drop-shadow-sm"></i>
+                <h3 class="text-2xl font-bold text-slate-800">Paper 1</h3>
+                <p class="text-sm text-slate-600 mt-1">View Questions</p>
             </a>
-            <a href="paper2.html" class="paper-card p-4 border border-gray-200">
-                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
-                <h3 class="text-2xl font-bold text-gray-800">Paper 2</h3>
-                <p class="text-sm text-gray-600">View Questions</p>
+            <a href="paper2.html" class="paper-card p-6">
+                <i class="fas fa-file-invoice text-5xl text-indigo-500 mb-4 drop-shadow-sm"></i>
+                <h3 class="text-2xl font-bold text-slate-800">Paper 2</h3>
+                <p class="text-sm text-slate-600 mt-1">View Questions</p>
             </a>
-            <a href="paper3.html" class="paper-card p-4 border border-gray-200">
-                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
-                <h3 class="text-2xl font-bold text-gray-800">Paper 3</h3>
-                <p class="text-sm text-gray-600">View Questions</p>
+            <a href="paper3.html" class="paper-card p-6">
+                <i class="fas fa-file-signature text-5xl text-indigo-500 mb-4 drop-shadow-sm"></i>
+                <h3 class="text-2xl font-bold text-slate-800">Paper 3</h3>
+                <p class="text-sm text-slate-600 mt-1">View Questions</p>
             </a>
-            <a href="paper4.html" class="paper-card p-4 border border-gray-200">
-                <i class="fas fa-file-alt text-4xl text-blue-500 mb-2"></i>
-                <h3 class="text-2xl font-bold text-gray-800">Paper 4</h3>
-                <p class="text-sm text-gray-600">View Questions</p>
+            <a href="paper4.html" class="paper-card p-6">
+                <i class="fas fa-file-medical text-5xl text-indigo-500 mb-4 drop-shadow-sm"></i>
+                <h3 class="text-2xl font-bold text-slate-800">Paper 4</h3>
+                <p class="text-sm text-slate-600 mt-1">View Questions</p>
             </a>
         </div>
     </main>
 
-    <footer class="bg-gray-800 text-white text-center py-4 mt-8 flex-shrink-0">
+    <footer class="bg-slate-800 text-slate-300 text-center py-4 mt-12 flex-shrink-0">
         <p>&copy; 2025 RadMentor. All rights reserved.</p>
     </footer>
 
