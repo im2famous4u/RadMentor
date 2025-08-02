@@ -175,15 +175,15 @@
     </div>
 
     <script>
-        // Configuration for DWV
+        // Configuration for DWV - More explicit configuration
         const baseConfig = {
             "tools": ["Scroll", "WindowLevel", "ZoomAndPan"],
             "loaders": ["File"],
             "skipLoadUrl": true,
-            // Add these properties to prevent the 'viewOnFirstLoadItem' error
-            "viewOnFirstLoadItem": true, // This explicitly sets the property DWV expects
+            "viewOnFirstLoadItem": true, // Explicitly set this
             "displaySizeDivId": null,   // Often needed by DWV, can be null if not used
             "dwvTools": {} // An empty object for custom tools, prevents undefined errors
+            // Ensure any other required default properties are present if you add custom features
         };
 
         // Initialize DWV for each viewport
@@ -197,12 +197,16 @@
         const totalSlices = 280; // Total number of DICOM files (as per your data)
 
         viewports.forEach(viewportId => {
-            const config = {
-                ...baseConfig,
-                "containerDivId": viewportId,
-                "defaultCharacterSet": 'ISO_IR 100'
-            };
-            const app = new dwv.App(config);
+            // Directly create the DWV app with the container ID
+            const app = new dwv.App(viewportId); 
+            
+            // Apply the base configuration to the app object
+            app.setAppProperties(baseConfig);
+            
+            // Set any additional viewport-specific properties if needed (like defaultCharacterSet)
+            app.setDefaultCharacterSet('ISO_IR 100');
+
+            // Initialize the app
             app.init();
             apps[viewportId] = app;
             
@@ -224,7 +228,7 @@
 
         // Load the DICOM files
         // CORRECTED BUCKET URL AND FILE NAMING CONVENTION
-        const bucketUrl = 'https://radmentor.s3.eu-north-1.amazonaws.com/';
+        const bucketUrl = 'https://radmentor.s3.eu-north-1.amazonaws.com/'; // Your S3 bucket URL
         const fileUrls = [];
 
         for (let i = 1; i <= totalSlices; i++) {
@@ -248,6 +252,8 @@
                     return fetch(url)
                         .then(response => {
                             if (!response.ok) {
+                                // Log the error details including status for easier debugging
+                                console.error(`Failed to fetch ${url}: HTTP Status ${response.status}`);
                                 throw new Error(`HTTP error! Status: ${response.status} for ${url}`);
                             }
                             return response.blob();
@@ -277,8 +283,13 @@
         function updateSlice(viewportId) {
             const app = apps[viewportId];
             const sliceIndex = currentSlices[viewportId];
-            app.getViewController().setCurrentPosition({ sliceIndex });
-            document.getElementById(`${viewportId}Status`).textContent = `Slice ${sliceIndex + 1}/${totalSlices}`;
+            // Ensure the image is loaded before attempting to set position
+            if (app.getImage()) { 
+                app.getViewController().setCurrentPosition({ sliceIndex });
+                document.getElementById(`${viewportId}Status`).textContent = `Slice ${sliceIndex + 1}/${totalSlices}`;
+            } else {
+                 document.getElementById(`${viewportId}Status`).textContent = `No image loaded for ${viewportId}`;
+            }
         }
 
         // Tool selection
