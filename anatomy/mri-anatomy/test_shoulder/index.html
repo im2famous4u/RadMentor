@@ -3,107 +3,308 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RadMentor - Shoulder MRI DICOM Viewer</title>
-    <style>
-        body { font-family: sans-serif; margin: 2em; background-color: #f0f0f0; }
-        #dwv {
-            height: 80vh; 
-            border: 1px solid #ccc;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .button-bar { margin-top: 1em; display: flex; align-items: center; gap: 1em; }
-        button {
-            background-color: #4f46e5; color: white; border: none;
-            padding: 10px 15px; border-radius: 5px; cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        button:hover { background-color: #4338ca; }
-        button:disabled { background-color: #9ca3af; cursor: not-allowed; }
-        #status { font-style: italic; color: #555; }
-    </style>
+    <title>DICOM MPR Viewer</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/dwv@0.31.0/dist/dwv.min.css">
     <script type="text/javascript" src="https://unpkg.com/dwv@0.31.0/dist/dwv.min.js"></script>
-    
-    <script type="text/javascript" src="https://unpkg.com/dwv@0.31.0/dist/decoders.min.js"></script>
-    <script type="text/javascript" src="https://unpkg.com/dwv@0.31.0/dist/tools.min.js"></script>
-
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        .toolbar {
+            padding: 10px;
+            background-color: #2c3e50;
+            color: white;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .toolbar h1 {
+            margin: 0;
+            font-size: 1.5em;
+            margin-right: 20px;
+        }
+        .toolbar button {
+            margin-right: 10px;
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .toolbar button:hover {
+            background-color: #2980b9;
+        }
+        .toolbar button.active {
+            background-color: #e74c3c;
+        }
+        .viewer-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .viewport {
+            flex: 1;
+            position: relative;
+            border: 1px solid #bdc3c7;
+            margin: 5px;
+            background-color: #34495e;
+            overflow: hidden;
+        }
+        .viewport-title {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            z-index: 10;
+            font-weight: bold;
+        }
+        .layerContainer {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .imageLayer {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+        }
+        .controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: center;
+            z-index: 10;
+        }
+        .controls button {
+            margin: 0 5px;
+            padding: 5px 10px;
+            background-color: rgba(52, 73, 94, 0.8);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            background-color: rgba(44, 62, 80, 0.9);
+        }
+        .status {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            z-index: 10;
+            font-size: 0.9em;
+        }
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 1.2em;
+            z-index: 20;
+        }
+    </style>
 </head>
-
 <body>
-    <h1>RadMentor DICOM Viewer</h1>
-    <p>A 280-slice shoulder MRI series will be loaded from the server.</p>
-
-    <div id="dwv">
-        <div class="layer-container"></div>
-    </div>
-    
-    <div class="button-bar">
-        <button id="load-series-btn">Load Shoulder MRI</button>
-        <button id="load-json-btn">Load Annotations</button>
-        <div id="status"></div>
+    <div class="container">
+        <div class="toolbar">
+            <h1>DICOM MPR Viewer</h1>
+            <button id="loadSeries">Load Series</button>
+            <button id="scrollTool" class="active">Scroll</button>
+            <button id="windowLevelTool">Window/Level</button>
+            <button id="zoomTool">Zoom</button>
+            <button id="resetView">Reset View</button>
+        </div>
+        <div class="viewer-container">
+            <div class="viewport" id="axial">
+                <div class="viewport-title">Axial</div>
+                <div class="layerContainer">
+                    <canvas class="imageLayer"></canvas>
+                </div>
+                <div class="controls">
+                    <button id="prevAxial">Previous</button>
+                    <button id="nextAxial">Next</button>
+                </div>
+                <div class="status" id="axialStatus">Ready</div>
+                <div class="loading" id="axialLoading" style="display: none;">Loading...</div>
+            </div>
+            <div class="viewport" id="sagittal">
+                <div class="viewport-title">Sagittal</div>
+                <div class="layerContainer">
+                    <canvas class="imageLayer"></canvas>
+                </div>
+                <div class="controls">
+                    <button id="prevSagittal">Previous</button>
+                    <button id="nextSagittal">Next</button>
+                </div>
+                <div class="status" id="sagittalStatus">Ready</div>
+                <div class="loading" id="sagittalLoading" style="display: none;">Loading...</div>
+            </div>
+            <div class="viewport" id="coronal">
+                <div class="viewport-title">Coronal</div>
+                <div class="layerContainer">
+                    <canvas class="imageLayer"></canvas>
+                </div>
+                <div class="controls">
+                    <button id="prevCoronal">Previous</button>
+                    <button id="nextCoronal">Next</button>
+                </div>
+                <div class="status" id="coronalStatus">Ready</div>
+                <div class="loading" id="coronalLoading" style="display: none;">Loading...</div>
+            </div>
+        </div>
     </div>
 
     <script>
-        const app = new dwv.App();
-        
-        // Corrected tool names
-        const tools = ["Scroll", "ZoomAndPan", "WindowLevel", "Draw", "Livewire", "Eraser"];
+        // Configuration for DWV
+        const baseConfig = {
+            "tools": ["Scroll", "WindowLevel", "ZoomAndPan"],
+            "loaders": ["File"],
+            "skipLoadUrl": true
+        };
 
-        app.init({
-            "containerDivId": "dwv",
-            "tools": tools,
-            "fitToWindow": true,
-        });
+        // Initialize DWV for each viewport
+        const viewports = ['axial', 'sagittal', 'coronal'];
+        const apps = {};
+        const currentSlices = {
+            'axial': 0,
+            'sagittal': 0,
+            'coronal': 0
+        };
+        const totalSlices = 280; // Total number of DICOM files
 
-        const loadSeriesBtn = document.getElementById("load-series-btn");
-        const loadJsonBtn = document.getElementById("load-json-btn");
-        const statusDiv = document.getElementById("status");
-
-        app.addEventListener("load-start", () => {
-            statusDiv.innerHTML = "<b>Loading series, please wait...</b>";
-            loadSeriesBtn.disabled = true;
-        });
-        app.addEventListener("load-end", () => {
-            statusDiv.innerHTML = "<b>Loading complete.</b> Use your mouse scroll to cycle through images.";
-            loadSeriesBtn.disabled = false;
-        });
-        app.addEventListener("error", (event) => {
-            statusDiv.innerHTML = `<b>Error:</b> ${event.error.message}`;
-            loadSeriesBtn.disabled = false;
-        });
-
-        loadSeriesBtn.addEventListener("click", () => {
-            const basePath = "/anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
-            const numberOfFiles = 280;
-            const dicomUrls = [];
-
-            for (let i = 1; i <= numberOfFiles; i++) {
-                const paddedNumber = String(i).padStart(4, '0');
-                const fileName = `IMG${paddedNumber}.dcm`;
-                dicomUrls.push(basePath + fileName);
-            }
+        viewports.forEach(viewportId => {
+            const config = {
+                ...baseConfig,
+                "containerDivId": viewportId,
+                "defaultCharacterSet": 'ISO_IR 100'
+            };
+            const app = new dwv.App(config);
+            app.init();
+            apps[viewportId] = app;
             
-            console.log(`Generated ${dicomUrls.length} URLs to load.`);
-            app.loadURLs(dicomUrls);
+            // Add event listeners for slice navigation
+            document.getElementById(`prev${viewportId.charAt(0).toUpperCase() + viewportId.slice(1)}`).addEventListener('click', () => {
+                if (currentSlices[viewportId] > 0) {
+                    currentSlices[viewportId]--;
+                    updateSlice(viewportId);
+                }
+            });
+            
+            document.getElementById(`next${viewportId.charAt(0).toUpperCase() + viewportId.slice(1)}`).addEventListener('click', () => {
+                if (currentSlices[viewportId] < totalSlices - 1) {
+                    currentSlices[viewportId]++;
+                    updateSlice(viewportId);
+                }
+            });
         });
 
-        loadJsonBtn.addEventListener("click", () => {
-            // FIX: Corrected app.isLoaded() to the new function name app.isMonoSliceDataLoaded()
-            if (!app.isMonoSliceDataLoaded()) {
-                alert("Please load the DICOM series before loading annotations.");
-                return;
-            }
+        // Load the DICOM files
+        const bucketUrl = 'https://radmentor.s3.amazonaws.com/'; // Replace with your bucket URL
+        const fileUrls = [];
 
-            console.log("Loading annotations...");
-            const sampleAnnotationJSON = `[{"type":"livewire","label":"Annotation 1","points":[{"x":150,"y":150},{"x":250,"y":150},{"x":250,"y":250},{"x":150,"y":250},{"x":150,"y":150}],"style":{"color":"#00ff00"}}]`;
-            const drawLayer = app.getDrawLayer(0);
+        for (let i = 1; i <= totalSlices; i++) {
+            const num = i.toString().padStart(4, '0');
+            fileUrls.push(`${bucketUrl}IMG${num}.dcm`);
+        }
 
-            if (drawLayer) {
-                drawLayer.clear();
-                drawLayer.fromJSON(sampleAnnotationJSON);
-                drawLayer.draw();
-                console.log("Annotations loaded successfully!");
-            }
+        // Load the series into each viewport
+        document.getElementById('loadSeries').addEventListener('click', () => {
+            viewports.forEach(viewportId => {
+                const app = apps[viewportId];
+                // Show loading indicator
+                document.getElementById(`${viewportId}Loading`).style.display = 'block';
+                document.getElementById(`${viewportId}Status`).textContent = 'Loading...';
+                
+                // Clear previous data
+                app.resetDisplay();
+                
+                // Load files
+                const promises = fileUrls.map(url => {
+                    return fetch(url)
+                        .then(response => response.blob())
+                        .then(blob => {
+                            const file = new File([blob], url.split('/').pop());
+                            return app.loadFiles([file]);
+                        });
+                });
+                
+                Promise.all(promises)
+                    .then(() => {
+                        // Hide loading indicator
+                        document.getElementById(`${viewportId}Loading`).style.display = 'none';
+                        document.getElementById(`${viewportId}Status`).textContent = `Slice 1/${totalSlices}`;
+                        currentSlices[viewportId] = 0;
+                    })
+                    .catch(error => {
+                        console.error('Error loading files:', error);
+                        document.getElementById(`${viewportId}Loading`).style.display = 'none';
+                        document.getElementById(`${viewportId}Status`).textContent = 'Error loading files';
+                    });
+            });
         });
+
+        // Update the current slice
+        function updateSlice(viewportId) {
+            const app = apps[viewportId];
+            const sliceIndex = currentSlices[viewportId];
+            app.getViewController().setCurrentPosition({ sliceIndex });
+            document.getElementById(`${viewportId}Status`).textContent = `Slice ${sliceIndex + 1}/${totalSlices}`;
+        }
+
+        // Tool selection
+        document.getElementById('scrollTool').addEventListener('click', () => {
+            setToolForAllViewports('Scroll');
+            setActiveButton('scrollTool');
+        });
+        document.getElementById('windowLevelTool').addEventListener('click', () => {
+            setToolForAllViewports('WindowLevel');
+            setActiveButton('windowLevelTool');
+        });
+        document.getElementById('zoomTool').addEventListener('click', () => {
+            setToolForAllViewports('ZoomAndPan');
+            setActiveButton('zoomTool');
+        });
+        document.getElementById('resetView').addEventListener('click', () => {
+            viewports.forEach(viewportId => {
+                apps[viewportId].resetDisplay();
+            });
+        });
+
+        function setToolForAllViewports(tool) {
+            viewports.forEach(viewportId => {
+                apps[viewportId].setTool(tool);
+            });
+        }
+
+        function setActiveButton(buttonId) {
+            document.querySelectorAll('.toolbar button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById(buttonId).classList.add('active');
+        }
+
+        // Set initial tool
+        setToolForAllViewports('Scroll');
     </script>
 </body>
 </html>
