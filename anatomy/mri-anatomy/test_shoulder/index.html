@@ -76,9 +76,8 @@
     const jsonBaseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/";
 
     const files = {
-      Deltoid: { url: jsonBaseUrl + "Deltoid.mrk.json", color: "red", points: [] },
-      Humerus: { url: jsonBaseUrl + "Humerus.mrk.json", color: "blue", points: [] },
-      Scapula: { url: jsonBaseUrl + "Scapula.mrk.json", color: "lime", points: [] }
+      Deltoid: { url: jsonBaseUrl + "F_2.mrk.json", color: "red", points: [] },
+      Scapula: { url: jsonBaseUrl + "newscapula.mrk.json", color: "lime", points: [] }
     };
 
     const imageIds = [];
@@ -92,7 +91,7 @@
     const currentSliceDisplay = document.getElementById('currentSlice');
     document.getElementById('totalSlices').textContent = imageIds.length;
 
-    let slicePositions = []; // store IPP for all slices
+    let slicePositions = [];
     let sliceThickness = 0;
 
     async function loadAnnotations() {
@@ -100,7 +99,7 @@
         const res = await fetch(files[key].url);
         const data = await res.json();
         files[key].points = data.markups[0].controlPoints.map(p => ({
-          position: p.position, // [x, y, z] LPS
+          position: p.position,
           label: p.label
         }));
       }
@@ -110,11 +109,11 @@
       slicePositions = [];
       for (let i = 0; i < imageIds.length; i++) {
         const img = await cornerstone.loadAndCacheImage(imageIds[i]);
-        const ipp = img.data.string('x00200032').split('\\').map(parseFloat); // ImagePositionPatient
-        slicePositions.push(ipp); // store LPS of slice origin
+        const ipp = img.data.string('x00200032').split('\\').map(parseFloat);
+        slicePositions.push(ipp);
       }
       if (slicePositions.length >= 2) {
-        sliceThickness = Math.abs(slicePositions[1][0] - slicePositions[0][0]); // ΔX for coronal
+        sliceThickness = Math.abs(slicePositions[1][0] - slicePositions[0][0]);
       }
     }
 
@@ -137,20 +136,17 @@
     function getSliceIndexForPoint(point) {
       let minDist = Infinity;
       let closestSlice = -1;
-
       for (let i = 0; i < slicePositions.length; i++) {
-        const dx = Math.abs(slicePositions[i][0] - point[0]); // LPS X diff for coronal
+        const dx = Math.abs(slicePositions[i][0] - point[0]);
         if (dx < minDist) {
           minDist = dx;
           closestSlice = i;
         }
       }
-
-      // Only match if within half slice thickness
       if (minDist <= sliceThickness / 2) {
         return closestSlice;
       } else {
-        return -1; // no match
+        return -1;
       }
     }
 
@@ -169,8 +165,6 @@
             ctx.beginPath();
             ctx.arc(ij.col, ij.row, 4, 0, 2 * Math.PI);
             ctx.fill();
-
-            // Label with outline
             ctx.strokeText(ptObj.label, ij.col + 6, ij.row - 6);
             ctx.fillText(ptObj.label, ij.col + 6, ij.row - 6);
           }
