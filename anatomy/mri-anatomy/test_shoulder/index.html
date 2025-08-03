@@ -111,8 +111,6 @@
     
     let sliceInfo = []; 
     let sliceThickness = 0;
-
-    // --- CHANGE 1: Add a "ready" flag ---
     let isReady = false;
     
     function debugLog(message) {
@@ -218,11 +216,7 @@
     }
     
     function drawAnnotations(image, sliceIndex) {
-      // --- CHANGE 3: Check the flag before drawing ---
-      if (!isReady) {
-        debugLog("Not ready to draw, pre-computation is not complete.");
-        return;
-      }
+      if (!isReady) { return; }
 
       ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
       const viewport = cornerstone.getViewport(element);
@@ -236,18 +230,19 @@
           if (sliceMatch === sliceIndex) {
             const ij = lpsToPixel(ptObj.position, image);
             if (ij.row < 0 || ij.col < 0) return;
-            const x = ij.col * viewport.scale + viewport.translation.x;
-            const y = ij.row * viewport.scale + viewport.translation.y;
-            
+
+            // --- ‼️ FINAL FIX: Use cornerstone's function for perfect accuracy ‼️ ---
+            const canvasCoords = cornerstone.pixelToCanvas(element, { x: ij.col, y: ij.row });
+
             ctx.beginPath();
-            ctx.arc(x, y, 4 * viewport.scale, 0, 2 * Math.PI);
+            ctx.arc(canvasCoords.x, canvasCoords.y, 4 * viewport.scale, 0, 2 * Math.PI);
             ctx.fill();
             
             ctx.font = `${Math.max(12, 12 * viewport.scale)}px Arial`;
             ctx.strokeStyle = "black";
             ctx.lineWidth = 2;
-            ctx.strokeText(ptObj.label, x + 6, y - 6);
-            ctx.fillText(ptObj.label, x + 6, y - 6);
+            ctx.strokeText(ptObj.label, canvasCoords.x + 6, canvasCoords.y - 6);
+            ctx.fillText(ptObj.label, canvasCoords.x + 6, canvasCoords.y - 6);
             pointsDrawn++;
           }
         });
@@ -303,10 +298,7 @@
       try {
         await loadAnnotations();
         await precomputeSlicePositions();
-
-        // --- CHANGE 2: Set the flag to true ---
         isReady = true; 
-        
         loadAndViewImage(0);
         debugLog("Initialization complete");
       } catch (e) {
