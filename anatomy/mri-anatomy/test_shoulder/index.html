@@ -170,16 +170,12 @@
         const dy = pos1[1] - pos0[1];
         const dz = pos1[2] - pos0[2];
         sliceThickness = Math.sqrt(dx*dx + dy*dy + dz*dz);
-        debugLog(`Computed slice thickness: ${sliceThickness}`);
+        debugLog(`Computed slice spacing: ${sliceThickness}`);
       }
     }
 
     function transformCoordinates(point) {
-      return [
-        point[0] - 160,
-        point[1] - 120,
-        point[2] + 70
-      ];
+      return point; // no hardcoded offsets, use raw LPS
     }
 
     function lpsToPixel(positionLPS, image) {
@@ -204,29 +200,29 @@
     }
 
     function getSliceIndexForPoint(pointLPS) {
-  let minDist = Infinity;
-  let closestSlice = -1;
-  for (let i = 0; i < sliceInfo.length; i++) {
-    if (!sliceInfo[i]) continue;
-    const ipp = sliceInfo[i].position;
-    const normal = sliceInfo[i].normal;
-    const vector = [
-      pointLPS[0] - ipp[0],
-      pointLPS[1] - ipp[1],
-      pointLPS[2] - ipp[2]
-    ];
-    const distance = Math.abs(
-      vector[0] * normal[0] + vector[1] * normal[1] + vector[2] * normal[2]
-    );
-    if (distance < minDist) {
-      minDist = distance;
-      closestSlice = i;
+      let minDist = Infinity;
+      let closestSlice = -1;
+      for (let i = 0; i < sliceInfo.length; i++) {
+        if (!sliceInfo[i]) continue;
+        const ipp = sliceInfo[i].position;
+        const normal = sliceInfo[i].normal;
+        const vector = [
+          pointLPS[0] - ipp[0],
+          pointLPS[1] - ipp[1],
+          pointLPS[2] - ipp[2]
+        ];
+        const distance = Math.abs(
+          vector[0] * normal[0] + vector[1] * normal[1] + vector[2] * normal[2]
+        );
+        if (distance < minDist) {
+          minDist = distance;
+          closestSlice = i;
+        }
+      }
+      const tolerance = Math.max(sliceThickness, 0.6);
+      debugLog(`Point ${JSON.stringify(pointLPS)} -> slice ${closestSlice} (dist=${minDist.toFixed(3)} mm)`);
+      return minDist <= tolerance ? closestSlice : -1;
     }
-  }
-  // Use larger tolerance to allow near-plane points
-  const tolerance = sliceThickness * 2; // was sliceThickness / 2
-  return minDist <= tolerance ? closestSlice : -1;
-}
 
     function drawAnnotations(image, sliceIndex) {
       if (!isReady) return;
@@ -240,7 +236,7 @@
       for (const key in files) {
         ctx.fillStyle = files[key].color;
 
-        files[key].points.forEach((ptObj, idx) => {
+        files[key].points.forEach((ptObj) => {
           let pointUsed = ptObj.position;
           let sliceMatch = getSliceIndexForPoint(pointUsed);
 
