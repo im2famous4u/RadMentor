@@ -1,0 +1,401 @@
+{
+  "@schema": "https://raw.githubusercontent.com/slicer/slicer/master/Modules/Loadable/Markups/Resources/Schema/markups-schema-v1.0.3.json#",
+  "markups": [
+    {
+      "type": "Fiducial",
+      "coordinateSystem": "LPS",
+      "coordinateUnits": "mm",
+      "locked": false,
+      "fixedNumberOfControlPoints": false,
+      "labelFormat": "%N-%d",
+      "lastUsedControlPointNumber": 13,
+      "controlPoints": [
+        {
+          "id": "1",
+          "label": "Scapula-1",
+          "description": "",
+          "associatedNodeID": "vtkMRMLScalarVolumeNode1",
+          "position": [
+            -113.24823050784815,
+            49.57485957073582,
+            85.31417338475906
+          ],
+          "orientation": [
+            -1.0,
+            -0.0,
+            -0.0,
+            -0.0,
+            -1.0,
+            -0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "selected": true,
+          "locked": false,
+          "visibility": true,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "2",
+          "label": "Scapula-2",
+          "description": "",
+          "associatedNodeID": "vtkMRMLScalarVolumeNode1",
+          "position": [
+            -109.6290968359213,
+            41.34841040302725,
+            86.8821480871433
+          ],
+          "orientation": [
+            -1.0,
+            -0.0,
+            -0.0,
+            -0.0,
+            -1.0,
+            -0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "selected": true,
+          "locked": false,
+          "visibility": true,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "3",
+          "label": "Scapula-3",
+          "description": "",
+          "associatedNodeID": "vtkMRMLScalarVolumeNode1",
+          "position": [
+            -111.81311829692844,
+            46.850059339791144,
+            85.28002016905384
+          ],
+          "orientation": [
+            -1.0,
+            -0.0,
+            -0.0,
+            -0.0,
+            -1.0,
+            -0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "selected": true,
+          "locked": false,
+          "visibility": true,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "4",
+          "label": "Scapula-4",
+          "description": "",
+          "associatedNodeID": "vtkMRMLScalarVolumeNode1",
+          "position": [
+            -112.7746336883357,
+            54.08210983046993,
+            86.05493928242676
+          ],
+          "orientation": [
+            -1.0,
+            -0.0,
+            -0.0,
+            -0.0,
+            -1.0,
+            -0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "selected": true,
+          "locked": false,
+          "visibility": true,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "5",
+          "label": "Scapula-5",
+          "description": "",
+          "associatedNodeID": "vtkMRMLScalarVolumeNode1",
+          "position": [
+            -110.62431078142457,
+            48.445179110835625,
+            86.49324484677061
+          ],
+          "orientation": [
+            -1.0,
+            -0.0,
+            -0.0,
+            -0.0,
+            -1.0,
+            -0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "selected": true,
+          "locked": false,
+          "visibility": true,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "6",
+          "label": "Scapula-6",
+          "description": "",
+          "associatedNodeID": "vtkMRMLScalarVolumeNode1",
+          "position": [
+            -108.79238049705819,
+            43.75814408101511,
+            86.83035437284859
+          ],
+          "orientation": [
+            -1.0,
+            -0.0,
+            -0.0,
+            -0.0,
+            -1.0,
+            -0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "selected": true,
+          "locked": false,
+          "visibility": true,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "7",
+          "label": "Scapula-7",
+          "description": "",
+          "associatedNodeID": "vtkMRMLScalarVolumeNode1",
+          "position": [
+            -108.55241332541544,
+            43.82058750026342,
+            86.66148370759716
+          ],
+          "orientation": [
+            -1.0,
+            -0.0,
+            -0.0,
+            -0.0,
+            -1.0,
+            -0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "selected": true,
+          "locked": false,
+          "visibility": true,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "8",
+          "label": "Scapula-8",
+          "description": "",
+          "associatedNodeID": "vtkMRMLScalarVolumeNode1",
+          "position": [
+            -110.85958713413048,
+            51.48219643802189,
+            85.68304473621868
+          ],
+          "orientation": [
+            -1.0,
+            -0.0,
+            -0.0,
+            -0.0,
+            -1.0,
+            -0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "selected": true,
+          "locked": false,
+          "visibility": true,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "9",
+          "label": "Scapula-9",
+          "description": "",
+          "associatedNodeID": "vtkMRMLScalarVolumeNode1",
+          "position": [
+            -108.39087160467464,
+            44.89537002857383,
+            86.22254633882841
+          ],
+          "orientation": [
+            -1.0,
+            -0.0,
+            -0.0,
+            -0.0,
+            -1.0,
+            -0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "selected": true,
+          "locked": false,
+          "visibility": true,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "10",
+          "label": "Scapula-10",
+          "description": "",
+          "associatedNodeID": "vtkMRMLScalarVolumeNode1",
+          "position": [
+            -106.24054869776351,
+            39.258439308939536,
+            86.66085190317224
+          ],
+          "orientation": [
+            -1.0,
+            -0.0,
+            -0.0,
+            -0.0,
+            -1.0,
+            -0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "selected": true,
+          "locked": false,
+          "visibility": true,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "11",
+          "label": "Scapula-11",
+          "description": "",
+          "associatedNodeID": "vtkMRMLScalarVolumeNode1",
+          "position": [
+            -108.22932988393384,
+            45.97015255688423,
+            85.78360897005962
+          ],
+          "orientation": [
+            -1.0,
+            -0.0,
+            -0.0,
+            -0.0,
+            -1.0,
+            -0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "selected": true,
+          "locked": false,
+          "visibility": true,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "12",
+          "label": "Scapula-12",
+          "description": "",
+          "associatedNodeID": "vtkMRMLScalarVolumeNode1",
+          "position": [
+            -109.06769292763319,
+            51.04224304656844,
+            85.93483913672156
+          ],
+          "orientation": [
+            -1.0,
+            -0.0,
+            -0.0,
+            -0.0,
+            -1.0,
+            -0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "selected": true,
+          "locked": false,
+          "visibility": true,
+          "positionStatus": "defined"
+        },
+        {
+          "id": "13",
+          "label": "Scapula-13",
+          "description": "",
+          "associatedNodeID": "vtkMRMLScalarVolumeNode1",
+          "position": [
+            -109.5876633487878,
+            55.16443784643887,
+            86.18726534164932
+          ],
+          "orientation": [
+            -1.0,
+            -0.0,
+            -0.0,
+            -0.0,
+            -1.0,
+            -0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "selected": true,
+          "locked": false,
+          "visibility": true,
+          "positionStatus": "defined"
+        }
+      ],
+      "measurements": [],
+      "display": {
+        "visibility": true,
+        "opacity": 1.0,
+        "color": [
+          0.4,
+          1.0,
+          1.0
+        ],
+        "selectedColor": [
+          1.0,
+          0.5000076295109483,
+          0.5000076295109483
+        ],
+        "activeColor": [
+          0.4,
+          1.0,
+          0.0
+        ],
+        "propertiesLabelVisibility": false,
+        "pointLabelsVisibility": true,
+        "textScale": 3.0,
+        "glyphType": "Sphere3D",
+        "glyphScale": 3.0,
+        "glyphSize": 5.0,
+        "useGlyphScale": true,
+        "sliceProjection": false,
+        "sliceProjectionUseFiducialColor": true,
+        "sliceProjectionOutlinedBehindSlicePlane": false,
+        "sliceProjectionColor": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "sliceProjectionOpacity": 0.6,
+        "lineThickness": 0.2,
+        "lineColorFadingStart": 1.0,
+        "lineColorFadingEnd": 10.0,
+        "lineColorFadingSaturation": 1.0,
+        "lineColorFadingHueOffset": 0.0,
+        "handlesInteractive": false,
+        "translationHandleVisibility": true,
+        "rotationHandleVisibility": true,
+        "scaleHandleVisibility": false,
+        "interactionHandleScale": 3.0,
+        "snapMode": "toVisibleSurface"
+      }
+    }
+  ]
+}
