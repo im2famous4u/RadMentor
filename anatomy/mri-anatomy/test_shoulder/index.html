@@ -203,29 +203,29 @@
       }
     }
 
-    function getSliceIndexForPoint(point) {
-      let minDist = Infinity;
-      let closestSlice = -1;
-      for (let i = 0; i < sliceInfo.length; i++) {
-        if (!sliceInfo[i]) continue;
-        const ipp = sliceInfo[i].position;
-        const normal = sliceInfo[i].normal;
-        const vector = [
-          point[0] - ipp[0],
-          point[1] - ipp[1],
-          point[2] - ipp[2]
-        ];
-        const distance = Math.abs(
-          vector[0] * normal[0] + vector[1] * normal[1] + vector[2] * normal[2]
-        );
-        if (distance < minDist) {
-          minDist = distance;
-          closestSlice = i;
-        }
-      }
-      const tolerance = sliceThickness / 2;
-      return minDist <= tolerance ? closestSlice : -1;
+    function getSliceIndexForPoint(pointLPS) {
+  let minDist = Infinity;
+  let closestSlice = -1;
+  for (let i = 0; i < sliceInfo.length; i++) {
+    if (!sliceInfo[i]) continue;
+    const ipp = sliceInfo[i].position;
+    const normal = sliceInfo[i].normal;
+    const vector = [
+      pointLPS[0] - ipp[0],
+      pointLPS[1] - ipp[1],
+      pointLPS[2] - ipp[2]
+    ];
+    const distance = Math.abs(
+      vector[0] * normal[0] + vector[1] * normal[1] + vector[2] * normal[2]
+    );
+    if (distance < minDist) {
+      minDist = distance;
+      closestSlice = i;
     }
+  }
+  const tolerance = sliceThickness / 2;
+  return minDist <= tolerance ? closestSlice : -1;
+}
 
     function drawAnnotations(image, sliceIndex) {
       if (!isReady) return;
