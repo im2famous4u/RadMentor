@@ -223,7 +223,8 @@
       closestSlice = i;
     }
   }
-  const tolerance = sliceThickness / 2;
+  // Use larger tolerance to allow near-plane points
+  const tolerance = sliceThickness * 2; // was sliceThickness / 2
   return minDist <= tolerance ? closestSlice : -1;
 }
 
