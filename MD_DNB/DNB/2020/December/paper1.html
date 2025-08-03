@@ -3,288 +3,338 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>December 2020 DNB - Paper 1 - RadMentor</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>PDF Flipbook Viewer</title>
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/4.1.0/turn.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
     
+    <!-- Inline Styles -->
     <style>
+        :root {
+            --primary-color: #007bff;
+            --secondary-color: #6c757d;
+            --background-color: #f8f9fa;
+            --surface-color: #ffffff;
+            --text-color: #333;
+            --shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
         }
-        .rad-gradient-text {
-            background: linear-gradient(90deg, #4f46e5, #3b82f6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-fill-color: transparent;
+
+        /* --- Viewer Screen --- */
+        #viewer-wrapper {
+            display: flex; /* Changed from none to be visible by default */
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
         }
-        /* --- NEW STYLES for a more modern look --- */
-        #pdf-viewer-outer-container {
-            width: 100%;
-            max-width: 896px; /* max-w-4xl, for a vertical paper-like layout */
-            margin: 0 auto;
-        }
-        #pdf-canvas-container {
-            width: 100%;
-            background-color: white;
-            border-radius: 0.75rem; /* rounded-xl */
-            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25); /* shadow-2xl */
-            padding: 1rem;
-            overflow: auto;
+
+        #flipbook-container {
+            flex-grow: 1;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .pdf-nav-buttons button {
-            background: linear-gradient(90deg, #4338ca, #4f46e5); /* Indigo gradient */
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+
+        #flipbook {
+            width: 90vw;
+            height: calc(100vh - 80px); /* Full height minus toolbar */
+            transition: transform 0.5s;
         }
-        .pdf-nav-buttons button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+        #flipbook .page {
+            background-color: white;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center center;
         }
-        .pdf-nav-buttons button:disabled {
-            background: #94a3b8; /* slate-400 */
-            transform: none;
-            box-shadow: none;
+
+        #flipbook .shadow,
+        #flipbook .gradient {
+            border-radius: 6px;
         }
-        canvas {
-            border-radius: 0.25rem;
-            display: block;
-            margin: 0 auto; /* Center canvas within the container */
+
+        /* --- Toolbar --- */
+        #toolbar {
+            height: 60px;
+            width: 100%;
+            background-color: var(--surface-color);
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            box-sizing: border-box;
+            gap: 15px;
+            z-index: 1000;
         }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #4f46e5; /* Indigo */
+
+        .toolbar-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
             border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+        
+        .toolbar-button:hover {
+            background-color: #e9ecef;
+        }
+
+        .toolbar-button svg {
+            width: 24px;
+            height: 24px;
+            fill: #555;
+        }
+        
+        .toolbar-button:disabled svg {
+            fill: #bbb;
+        }
+
+        #page-number-input {
             width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 100;
-            display: none;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 5px;
+            font-size: 14px;
         }
-        @keyframes spin {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
+
+        #page-indicator {
+            font-size: 14px;
+            color: var(--secondary-color);
+            min-width: 50px;
+            text-align: left;
         }
+
+        /* --- Loader --- */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            color: var(--text-color);
+            z-index: 2000;
+        }
+
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 flex flex-col min-h-screen">
+<body>
+
+    <!-- The viewer is now the main element, upload prompt is removed -->
+    <div id="viewer-wrapper">
+        <div id="flipbook-container">
+            <div id="flipbook"></div>
+        </div>
+        <div id="toolbar">
+            <button id="prev-page-btn" class="toolbar-button" title="Previous Page">
+                <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"></path></svg>
+            </button>
+            <input type="number" id="page-number-input" min="1">
+            <span id="page-indicator">/ 1</span>
+            <button id="next-page-btn" class="toolbar-button" title="Next Page">
+                <svg viewBox="0 0 24 24"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"></path></svg>
+            </button>
+            <div style="width: 30px;"></div> <!-- Spacer -->
+            <button id="zoom-in-btn" class="toolbar-button" title="Zoom In">
+                <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>
+            </button>
+            <button id="zoom-out-btn" class="toolbar-button" title="Zoom Out">
+                <svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"></path></svg>
+            </button>
+             <div style="width: 30px;"></div> <!-- Spacer -->
+            <button id="toggle-fullscreen-btn" class="toolbar-button" title="Toggle Fullscreen">
+                <svg id="fullscreen-icon" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"></path></svg>
+                <svg id="exit-fullscreen-icon" style="display:none;" viewBox="0 0 24 24"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Global Loader -->
+    <div id="loader" style="display: none;">Loading...</div>
+
+<script>
+// Configure PDF.js worker
+if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';
+}
+
+// DOM Elements
+const viewerWrapper = document.getElementById('viewer-wrapper');
+const flipbookEl = document.getElementById('flipbook');
+const loader = document.getElementById('loader');
+
+// Toolbar Elements
+const prevPageBtn = document.getElementById('prev-page-btn');
+const nextPageBtn = document.getElementById('next-page-btn');
+const pageNumberInput = document.getElementById('page-number-input');
+const pageIndicator = document.getElementById('page-indicator');
+const zoomInBtn = document.getElementById('zoom-in-btn');
+const zoomOutBtn = document.getElementById('zoom-out-btn');
+const toggleFullscreenBtn = document.getElementById('toggle-fullscreen-btn');
+
+// PDF State
+const pdfUrl = "/MD_DNB/DNB/2020/December/DNB DEC 2020 PAPER 1.pdf";
+let pdfDoc = null;
+let zoomLevel = 1;
+
+// --- AUTO-LOAD PDF ON PAGE LOAD ---
+document.addEventListener('DOMContentLoaded', () => {
+    loadPdfFromUrl(pdfUrl);
+});
+
+async function loadPdfFromUrl(url) {
+    try {
+        loader.style.display = 'flex';
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const pdfData = await response.arrayBuffer();
+        const typedarray = new Uint8Array(pdfData);
+        await renderPdfPages(typedarray);
+
+    } catch (error) {
+        console.error('Failed to load PDF from URL:', error);
+        alert(`Could not load the PDF from the specified URL.\nError: ${error.message}`);
+        loader.style.display = 'none';
+    }
+}
+
+
+// --- PDF RENDERING ---
+async function renderPdfPages(pdfData) {
+    try {
+        pdfDoc = await pdfjsLib.getDocument(pdfData).promise;
+        const numPages = pdfDoc.numPages;
+        
+        pageIndicator.textContent = `/ ${numPages}`;
+        pageNumberInput.max = numPages;
+        flipbookEl.innerHTML = '';
+
+        // Render all pages
+        for (let i = 1; i <= numPages; i++) {
+            const page = await pdfDoc.getPage(i);
+            const viewport = page.getViewport({ scale: 1.5 }); // High-res for quality
+            
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            const pageWrapper = document.createElement('div');
+            pageWrapper.appendChild(canvas);
+            flipbookEl.appendChild(pageWrapper);
+
+            await page.render({ canvasContext: context, viewport: viewport }).promise;
+        }
+
+        initializeFlipbook(numPages);
+    } catch (error) {
+        console.error('Error rendering PDF pages:', error);
+        alert('Could not render the PDF file. It might be corrupted or protected.');
+    } finally {
+        loader.style.display = 'none';
+    }
+}
+
+// --- FLIPBOOK INITIALIZATION & CONTROLS ---
+function initializeFlipbook(numPages) {
+    const flipbook = $(flipbookEl);
+
+    flipbook.turn({
+        width: '90vw',
+        height: 'calc(100vh - 80px)',
+        autoCenter: true,
+        display: 'double',
+        elevation: 50,
+        gradients: true,
+        when: {
+            turned: function(event, page) {
+                updateControls(page, numPages);
+            }
+        }
+    });
+
+    // Initial control state
+    updateControls(1, numPages);
+
+    // Toolbar event listeners
+    prevPageBtn.addEventListener('click', () => flipbook.turn('previous'));
+    nextPageBtn.addEventListener('click', () => flipbook.turn('next'));
+
+    pageNumberInput.addEventListener('change', (e) => {
+        const page = parseInt(e.target.value, 10);
+        if (page > 0 && page <= numPages) {
+            flipbook.turn('page', page);
+        }
+    });
+
+    zoomInBtn.addEventListener('click', () => {
+        zoomLevel += 0.1;
+        flipbook.turn('zoom', zoomLevel);
+    });
     
-    <header class="bg-white/90 backdrop-blur-lg flex-shrink-0 z-20 shadow-sm border-b border-slate-200 sticky top-0">
-        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
-            <div class="flex items-center">
-                <img src="/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
-                <span class="text-2xl font-bold text-slate-800">RadMentor</span>
-            </div>
-            <nav class="hidden md:flex items-center space-x-6">
-                <a href="javascript:history.back()" class="text-slate-600 hover:text-indigo-600 flex items-center transition-colors">
-                    <i class="fas fa-arrow-left mr-2"></i>Back
-                </a>
-                <a href="/dashboard.html" class="text-slate-600 hover:text-indigo-600 transition-colors">Dashboard</a>
-                <a href="/anatomy/mri-anatomy/test_shoulder/index.html" class="text-slate-600 hover:text-indigo-600 transition-colors">Anatomy Viewer</a>
-                <a href="#" class="text-slate-600 hover:text-indigo-600 transition-colors">Courses</a>
-                <a href="../../../index.html" class="text-indigo-600 font-semibold">DNB Questions</a> 
-            </nav>
-            <a href="/dashboard.html" class="bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 transition-colors hidden md:block">
-                My Dashboard
-            </a>
-        </div>
-    </header>
+    zoomOutBtn.addEventListener('click', () => {
+        zoomLevel -= 0.1;
+        flipbook.turn('zoom', zoomLevel);
+    });
 
-    <main class="flex-1 container mx-auto px-6 py-8 flex flex-col items-center">
-        <h1 class="text-4xl font-extrabold text-center mb-4 rad-gradient-text">
-            December 2020 DNB - Paper 1
-        </h1>
-        <p class="text-lg text-slate-600 text-center max-w-2xl mb-10">
-            Practice questions from this exam paper.
-        </p>
+    toggleFullscreenBtn.addEventListener('click', toggleFullscreen);
+    document.addEventListener('fullscreenchange', updateFullscreenIcon);
+}
 
-        <div id="pdf-viewer-outer-container">
-            <div class="flex items-center justify-center space-x-2 mb-6 p-2 bg-slate-200/60 rounded-lg">
-                <button id="zoom-in-btn" class="px-3 py-1.5 rounded-md text-slate-600 bg-white shadow-sm hover:bg-slate-50 transition-colors" title="Zoom In"><i class="fas fa-search-plus"></i></button>
-                <button id="zoom-out-btn" class="px-3 py-1.5 rounded-md text-slate-600 bg-white shadow-sm hover:bg-slate-50 transition-colors" title="Zoom Out"><i class="fas fa-search-minus"></i></button>
-                <button id="fit-width-btn" class="px-3 py-1.5 rounded-md text-slate-600 bg-white shadow-sm hover:bg-slate-50 transition-colors" title="Fit to Width"><i class="fas fa-arrows-alt-h"></i></button>
-                <button id="fit-page-btn" class="px-3 py-1.5 rounded-md text-slate-600 bg-white shadow-sm hover:bg-slate-50 transition-colors" title="Fit to Page"><i class="fas fa-expand-arrows-alt"></i></button>
-                <button id="rotate-left-btn" class="px-3 py-1.5 rounded-md text-slate-600 bg-white shadow-sm hover:bg-slate-50 transition-colors" title="Rotate Left"><i class="fas fa-undo"></i></button>
-                <button id="rotate-right-btn" class="px-3 py-1.5 rounded-md text-slate-600 bg-white shadow-sm hover:bg-slate-50 transition-colors" title="Rotate Right"><i class="fas fa-redo"></i></button>
-            </div>
+function updateControls(currentPage, totalPages) {
+    pageNumberInput.value = currentPage;
+    prevPageBtn.disabled = currentPage === 1;
+    nextPageBtn.disabled = currentPage === totalPages;
+}
 
-            <div id="pdf-canvas-container">
-                <div class="loader" id="pdf-loader"></div>
-            </div>
-            
-            <div class="pdf-nav-buttons flex items-center justify-center space-x-6 mt-6">
-                <button id="prev-page" class="px-5 py-2 rounded-md font-semibold text-white">Previous</button>
-                <span id="page-controls" class="text-lg font-semibold text-slate-700">Page: <span id="page-num">1</span> / <span id="page-count">--</span></span>
-                <button id="next-page" class="px-5 py-2 rounded-md font-semibold text-white">Next</button>
-            </div>
-        </div>
-    </main>
-
-    <footer class="bg-slate-800 text-slate-300 text-center py-4 mt-12 flex-shrink-0">
-        <p>&copy; 2025 RadMentor. All rights reserved.</p>
-    </footer>
-
-    <script src="/js/pdf.min.js"></script>
-    <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = '/js/pdf.worker.min.js';
-
-        let pdfDoc = null;
-        let pageNum = 1;
-        let pageRendering = false;
-        let pageNumPending = null;
-        let scale = 1.5;
-        let rotation = 0;
-
-        const pdfCanvasContainer = document.getElementById('pdf-canvas-container');
-        const pageNumSpan = document.getElementById('page-num');
-        const pageCountSpan = document.getElementById('page-count');
-        const prevPageBtn = document.getElementById('prev-page');
-        const nextPageBtn = document.getElementById('next-page');
-        const pdfLoader = document.getElementById('pdf-loader');
-        
-        const zoomInBtn = document.getElementById('zoom-in-btn');
-        const zoomOutBtn = document.getElementById('zoom-out-btn');
-        const fitWidthBtn = document.getElementById('fit-width-btn');
-        const fitPageBtn = document.getElementById('fit-page-btn');
-        const rotateLeftBtn = document.getElementById('rotate-left-btn');
-        const rotateRightBtn = document.getElementById('rotate-right-btn');
-        
-        const watermarkLogoSrc = "/logo.png";
-        let watermarkLogo = new Image();
-        let logoLoaded = false;
-        
-        watermarkLogo.onload = () => { logoLoaded = true; if (pdfDoc && !pageRendering) renderPage(pageNum); };
-        watermarkLogo.onerror = () => { console.warn("Watermark logo failed to load."); logoLoaded = false; };
-        watermarkLogo.src = watermarkLogoSrc;
-
-        async function renderPage(num) {
-            if (!pdfDoc) return;
-            
-            pageRendering = true;
-            pdfLoader.style.display = 'block';
-            pageNumSpan.textContent = num;
-            
-            prevPageBtn.disabled = (num <= 1);
-            nextPageBtn.disabled = (num >= pdfDoc.numPages);
-
-            try {
-                const page = await pdfDoc.getPage(num);
-                const viewport = page.getViewport({ scale: scale, rotation: rotation });
-                
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-                const devicePixelRatio = window.devicePixelRatio || 1;
-                
-                canvas.width = Math.floor(viewport.width * devicePixelRatio);
-                canvas.height = Math.floor(viewport.height * devicePixelRatio);
-                canvas.style.width = `${Math.floor(viewport.width)}px`;
-                canvas.style.height = `${Math.floor(viewport.height)}px`;
-                context.scale(devicePixelRatio, devicePixelRatio);
-
-                pdfCanvasContainer.innerHTML = '';
-                pdfCanvasContainer.appendChild(canvas);
-
-                const renderContext = { canvasContext: context, viewport: viewport };
-                await page.render(renderContext).promise;
-
-                // --- ADDED Copyright Footer ---
-                const copyrightFontSize = viewport.width / 70;
-                context.font = `${copyrightFontSize}px Inter, sans-serif`;
-                context.fillStyle = '#6b7280'; // text-slate-500
-                context.textAlign = 'right';
-                const padding = copyrightFontSize;
-                context.fillText('© 2025 RadMentor. All rights reserved.', viewport.width - padding, viewport.height - padding);
-                
-                // --- Watermark ---
-                if (logoLoaded) {
-                    context.save();
-                    context.globalAlpha = 0.08;
-                    const targetLogoWidth = viewport.width * 0.40;
-                    const targetLogoHeight = (watermarkLogo.naturalHeight / watermarkLogo.naturalWidth) * targetLogoWidth;
-                    const logoX = (viewport.width - targetLogoWidth) / 2;
-                    const logoY = (viewport.height - targetLogoHeight) / 2;
-                    context.drawImage(watermarkLogo, logoX, logoY, targetLogoWidth, targetLogoHeight);
-
-                    const fontSize = viewport.width / 35;
-                    context.font = `bold ${fontSize}px Inter, sans-serif`;
-                    context.fillStyle = '#000000';
-                    context.textAlign = 'center';
-                    const textY = logoY + targetLogoHeight + fontSize; 
-                    context.fillText('RadMentor', viewport.width / 2, textY);
-                    context.restore();
-                }
-
-            } catch (error) {
-                console.error("Error rendering PDF page:", error);
-            } finally {
-                pdfLoader.style.display = 'none';
-                pageRendering = false;
-                if (pageNumPending !== null) {
-                    renderPage(pageNumPending);
-                    pageNumPending = null;
-                }
-            }
+// --- FULLSCREEN LOGIC ---
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
         }
+    }
+}
 
-        function queueRenderPage(num) {
-            if (pageRendering) {
-                pageNumPending = num;
-            } else {
-                renderPage(num);
-            }
-        }
+function updateFullscreenIcon() {
+    const fsIcon = document.getElementById('fullscreen-icon');
+    const exitFsIcon = document.getElementById('exit-fullscreen-icon');
+    if (document.fullscreenElement) {
+        fsIcon.style.display = 'none';
+        exitFsIcon.style.display = 'block';
+    } else {
+        fsIcon.style.display = 'block';
+        exitFsIcon.style.display = 'none';
+    }
+}
 
-        prevPageBtn.addEventListener('click', () => { if (pageNum > 1) { pageNum--; queueRenderPage(pageNum); }});
-        nextPageBtn.addEventListener('click', () => { if (pageNum < pdfDoc.numPages) { pageNum++; queueRenderPage(pageNum); }});
-        zoomInBtn.addEventListener('click', () => { scale *= 1.2; queueRenderPage(pageNum); });
-        zoomOutBtn.addEventListener('click', () => { scale /= 1.2; queueRenderPage(pageNum); });
-        rotateLeftBtn.addEventListener('click', () => { rotation = (rotation - 90 + 360) % 360; queueRenderPage(pageNum); });
-        rotateRightBtn.addEventListener('click', () => { rotation = (rotation + 90) % 360; queueRenderPage(pageNum); });
-
-        fitWidthBtn.addEventListener('click', () => {
-            pdfDoc.getPage(pageNum).then(page => {
-                const viewport = page.getViewport({ scale: 1.0, rotation: rotation });
-                const containerWidth = pdfCanvasContainer.clientWidth - 32; // Account for padding
-                scale = containerWidth / viewport.width;
-                queueRenderPage(pageNum);
-            });
-        });
-        fitPageBtn.addEventListener('click', () => {
-            pdfDoc.getPage(pageNum).then(page => {
-                const viewport = page.getViewport({ scale: 1.0, rotation: rotation });
-                const containerHeight = window.innerHeight - 300; // Approx visible height
-                const containerWidth = pdfCanvasContainer.clientWidth - 32;
-                const scaleX = containerWidth / viewport.width;
-                const scaleY = containerHeight / viewport.height;
-                scale = Math.min(scaleX, scaleY);
-                queueRenderPage(pageNum);
-            });
-        });
-
-        async function loadPdfDocument(pdfUrl) {
-            try {
-                pdfLoader.style.display = 'block';
-                const loadingTask = pdfjsLib.getDocument(pdfUrl);
-                pdfDoc = await loadingTask.promise;
-                pageCountSpan.textContent = pdfDoc.numPages;
-                pageNum = 1;
-                // Initially fit page to the new container size for a better default view
-                fitPageBtn.click();
-            } catch (error) {
-                console.error('Error loading PDF:', error);
-                alert(`Failed to load PDF document.\nPath: ${pdfUrl}\nError: ${error.message}`);
-                pdfLoader.style.display = 'none';
-            }
-        }
-        
-        const pdfUrl = "/MD_DNB/DNB/2020/December/DNB DEC 2020 PAPER 1.pdf"; 
-        loadPdfDocument(pdfUrl);
-    </script>
+</script>
 </body>
 </html>
