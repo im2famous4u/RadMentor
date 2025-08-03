@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RadMentor App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body class="flex min-h-screen bg-gray-100">
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white border-r px-4 py-6 hidden md:flex flex-col shadow-lg">
+    <div class="mb-8 flex items-center gap-3">
+      <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="Logo" class="h-10">
+      <span class="text-xl font-bold">RadMentor</span>
+    </div>
+
+    <div class="text-xs text-gray-500 uppercase font-semibold mb-2">Exam Preparation</div>
+    <nav class="flex flex-col gap-1 mb-6">
+      <a href="frcr.html" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">FRCR</a>
+      <a href="md_dnb.html" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">MD / DNB</a>
+      <a href="anatomy.html" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">Anatomy</a>
+      <a href="micr.html" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">MICR</a>
+      <a href="superspeciality.html" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">Superspeciality</a>
+      <a href="fellowship.html" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">Fellowship Exams</a>
+    </nav>
+
+    <div class="text-xs text-gray-500 uppercase font-semibold mb-2">My Account</div>
+    <nav class="flex flex-col gap-1">
+      <a href="#" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">🙋‍♂️ My Profile</a>
+      <a href="#" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">📌 My Bookmarks</a>
+      <a href="#" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">📈 Performance</a>
+      <a href="#" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">❓ Ask a Doubt</a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold">Welcome back, Doctor 👋</h1>
+      <button class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">Logout</button>
+    </div>
+
+    <div class="grid grid-cols-1 gap-6">
+      <!-- Quick Links Card -->
+      <div class="bg-white p-6 rounded-2xl shadow-lg">
+        <h2 class="text-lg font-semibold mb-4">Quick Links</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+          <a href="#" class="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+            <img src="https://img.icons8.com/ios-filled/50/4a90e2/questions.png" class="h-10" alt="QBank">
+            <span class="text-sm font-medium">QBank</span>
+          </a>
+          <a href="#" class="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+            <img src="https://img.icons8.com/fluency/48/test-passed.png" class="h-10" alt="Mock Exams">
+            <span class="text-sm font-medium">Mock Exams</span>
+          </a>
+          <a href="#" class="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+            <img src="https://img.icons8.com/fluency/48/bookmark-ribbon.png" class="h-10" alt="Bookmarks">
+            <span class="text-sm font-medium">Bookmarks</span>
+          </a>
+          <a href="#" class="relative flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+            <img src="https://img.icons8.com/fluency/48/analytics.png" class="h-10" alt="Analytics">
+            <span class="text-sm font-medium">Analytics</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
