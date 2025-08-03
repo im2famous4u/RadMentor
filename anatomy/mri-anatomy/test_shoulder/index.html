@@ -231,18 +231,32 @@
             const ij = lpsToPixel(ptObj.position, image);
             if (ij.row < 0 || ij.col < 0) return;
 
-            // --- ‼️ FINAL FIX: Use cornerstone's function for perfect accuracy ‼️ ---
             const canvasCoords = cornerstone.pixelToCanvas(element, { x: ij.col, y: ij.row });
 
+            // Draw the annotation dot
             ctx.beginPath();
             ctx.arc(canvasCoords.x, canvasCoords.y, 4 * viewport.scale, 0, 2 * Math.PI);
             ctx.fill();
             
+            // --- ‼️ FINAL TEXT ALIGNMENT FIX ‼️ ---
+
+            // 1. Set text alignment properties for accurate positioning
+            ctx.textAlign = 'left';      // Position text starting from the left
+            ctx.textBaseline = 'middle'; // Vertically center the text on our Y coordinate
+
+            // 2. Prepare text style
             ctx.font = `${Math.max(12, 12 * viewport.scale)}px Arial`;
-            ctx.strokeStyle = "black";
+            ctx.strokeStyle = 'black';
             ctx.lineWidth = 2;
-            ctx.strokeText(ptObj.label, canvasCoords.x + 6, canvasCoords.y - 6);
-            ctx.fillText(ptObj.label, canvasCoords.x + 6, canvasCoords.y - 6);
+
+            // 3. Define text position with a small offset to the right
+            const textX = canvasCoords.x + 8; // Offset a little to the right of the dot
+            const textY = canvasCoords.y;     // Use the dot's exact Y-center
+
+            // 4. Draw the text
+            ctx.strokeText(ptObj.label, textX, textY);
+            ctx.fillText(ptObj.label, textX, textY);
+            
             pointsDrawn++;
           }
         });
