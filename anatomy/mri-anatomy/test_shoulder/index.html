@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Shoulder MRI Viewer with Annotations</title>
+  <title>Shoulder MRI Viewer with Slice-Matched Annotations</title>
 
   <!-- Cornerstone Libraries -->
   <script src="https://unpkg.com/cornerstone-core"></script>
@@ -92,18 +92,32 @@
     const currentSliceDisplay = document.getElementById('currentSlice');
     document.getElementById('totalSlices').textContent = imageIds.length;
 
+    let slicePositions = []; // store z-positions for all slices
+
     async function loadAnnotations() {
       for (const key in files) {
         const res = await fetch(files[key].url);
         const data = await res.json();
-        files[key].points = data.markups[0].controlPoints.map(p => p.position);
+        files[key].points = data.markups[0].controlPoints.map(p => ({
+          position: p.position,
+          label: p.label
+        }));
       }
     }
 
-    function lpsToIJK(positionLPS, image) {
-      const ipp = image.data.string('x00200032').split('\\').map(parseFloat); // ImagePositionPatient
-      const iop = image.data.string('x00200037').split('\\').map(parseFloat); // ImageOrientationPatient
-      const pxSpacing = image.data.string('x00280030').split('\\').map(parseFloat); // PixelSpacing
+    async function precomputeSlicePositions() {
+      slicePositions = [];
+      for (let i = 0; i < imageIds.length; i++) {
+        const img = await cornerstone.loadAndCacheImage(imageIds[i]);
+        const ipp = img.data.string('x00200032').split('\\').map(parseFloat); // ImagePositionPatient
+        slicePositions.push(ipp);
+      }
+    }
+
+    function lpsToPixel(positionLPS, image) {
+      const ipp = image.data.string('x00200032').split('\\').map(parseFloat);
+      const iop = image.data.string('x00200037').split('\\').map(parseFloat);
+      const pxSpacing = image.data.string('x00280030').split('\\').map(parseFloat);
       const rowCosines = [iop[0], iop[1], iop[2]];
       const colCosines = [iop[3], iop[4], iop[5]];
 
@@ -116,16 +130,40 @@
       return { row, col };
     }
 
-    function drawAnnotations(image) {
+    function getSliceIndexForPoint(point) {
+      // Find closest slice based on z-distance
+      let minDist = Infinity;
+      let closestSlice = -1;
+      for (let i = 0; i < slicePositions.length; i++) {
+        const dz = Math.abs(slicePositions[i][2] - point[2]);
+        if (dz < minDist) {
+          minDist = dz;
+          closestSlice = i;
+        }
+      }
+      return closestSlice;
+    }
+
+    function drawAnnotations(image, sliceIndex) {
       ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      ctx.font = "12px Arial";
+      ctx.fillStyle = "white";
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 2;
+
       for (const key in files) {
         ctx.fillStyle = files[key].color;
-        files[key].points.forEach(pt => {
-          const ij = lpsToIJK(pt, image);
-          if (ij.row >= 0 && ij.row < image.rows && ij.col >= 0 && ij.col < image.columns) {
+        files[key].points.forEach(ptObj => {
+          const sliceMatch = getSliceIndexForPoint(ptObj.position);
+          if (sliceMatch === sliceIndex) {
+            const ij = lpsToPixel(ptObj.position, image);
             ctx.beginPath();
             ctx.arc(ij.col, ij.row, 4, 0, 2 * Math.PI);
             ctx.fill();
+
+            // Draw label
+            ctx.strokeText(ptObj.label, ij.col + 6, ij.row - 6);
+            ctx.fillText(ptObj.label, ij.col + 6, ij.row - 6);
           }
         });
       }
@@ -138,7 +176,7 @@
       currentSliceDisplay.textContent = index + 1;
       const image = await cornerstone.loadAndCacheImage(imageIds[index]);
       cornerstone.displayImage(element, image);
-      drawAnnotations(image);
+      drawAnnotations(image, index);
     }
 
     element.addEventListener('wheel', (e) => {
@@ -155,6 +193,7 @@
 
     (async function init() {
       await loadAnnotations();
+      await precomputeSlicePositions();
       loadAndViewImage(0);
     })();
   </script>
