@@ -269,116 +269,6 @@
         </div>
     </div>
 
-    <!-- Dashboard -->
-    <div id="dashboard" class="hidden">
-        <div class="fixed top-0 left-0 right-0 bg-white shadow-md z-40">
-            <div class="container mx-auto px-6 h-16 flex justify-between items-center">
-                <div class="flex items-center cursor-pointer" onclick="showLandingPage()">
-                    <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-8"/>
-                    <span class="text-xl font-bold text-gray-800 ml-2">RadMentor</span>
-                </div>
-                <div class="flex items-center">
-                    <span class="hidden sm:block text-gray-700 mr-4">Hi, <span id="user-greeting-name">Doctor</span>!</span>
-                    <button id="dashboard-menu-button" class="text-gray-700">
-                        <i data-feather="menu" class="w-6 h-6"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div id="sidebar" class="fixed top-0 right-0 h-full bg-white shadow-xl z-50 w-72 p-6 transform translate-x-full">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-xl font-bold">Menu</h2>
-                <button id="close-sidebar-button" class="text-gray-600 hover:text-gray-900"><i data-feather="x"></i></button>
-            </div>
-            <nav class="space-y-2">
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 bg-blue-100 font-semibold" onclick="showDashboardSection('main')"><i data-feather="home" class="mr-3 w-5 h-5"></i>Home</a>
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('profile')"><i data-feather="user" class="mr-3 w-5 h-5"></i>Profile</a>
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('subscription')"><i data-feather="credit-card" class="mr-3 w-5 h-5"></i>Subscription</a>
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="showDashboardSection('settings')"><i data-feather="settings" class="mr-3 w-5 h-5"></i>Settings</a>
-                <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100" onclick="logout()"><i data-feather="log-out" class="mr-3 w-5 h-5"></i>Logout</a>
-            </nav>
-        </div>
-        <div class="pt-24 pb-12 bg-gray-50 min-h-screen">
-            <div class="container mx-auto px-6">
-                <div id="dashboard-main-content">
-                    <h1 class="text-3xl font-bold text-gray-900">Welcome to RadMentor</h1>
-                    <p class="mt-2 text-lg text-gray-600">Select a category to start your preparation.</p>
-                    <div id="access-level-notice"></div>
-                    <div id="main-dashboard-grid" class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="showFrcrParts()">
-                            <i data-feather="award" class="w-10 h-10 text-blue-600 mb-4"></i>
-                            <h3 class="text-2xl font-bold text-gray-800">FRCR</h3>
-                            <p class="mt-2 text-gray-600">Comprehensive question banks and mock tests for the FRCR exam.</p>
-                        </div>
-                        <a href="MD_DNB/index.html" class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center">
-                            <i data-feather="book-open" class="w-10 h-10 text-blue-600 mb-4"></i>
-                            <h3 class="text-2xl font-bold text-gray-800">MD / DNB</h3>
-                            <p class="mt-2 text-gray-600">Master your final year exams with our targeted content.</p>
-                        </a>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='anatomy/'">
-                            <i data-feather="activity" class="w-10 h-10 text-blue-600 mb-4"></i>
-                            <h3 class="text-2xl font-bold text-gray-800">Anatomy</h3>
-                            <p class="mt-2 text-gray-600">Detailed anatomical modules to build a strong foundation.</p>
-                        </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('MICR MCQs coming soon!')">
-                            <h3 class="text-2xl font-bold text-gray-800">MICR</h3>
-                            <p class="mt-2 text-gray-600">Practice with MCQs tailored for the MICR examination.</p>
-                        </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('Superspeciality content coming soon!')">
-                            <i data-feather="star" class="w-10 h-10 text-blue-600 mb-4"></i>
-                            <h3 class="text-2xl font-bold text-gray-800">Superspeciality</h3>
-                            <p class="mt-2 text-gray-600">Prepare for NEET SS & INICET SS with high-yield questions.</p>
-                        </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('Fellowship Exams MCQs coming soon!')">
-                            <i data-feather="award" class="w-10 h-10 text-blue-600 mb-4"></i>
-                            <h3 class="text-2xl font-bold text-gray-800">Fellowship Exams</h3>
-                            <p class="mt-2 text-gray-600">Excel in your fellowship exams with our specialized modules.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="frcr-parts-view" class="hidden">
-                    <button onclick="showMainDashboard()" class="flex items-center text-gray-600 hover:text-blue-600 mb-6">
-                        <i data-feather="arrow-left" class="mr-2"></i> Back to Dashboard
-                    </button>
-                    <h1 class="text-3xl font-bold text-gray-900">FRCR Preparation</h1>
-                    <p class="mt-2 text-lg text-gray-600">Select which part of the exam you want to practice.</p>
-                    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="showFrcrPart1Subjects()">
-                            <h3 class="text-2xl font-bold text-gray-800">Part 1</h3>
-                        </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('Part 2A is coming soon!')">
-                            <h3 class="text-2xl font-bold text-gray-800">Part 2A</h3>
-                        </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="alert('Part 2B is coming soon!')">
-                            <h3 class="text-2xl font-bold text-gray-800">Part 2B</h3>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="frcr-part1-subjects-view" class="hidden">
-                    <button onclick="showFrcrParts()" class="flex items-center text-gray-600 hover:text-blue-600 mb-6">
-                        <i data-feather="arrow-left" class="mr-2"></i> Back to FRCR Parts
-                    </button>
-                    <h1 class="text-3xl font-bold text-gray-900">FRCR Part 1</h1>
-                    <p class="mt-2 text-lg text-gray-600">Select a subject to begin.</p>
-                    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='frcr/Part 1/Anatomy/'">
-                            <h3 class="text-2xl font-bold text-gray-800">FRCR Anatomy</h3>
-                        </div>
-                        <div class="dashboard-grid-item bg-white p-8 rounded-lg flex flex-col items-center justify-center text-center cursor-pointer" onclick="window.location.href='frcr/Part 1/Physics/'">
-                            <h3 class="text-2xl font-bold text-gray-800">FRCR Physics</h3>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="profile-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
-                <div id="subscription-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
-                <div id="settings-section" class="hidden bg-white p-8 rounded-lg shadow-md"></div>
-            </div>
-        </div>
-    </div>
-
     <!-- Chatbot -->
     <div id="chatbot-container">
         <div id="chatbot-header">RadMentor AI</div>
@@ -401,7 +291,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
     <!-- Custom JavaScript -->
-    <script src="app.js"></script>
+    <script src="js/firebase.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/chatbot.js"></script>
+    <script src="js/main.js"></script>
 
 </body>
 </html>
