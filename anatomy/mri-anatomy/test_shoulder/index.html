@@ -3,121 +3,35 @@
 <head>
   <meta charset="utf-8">
   <title>Shoulder MRI Viewer with Annotations</title>
-  
+
+  <!-- Cornerstone Libraries -->
   <script src="https://unpkg.com/cornerstone-core"></script>
   <script src="https://unpkg.com/cornerstone-tools"></script>
   <script src="https://unpkg.com/dicom-parser"></script>
   <script src="https://unpkg.com/cornerstone-wado-image-loader"></script>
 
   <style>
-    /* General Styles */
     body {
       background-color: #1a1a1a;
-      font-family: 'Inter', sans-serif; /* Using a nicer font like the example */
+      font-family: Arial, sans-serif;
       color: #fff;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    h2 {
-      margin: 20px 0;
-      font-weight: 600;
-      letter-spacing: 1px;
-    }
-    
-    /* This new container will manage the positioning of the viewer and external labels */
-    #viewer-body {
-        position: relative;
-        max-width: 90vw;
-        display: flex; /* Helps center the image wrapper */
-        justify-content: center;
-    }
-
-    /* The wrapper for the cornerstone canvas and the SVG overlay */
-    #image-wrapper {
-        position: relative;
-        width: 512px;
-        height: 512px;
-        background-color: #000;
-        border-radius: 12px;
-        padding: 10px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    }
-    
-    #dicomImage {
-      width: 100%;
-      height: 100%;
-    }
-
-    /* SVG overlay for lines and circles, positioned exactly over the canvas */
-    .annotation-svg-overlay {
-        position: absolute;
-        top: 10px; /* Account for padding in #image-wrapper */
-        left: 10px;
-        width: 512px;
-        height: 512px;
-        pointer-events: none; /* Allows mouse events to pass through to the canvas */
-        z-index: 10;
-    }
-
-    /* Styles for annotation labels and lines, adapted from your example */
-    .annotation-label {
-        position: absolute;
-        background-color: rgba(240, 240, 255, 0.95);
-        color: #1e3a8a;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        font-weight: 500;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        border: 1px solid #60a5fa;
-        z-index: 11;
-        pointer-events: auto; /* Labels are clickable/hoverable */
-        white-space: normal;
-        max-width: 150px;
-        line-height: 1.2;
-        transition: background-color 0.2s;
-    }
-    .annotation-label:hover {
-        background-color: rgba(255, 255, 255, 1);
-    }
-    .annotation-label.align-right {
-        transform: translate(calc(-100% - 15px), -50%); /* Position left of the viewer */
-        text-align: right;
-    }
-    .annotation-label.align-left {
-        transform: translate(15px, -50%); /* Position right of the viewer */
-        text-align: left;
-    }
-
-    .annotation-svg-overlay line {
-        stroke: #60a5fa;
-        stroke-width: 1.5;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    .annotation-svg-overlay circle {
-        fill: #ef4444; /* red-500 */
-        transition: r 0.2s ease;
-        stroke: white;
-        stroke-width: 1;
-    }
-    /* Hover effects */
-    .annotation-label.hovered, .annotation-label:hover {
-        border-color: #ef4444;
-    }
-    .hovered line {
-        opacity: 0.8;
-    }
-    .hovered circle {
-        r: 6 !important;
-    }
-    
-    /* Controls */
-    #controls {
       text-align: center;
+    }
+    #dicomImage {
+      width: 512px;
+      height: 512px;
+      background-color: black;
+      margin: auto;
+      border-radius: 8px;
+      position: relative;
+    }
+    #overlayCanvas {
+      position: absolute;
+      left: 0;
+      top: 0;
+      pointer-events: none;
+    }
+    #controls {
       margin-top: 15px;
     }
     input[type=range] {
@@ -132,212 +46,117 @@
   </style>
 </head>
 <body>
-  <h2>Shoulder MRI Viewer</h2>
-
-  <div id="viewer-body">
-      <div id="image-wrapper">
-          <div id="dicomImage"></div>
-          <svg class="annotation-svg-overlay" id="annotationSvgOverlay"></svg>
-      </div>
-      </div>
-
+  <h2>Shoulder MRI Viewer with Annotations</h2>
+  <div style="position:relative; display:inline-block;">
+    <div id="dicomImage"></div>
+    <canvas id="overlayCanvas" width="512" height="512"></canvas>
+  </div>
   <div id="controls">
     <input type="range" id="sliceSlider" min="0" max="279" value="0">
-    <div class="slice-info">
-      Slice <span id="currentSlice">1</span> / <span id="totalSlices">280</span>
-    </div>
+    <div class="slice-info">Slice <span id="currentSlice">1</span> / <span id="totalSlices">280</span></div>
   </div>
-  
+
   <script>
-    // --- SETUP & CONFIG ---
-    const { RenderingEngine, Enums } = cornerstone;
     cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
     cornerstoneWADOImageLoader.webWorkerManager.initialize({
       webWorkerPath : 'https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoaderWebWorker.min.js',
       taskConfiguration: {
-        'decodeTask': {
+        decodeTask: {
           codecsPath: 'https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoaderCodecs.min.js'
         }
       }
     });
 
     const element = document.getElementById('dicomImage');
+    const overlayCanvas = document.getElementById('overlayCanvas');
+    const ctx = overlayCanvas.getContext('2d');
+    cornerstone.enable(element);
+
+    const baseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
+    const jsonBaseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/annotations/";
+
+    const files = {
+      Deltoid: { url: jsonBaseUrl + "Deltoid.mrk.json", color: "red", points: [] },
+      Humerus: { url: jsonBaseUrl + "Humerus.mrk.json", color: "blue", points: [] },
+      Scapula: { url: jsonBaseUrl + "Scapula.mrk.json", color: "lime", points: [] }
+    };
+
+    const imageIds = [];
+    for (let i = 1; i <= 280; i++) {
+      const num = String(i).padStart(4, '0');
+      imageIds.push(`wadouri:${baseUrl}IMG${num}.dcm`);
+    }
+
+    let currentImageIndex = 0;
     const slider = document.getElementById('sliceSlider');
     const currentSliceDisplay = document.getElementById('currentSlice');
-    const totalSlicesDisplay = document.getElementById('totalSlices');
-    const annotationSvgOverlay = document.getElementById('annotationSvgOverlay');
-    const viewerBody = document.getElementById('viewer-body');
-    
-    const baseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/";
-    const imageIds = Array.from({ length: 280 }, (_, i) => `wadouri:${baseUrl}shoulder-dicom/IMG${String(i + 1).padStart(4, '0')}.dcm`);
-    totalSlicesDisplay.textContent = imageIds.length;
-    
-    const annotationFiles = ["Deltoid.mrk.json", "Humerus.mrk.json", "Scapula.mrk.json"];
-    let allAnnotations = [];
-    let imageWidth = 512; // Default, will be updated from DICOM metadata
+    document.getElementById('totalSlices').textContent = imageIds.length;
 
-    // --- ANNOTATION LOGIC (Adapted from your example) ---
+    async function loadAnnotations() {
+      for (const key in files) {
+        const res = await fetch(files[key].url);
+        const data = await res.json();
+        files[key].points = data.markups[0].controlPoints.map(p => p.position);
+      }
+    }
 
-    async function loadAndProcessAnnotations() {
-        const fetchPromises = annotationFiles.map(file => fetch(`${baseUrl}${file}`).then(res => res.json()));
-        const results = await Promise.all(fetchPromises);
-        
-        const processedAnnotations = [];
-        results.forEach(data => {
-            if (!data || !data.markups) return;
-            data.markups.forEach(markup => {
-                if (!markup.controlPoints || !markup.associatedNodeID) return;
-                
-                const sliceIndex = parseInt(markup.associatedNodeID.split('_').pop(), 10);
-                
-                markup.controlPoints.forEach(cp => {
-                    processedAnnotations.push({
-                        slice: sliceIndex,
-                        text: cp.label,
-                        x: cp.position[0],
-                        y: cp.position[1]
-                    });
-                });
-            });
+    function lpsToIJK(positionLPS, image) {
+      const ipp = image.data.string('x00200032').split('\\').map(parseFloat); // ImagePositionPatient
+      const iop = image.data.string('x00200037').split('\\').map(parseFloat); // ImageOrientationPatient
+      const pxSpacing = image.data.string('x00280030').split('\\').map(parseFloat); // PixelSpacing
+      const rowCosines = [iop[0], iop[1], iop[2]];
+      const colCosines = [iop[3], iop[4], iop[5]];
+
+      const dx = positionLPS[0] - ipp[0];
+      const dy = positionLPS[1] - ipp[1];
+      const dz = positionLPS[2] - ipp[2];
+
+      const col = (dx * colCosines[0] + dy * colCosines[1] + dz * colCosines[2]) / pxSpacing[1];
+      const row = (dx * rowCosines[0] + dy * rowCosines[1] + dz * rowCosines[2]) / pxSpacing[0];
+      return { row, col };
+    }
+
+    function drawAnnotations(image) {
+      ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+      for (const key in files) {
+        ctx.fillStyle = files[key].color;
+        files[key].points.forEach(pt => {
+          const ij = lpsToIJK(pt, image);
+          if (ij.row >= 0 && ij.row < image.rows && ij.col >= 0 && ij.col < image.columns) {
+            ctx.beginPath();
+            ctx.arc(ij.col, ij.row, 4, 0, 2 * Math.PI);
+            ctx.fill();
+          }
         });
-        allAnnotations = processedAnnotations;
+      }
     }
 
-    function placeAnnotations() {
-        // Clear previous annotations
-        annotationSvgOverlay.innerHTML = '';
-        document.querySelectorAll('.annotation-label').forEach(el => el.remove());
-        
-        const enabledElement = cornerstone.getEnabledElement(element);
-        if (!enabledElement || !enabledElement.image) return;
-        
-        imageWidth = enabledElement.image.width;
-        const viewport = enabledElement.viewport;
-        const currentSliceIndex = enabledElement.image.imageId.split('IMG')[1].split('.dcm')[0];
-        const currentSliceNumber = parseInt(currentSliceIndex, 10);
-        
-        const annotationsForSlice = allAnnotations
-            .filter(ann => ann.slice === currentSliceNumber)
-            .sort((a, b) => a.y - b.y); // Sort by vertical position
-
-        let placedLabelsLeft = [];
-        let placedLabelsRight = [];
-        const LABEL_VERTICAL_SPACING = 5;
-
-        annotationsForSlice.forEach(ann => {
-            const canvasPoint = cornerstone.pixelToCanvas(element, { x: ann.x, y: ann.y });
-            
-            // Create label to measure its height
-            const labelDiv = document.createElement('div');
-            labelDiv.className = 'annotation-label';
-            labelDiv.textContent = ann.text;
-            viewerBody.appendChild(labelDiv);
-            const labelHeight = labelDiv.offsetHeight;
-
-            // --- Label placement algorithm from your example ---
-            const pointIsOnLeftSide = ann.x < (imageWidth / 2);
-            const targetColumn = pointIsOnLeftSide ? placedLabelsLeft : placedLabelsRight;
-
-            let bestY = canvasPoint.y;
-            let foundFit = false;
-            
-            // Try ideal position first
-            if (!checkOverlap(bestY, labelHeight, targetColumn)) {
-                foundFit = true;
-            } else { // Search for a new position
-                 for (let offset = 5; offset < element.offsetHeight / 2; offset += 5) {
-                    let tryUp = canvasPoint.y - offset;
-                    if (tryUp - labelHeight / 2 > 0 && !checkOverlap(tryUp, labelHeight, targetColumn)) { bestY = tryUp; foundFit = true; break; }
-                    let tryDown = canvasPoint.y + offset;
-                    if (tryDown + labelHeight / 2 < element.offsetHeight && !checkOverlap(tryDown, labelHeight, targetColumn)) { bestY = tryDown; foundFit = true; break; }
-                }
-            }
-            
-            bestY = Math.max(bestY, labelHeight / 2);
-            bestY = Math.min(bestY, element.offsetHeight - labelHeight / 2);
-            targetColumn.push({ top: bestY - labelHeight / 2, bottom: bestY + labelHeight / 2 });
-            
-            // Position the label and draw the line
-            const wrapperRect = document.getElementById('image-wrapper').getBoundingClientRect();
-            const bodyRect = viewerBody.getBoundingClientRect();
-            let labelTargetX, lineEndX;
-
-            if (pointIsOnLeftSide) {
-                labelDiv.classList.add('align-right');
-                labelTargetX = (wrapperRect.left - bodyRect.left);
-                lineEndX = 0;
-            } else {
-                labelDiv.classList.add('align-left');
-                labelTargetX = (wrapperRect.right - bodyRect.left);
-                lineEndX = element.offsetWidth;
-            }
-            
-            labelDiv.style.left = `${labelTargetX}px`;
-            labelDiv.style.top = `${bestY}px`;
-            
-            // Create SVG Line and Circle
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', canvasPoint.x);
-            line.setAttribute('y1', canvasPoint.y);
-            line.setAttribute('x2', lineEndX);
-            line.setAttribute('y2', bestY);
-
-            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            circle.setAttribute('cx', canvasPoint.x);
-            circle.setAttribute('cy', canvasPoint.y);
-            circle.setAttribute('r', 4);
-
-            const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-            group.appendChild(line);
-            group.appendChild(circle);
-            annotationSvgOverlay.appendChild(group);
-
-            // Hover interactivity
-            const activate = () => { group.classList.add('hovered'); labelDiv.classList.add('hovered'); };
-            const deactivate = () => { group.classList.remove('hovered'); labelDiv.classList.remove('hovered'); };
-            labelDiv.onmouseover = group.onmouseover = activate;
-            labelDiv.onmouseout = group.onmouseout = deactivate;
-        });
+    async function loadAndViewImage(index) {
+      if (index < 0 || index >= imageIds.length) return;
+      currentImageIndex = index;
+      slider.value = index;
+      currentSliceDisplay.textContent = index + 1;
+      const image = await cornerstone.loadAndCacheImage(imageIds[index]);
+      cornerstone.displayImage(element, image);
+      drawAnnotations(image);
     }
 
-    function checkOverlap(testY, height, placedLabels) {
-        const top1 = testY - height / 2;
-        const bottom1 = testY + height / 2;
-        for (const label of placedLabels) {
-            if (top1 < (label.bottom + LABEL_VERTICAL_SPACING) && bottom1 > (label.top - LABEL_VERTICAL_SPACING)) {
-                return true;
-            }
-        }
-        return false;
-    }
+    element.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      loadAndViewImage(currentImageIndex + (e.deltaY < 0 ? -1 : 1));
+    });
 
-    // --- MAIN EXECUTION ---
-    async function run() {
-      await cornerstone.init();
-      const renderingEngine = new RenderingEngine('myRenderingEngine');
-      renderingEngine.enableElement({
-        viewportId: 'mriViewport',
-        element,
-        type: Enums.ViewportType.STACK,
-      });
-      
-      const viewport = renderingEngine.getViewport('mriViewport');
-      await viewport.setStack(imageIds, 0);
-      viewport.render();
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowRight') loadAndViewImage(currentImageIndex + 1);
+      else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') loadAndViewImage(currentImageIndex - 1);
+    });
 
-      await loadAndProcessAnnotations();
-      
-      // --- EVENT LISTENERS ---
-      element.addEventListener(Enums.Events.IMAGE_RENDERED, placeAnnotations);
-      window.addEventListener('resize', placeAnnotations);
+    slider.addEventListener('input', () => loadAndViewImage(parseInt(slider.value)));
 
-      slider.addEventListener('input', (e) => {
-          viewport.setImageIdIndex(parseInt(e.target.value, 10));
-          currentSliceDisplay.textContent = parseInt(e.target.value, 10) + 1;
-      });
-    }
-
-    run();
+    (async function init() {
+      await loadAnnotations();
+      loadAndViewImage(0);
+    })();
   </script>
 </body>
 </html>
