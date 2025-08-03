@@ -33,7 +33,7 @@
       padding: 10px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
       max-width: 90vw;
-      position: relative; /* Needed for overlay */
+      position: relative;
     }
 
     #dicomImage {
@@ -71,7 +71,7 @@
       cursor: pointer;
       transition: background 0.3s;
     }
-
+    
     input[type=range]::-webkit-slider-thumb:hover {
       background: #00ffff;
     }
@@ -132,7 +132,7 @@
 
     const element = document.getElementById('dicomImage');
     cornerstone.enable(element);
-    cornerstoneTools.init(); // Initialize cornerstone-tools
+    cornerstoneTools.init(); 
 
     const baseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/";
     const imageIds = [];
@@ -154,14 +154,14 @@
     const currentSliceDisplay = document.getElementById('currentSlice');
     document.getElementById('totalSlices').textContent = imageIds.length;
     
-    // --- Annotation Functions ---
-
-    // 1. Load all annotation files
     async function loadAnnotations() {
         const fetchPromises = annotationFiles.map(file =>
             fetch(`${baseUrl}${file}`)
-                .then(response => response.json())
-                .catch(err => console.error(`Failed to load ${file}`, err))
+                .then(response => {
+                    if (!response.ok) throw new Error(`Network response was not ok for ${file}`);
+                    return response.json();
+                })
+                .catch(err => console.error(`Failed to load or parse ${file}:`, err))
         );
 
         const results = await Promise.all(fetchPromises);
@@ -171,14 +171,12 @@
                 allAnnotationData[label] = data.markups;
             }
         });
-        console.log("Annotations loaded:", allAnnotationData);
         createLegend();
     }
     
-    // 2. Create the legend UI
     function createLegend() {
         const legendContainer = document.getElementById('legend');
-        legendContainer.innerHTML = ''; // Clear previous legend
+        legendContainer.innerHTML = '';
         Object.keys(annotationColors).forEach(label => {
             const item = document.createElement('div');
             item.className = 'legend-item';
@@ -190,18 +188,16 @@
         });
     }
 
-    // 3. Draw annotations for the current slice
     function drawAnnotationsForSlice(sliceIndex) {
-        // Clear previous annotations
         cornerstoneTools.clearToolState(element, 'FreehandRoi');
 
         Object.keys(allAnnotationData).forEach(label => {
             const markups = allAnnotationData[label];
+            if (!markups) return;
+
             const color = annotationColors[label];
 
             markups.forEach(markup => {
-                // The slice number is encoded at the end of the associatedNodeID
-                // Example: "vtkMRMLScalarVolumeNode_4_slice_125" -> 125
                 const markupSliceIndex = parseInt(markup.associatedNodeID.split('_').pop(), 10);
 
                 if (markupSliceIndex === sliceIndex) {
@@ -212,9 +208,9 @@
 
                     const toolData = {
                         visible: true,
-                        active: false, // Not editable
+                        active: false,
                         color: color,
-                        fill: false, // Set to true for a filled region
+                        fill: false,
                         handles: {
                             points: points
                         }
@@ -223,40 +219,31 @@
                 }
             });
         });
-
-        // Redraw the image to show the new tool state
         cornerstone.updateImage(element);
     }
     
-
-    // --- Image Loading and Navigation ---
-
     function loadAndViewImage(index) {
         if (index < 0 || index >= imageIds.length) return;
         currentImageIndex = index;
         slider.value = index;
-        currentSliceDisplay.textContent = index + 1; // Slice number is index + 1
+        currentSliceDisplay.textContent = index + 1;
 
         cornerstone.loadAndCacheImage(imageIds[index])
             .then(image => {
                 cornerstone.displayImage(element, image);
-                // After displaying the image, draw the annotations for this slice
-                drawAnnotationsForSlice(index + 1); // The markup files use 1-based indexing
+                drawAnnotationsForSlice(index + 1);
             })
-            .catch(err => console.error("Error loading image:", err));
+            .catch(err => {
+                console.error(`Error loading image index ${index}:`, err);
+            });
     }
 
-    // Mouse wheel scrolling
     element.addEventListener('wheel', (e) => {
       e.preventDefault();
-      if (e.deltaY < 0) {
-        loadAndViewImage(currentImageIndex - 1);
-      } else {
-        loadAndViewImage(currentImageIndex + 1);
-      }
+      let newIndex = currentImageIndex + (e.deltaY < 0 ? -1 : 1);
+      loadAndViewImage(newIndex);
     });
 
-    // Keyboard navigation
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
         loadAndViewImage(currentImageIndex + 1);
@@ -265,20 +252,17 @@
       }
     });
 
-    // Slider control
     slider.addEventListener('input', () => {
       loadAndViewImage(parseInt(slider.value));
     });
 
-    // Initial load
     async function initializeViewer() {
         await loadAnnotations();
         loadAndViewImage(0);
 
-        // Make the FreehandRoi tool visible but not interactable by default
         const FreehandRoiTool = cornerstoneTools.FreehandRoiTool;
         cornerstoneTools.addTool(FreehandRoiTool);
-        cornerstoneTools.setToolActive('FreehandRoi', { mouseButtonMask: 0 }); // Active but no mouse button interaction
+        cornerstoneTools.setToolActive('FreehandRoi', { mouseButtonMask: 0 });
     }
 
     initializeViewer();
