@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Shoulder MRI Viewer with Annotations (Shifted JSON)</title>
+  <title>Shoulder MRI Viewer with Registered Annotations</title>
   <script src="https://unpkg.com/cornerstone-core"></script>
   <script src="https://unpkg.com/cornerstone-tools"></script>
   <script src="https://unpkg.com/dicom-parser"></script>
@@ -93,7 +93,7 @@
 
     const files = {
       Deltoid: { url: jsonBaseUrl + "F_2.mrk.json", color: "red", points: [] },
-      Scapula: { url: jsonBaseUrl + "newscapula_shifted.mrk.json", color: "lime", points: [] } // updated to shifted file
+      Scapula: { url: jsonBaseUrl + "newscapula_registered.mrk.json", color: "lime", points: [] }
     };
 
     const imageIds = [];
@@ -175,7 +175,7 @@
     }
 
     function transformCoordinates(point) {
-      return point; // no offset
+      return point;
     }
 
     function lpsToPixel(positionLPS, image) {
