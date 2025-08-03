@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8">
   <title>Shoulder MRI Viewer with Annotations (Fixed Version)</title>
-  <!-- Cornerstone Libraries -->
   <script src="https://unpkg.com/cornerstone-core"></script>
   <script src="https://unpkg.com/cornerstone-tools"></script>
   <script src="https://unpkg.com/dicom-parser"></script>
@@ -68,13 +67,13 @@
     <div class="slice-info">Slice <span id="currentSlice">1</span> / <span id="totalSlices">280</span></div>
   </div>
   
-  <!-- Debug Panel -->
   <div id="debugPanel">
     <strong>Debug Info:</strong>
     <div id="debugContent"></div>
   </div>
 
   <script>
+    // NOTE: This uses the lowercase 'c' to match your latest code.
     cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
     cornerstoneWADOImageLoader.webWorkerManager.initialize({
       webWorkerPath : 'https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoaderWebWorker.min.js',
@@ -110,25 +109,21 @@
     const slider = document.getElementById('sliceSlider');
     const currentSliceDisplay = document.getElementById('currentSlice');
     document.getElementById('totalSlices').textContent = imageIds.length;
-    let slicePositions = [];
+
+    // This will now store objects with position AND orientation info
+    let sliceInfo = []; 
     let sliceThickness = 0;
     
-    // Debug logging function
     function debugLog(message) {
       console.log(message);
-      debugContent.innerHTML += `<div>${message}</div>`;
+      const msg = typeof message === 'object' ? JSON.stringify(message) : message;
+      debugContent.innerHTML += `<div>${msg}</div>`;
       debugContent.scrollTop = debugContent.scrollHeight;
     }
     
-    // Function to resize overlay canvas to match the displayed DICOM image
     function resizeOverlayCanvas() {
-      debugLog(`Resizing canvas: ${element.clientWidth}x${element.clientHeight}`);
-      
-      // Update canvas CSS size to match element
       overlayCanvas.style.width = element.clientWidth + 'px';
       overlayCanvas.style.height = element.clientHeight + 'px';
-      
-      // Update canvas internal resolution to match display
       overlayCanvas.width = element.clientWidth;
       overlayCanvas.height = element.clientHeight;
     }
@@ -137,213 +132,186 @@
       debugLog("Loading annotations...");
       for (const key in files) {
         try {
-          debugLog(`Fetching ${key} from ${files[key].url}`);
           const res = await fetch(files[key].url);
           if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
           const data = await res.json();
-          
-          debugLog(`Raw data for ${key}:`, data);
           
           files[key].points = data.markups[0].controlPoints.map(p => ({
             position: p.position,
             label: p.label
           }));
-          
           debugLog(`Loaded ${files[key].points.length} points for ${key}`);
-          debugLog(`First point for ${key}:`, files[key].points[0]);
         } catch (e) {
           debugLog(`Error loading ${key} annotations: ${e.message}`);
         }
       }
     }
     
+    // --- ‼️ FIXED FUNCTION ‼️ ---
+    // Now precomputes position, orientation, and the slice normal vector.
     async function precomputeSlicePositions() {
-      debugLog("Precomputing slice positions...");
-      slicePositions = [];
-      
-      // Load all slice positions
-      for (let i = 0; i < imageIds.length; i++) {
-        try {
-          const img = await cornerstone.loadAndCacheImage(imageIds[i]);
-          const ipp = img.data.string('x00200032');
-          if (!ipp) {
-            debugLog(`Missing Image Position Patient for slice ${i}`);
-            continue;
-          }
-          const position = ipp.split('\\').map(parseFloat);
-          slicePositions[i] = position;
-          
-          // Only log first few slices to avoid flooding the debug panel
-          if (i < 5 || i >= imageIds.length - 5) {
-            debugLog(`Slice ${i} position: ${position}`);
-          }
-        } catch (e) {
-          debugLog(`Error precomputing slice position ${i}: ${e.message}`);
+        debugLog("Precomputing slice information...");
+        sliceInfo = [];
+
+        for (let i = 0; i < imageIds.length; i++) {
+            try {
+                const img = await cornerstone.loadAndCacheImage(imageIds[i]);
+                const ipp = img.data.string('x00200032').split('\\').map(parseFloat);
+                const iop = img.data.string('x00200037').split('\\').map(parseFloat);
+
+                const rowCosines = [iop[0], iop[1], iop[2]];
+                const colCosines = [iop[3], iop[4], iop[5]];
+
+                // Calculate the normal vector using the cross product
+                const normal = [
+                    rowCosines[1] * colCosines[2] - rowCosines[2] * colCosines[1],
+                    rowCosines[2] * colCosines[0] - rowCosines[0] * colCosines[2],
+                    rowCosines[0] * colCosines[1] - rowCosines[1] * colCosines[0]
+                ];
+
+                sliceInfo[i] = { position: ipp, orientation: iop, normal: normal };
+
+                if (i < 2) {
+                    debugLog(`Slice ${i} position: ${ipp}`);
+                }
+            } catch (e) {
+                debugLog(`Error precomputing slice info ${i}: ${e.message}`);
+            }
         }
-      }
-      
-      if (slicePositions.length >= 2) {
-        // Calculate slice thickness from the first two slices
-        const dx = slicePositions[1][0] - slicePositions[0][0];
-        const dy = slicePositions[1][1] - slicePositions[0][1];
-        const dz = slicePositions[1][2] - slicePositions[0][2];
-        sliceThickness = Math.sqrt(dx*dx + dy*dy + dz*dz);
-        debugLog(`Computed slice thickness: ${sliceThickness}`);
-      } else {
-        debugLog("Could not compute slice thickness");
-      }
+        
+        if (sliceInfo.length >= 2 && sliceInfo[0] && sliceInfo[1]) {
+            const pos0 = sliceInfo[0].position;
+            const pos1 = sliceInfo[1].position;
+            const dx = pos1[0] - pos0[0];
+            const dy = pos1[1] - pos0[1];
+            const dz = pos1[2] - pos0[2];
+            sliceThickness = Math.sqrt(dx*dx + dy*dy + dz*dz);
+            debugLog(`Computed slice thickness: ${sliceThickness}`);
+        } else {
+            debugLog("Could not compute slice thickness");
+        }
     }
     
     function lpsToPixel(positionLPS, image) {
-      try {
-        const ipp = image.data.string('x00200032').split('\\').map(parseFloat);
-        const iop = image.data.string('x00200037').split('\\').map(parseFloat);
-        const pxSpacing = image.data.string('x00280030').split('\\').map(parseFloat);
-        
-        if (!ipp || !iop || !pxSpacing) {
-          debugLog("Missing required DICOM tags for coordinate conversion");
-          return { row: -1000, col: -1000 }; // Return invalid coordinates
-        }
-        
-        const rowCosines = [iop[0], iop[1], iop[2]];
-        const colCosines = [iop[3], iop[4], iop[5]];
-        const dx = positionLPS[0] - ipp[0];
-        const dy = positionLPS[1] - ipp[1];
-        const dz = positionLPS[2] - ipp[2];
-        const col = (dx * colCosines[0] + dy * colCosines[1] + dz * colCosines[2]) / pxSpacing[1];
-        const row = (dx * rowCosines[0] + dy * rowCosines[1] + dz * rowCosines[2]) / pxSpacing[0];
-        
-        debugLog(`LPS to pixel: LPS=${positionLPS}, IPP=${ipp}, result=(${row}, ${col})`);
-        
-        return { row, col };
-      } catch (e) {
-        debugLog(`Error in lpsToPixel: ${e.message}`);
-        return { row: -1000, col: -1000 }; // Return invalid coordinates
-      }
+      const ipp = image.data.string('x00200032').split('\\').map(parseFloat);
+      const iop = image.data.string('x00200037').split('\\').map(parseFloat);
+      const pxSpacing = image.data.string('x00280030').split('\\').map(parseFloat);
+      
+      const rowCosines = [iop[0], iop[1], iop[2]];
+      const colCosines = [iop[3], iop[4], iop[5]];
+      
+      const dx = positionLPS[0] - ipp[0];
+      const dy = positionLPS[1] - ipp[1];
+      const dz = positionLPS[2] - ipp[2];
+      
+      const col = (dx * colCosines[0] + dy * colCosines[1] + dz * colCosines[2]) / pxSpacing[1];
+      const row = (dx * rowCosines[0] + dy * rowCosines[1] + dz * rowCosines[2]) / pxSpacing[0];
+      
+      return { row, col };
     }
     
-    // FIXED: Calculate 3D distance between point and slice
+    // --- ‼️ FIXED FUNCTION ‼️ ---
+    // Calculates perpendicular distance from the point to the slice plane.
     function getSliceIndexForPoint(point) {
-      let minDist = Infinity;
-      let closestSlice = -1;
-      
-      for (let i = 0; i < slicePositions.length; i++) {
-        if (!slicePositions[i]) continue;
-        
-        // Calculate 3D Euclidean distance between point and slice position
-        const dx = slicePositions[i][0] - point[0];
-        const dy = slicePositions[i][1] - point[1];
-        const dz = slicePositions[i][2] - point[2];
-        const distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
-        
-        if (distance < minDist) {
-          minDist = distance;
-          closestSlice = i;
+        let minDist = Infinity;
+        let closestSlice = -1;
+
+        for (let i = 0; i < sliceInfo.length; i++) {
+            if (!sliceInfo[i]) continue;
+            
+            const slice = sliceInfo[i];
+            const ipp = slice.position;
+            const normal = slice.normal;
+
+            // Vector from a point on the plane (ipp) to our annotation point
+            const vector = [
+                point[0] - ipp[0],
+                point[1] - ipp[1],
+                point[2] - ipp[2]
+            ];
+
+            // Dot product of the vector and the normal gives the perpendicular distance
+            const distance = Math.abs(
+                vector[0] * normal[0] +
+                vector[1] * normal[1] +
+                vector[2] * normal[2]
+            );
+
+            if (distance < minDist) {
+                minDist = distance;
+                closestSlice = i;
+            }
         }
-      }
-      
-      debugLog(`Point ${point} closest to slice ${closestSlice} (dist: ${minDist})`);
-      
-      // Use a more lenient tolerance - half the slice thickness plus a small buffer
-      const tolerance = sliceThickness * 0.75;
-      if (minDist <= tolerance) {
-        return closestSlice;
-      } else {
-        debugLog(`Point ${point} rejected: distance ${minDist} > tolerance ${tolerance}`);
-        return -1;
-      }
+
+        // The tolerance should be half the slice thickness
+        const tolerance = sliceThickness / 2;
+        if (minDist <= tolerance) {
+            debugLog(`Point ${point} matched slice ${closestSlice} (dist: ${minDist.toFixed(2)} <= tolerance: ${tolerance.toFixed(2)})`);
+            return closestSlice;
+        } else {
+            // This log will now be much less frequent
+            if (currentImageIndex < 5) debugLog(`Point ${point} rejected: dist ${minDist.toFixed(2)} > tolerance ${tolerance.toFixed(2)}`);
+            return -1;
+        }
     }
     
     function drawAnnotations(image, sliceIndex) {
-      debugLog(`Drawing annotations for slice ${sliceIndex}`);
-      
-      // Clear the canvas
       ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
       
-      // Draw a test circle to verify canvas is visible
+      // Test circle
       ctx.fillStyle = "yellow";
       ctx.beginPath();
       ctx.arc(50, 50, 10, 0, 2 * Math.PI);
       ctx.fill();
       
-      // Get the current viewport to handle scaling and panning
       const viewport = cornerstone.getViewport(element);
-      if (!viewport) {
-        debugLog("No viewport available");
-        return;
-      }
-      
-      debugLog(`Viewport: scale=${viewport.scale}, translation=(${viewport.translation.x}, ${viewport.translation.y})`);
-      
-      // Calculate scaling factors from image pixels to canvas pixels
-      const scaleX = element.clientWidth / image.columns;
-      const scaleY = element.clientHeight / image.rows;
-      
-      debugLog(`Image dimensions: ${image.columns}x${image.rows}`);
-      debugLog(`Canvas dimensions: ${element.clientWidth}x${element.clientHeight}`);
-      debugLog(`Scaling factors: X=${scaleX}, Y=${scaleY}`);
+      if (!viewport) return;
       
       let pointsDrawn = 0;
-      
       for (const key in files) {
         ctx.fillStyle = files[key].color;
-        debugLog(`Processing ${key} annotations (${files[key].points.length} points)`);
         
-        files[key].points.forEach((ptObj, idx) => {
+        files[key].points.forEach((ptObj) => {
           const sliceMatch = getSliceIndexForPoint(ptObj.position);
-          debugLog(`Point ${idx} (${ptObj.label}): position=${ptObj.position}, matched slice=${sliceMatch}`);
           
-          if (sliceMatch === sliceIndex && sliceMatch !== -1) {
-            // Convert from LPS to pixel coordinates
+          if (sliceMatch === sliceIndex) {
             const ij = lpsToPixel(ptObj.position, image);
+            if (ij.row < 0 || ij.col < 0) return;
+
+            // Correct way to apply viewport transform to image pixel coordinates
+            const x = ij.col * viewport.scale + viewport.translation.x;
+            const y = ij.row * viewport.scale + viewport.translation.y;
             
-            // Skip if coordinates are invalid
-            if (ij.row < 0 || ij.col < 0) {
-              debugLog(`Skipping point ${ptObj.label} due to invalid coordinates`);
-              return;
-            }
+            debugLog(`Drawing point ${ptObj.label} at canvas coords (${x.toFixed(1)}, ${y.toFixed(1)})`);
             
-            // Convert from image pixel coordinates to canvas pixel coordinates
-            let x = ij.col * scaleX;
-            let y = ij.row * scaleY;
-            
-            // Apply viewport transformations (scaling and panning)
-            x = x * viewport.scale + viewport.translation.x;
-            y = y * viewport.scale + viewport.translation.y;
-            
-            debugLog(`Drawing point ${ptObj.label} at (${x}, ${y})`);
-            
-            // Draw the annotation
             ctx.beginPath();
             ctx.arc(x, y, 4 * viewport.scale, 0, 2 * Math.PI);
             ctx.fill();
             
-            // Draw label
-            ctx.font = `${12 * viewport.scale}px Arial`;
+            ctx.font = `${Math.max(12, 12 * viewport.scale)}px Arial`;
             ctx.strokeStyle = "black";
-            ctx.lineWidth = 2 * viewport.scale;
-            ctx.strokeText(ptObj.label, x + 6 * viewport.scale, y - 6 * viewport.scale);
-            ctx.fillText(ptObj.label, x + 6 * viewport.scale, y - 6 * viewport.scale);
+            ctx.lineWidth = 2;
+            ctx.strokeText(ptObj.label, x + 6, y - 6);
+            ctx.fillText(ptObj.label, x + 6, y - 6);
             
             pointsDrawn++;
           }
         });
       }
-      
-      debugLog(`Drew ${pointsDrawn} annotations`);
+      if (pointsDrawn > 0) {
+        debugLog(`Drew ${pointsDrawn} annotations for slice ${sliceIndex}`);
+      }
     }
-    
+
     async function loadAndViewImage(index) {
       if (index < 0 || index >= imageIds.length) return;
       currentImageIndex = index;
       slider.value = index;
       currentSliceDisplay.textContent = index + 1;
-      debugLog(`Loading image ${index}`);
       
       try {
         const image = await cornerstone.loadAndCacheImage(imageIds[index]);
         cornerstone.displayImage(element, image);
-        debugLog(`Image ${index} loaded successfully`);
       } catch (e) {
         debugLog(`Error loading image ${index}: ${e.message}`);
       }
@@ -361,26 +329,20 @@
     
     slider.addEventListener('input', () => loadAndViewImage(parseInt(slider.value)));
     
-    // Event listener for when the image is rendered
     element.addEventListener('cornerstoneimagerendered', () => {
-      debugLog("Image rendered event fired");
       resizeOverlayCanvas();
       const image = cornerstone.getImage(element);
       if (image) {
         drawAnnotations(image, currentImageIndex);
-      } else {
-        debugLog("No image available after render");
       }
     });
     
-    // Event listener for window resize
     window.addEventListener('resize', () => {
-      debugLog("Window resized");
-      resizeOverlayCanvas();
-      const image = cornerstone.getImage(element);
-      if (image) {
-        drawAnnotations(image, currentImageIndex);
-      }
+        resizeOverlayCanvas();
+        const image = cornerstone.getImage(element);
+        if (image) {
+            drawAnnotations(image, currentImageIndex);
+        }
     });
     
     (async function init() {
