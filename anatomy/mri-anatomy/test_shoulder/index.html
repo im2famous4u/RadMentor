@@ -2,13 +2,12 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Shoulder MRI Viewer</title>
+  <title>Shoulder MRI Viewer with Annotations</title>
 
-  <!-- Cornerstone Libraries -->
-  <script src="https://unpkg.com/cornerstone-core"></script>
-  <script src="https://unpkg.com/cornerstone-tools"></script>
-  <script src="https://unpkg.com/dicom-parser"></script>
-  <script src="https://unpkg.com/cornerstone-wado-image-loader"></script>
+  <script src="https://unpkg.com/cornerstone-core@2.3.0/dist/cornerstone.min.js"></script>
+  <script src="https://unpkg.com/cornerstone-tools@4.25.1/dist/cornerstoneTools.min.js"></script>
+  <script src="https://unpkg.com/dicom-parser@1.8.7/dist/dicomParser.min.js"></script>
+  <script src="https://unpkg.com/cornerstone-wado-image-loader@3.1.2/dist/cornerstoneWADOImageLoader.min.js"></script>
 
   <style>
     body {
@@ -34,6 +33,7 @@
       padding: 10px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
       max-width: 90vw;
+      position: relative; /* Needed for overlay */
     }
 
     #dicomImage {
@@ -54,7 +54,7 @@
     input[type=range] {
       width: 500px;
       max-width: 80vw;
-      appearance: none;
+      -webkit-appearance: none;
       height: 6px;
       border-radius: 5px;
       background: #555;
@@ -63,7 +63,7 @@
     }
 
     input[type=range]::-webkit-slider-thumb {
-      appearance: none;
+      -webkit-appearance: none;
       width: 14px;
       height: 14px;
       border-radius: 50%;
@@ -81,6 +81,24 @@
       font-size: 14px;
       color: #ccc;
     }
+
+    #legend {
+        margin-top: 15px;
+        display: flex;
+        gap: 20px;
+        font-size: 14px;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .legend-color {
+        width: 15px;
+        height: 15px;
+        border-radius: 3px;
+    }
+
   </style>
 </head>
 <body>
@@ -99,42 +117,133 @@
     </p>
   </div>
 
+  <div id="legend"></div>
+
   <script>
     cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
     cornerstoneWADOImageLoader.webWorkerManager.initialize({
-      webWorkerPath : 'https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoaderWebWorker.min.js',
+      webWorkerPath : 'https://unpkg.com/cornerstone-wado-image-loader@3.1.2/dist/cornerstoneWADOImageLoaderWebWorker.min.js',
       taskConfiguration: {
-        decodeTask: {
-          codecsPath: 'https://unpkg.com/cornerstone-wado-image-loader/dist/cornerstoneWADOImageLoaderCodecs.min.js'
+        'decodeTask': {
+          codecsPath: 'https://unpkg.com/cornerstone-wado-image-loader@3.1.2/dist/cornerstoneWADOImageLoaderCodecs.min.js'
         }
       }
     });
 
     const element = document.getElementById('dicomImage');
     cornerstone.enable(element);
+    cornerstoneTools.init(); // Initialize cornerstone-tools
 
-    const baseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
+    const baseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/";
     const imageIds = [];
     for (let i = 1; i <= 280; i++) {
       const num = String(i).padStart(4, '0');
-      imageIds.push(`wadouri:${baseUrl}IMG${num}.dcm`);
+      imageIds.push(`wadouri:${baseUrl}shoulder-dicom/IMG${num}.dcm`);
     }
+
+    const annotationFiles = ["Deltoid.mrk.json", "Humerus.mrk.json", "Scapula.mrk.json"];
+    const annotationColors = {
+        "Deltoid": "#ff4d4d", // Red
+        "Humerus": "#4dff4d", // Green
+        "Scapula": "#4d4dff"  // Blue
+    };
+    let allAnnotationData = {};
 
     let currentImageIndex = 0;
     const slider = document.getElementById('sliceSlider');
     const currentSliceDisplay = document.getElementById('currentSlice');
     document.getElementById('totalSlices').textContent = imageIds.length;
+    
+    // --- Annotation Functions ---
+
+    // 1. Load all annotation files
+    async function loadAnnotations() {
+        const fetchPromises = annotationFiles.map(file =>
+            fetch(`${baseUrl}${file}`)
+                .then(response => response.json())
+                .catch(err => console.error(`Failed to load ${file}`, err))
+        );
+
+        const results = await Promise.all(fetchPromises);
+        results.forEach(data => {
+            if (data && data.markups && data.markups.length > 0) {
+                const label = data.markups[0].label;
+                allAnnotationData[label] = data.markups;
+            }
+        });
+        console.log("Annotations loaded:", allAnnotationData);
+        createLegend();
+    }
+    
+    // 2. Create the legend UI
+    function createLegend() {
+        const legendContainer = document.getElementById('legend');
+        legendContainer.innerHTML = ''; // Clear previous legend
+        Object.keys(annotationColors).forEach(label => {
+            const item = document.createElement('div');
+            item.className = 'legend-item';
+            item.innerHTML = `
+                <div class="legend-color" style="background-color: ${annotationColors[label]}"></div>
+                <span>${label}</span>
+            `;
+            legendContainer.appendChild(item);
+        });
+    }
+
+    // 3. Draw annotations for the current slice
+    function drawAnnotationsForSlice(sliceIndex) {
+        // Clear previous annotations
+        cornerstoneTools.clearToolState(element, 'FreehandRoi');
+
+        Object.keys(allAnnotationData).forEach(label => {
+            const markups = allAnnotationData[label];
+            const color = annotationColors[label];
+
+            markups.forEach(markup => {
+                // The slice number is encoded at the end of the associatedNodeID
+                // Example: "vtkMRMLScalarVolumeNode_4_slice_125" -> 125
+                const markupSliceIndex = parseInt(markup.associatedNodeID.split('_').pop(), 10);
+
+                if (markupSliceIndex === sliceIndex) {
+                    const points = markup.controlPoints.map(p => ({
+                        x: p.position[0],
+                        y: p.position[1]
+                    }));
+
+                    const toolData = {
+                        visible: true,
+                        active: false, // Not editable
+                        color: color,
+                        fill: false, // Set to true for a filled region
+                        handles: {
+                            points: points
+                        }
+                    };
+                    cornerstoneTools.addToolState(element, 'FreehandRoi', toolData);
+                }
+            });
+        });
+
+        // Redraw the image to show the new tool state
+        cornerstone.updateImage(element);
+    }
+    
+
+    // --- Image Loading and Navigation ---
 
     function loadAndViewImage(index) {
-      if (index < 0 || index >= imageIds.length) return;
-      currentImageIndex = index;
-      slider.value = index;
-      currentSliceDisplay.textContent = index + 1;
-      cornerstone.loadAndCacheImage(imageIds[index])
-        .then(image => {
-          cornerstone.displayImage(element, image);
-        })
-        .catch(err => console.error("Error loading image:", err));
+        if (index < 0 || index >= imageIds.length) return;
+        currentImageIndex = index;
+        slider.value = index;
+        currentSliceDisplay.textContent = index + 1; // Slice number is index + 1
+
+        cornerstone.loadAndCacheImage(imageIds[index])
+            .then(image => {
+                cornerstone.displayImage(element, image);
+                // After displaying the image, draw the annotations for this slice
+                drawAnnotationsForSlice(index + 1); // The markup files use 1-based indexing
+            })
+            .catch(err => console.error("Error loading image:", err));
     }
 
     // Mouse wheel scrolling
@@ -162,7 +271,17 @@
     });
 
     // Initial load
-    loadAndViewImage(0);
+    async function initializeViewer() {
+        await loadAnnotations();
+        loadAndViewImage(0);
+
+        // Make the FreehandRoi tool visible but not interactable by default
+        const FreehandRoiTool = cornerstoneTools.FreehandRoiTool;
+        cornerstoneTools.addTool(FreehandRoiTool);
+        cornerstoneTools.setToolActive('FreehandRoi', { mouseButtonMask: 0 }); // Active but no mouse button interaction
+    }
+
+    initializeViewer();
   </script>
 </body>
 </html>
