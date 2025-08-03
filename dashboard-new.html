@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RadMentor Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .sidebar {
+            background-color: white;
+            width: 240px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+        }
+        .main-content {
+            margin-left: 240px;
+            min-height: 100vh;
+        }
+        .nav-item {
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+        .nav-item:hover {
+            background-color: #f1f5f9;
+            color: #1e40af;
+        }
+        .nav-item.active {
+            color: #1e40af;
+            background-color: #f1f5f9;
+            font-weight: 600;
+        }
+        .section-title {
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 16px 24px 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Left Sidebar -->
+    <div class="sidebar border-r border-gray-200">
+        <!-- Logo -->
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex items-center">
+                <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor" class="h-8 w-auto">
+                <span class="ml-2 font-semibold text-gray-900">RadMentor</span>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="py-2">
+            <a href="#" class="nav-item active">
+                <i data-feather="home" class="w-5 h-5 mr-3"></i>
+                Home
+            </a>
+
+            <div class="section-title">STUDY MODULE</div>
+            
+            <a href="#" class="nav-item">
+                <i data-feather="video" class="w-5 h-5 mr-3"></i>
+                Videos
+            </a>
+            <a href="#" class="nav-item">
+                <i data-feather="book-open" class="w-5 h-5 mr-3"></i>
+                QBank
+            </a>
+            <a href="#" class="nav-item">
+                <i data-feather="edit-3" class="w-5 h-5 mr-3"></i>
+                Tests
+            </a>
+
+            <div class="section-title">MY ACCOUNT</div>
+            
+            <a href="#" class="nav-item">
+                <i data-feather="user" class="w-5 h-5 mr-3"></i>
+                Me
+            </a>
+            <a href="#" class="nav-item">
+                <i data-feather="bookmark" class="w-5 h-5 mr-3"></i>
+                Bookmarks
+            </a>
+            <a href="#" class="nav-item">
+                <i data-feather="credit-card" class="w-5 h-5 mr-3"></i>
+                View plans
+            </a>
+            <a href="#" class="nav-item">
+                <i data-feather="help-circle" class="w-5 h-5 mr-3"></i>
+                Ask a doubt
+            </a>
+
+            <div class="section-title">DOWNLOAD APP</div>
+            
+            <div class="px-6 py-4 space-y-3">
+                <a href="#" class="block">
+                    <img src="https://www.prepladder.com/app-store-badge.svg" alt="App Store" class="h-10">
+                </a>
+                <a href="#" class="block">
+                    <img src="https://www.prepladder.com/play-store-badge.svg" alt="Play Store" class="h-10">
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Banner -->
+        <div class="bg-gradient-to-r from-blue-900 to-blue-700 text-white p-6 relative overflow-hidden">
+            <div class="relative z-10">
+                <h1 class="text-2xl font-semibold">Good evening, Neel Yadav</h1>
+                <p class="text-blue-100 mt-1">Let's guide you through your learning process</p>
+            </div>
+            <div class="absolute right-0 bottom-0">
+                <img src="https://www.prepladder.com/evening-illustration.svg" alt="Evening" class="h-24">
+            </div>
+        </div>
+
+        <!-- Notification Card -->
+        <div class="p-6">
+            <div class="bg-[#1a237e] rounded-lg text-white p-6 relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="inline-block bg-yellow-400 text-black text-sm font-medium px-2 py-1 rounded mb-2">
+                            NEET PG 2024
+                        </div>
+                        <h2 class="text-xl font-bold mb-2">PAPER ANALYSIS</h2>
+                        <p class="text-blue-200">A Mega Recall Session By India's Top Educators</p>
+                        <p class="text-yellow-400 mt-2">3rd August 3 PM Onwards</p>
+                        <button class="mt-4 bg-white text-blue-900 px-4 py-2 rounded-full text-sm font-medium">
+                            Notify Me
+                        </button>
+                    </div>
+                    <img src="https://www.prepladder.com/paper-analysis-illustration.webp" alt="Paper Analysis" class="h-40">
+                </div>
+            </div>
+        </div>
+
+        <!-- Get Started Section -->
+        <div class="px-6">
+            <h3 class="text-gray-500 font-medium mb-4">GET STARTED WITH YOUR PREP</h3>
+            
+            <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                <div class="flex items-center">
+                    <div class="w-40 h-40 bg-green-100 rounded-lg flex items-center justify-center overflow-hidden">
+                        <img src="https://www.prepladder.com/faculty-placeholder.webp" alt="Dr. Ankit Kumar" class="w-full h-full object-cover">
+                    </div>
+                    <div class="ml-6">
+                        <span class="text-blue-600 text-sm font-medium">PHARMACOLOGY</span>
+                        <h2 class="text-xl font-semibold mt-1">Glaucoma</h2>
+                        <p class="text-gray-600 mt-1">Dr. Ankit Kumar</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="px-6 mt-8">
+            <h3 class="text-gray-500 font-medium mb-4">QUICK LINKS</h3>
+            
+            <div class="grid grid-cols-4 gap-4">
+                <div class="bg-white rounded-lg p-4 text-center hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i data-feather="award" class="w-6 h-6 text-blue-600"></i>
+                    </div>
+                    <span class="text-sm font-medium">Treasures</span>
+                </div>
+                
+                <div class="bg-white rounded-lg p-4 text-center hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i data-feather="help-circle" class="w-6 h-6 text-orange-600"></i>
+                    </div>
+                    <span class="text-sm font-medium">PYQ's</span>
+                </div>
+
+                <div class="bg-white rounded-lg p-4 text-center hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i data-feather="bookmark" class="w-6 h-6 text-blue-600"></i>
+                    </div>
+                    <span class="text-sm font-medium">Bookmarks</span>
+                </div>
+
+                <div class="bg-white rounded-lg p-4 text-center hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <i data-feather="clock" class="w-6 h-6 text-purple-600"></i>
+                    </div>
+                    <span class="text-sm font-medium">Recent Updates</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        feather.replace();
+    </script>
+</body>
+</html>
