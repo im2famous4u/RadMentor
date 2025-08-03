@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Shoulder MRI Viewer with Registered Annotations</title>
+  <title>Shoulder MRI Viewer - Scapula Test</title>
   <script src="https://unpkg.com/cornerstone-core"></script>
   <script src="https://unpkg.com/cornerstone-tools"></script>
   <script src="https://unpkg.com/dicom-parser"></script>
@@ -57,7 +57,7 @@
   </style>
 </head>
 <body>
-  <h2>Shoulder MRI Viewer with Annotations</h2>
+  <h2>Shoulder MRI Viewer - Scapula Registered Test</h2>
   <div style="position:relative; display:inline-block;">
     <div id="dicomImage"></div>
     <canvas id="overlayCanvas" width="512" height="512"></canvas>
@@ -91,8 +91,8 @@
     const baseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
     const jsonBaseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/";
 
+    // Only Scapula file for testing
     const files = {
-      Deltoid: { url: jsonBaseUrl + "F_2.mrk.json", color: "red", points: [] },
       Scapula: { url: jsonBaseUrl + "newscapula_registered.mrk.json", color: "lime", points: [] }
     };
 
@@ -174,10 +174,6 @@
       }
     }
 
-    function transformCoordinates(point) {
-      return point;
-    }
-
     function lpsToPixel(positionLPS, image) {
       try {
         const ipp = image.data.string('x00200032').split('\\').map(parseFloat);
@@ -221,7 +217,7 @@
       }
       const tolerance = Math.max(sliceThickness, 0.6);
       debugLog(`Point ${JSON.stringify(pointLPS)} -> slice ${closestSlice} (dist=${minDist.toFixed(3)} mm)`);
-      return minDist <= tolerance ? closestSlice : -1;
+      return { slice: closestSlice, dist: minDist };
     }
 
     function drawAnnotations(image, sliceIndex) {
@@ -234,14 +230,14 @@
       let pointsDrawn = 0;
 
       for (const key in files) {
-        ctx.fillStyle = files[key].color;
-
         files[key].points.forEach((ptObj) => {
-          let pointUsed = ptObj.position;
-          let sliceMatch = getSliceIndexForPoint(pointUsed);
+          const { slice: sliceMatch, dist } = getSliceIndexForPoint(ptObj.position);
+
+          // In current slice -> bright color, else faded
+          ctx.fillStyle = (sliceMatch === sliceIndex) ? files[key].color : "rgba(200,200,200,0.3)";
 
           if (sliceMatch === sliceIndex) {
-            const ij = lpsToPixel(pointUsed, image);
+            const ij = lpsToPixel(ptObj.position, image);
             const canvasCoords = cornerstone.pixelToCanvas(element, { x: ij.col, y: ij.row });
             ctx.beginPath();
             ctx.arc(canvasCoords.x, canvasCoords.y, 4 * viewport.scale, 0, 2 * Math.PI);
