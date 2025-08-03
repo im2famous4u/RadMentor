@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Shoulder MRI Viewer with Annotations (Final Version)</title>
+  <title>Shoulder MRI Viewer with Annotations (Raw First + Fallback)</title>
   <script src="https://unpkg.com/cornerstone-core"></script>
   <script src="https://unpkg.com/cornerstone-tools"></script>
   <script src="https://unpkg.com/dicom-parser"></script>
@@ -66,11 +66,11 @@
     <input type="range" id="sliceSlider" min="0" max="279" value="0">
     <div class="slice-info">Slice <span id="currentSlice">1</span> / <span id="totalSlices">280</span></div>
   </div>
-  
   <div id="debugPanel">
     <strong>Debug Info:</strong>
     <div id="debugContent"></div>
   </div>
+
   <script>
     cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
     cornerstoneWADOImageLoader.webWorkerManager.initialize({
@@ -81,51 +81,50 @@
         }
       }
     });
-    
+
     const element = document.getElementById('dicomImage');
     const overlayCanvas = document.getElementById('overlayCanvas');
     const ctx = overlayCanvas.getContext('2d');
     const debugContent = document.getElementById('debugContent');
-    
     cornerstone.enable(element);
-    
+
     const baseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/shoulder-dicom/";
     const jsonBaseUrl = "https://raw.githubusercontent.com/im2famous4u/RadMentor/main/anatomy/mri-anatomy/test_shoulder/";
-    
+
     const files = {
       Deltoid: { url: jsonBaseUrl + "F_2.mrk.json", color: "red", points: [] },
       Scapula: { url: jsonBaseUrl + "newscapula.mrk.json", color: "lime", points: [] }
     };
-    
+
     const imageIds = [];
     for (let i = 1; i <= 280; i++) {
       const num = String(i).padStart(4, '0');
       imageIds.push(`wadouri:${baseUrl}IMG${num}.dcm`);
     }
-    
+
     let currentImageIndex = 0;
-    const slider = document.getElementById('sliceSlider');
-    const currentSliceDisplay = document.getElementById('currentSlice');
-    document.getElementById('totalSlices').textContent = imageIds.length;
-    
-    let sliceInfo = []; 
+    const slider = document.getElementById("sliceSlider");
+    const currentSliceDisplay = document.getElementById("currentSlice");
+    document.getElementById("totalSlices").textContent = imageIds.length;
+
+    let sliceInfo = [];
     let sliceThickness = 0;
     let isReady = false;
-    
+
     function debugLog(message) {
       console.log(message);
       const msg = typeof message === 'object' ? JSON.stringify(message) : message;
       debugContent.innerHTML += `<div>${msg}</div>`;
       debugContent.scrollTop = debugContent.scrollHeight;
     }
-    
+
     function resizeOverlayCanvas() {
       overlayCanvas.style.width = element.clientWidth + 'px';
       overlayCanvas.style.height = element.clientHeight + 'px';
       overlayCanvas.width = element.clientWidth;
       overlayCanvas.height = element.clientHeight;
     }
-    
+
     async function loadAnnotations() {
       debugLog("Loading annotations...");
       for (const key in files) {
@@ -143,224 +142,174 @@
         }
       }
     }
-    
+
     async function precomputeSlicePositions() {
-        debugLog("Precomputing slice information...");
-        sliceInfo = [];
-        for (let i = 0; i < imageIds.length; i++) {
-            try {
-                const img = await cornerstone.loadAndCacheImage(imageIds[i]);
-                const ipp = img.data.string('x00200032').split('\\').map(parseFloat);
-                const iop = img.data.string('x00200037').split('\\').map(parseFloat);
-                const rowCosines = [iop[0], iop[1], iop[2]];
-                const colCosines = [iop[3], iop[4], iop[5]];
-                const normal = [
-                    rowCosines[1] * colCosines[2] - rowCosines[2] * colCosines[1],
-                    rowCosines[2] * colCosines[0] - rowCosines[0] * colCosines[2],
-                    rowCosines[0] * colCosines[1] - rowCosines[1] * colCosines[0]
-                ];
-                sliceInfo[i] = { position: ipp, orientation: iop, normal: normal };
-            } catch (e) {
-                debugLog(`Error precomputing slice info ${i}: ${e.message}`);
-            }
+      debugLog("Precomputing slice information...");
+      sliceInfo = [];
+      for (let i = 0; i < imageIds.length; i++) {
+        try {
+          const img = await cornerstone.loadAndCacheImage(imageIds[i]);
+          const ipp = img.data.string('x00200032').split('\\').map(parseFloat);
+          const iop = img.data.string('x00200037').split('\\').map(parseFloat);
+          const rowCosines = [iop[0], iop[1], iop[2]];
+          const colCosines = [iop[3], iop[4], iop[5]];
+          const normal = [
+            rowCosines[1] * colCosines[2] - rowCosines[2] * colCosines[1],
+            rowCosines[2] * colCosines[0] - rowCosines[0] * colCosines[2],
+            rowCosines[0] * colCosines[1] - rowCosines[1] * colCosines[0]
+          ];
+          sliceInfo[i] = { position: ipp, normal: normal };
+        } catch (e) {
+          debugLog(`Error precomputing slice info ${i}: ${e.message}`);
         }
-        if (sliceInfo.length >= 2 && sliceInfo[0] && sliceInfo[1]) {
-            const pos0 = sliceInfo[0].position;
-            const pos1 = sliceInfo[1].position;
-            const dx = pos1[0] - pos0[0];
-            const dy = pos1[1] - pos0[1];
-            const dz = pos1[2] - pos0[2];
-            sliceThickness = Math.sqrt(dx*dx + dy*dy + dz*dz);
-            debugLog(`Computed slice thickness: ${sliceThickness}`);
-        } else {
-            debugLog("Could not compute slice thickness");
-        }
+      }
+      if (sliceInfo.length >= 2 && sliceInfo[0] && sliceInfo[1]) {
+        const pos0 = sliceInfo[0].position;
+        const pos1 = sliceInfo[1].position;
+        const dx = pos1[0] - pos0[0];
+        const dy = pos1[1] - pos0[1];
+        const dz = pos1[2] - pos0[2];
+        sliceThickness = Math.sqrt(dx*dx + dy*dy + dz*dz);
+        debugLog(`Computed slice thickness: ${sliceThickness}`);
+      }
     }
-    
-    // Coordinate transformation function (RAS to LPS)
+
     function transformCoordinates(point) {
-      // Convert from RAS (Right-Anterior-Superior) to LPS (Left-Posterior-Superior)
-      return [-point[0], -point[1], point[2]];
+      return [
+        point[0] - 160,
+        point[1] - 120,
+        point[2] + 70
+      ];
     }
-    
+
     function lpsToPixel(positionLPS, image) {
       try {
         const ipp = image.data.string('x00200032').split('\\').map(parseFloat);
         const iop = image.data.string('x00200037').split('\\').map(parseFloat);
         const pxSpacing = image.data.string('x00280030').split('\\').map(parseFloat);
-        
-        if (!ipp || !iop || !pxSpacing) {
-          debugLog("Missing required DICOM tags for coordinate conversion");
-          return { row: -1000, col: -1000 };
-        }
-        
         const rowCosines = [iop[0], iop[1], iop[2]];
         const colCosines = [iop[3], iop[4], iop[5]];
+
         const dx = positionLPS[0] - ipp[0];
         const dy = positionLPS[1] - ipp[1];
         const dz = positionLPS[2] - ipp[2];
+
         const col = (dx * colCosines[0] + dy * colCosines[1] + dz * colCosines[2]) / pxSpacing[1];
         const row = (dx * rowCosines[0] + dy * rowCosines[1] + dz * rowCosines[2]) / pxSpacing[0];
-        
         return { row, col };
       } catch (e) {
         debugLog(`Error in lpsToPixel: ${e.message}`);
         return { row: -1000, col: -1000 };
       }
     }
-    
+
     function getSliceIndexForPoint(point) {
-        let minDist = Infinity;
-        let closestSlice = -1;
-        
-        for (let i = 0; i < sliceInfo.length; i++) {
-            if (!sliceInfo[i]) continue;
-            const slice = sliceInfo[i];
-            const ipp = slice.position;
-            const normal = slice.normal;
-            const vector = [ point[0] - ipp[0], point[1] - ipp[1], point[2] - ipp[2] ];
-            const distance = Math.abs(vector[0] * normal[0] + vector[1] * normal[1] + vector[2] * normal[2]);
-            
-            if (distance < minDist) {
-                minDist = distance;
-                closestSlice = i;
-            }
-        }
-        
-        // Increased tolerance for better matching
-        const tolerance = sliceThickness * 2;
-        if (minDist <= tolerance) {
-            return closestSlice;
-        } else {
-            return -1;
-        }
-    }
-    
-    // Debug coordinate systems
-    function debugCoordinateSystems() {
-      debugLog("=== Coordinate System Debug ===");
-      debugLog("First few slice positions:");
-      for (let i = 0; i < Math.min(3, sliceInfo.length); i++) {
-        if (sliceInfo[i]) {
-          debugLog(`Slice ${i}: position=${sliceInfo[i].position}`);
+      let minDist = Infinity;
+      let closestSlice = -1;
+      for (let i = 0; i < sliceInfo.length; i++) {
+        if (!sliceInfo[i]) continue;
+        const ipp = sliceInfo[i].position;
+        const normal = sliceInfo[i].normal;
+        const vector = [
+          point[0] - ipp[0],
+          point[1] - ipp[1],
+          point[2] - ipp[2]
+        ];
+        const distance = Math.abs(
+          vector[0] * normal[0] + vector[1] * normal[1] + vector[2] * normal[2]
+        );
+        if (distance < minDist) {
+          minDist = distance;
+          closestSlice = i;
         }
       }
-      
-      debugLog("Annotation points:");
-      for (const key in files) {
-        if (files[key].points.length > 0) {
-          debugLog(`${key} first point: ${files[key].points[0].position}`);
-          debugLog(`${key} first point (transformed): ${transformCoordinates(files[key].points[0].position)}`);
-        }
-      }
+      const tolerance = sliceThickness / 2;
+      return minDist <= tolerance ? closestSlice : -1;
     }
-    
+
     function drawAnnotations(image, sliceIndex) {
-      if (!isReady) { return; }
+      if (!isReady) return;
+
       ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
       const viewport = cornerstone.getViewport(element);
       if (!viewport) return;
-      
+
       let pointsDrawn = 0;
-      
+
       for (const key in files) {
         ctx.fillStyle = files[key].color;
-        files[key].points.forEach((ptObj) => {
-          // Transform coordinates from RAS to LPS
-          const transformedPoint = transformCoordinates(ptObj.position);
-          const sliceMatch = getSliceIndexForPoint(transformedPoint);
-          
+
+        files[key].points.forEach((ptObj, idx) => {
+          let pointUsed = ptObj.position;
+          let sliceMatch = getSliceIndexForPoint(pointUsed);
+
+          if (sliceMatch !== sliceIndex) {
+            const transformedPoint = transformCoordinates(ptObj.position);
+            const transformedMatch = getSliceIndexForPoint(transformedPoint);
+            if (transformedMatch === sliceIndex) {
+              pointUsed = transformedPoint;
+              sliceMatch = transformedMatch;
+              debugLog(`Fallback used for ${ptObj.label}`);
+            }
+          }
+
           if (sliceMatch === sliceIndex) {
-            // Use the transformed point for coordinate conversion
-            const ij = lpsToPixel(transformedPoint, image);
-            
-            if (ij.row < 0 || ij.col < 0) return;
-            
-            // Use cornerstone's pixelToCanvas for proper coordinate transformation
+            const ij = lpsToPixel(pointUsed, image);
             const canvasCoords = cornerstone.pixelToCanvas(element, { x: ij.col, y: ij.row });
-            
-            // Draw the annotation
             ctx.beginPath();
             ctx.arc(canvasCoords.x, canvasCoords.y, 4 * viewport.scale, 0, 2 * Math.PI);
             ctx.fill();
-            
-            // Draw label
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'middle';
             ctx.font = `${Math.max(12, 12 * viewport.scale)}px Arial`;
             ctx.strokeStyle = 'black';
             ctx.lineWidth = 2;
-            const textX = canvasCoords.x + 8;
-            const textY = canvasCoords.y;
-            ctx.strokeText(ptObj.label, textX, textY);
-            ctx.fillText(ptObj.label, textX, textY);
-            
+            ctx.strokeText(ptObj.label, canvasCoords.x + 8, canvasCoords.y);
+            ctx.fillText(ptObj.label, canvasCoords.x + 8, canvasCoords.y);
             pointsDrawn++;
           }
         });
       }
-      
-      if (pointsDrawn > 0) {
-        debugLog(`Drew ${pointsDrawn} annotations for slice ${sliceIndex}`);
-      }
+      debugLog(`Drew ${pointsDrawn} annotations for slice ${sliceIndex}`);
     }
-    
+
     async function loadAndViewImage(index) {
       if (index < 0 || index >= imageIds.length) return;
       currentImageIndex = index;
       slider.value = index;
       currentSliceDisplay.textContent = index + 1;
-      try {
-        const image = await cornerstone.loadAndCacheImage(imageIds[index]);
-        cornerstone.displayImage(element, image);
-      } catch (e) {
-        debugLog(`Error loading image ${index}: ${e.message}`);
-      }
+      const image = await cornerstone.loadAndCacheImage(imageIds[index]);
+      cornerstone.displayImage(element, image);
+      drawAnnotations(image, index);
     }
-    
+
     element.addEventListener('wheel', (e) => {
       e.preventDefault();
       loadAndViewImage(currentImageIndex + (e.deltaY < 0 ? -1 : 1));
     });
-    
+
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowUp' || e.key === 'ArrowRight') loadAndViewImage(currentImageIndex + 1);
       else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') loadAndViewImage(currentImageIndex - 1);
     });
-    
+
     slider.addEventListener('input', () => loadAndViewImage(parseInt(slider.value)));
-    
+
     element.addEventListener('cornerstoneimagerendered', () => {
       resizeOverlayCanvas();
       const image = cornerstone.getImage(element);
-      if (image) {
-        drawAnnotations(image, currentImageIndex);
-      }
+      if (image) drawAnnotations(image, currentImageIndex);
     });
-    
+
     window.addEventListener('resize', () => {
-        resizeOverlayCanvas();
-        const image = cornerstone.getImage(element);
-        if (image) {
-            drawAnnotations(image, currentImageIndex);
-        }
+      resizeOverlayCanvas();
+      const image = cornerstone.getImage(element);
+      if (image) drawAnnotations(image, currentImageIndex);
     });
-    
+
     (async function init() {
-      debugLog("Initializing application");
-      try {
-        await loadAnnotations();
-        await precomputeSlicePositions();
-        
-        // Debug coordinate systems
-        debugCoordinateSystems();
-        
-        isReady = true; 
-        loadAndViewImage(0);
-        debugLog("Initialization complete");
-      } catch (e) {
-        debugLog(`Initialization error: ${e.message}`);
-      }
+      await loadAnnotations();
+      await precomputeSlicePositions();
+      isReady = true;
+      loadAndViewImage(0);
     })();
   </script>
 </body>
