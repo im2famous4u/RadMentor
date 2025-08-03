@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Shoulder MRI Viewer with Annotations (Raw First + Fallback)</title>
+  <title>Shoulder MRI Viewer with Annotations (Shifted JSON)</title>
   <script src="https://unpkg.com/cornerstone-core"></script>
   <script src="https://unpkg.com/cornerstone-tools"></script>
   <script src="https://unpkg.com/dicom-parser"></script>
@@ -93,7 +93,7 @@
 
     const files = {
       Deltoid: { url: jsonBaseUrl + "F_2.mrk.json", color: "red", points: [] },
-      Scapula: { url: jsonBaseUrl + "newscapula.mrk.json", color: "lime", points: [] }
+      Scapula: { url: jsonBaseUrl + "newscapula_shifted.mrk.json", color: "lime", points: [] } // updated to shifted file
     };
 
     const imageIds = [];
@@ -175,7 +175,7 @@
     }
 
     function transformCoordinates(point) {
-      return point; // no hardcoded offsets, use raw LPS
+      return point; // no offset
     }
 
     function lpsToPixel(positionLPS, image) {
@@ -239,16 +239,6 @@
         files[key].points.forEach((ptObj) => {
           let pointUsed = ptObj.position;
           let sliceMatch = getSliceIndexForPoint(pointUsed);
-
-          if (sliceMatch !== sliceIndex) {
-            const transformedPoint = transformCoordinates(ptObj.position);
-            const transformedMatch = getSliceIndexForPoint(transformedPoint);
-            if (transformedMatch === sliceIndex) {
-              pointUsed = transformedPoint;
-              sliceMatch = transformedMatch;
-              debugLog(`Fallback used for ${ptObj.label}`);
-            }
-          }
 
           if (sliceMatch === sliceIndex) {
             const ij = lpsToPixel(pointUsed, image);
