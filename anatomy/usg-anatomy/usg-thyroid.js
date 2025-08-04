@@ -1,136 +1,75 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const protocolSteps = [
-        { id: 'longitudinal', title: 'Longitudinal Scan' },
-        { id: 'transverse', title: 'Transverse Scan' },
-        { id: 'measurements', title: 'Lobe Measurements' },
-        { id: 'isthmus', title: 'Isthmus Scan' }
-    ];
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>USG Thyroid Anatomy - RadMentor</title>
 
-    const checklist = document.getElementById('protocol-checklist');
-    const displayPanel = document.getElementById('display-panel');
+    <script src="https://cdn.tailwindcss.com"></script>
 
-    // Populate the checklist
-    protocolSteps.forEach((step, index) => {
-        const item = document.createElement('li');
-        item.innerHTML = `
-            <button data-step-id="${step.id}" class="w-full text-left flex items-center p-3 rounded-lg hover:bg-gray-100 transition-colors">
-                <i data-feather="circle" class="w-5 h-5 mr-3 text-gray-400"></i>
-                <span class="font-medium">${index + 1}. ${step.title}</span>
-                <i data-feather="chevron-right" class="w-5 h-5 ml-auto text-gray-500"></i>
-            </button>
-        `;
-        checklist.appendChild(item);
-    });
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    // Add click listeners to checklist buttons
-    checklist.querySelectorAll('button').forEach(button => {
-        button.addEventListener('click', () => {
-            const stepId = button.dataset.stepId;
-            showStepContent(stepId);
+    <script src="https://unpkg.com/feather-icons"></script>
 
-            // Update checklist styles
-            checklist.querySelectorAll('button').forEach(btn => btn.classList.remove('rad-gradient', 'text-white'));
-            button.classList.add('rad-gradient', 'text-white');
-        });
-    });
-
-    // Function to show content for a specific step
-    const showStepContent = (stepId) => {
-        let content = '';
-        switch (stepId) {
-            case 'longitudinal':
-                content = generateScanStepHTML(
-                    'Longitudinal Scan',
-                    'Place the probe with the marker oriented towards the patient\'s head. Scan each lobe completely from medial to lateral.',
-                    'path/to/probe-longitudinal.png', // <-- REPLACE
-                    'long'
-                );
-                break;
-            case 'transverse':
-                content = generateScanStepHTML(
-                    'Transverse Scan',
-                    'Rotate the probe 90 degrees, with the marker oriented to the patient\'s right. Scan each lobe from superior to inferior.',
-                    'path/to/probe-transverse.png', // <-- REPLACE
-                    'trans'
-                );
-                break;
-            case 'measurements':
-                content = `
-                    <h3 class="text-2xl font-bold text-gray-900">Step 3: Lobe Measurements</h3>
-                    <p class="mt-2 text-gray-600 mb-6">Accurate measurements are crucial for calculating volume. Perform them on mid-gland images.</p>
-                    <div class="space-y-6">
-                        <div>
-                            <h4 class="font-semibold text-lg mb-2">Width (W) & Antero-Posterior (AP)</h4>
-                            <p class="text-sm text-gray-500 mb-2">Measured on a <span class="font-bold">transverse</span> mid-gland image.</p>
-                            <img src="path/to/measurement-trans.png" alt="Transverse measurement" class="rounded-lg shadow-md w-full">
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-lg mb-2">Length (L)</h4>
-                            <p class="text-sm text-gray-500 mb-2">Measured on a <span class="font-bold">longitudinal</span> mid-gland image.</p>
-                            <img src="path/to/measurement-long.png" alt="Longitudinal measurement" class="rounded-lg shadow-md w-full">
-                        </div>
-                    </div>
-                `;
-                break;
-            case 'isthmus':
-                content = `
-                    <h3 class="text-2xl font-bold text-gray-900">Step 4: Isthmus Scan</h3>
-                    <p class="mt-2 text-gray-600 mb-6">Scan the isthmus in a transverse plane, measuring its AP thickness. The trachea should be centered.</p>
-                    <img src="path/to/isthmus-measurement.png" alt="Isthmus measurement" class="rounded-lg shadow-md w-full">
-                `;
-                break;
+    <style>
+        .rad-gradient {
+            background-image: linear-gradient(to right, #4f46e5, #818cf8);
         }
-        displayPanel.innerHTML = content;
-        feather.replace(); // Re-initialize icons if any are added dynamically
-    };
+        .rad-gradient-text {
+            background: linear-gradient(to right, #4f46e5, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-['Inter']">
+
+    <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <a href="../../index.html" class="flex items-center">
+                    <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
+                    <span class="text-2xl font-bold text-gray-800">RadMentor</span>
+                </a>
+            </div>
+            <nav class="hidden md:flex items-center space-x-8">
+                <a href="../../index.html#courses" class="text-gray-600 hover:text-blue-600">Courses</a>
+                <a href="../../anatomy/index.html" class="text-gray-600 hover:text-blue-600">Anatomy</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 pt-24 pb-12">
+        <div class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+            <a href="../../index.html" class="hover:text-blue-600">RadMentor</a>
+            <span>/</span>
+            <a href="../index.html" class="hover:text-blue-600">anatomy</a>
+            <span>/</span>
+            <span class="font-semibold text-gray-700">usg-anatomy</span>
+        </div>
+
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">Interactive Ultrasound: Thyroid</h1>
+        <p class="text-lg text-gray-600 mb-8">Follow the standard protocol steps to perform a complete thyroid ultrasound.</p>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            <aside class="lg:w-1/3">
+                <div class="bg-white p-6 rounded-xl shadow-md sticky top-24">
+                    <h2 class="text-xl font-bold mb-4">Thyroid Protocol</h2>
+                    <ol id="protocol-checklist" class="space-y-3">
+                    </ol>
+                </div>
+            </aside>
+
+            <div id="display-panel" class="lg:w-2/3 bg-black p-4 rounded-xl shadow-md min-h-[600px] flex items-center justify-center">
+            </div>
+        </div>
+    </main>
     
-    // Helper function to generate repetitive HTML for scan steps
-    const generateScanStepHTML = (title, description, probeImgSrc, prefix) => `
-        <h3 class="text-2xl font-bold text-gray-900">Step: ${title}</h3>
-        <p class="mt-2 text-gray-600 mb-4">${description}</p>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center mb-6">
-            <div>
-                <h4 class="font-semibold mb-2">Probe Position</h4>
-                <img src="${probeImgSrc}" alt="Probe position for ${title}" class="rounded-lg shadow-md">
-            </div>
-            <div class="space-y-4">
-                <button onclick="showSubContent('${prefix}-static')" class="w-full p-4 bg-gray-100 hover:bg-indigo-100 rounded-lg text-left transition-colors">
-                    <h4 class="font-bold">Static Images</h4>
-                    <p class="text-sm text-gray-600">View the required 3 grayscale images per lobe (lateral, mid, medial).</p>
-                </button>
-                <button onclick="showSubContent('${prefix}-cine')" class="w-full p-4 bg-gray-100 hover:bg-indigo-100 rounded-lg text-left transition-colors">
-                    <h4 class="font-bold">Cine Clip</h4>
-                    <p class="text-sm text-gray-600">Watch the sweep of the entire lobe.</p>
-                </button>
-            </div>
-        </div>
-        
-        <div id="${prefix}-static" class="hidden sub-content mt-4">
-            <h4 class="font-bold text-lg mb-2">Static Images</h4>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div><img src="path/to/${prefix}-medial.jpg" alt="Medial" class="rounded-lg"><p class="text-center text-sm mt-1">Medial</p></div>
-                <div><img src="path/to/${prefix}-mid.jpg" alt="Mid" class="rounded-lg"><p class="text-center text-sm mt-1">Mid</p></div>
-                <div><img src="path/to/${prefix}-lateral.jpg" alt="Lateral" class="rounded-lg"><p class="text-center text-sm mt-1">Lateral</p></div>
-            </div>
-        </div>
-
-        <div id="${prefix}-cine" class="hidden sub-content mt-4">
-            <h4 class="font-bold text-lg mb-2">Cine Clip</h4>
-            <video controls class="w-full rounded-lg shadow-md">
-                <source src="path/to/${prefix}-sweep.mp4" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        </div>
-    `;
-
-    // Make sub-content functions globally accessible
-    window.showSubContent = (id) => {
-        document.querySelectorAll('.sub-content').forEach(el => el.classList.add('hidden'));
-        document.getElementById(id).classList.remove('hidden');
-    };
-
-    // Initialize Feather Icons and show the first step
-    feather.replace();
-    document.querySelector('#protocol-checklist button').click();
-});
+    <script>
+        feather.replace();
+    </script>
+    <script src="usg-thyroid.js"></script>
+</body>
+</html>
