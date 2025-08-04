@@ -4,72 +4,302 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RadMentor App</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Google Fonts - Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
+    /* Custom styles for better aesthetics and overrides */
     body {
       font-family: 'Inter', sans-serif;
     }
+    /* Custom scrollbar for sidebar */
+    .sidebar-scroll {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+    }
+    .sidebar-scroll::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera*/
+    }
+    .gradient-bg {
+      background: linear-gradient(to right, #6366f1, #8b5cf6); /* Purple to Indigo gradient */
+    }
+    .glass-card {
+      background-color: rgba(255, 255, 255, 0.7); /* Slightly transparent white */
+      backdrop-filter: blur(10px); /* Glass effect blur */
+      border-radius: 1.5rem; /* rounded-3xl */
+      padding: 2rem; /* p-8 */
+      transition: all 0.3s ease-in-out; /* Smooth transition for hover effects */
+    }
+    .glass-card:hover {
+      background-color: rgba(255, 255, 255, 0.9); /* More opaque on hover */
+      transform: translateY(-5px); /* Lift effect */
+      box-shadow: 0 15px 30px rgba(0,0,0,0.1); /* Enhanced shadow */
+    }
+    .card-shadow {
+      box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 6px 6px rgba(0,0,0,0.03);
+    }
+    .icon-filter-blue {
+        filter: invert(36%) sepia(85%) saturate(1500%) hue-rotate(220deg) brightness(95%) contrast(90%);
+    }
+    .icon-filter-green {
+        filter: invert(47%) sepia(81%) saturate(500%) hue-rotate(70deg) brightness(90%) contrast(90%);
+    }
+    .icon-filter-purple {
+        filter: invert(30%) sepia(80%) saturate(1500%) hue-rotate(270deg) brightness(85%) contrast(90%);
+    }
+    .icon-filter-yellow {
+        filter: invert(70%) sepia(60%) saturate(1500%) hue-rotate(10deg) brightness(100%) contrast(90%);
+    }
+
+    /* Wave emoji animation */
+    .wave-emoji {
+      animation: wave 2.5s infinite;
+      transform-origin: 70% 70%;
+      display: inline-block;
+    }
+    @keyframes wave {
+      0% { transform: rotate(0deg); }
+      10% { transform: rotate(14deg); }
+      20% { transform: rotate(-8deg); }
+      30% { transform: rotate(14deg); }
+      40% { transform: rotate(-4deg); }
+      50% { transform: rotate(10deg); }
+      60% { transform: rotate(0deg); }
+      100% { transform: rotate(0deg); }
+    }
+
+    /* Card entrance animation */
+    .card-enter {
+      animation: fadeInScale 0.5s ease-out forwards;
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    @keyframes fadeInScale {
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Active sidebar link style */
+    .sidebar-link.active {
+      background-color: #e0e7ff; /* blue-100 */
+      color: #4338ca; /* indigo-700 */
+      font-weight: 600; /* semibold */
+      border-left: 4px solid #6366f1; /* indigo-500 */
+      padding-left: calc(1rem - 4px); /* Adjust padding to keep alignment */
+    }
+    .sidebar-link:hover {
+      background-color: #eff6ff; /* blue-50 */
+      color: #2563eb; /* blue-700 */
+    }
+
+    /* Specific icon colors for sidebar to match new design */
+    .sidebar-link svg {
+      transition: color 0.2s ease-in-out;
+    }
+    .sidebar-link:hover svg {
+      color: currentColor; /* Inherit color from parent on hover */
+    }
+
   </style>
 </head>
-<body class="flex min-h-screen bg-gray-100">
+<body class="flex min-h-screen bg-gray-50 text-gray-800">
   <!-- Sidebar -->
-  <aside class="w-64 bg-white border-r px-4 py-6 hidden md:flex flex-col shadow-lg">
-    <div class="mb-8 flex items-center gap-3">
-      <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="Logo" class="h-10">
-      <span class="text-xl font-bold">RadMentor</span>
+  <aside class="w-72 bg-white border-r border-gray-200 p-6 flex flex-col shadow-xl rounded-r-2xl overflow-y-auto sidebar-scroll">
+    <div class="mb-10 flex items-center gap-3 transform transition-transform duration-200 hover:scale-105">
+      <!-- Using a placeholder image for the logo with a fallback -->
+      <img src="https://placehold.co/40x40/6366f1/ffffff?text=RM" alt="RadMentor Logo" class="h-10 w-10 rounded-full shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/40x40/6366f1/ffffff?text=RM';">
+      <span class="text-2xl font-extrabold text-gray-900">RadMentor</span>
     </div>
 
-    <div class="text-xs text-gray-500 uppercase font-semibold mb-2">Exam Preparation</div>
-    <nav class="flex flex-col gap-1 mb-6">
-      <a href="frcr.html" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">FRCR</a>
-      <a href="md_dnb.html" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">MD / DNB</a>
-      <a href="anatomy.html" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">Anatomy</a>
-      <a href="micr.html" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">MICR</a>
-      <a href="superspeciality.html" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">Superspeciality</a>
-      <a href="fellowship.html" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">Fellowship Exams</a>
+    <div class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3">Exam Preparation</div>
+    <nav class="flex flex-col gap-2 mb-8">
+      <!-- Updated hrefs for dynamic linking -->
+      <a href="frcr/index.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 ease-in-out">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+        FRCR
+      </a>
+      <a href="MD_DNB/index.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 ease-in-out active">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253" />
+        </svg>
+        MD / DNB
+      </a>
+      <a href="anatomy/index.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 ease-in-out">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0h.01M9 19h10a2 2 0 002-2v-6a2 2 0 00-2-2H9m11 0V7a2 2 0 00-2-2h-2M4 6h.01M6 6h.01" />
+        </svg>
+        Anatomy
+      </a>
+      <a href="MICR/index.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 ease-in-out">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3m0 0l3 3m-3-3v8m0-9a9 9 0 110 18 9 9 0 010-18z" />
+        </svg>
+        MICR
+      </a>
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 ease-in-out">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v-2m-2 2h2m5-12l2-2m2 2l-2-2m-3 12l2 2m2-2l-2 2m-3-7h.01M19 12h.01" />
+        </svg>
+        Superspeciality
+      </a>
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 ease-in-out">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V3m0 9v3m0 0h.01M12 12h.01M12 12l-2.58 2.58M12 12l2.58 2.58M12 12l-2.58-2.58M12 12l2.58-2.58M12 12l-2.58 2.58M12 12l2.58 2.58" />
+        </svg>
+        Fellowship Exams
+        <span class="ml-auto bg-purple-200 text-purple-800 text-xs font-semibold px-2 py-0.5 rounded-full">New!</span>
+      </a>
     </nav>
 
-    <div class="text-xs text-gray-500 uppercase font-semibold mb-2">My Account</div>
-    <nav class="flex flex-col gap-1">
-      <a href="#" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">🙋‍♂️ My Profile</a>
-      <a href="#" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">📌 My Bookmarks</a>
-      <a href="#" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">📈 Performance</a>
-      <a href="#" class="px-3 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-colors">❓ Ask a Doubt</a>
+    <div class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3">My Account</div>
+    <nav class="flex flex-col gap-2">
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out">
+        <span class="mr-3 text-gray-600">🙋‍♂️</span> My Profile
+      </a>
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out">
+        <span class="mr-3 text-gray-600">📌</span> My Bookmarks
+      </a>
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out">
+        <span class="mr-3 text-gray-600">📈</span> Performance
+      </a>
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out">
+        <span class="mr-3 text-gray-600">❓</span> Ask a Doubt
+      </a>
     </nav>
   </aside>
 
   <!-- Main Content -->
-  <main class="flex-1 p-6">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold">Welcome back, Doctor 👋</h1>
-      <button class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">Logout</button>
+  <main class="flex-1 p-8 overflow-y-auto">
+    <div class="flex items-center justify-between mb-8">
+      <!-- Dynamic Greeting -->
+      <h1 id="greeting" class="text-3xl font-extrabold text-gray-900"></h1>
+      <button class="gradient-bg text-white text-base font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-0.5">
+        Logout
+      </button>
     </div>
 
-    <div class="grid grid-cols-1 gap-6">
-      <!-- Quick Links Card -->
-      <div class="bg-white p-6 rounded-2xl shadow-lg">
-        <h2 class="text-lg font-semibold mb-4">Quick Links</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-          <a href="#" class="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
-            <img src="https://img.icons8.com/ios-filled/50/4a90e2/questions.png" class="h-10" alt="QBank">
-            <span class="text-sm font-medium">QBank</span>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> <!-- Decreased gap from gap-8 to gap-6 -->
+
+      <!-- Your Progress Card (Moved to top) -->
+      <div class="glass-card card-shadow card-enter col-span-1 md:col-span-2 lg:col-span-1" style="animation-delay: 0s;">
+        <h2 class="text-xl font-bold text-gray-800 mb-6">Your Progress</h2>
+        <div class="space-y-4">
+          <div>
+            <p class="text-sm font-medium text-gray-700 mb-1">Overall Completion</p>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+              <div class="bg-blue-500 h-2.5 rounded-full" style="width: 75%;"></div>
+            </div>
+            <p class="text-right text-xs text-gray-500 mt-1">75% Complete</p>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-700 mb-1">QBank Accuracy</p>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+              <div class="bg-green-500 h-2.5 rounded-full" style="width: 82%;"></div>
+            </div>
+            <p class="text-right text-xs text-gray-500 mt-1">82% Correct</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Continue Learning Card (Moved up, showing only 1 last course) -->
+      <div class="glass-card card-shadow card-enter col-span-1 md:col-span-1 lg:col-span-2" style="animation-delay: 0.1s;">
+        <h2 class="text-xl font-bold text-gray-800 mb-6">Continue Learning</h2>
+        <div class="flex flex-col gap-4">
+          <div class="bg-indigo-50 p-4 rounded-lg flex items-center gap-4 hover:bg-indigo-100 transition-colors cursor-pointer">
+            <img src="https://placehold.co/40x40/6366f1/ffffff?text=C" alt="Last Course" class="rounded-md object-cover">
+            <div>
+              <p class="font-semibold text-indigo-800">MD / DNB - June 2023 Paper 2</p>
+              <p class="text-xs text-indigo-600">Last accessed: 2 days ago</p>
+            </div>
+            <a href="#" class="ml-auto text-indigo-600 hover:text-indigo-800 font-semibold text-sm">Continue &rarr;</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily Case Challenge Card -->
+      <div class="glass-card card-shadow card-enter col-span-1 md:col-span-2 lg:col-span-3" style="animation-delay: 0.2s;">
+        <h2 class="text-xl font-bold text-gray-800 mb-6">Daily Case Challenge</h2>
+        <div class="bg-red-50 p-4 rounded-lg flex flex-col items-center gap-4 text-center">
+          <img src="https://placehold.co/80x50/ef4444/ffffff?text=CT+Case" alt="Daily CT Case" class="rounded-md object-cover mb-2"> <!-- Smaller image -->
+          <p class="font-semibold text-red-800 text-base mb-2">Can you diagnose this?</p>
+          <p class="text-sm text-red-700 mb-4 max-w-prose">A 45-year-old male presents with sudden onset headache. CT scan provided.</p>
+          <button class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-shadow transform hover:-translate-y-0.5">
+            Start Challenge
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Links Card (Moved to end, icons smaller) -->
+      <div class="glass-card card-shadow card-enter col-span-full" style="animation-delay: 0.3s;">
+        <h2 class="text-xl font-bold text-gray-800 mb-6">Quick Links</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-4 text-center">
+          <a href="#" class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-blue-50 hover:bg-blue-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md">
+            <img src="https://img.icons8.com/ios-filled/50/4a90e2/questions.png" class="h-8 w-8 object-contain icon-filter-blue" alt="QBank"> <!-- Smaller icon -->
+            <span class="text-xs font-semibold text-blue-700 mt-1">QBank</span>
           </a>
-          <a href="#" class="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
-            <img src="https://img.icons8.com/fluency/48/test-passed.png" class="h-10" alt="Mock Exams">
-            <span class="text-sm font-medium">Mock Exams</span>
+          <a href="#" class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-green-50 hover:bg-green-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md">
+            <img src="https://img.icons8.com/fluency/48/test-passed.png" class="h-8 w-8 object-contain icon-filter-green" alt="Mock Exams"> <!-- Smaller icon -->
+            <span class="text-xs font-semibold text-green-700 mt-1">Mock Exams</span>
           </a>
-          <a href="#" class="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
-            <img src="https://img.icons8.com/fluency/48/bookmark-ribbon.png" class="h-10" alt="Bookmarks">
-            <span class="text-sm font-medium">Bookmarks</span>
+          <a href="#" class="relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-purple-50 hover:bg-purple-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md">
+            <img src="https://img.icons8.com/fluency/48/bookmark-ribbon.png" class="h-8 w-8 object-contain icon-filter-purple" alt="Bookmarks"> <!-- Smaller icon -->
+            <span class="text-xs font-semibold text-purple-700 mt-1">Bookmarks</span>
           </a>
-          <a href="#" class="relative flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-gray-100 transition-colors">
-            <img src="https://img.icons8.com/fluency/48/analytics.png" class="h-10" alt="Analytics">
-            <span class="text-sm font-medium">Analytics</span>
+          <a href="#" class="relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-yellow-50 hover:bg-yellow-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md">
+            <img src="https://img.icons8.com/fluency/48/analytics.png" class="h-8 w-8 object-contain icon-filter-yellow" alt="Analytics"> <!-- Smaller icon -->
+            <span class="text-xs font-semibold text-yellow-700 mt-1">Analytics</span>
           </a>
         </div>
       </div>
+
     </div>
   </main>
+
+  <script>
+    // JavaScript to set dynamic greeting based on time of day
+    document.addEventListener('DOMContentLoaded', () => {
+      const greetingElement = document.getElementById('greeting');
+      const date = new Date();
+      const hour = date.getHours();
+      let greeting;
+
+      if (hour < 12) {
+        greeting = "Good Morning, User 👋";
+      } else if (hour < 18) {
+        greeting = "Good Afternoon, User 👋";
+      } else {
+        greeting = "Good Evening, User 👋";
+      }
+      greetingElement.textContent = greeting;
+
+      // Highlight active sidebar link based on current page
+      const currentPath = window.location.pathname.split('/').pop();
+      const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+      sidebarLinks.forEach(link => {
+        const linkHref = link.getAttribute('href').split('/').pop();
+        // Check if the link's href matches the current page, or if it's the dashboard (index.html)
+        // or if it's the main dashboard page itself (empty string for currentPath)
+        if (linkHref === currentPath || (currentPath === '' && linkHref === 'md_dnb.html')) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active'); // Ensure only one is active
+        }
+      });
+
+      // Apply entrance animation to cards
+      const cards = document.querySelectorAll('.card-enter');
+      cards.forEach((card, index) => {
+        // Stagger the animation slightly
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('animate-in'); // Trigger animation
+      });
+    });
+  </script>
 </body>
 </html>
