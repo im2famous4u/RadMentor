@@ -133,4 +133,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Feather Icons and show the first step
     feather.replace();
     document.querySelector('#protocol-checklist button').click();
-});.js
+});
