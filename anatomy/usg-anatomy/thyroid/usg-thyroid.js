@@ -1,29 +1,13 @@
 document.addEventListener('DOMContentLoaded', function() {
 
     const protocolData = [
-        // ... (Step 1 and 2 data remains the same)
-        {
-            id: 1,
-            name: 'Longitudinal Scan',
-            layoutType: 'video_image',
-            shortDef: 'A longitudinal view provides a long-axis image of the thyroid lobe, essential for evaluating its length and overall morphology.',
-            videoSrc: 'thy-long.mp4',
-            imageSrc: 'long-img.png',
-            options: [ { title: 'Static Images', detailText: 'Acquire at least 3 grayscale images per lobe, capturing the <strong>lateral, mid, and medial</strong> portions.' }, { title: 'Cine Clip', detailText: 'Perform a full sweep of the lobe from the <strong>medial to the lateral</strong> border to visualize the entire gland in motion.' } ]
-        },
-        {
-            id: 2,
-            name: 'Transverse Scan',
-            layoutType: 'video_image',
-            shortDef: 'A transverse view provides a short-axis image, crucial for measuring width and depth, and assessing for nodules.',
-            videoSrc: 'thy-trans.mp4',
-            imageSrc: 'trans-img.png',
-            options: [ { title: 'Static Images', detailText: 'Acquire at least 3 grayscale images per lobe, capturing the <strong>superior, mid, and inferior</strong> portions.' }, { title: 'Cine Clip', detailText: 'Perform a full sweep of the lobe from the <strong>superior to the inferior</strong> border.' } ]
-        },
+        // ... (Steps 1 and 2 data is unchanged)
+        { id: 1, name: 'Longitudinal Scan', layoutType: 'video_image', shortDef: 'A longitudinal view provides a long-axis image of the thyroid lobe, essential for evaluating its length and overall morphology.', videoSrc: 'thy-long.mp4', imageSrc: 'long-img.png', options: [ { title: 'Static Images', detailText: 'Acquire at least 3 grayscale images per lobe, capturing the <strong>lateral, mid, and medial</strong> portions.' }, { title: 'Cine Clip', detailText: 'Perform a full sweep of the lobe from the <strong>medial to the lateral</strong> border to visualize the entire gland in motion.' } ] },
+        { id: 2, name: 'Transverse Scan', layoutType: 'video_image', shortDef: 'A transverse view provides a short-axis image, crucial for measuring width and depth, and assessing for nodules.', videoSrc: 'thy-trans.mp4', imageSrc: 'trans-img.png', options: [ { title: 'Static Images', detailText: 'Acquire at least 3 grayscale images per lobe, capturing the <strong>superior, mid, and inferior</strong> portions.' }, { title: 'Cine Clip', detailText: 'Perform a full sweep of the lobe from the <strong>superior to the inferior</strong> border.' } ] },
         {
             id: 3,
             name: 'Lobe Measurements',
-            layoutType: 'measurement_grid', // This layout type will now be rendered correctly
+            layoutType: 'measurement_grid',
             shortDef: 'Accurate measurements are crucial for assessing gland size and monitoring changes. Measurements are typically taken from the mid-portion of each lobe.',
             images: [ 'trans.jpg', 'measurement1.jpg', 'long.jpg', 'measurement2.jpg' ],
             table: {
@@ -32,18 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 footer: '<strong>Isthmus thickness:</strong> Normal: ≤ 3–5 mm (AP dimension)'
             }
         },
-        {
-            id: 4,
-            name: 'Isthmus Scan',
-            layoutType: 'isthmus_scan',
-            shortDef: 'The isthmus connects the two lobes and must be evaluated for any abnormalities or nodules.',
-            images: [ 'Isthmus.jpg', 'Isthmus-usg.jpg' ],
-            table: {
-                headers: ['Age Group', 'Normal Isthmus Thickness (AP)'],
-                rows: [ ['Adult & Adolescent', '≤ 3 mm (some sources allow up to 4–5 mm)'], ['Child (6–12 yr)', '≤ 2–3 mm'], ['Toddler (1–5 yr)', '≤ 2 mm'], ['Infant (<1 yr)', '≤ 1.5–2 mm'] ]
-            },
-            options: [ { title: 'Isthmus Protocol', detailText: 'A transverse grayscale image is taken through the isthmus. AP thickness should be measured.' } ]
-        }
+        { id: 4, name: 'Isthmus Scan', layoutType: 'isthmus_scan', shortDef: 'The isthmus connects the two lobes and must be evaluated for any abnormalities or nodules.', images: [ 'Isthmus.jpg', 'Isthmus-usg.jpg' ], table: { headers: ['Age Group', 'Normal Isthmus Thickness (AP)'], rows: [ ['Adult & Adolescent', '≤ 3 mm (some sources allow up to 4–5 mm)'], ['Child (6–12 yr)', '≤ 2–3 mm'], ['Toddler (1–5 yr)', '≤ 2 mm'], ['Infant (<1 yr)', '≤ 1.5–2 mm'] ] }, options: [ { title: 'Isthmus Protocol', detailText: 'A transverse grayscale image is taken through the isthmus. AP thickness should be measured.' } ] }
     ];
 
     let activeStepIndex = 0;
@@ -56,12 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const isActive = index === activeStepIndex;
             listItemsHTML += `
                 <li data-index="${index}" class="flex items-center justify-between p-4 rounded-lg cursor-pointer transition-all duration-300 ${isActive ? 'rad-gradient-bg text-white shadow-lg' : 'bg-slate-100 text-slate-700 hover:bg-indigo-100 hover:text-indigo-700'} group">
-                    <div class="flex items-center">
-                        <span class="flex items-center justify-center w-7 h-7 mr-3 text-sm font-bold rounded-full ${isActive ? 'bg-white/20' : 'bg-white text-indigo-600'}">
-                            ${step.id}
-                        </span>
-                        <span class="font-semibold">${step.name}</span>
-                    </div>
+                    <div class="flex items-center"><span class="flex items-center justify-center w-7 h-7 mr-3 text-sm font-bold rounded-full ${isActive ? 'bg-white/20' : 'bg-white text-indigo-600'}">${step.id}</span><span class="font-semibold">${step.name}</span></div>
                     <i data-feather="chevron-right" class="transition-transform duration-300 ${isActive ? '' : 'group-hover:translate-x-1'}"></i>
                 </li>`;
         });
@@ -74,10 +42,11 @@ document.addEventListener('DOMContentLoaded', function() {
         let panelHTML = '';
 
         if (step.layoutType === 'measurement_grid') {
-            // --- THIS IS THE CORRECTED 2x2 GRID LAYOUT ---
+            // === THIS SECTION IS NOW CORRECTED ===
             let gridImagesHTML = '';
             step.images.forEach(imgSrc => {
-                gridImagesHTML += `<div class="bg-slate-800 rounded-lg overflow-hidden shadow-inner"><img src="${imgSrc}" class="w-full h-full object-cover" loading="lazy"></div>`;
+                // The KEY CHANGE is changing "object-cover" to "object-contain"
+                gridImagesHTML += `<div class="bg-slate-800 rounded-lg overflow-hidden shadow-inner"><img src="${imgSrc}" class="w-full h-full object-contain" loading="lazy"></div>`;
             });
             
             let tableHTML = `<div class="mt-6 text-sm"><table class="styled-table"><thead><tr><th>${step.table.headers[0]}</th><th>${step.table.headers[1]}</th></tr></thead><tbody>`;
@@ -91,8 +60,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="flex-shrink-0">${tableHTML}</div>
                 </div>
             `;
+            // ===================================
         } else if (step.layoutType === 'isthmus_scan') {
-            // This is the layout for the Isthmus scan
             let visualHTML = '<div class="flex flex-col gap-3 h-full">';
             step.images.forEach(imgSrc => {
                 visualHTML += `<div class="bg-slate-800 rounded-lg overflow-hidden shadow-inner flex-1"><img src="${imgSrc}" class="w-full h-full object-contain" loading="lazy"></div>`;
