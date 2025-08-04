@@ -9,21 +9,22 @@ document.addEventListener('DOMContentLoaded', function() {
             imageSrc: 'long-img.png',
             options: [
                 {
-                    title: 'Option 1 = Static Images',
+                    title: 'Static Images',
                     detailText: 'Acquire at least 3 grayscale images per lobe, capturing the <strong>lateral, mid, and medial</strong> portions.'
                 },
                 {
-                    title: 'Option 2 = Cine Clip',
+                    title: 'Cine Clip',
                     detailText: 'Perform a full sweep of the lobe from the <strong>medial to the lateral</strong> border to visualize the entire gland in motion.'
                 }
             ]
         },
+        // === CHANGES ARE IN THIS SECTION ===
         {
             id: 2,
             name: 'Transverse Scan',
             shortDef: 'A transverse view provides a short-axis image, crucial for measuring width and depth, and assessing for nodules.',
-            videoSrc: 'thy-long.mp4', // Placeholder
-            imageSrc: 'long-img.png', // Placeholder
+            videoSrc: 'thy-trans.mp4', // <-- UPDATED from placeholder
+            imageSrc: 'trans-img.png', // <-- UPDATED from placeholder
             options: [
                 {
                     title: 'Static Images',
@@ -35,6 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             ]
         },
+        // ===================================
         { id: 3, name: 'Lobe Measurements', shortDef: 'Accurate measurements are crucial for assessing gland size and monitoring changes.', videoSrc: '', imageSrc: '', options: [ { title: 'Measurement Protocol', detailText: '<strong>Width & AP Diameter:</strong> Use the transverse view. <strong>Length:</strong> Use the longitudinal view.' } ] },
         { id: 4, name: 'Isthmus Scan', shortDef: 'The isthmus connects the two lobes and must be evaluated for any abnormalities or nodules.', videoSrc: '', imageSrc: '', options: [ { title: 'Isthmus Protocol', detailText: 'A transverse grayscale image is taken through the isthmus. AP thickness should be measured.' } ] }
     ];
@@ -67,7 +69,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderDisplayPanel() {
         const step = protocolData[activeStepIndex];
 
-        // --- NEW: Build the text block with definition first, then two boxes ---
         let textContentHTML = `
             <div class="bg-gray-50 p-6 rounded-lg h-full flex flex-col">
                 <h3 class="font-bold text-xl mb-2">${step.name}</h3>
@@ -77,15 +78,13 @@ document.addEventListener('DOMContentLoaded', function() {
         step.options.forEach((option, index) => {
             textContentHTML += `
                 <div class="bg-white p-4 rounded-lg border">
-                    <h4 class="font-semibold text-gray-800">${option.title}</h4>
+                    <h4 class="font-semibold text-gray-800">Option ${index + 1} - ${option.title}</h4>
                     <p class="text-gray-600 mt-1 text-sm">${option.detailText}</p>
                 </div>
             `;
         });
         textContentHTML += `</div></div>`;
 
-
-        // --- NEW: Compact visuals with performance attributes ---
         let visualHTML = `
             <div class="flex flex-col h-full w-full gap-2">
                 <div class="h-1/2 rounded-lg overflow-hidden bg-black">
@@ -101,7 +100,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
 
-        // Assemble the final layout
         displayPanel.innerHTML = `
             <div class="flex flex-col md:flex-row gap-6 w-full h-full">
                 <div class="w-full md:w-1/2">
