@@ -9,11 +9,11 @@ document.addEventListener('DOMContentLoaded', function() {
             imageSrc: 'long-img.png',
             options: [
                 {
-                    title: 'Static Images',
+                    title: 'Option 1 = Static Images',
                     detailText: 'Acquire at least 3 grayscale images per lobe, capturing the <strong>lateral, mid, and medial</strong> portions.'
                 },
                 {
-                    title: 'Cine Clip',
+                    title: 'Option 2 = Cine Clip',
                     detailText: 'Perform a full sweep of the lobe from the <strong>medial to the lateral</strong> border to visualize the entire gland in motion.'
                 }
             ]
