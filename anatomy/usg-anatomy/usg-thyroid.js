@@ -5,16 +5,13 @@ document.addEventListener('DOMContentLoaded', function() {
             id: 1,
             name: 'Longitudinal Scan',
             videoSrc: 'thy-long.mp4',
-            imageSrc: 'long-img.png', // Added the image source as requested
-            mainDescription: 'A longitudinal view provides a long-axis image of the thyroid lobe. Select an option for specific protocols.',
+            imageSrc: 'long-img.png',
             options: [
                 {
-                    type: 'static',
                     title: 'Static Images',
                     detailText: 'Acquire at least 3 grayscale images per lobe, capturing the <strong>lateral, mid, and medial</strong> portions.'
                 },
                 {
-                    type: 'cine',
                     title: 'Cine Clip',
                     detailText: 'Perform a full sweep of the lobe from the <strong>medial to the lateral</strong> border to visualize the entire gland in motion.'
                 }
@@ -25,27 +22,23 @@ document.addEventListener('DOMContentLoaded', function() {
             name: 'Transverse Scan',
             videoSrc: 'thy-long.mp4', // Placeholder
             imageSrc: 'long-img.png', // Placeholder
-            mainDescription: 'A transverse view provides a short-axis image of the thyroid lobe. Select an option for specific protocols.',
             options: [
                 {
-                    type: 'static',
                     title: 'Static Images',
                     detailText: 'Acquire at least 3 grayscale images per lobe, capturing the <strong>superior, mid, and inferior</strong> portions.'
                 },
                 {
-                    type: 'cine',
                     title: 'Cine Clip',
                     detailText: 'Perform a full sweep of the lobe from the <strong>superior to the inferior</strong> border.'
                 }
             ]
         },
         // ... (other steps)
-        { id: 3, name: 'Lobe Measurements', videoSrc: '', imageSrc: '', mainDescription: 'Accurate measurements are crucial for assessing gland size.', options: [ { type: 'info', title: 'Measurement Protocol', detailText: '<strong>Width & AP Diameter:</strong> Use the transverse view. <strong>Length:</strong> Use the longitudinal view.' } ] },
-        { id: 4, name: 'Isthmus Scan', videoSrc: '', imageSrc: '', mainDescription: 'The isthmus connects the two lobes.', options: [ { type: 'info', title: 'Isthmus Protocol', detailText: 'A transverse grayscale image is taken through the isthmus.' } ] }
+        { id: 3, name: 'Lobe Measurements', videoSrc: '', imageSrc: '', options: [ { title: 'Measurement Protocol', detailText: '<strong>Width & AP Diameter:</strong> Use the transverse view. <strong>Length:</strong> Use the longitudinal view.' } ] },
+        { id: 4, name: 'Isthmus Scan', videoSrc: '', imageSrc: '', options: [ { title: 'Isthmus Protocol', detailText: 'A transverse grayscale image is taken through the isthmus.' } ] }
     ];
 
     let activeStepIndex = 0;
-    let activeOptionType = null;
 
     const protocolChecklist = document.getElementById('protocol-checklist');
     const displayPanel = document.getElementById('display-panel');
@@ -73,50 +66,43 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderDisplayPanel() {
         const step = protocolData[activeStepIndex];
 
-        let optionsButtonsHTML = '';
-        step.options.forEach(option => {
-            const isOptionActive = option.type === activeOptionType;
-            optionsButtonsHTML += `
-                <div data-type="${option.type}" class="p-4 rounded-lg border cursor-pointer ${isOptionActive ? 'bg-indigo-100 border-indigo-500' : 'bg-gray-50 hover:border-indigo-400'}">
-                    <h3 class="font-bold text-gray-800 pointer-events-none">${option.title}</h3>
+        // --- NEW: Build the static text block for the right column ---
+        let textContentHTML = `<div class="bg-gray-50 p-6 rounded-lg h-full space-y-6">`;
+        step.options.forEach((option, index) => {
+            textContentHTML += `
+                <div>
+                    <h4 class="font-bold text-lg text-gray-800">Option ${index + 1} - ${option.title}</h4>
+                    <p class="text-gray-600 mt-2">${option.detailText}</p>
                 </div>
             `;
         });
+        textContentHTML += `</div>`;
 
-        let infoText = step.mainDescription;
-        if (activeOptionType) {
-            infoText = step.options.find(opt => opt.type === activeOptionType)?.detailText || step.mainDescription;
-        }
 
-        // --- NEW: Build the composite visual area ---
+        // --- NEW: Build the visual area with NO BORDERS ---
         let visualHTML = `
             <div class="flex flex-col h-full w-full gap-4">
-                <div class="h-3/5 bg-black rounded-lg flex items-center justify-center text-white p-2">
+                <div class="h-3/5 rounded-lg overflow-hidden bg-black">
                     ${step.videoSrc ? `
-                        <video key="${Date.now()}" class="w-full h-full" autoplay muted playsinline>
+                        <video key="${Date.now()}" class="w-full h-full object-cover" autoplay muted playsinline>
                             <source src="${step.videoSrc}" type="video/mp4">
-                        </video>` : `(No Video)`}
+                        </video>` : `<div class="w-full h-full flex items-center justify-center text-white">(No Video)</div>`}
                 </div>
-                <div class="h-2/5 bg-gray-100 rounded-lg flex items-center justify-center p-2">
+                <div class="h-2/5 rounded-lg overflow-hidden bg-white flex items-center justify-center">
                     ${step.imageSrc ? `
-                        <img src="${step.imageSrc}" alt="${step.name} illustration" class="max-h-full max-w-full object-contain">` : `(No Image)`}
+                        <img src="${step.imageSrc}" alt="${step.name} illustration" class="max-h-full max-w-full object-contain">` : `<div class="w-full h-full flex items-center justify-center text-gray-500">(No Image)</div>`}
                 </div>
             </div>
         `;
 
+        // Assemble the final layout
         displayPanel.innerHTML = `
             <div class="flex flex-col md:flex-row gap-6 w-full h-full">
-                <div id="visual-content" class="w-full md:w-3/5">
+                <div class="w-full md:w-1/2">
                     ${visualHTML}
                 </div>
-                <div class="w-full md:w-2/5 flex flex-col gap-4">
-                    <div id="info-panel" class="p-4 bg-gray-50 rounded-lg border flex-grow">
-                        <h3 class="font-bold text-lg mb-2">${step.name}</h3>
-                        <p class="text-gray-700">${infoText}</p>
-                    </div>
-                    <div class="flex flex-col gap-4">
-                        ${optionsButtonsHTML}
-                    </div>
+                <div class="w-full md:w-1/2">
+                    ${textContentHTML}
                 </div>
             </div>
         `;
@@ -128,17 +114,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const index = parseInt(listItem.dataset.index);
         if (index !== activeStepIndex) {
             activeStepIndex = index;
-            activeOptionType = null;
             renderProtocolList();
             renderDisplayPanel();
         }
-    });
-
-    displayPanel.addEventListener('click', function(e) {
-        const optionButton = e.target.closest('[data-type]');
-        if (!optionButton) return;
-        activeOptionType = optionButton.dataset.type;
-        renderDisplayPanel();
     });
     
     renderProtocolList();
