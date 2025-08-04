@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RadMentor App</title>
+  <title>RadScribe AI - Report Generator</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Google Fonts - Inter -->
@@ -39,91 +39,54 @@
     .card-shadow {
       box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 6px 6px rgba(0,0,0,0.03);
     }
-    .icon-filter-blue {
-        filter: invert(36%) sepia(85%) saturate(1500%) hue-rotate(220deg) brightness(95%) contrast(90%);
+    /* Active tab style */
+    .tab-button.active {
+      background-color: #6366f1; /* indigo-500 */
+      color: white;
+      box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
     }
-    .icon-filter-green {
-        filter: invert(47%) sepia(81%) saturate(500%) hue-rotate(70deg) brightness(90%) contrast(90%);
-    }
-    .icon-filter-purple {
-        filter: invert(30%) sepia(80%) saturate(1500%) hue-rotate(270deg) brightness(85%) contrast(90%);
-    }
-    .icon-filter-yellow {
-        filter: invert(70%) sepia(60%) saturate(1500%) hue-rotate(10deg) brightness(100%) contrast(90%);
-    }
-
-    /* Wave emoji animation */
-    .wave-emoji {
-      animation: wave 2.5s infinite;
-      transform-origin: 70% 70%;
-      display: inline-block;
-    }
-    @keyframes wave {
-      0% { transform: rotate(0deg); }
-      10% { transform: rotate(14deg); }
-      20% { transform: rotate(-8deg); }
-      30% { transform: rotate(14deg); }
-      40% { transform: rotate(-4deg); }
-      50% { transform: rotate(10deg); }
-      60% { transform: rotate(0deg); }
-      100% { transform: rotate(0deg); }
-    }
-
-    /* Card entrance animation */
-    .card-enter {
-      animation: fadeInScale 0.5s ease-out forwards;
+    /* Message Box styles */
+    .message-box {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #4CAF50; /* Green */
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      display: none; /* Hidden by default */
       opacity: 0;
-      transform: scale(0.95);
+      transition: opacity 0.3s ease-in-out;
     }
-    @keyframes fadeInScale {
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
+    .message-box.show {
+      display: block;
+      opacity: 1;
     }
-
-    /* Active sidebar link style */
-    .sidebar-link.active {
-      background-color: #e0e7ff; /* blue-100 */
-      color: #4338ca; /* indigo-700 */
-      font-weight: 600; /* semibold */
-      border-left: 4px solid #6366f1; /* indigo-500 */
-      padding-left: calc(1rem - 4px); /* Adjust padding to keep alignment */
-    }
-    .sidebar-link:hover {
-      background-color: #eff6ff; /* blue-50 */
-      color: #2563eb; /* blue-700 */
-    }
-
-    /* Specific icon colors for sidebar to match new design */
-    .sidebar-link svg {
-      transition: color 0.2s ease-in-out;
-    }
-    .sidebar-link:hover svg {
-      color: currentColor; /* Inherit color from parent on hover */
-    }
-
   </style>
 </head>
 <body class="flex min-h-screen bg-gray-50 text-gray-800">
-  <!-- Sidebar -->
+
+  <!-- Message Box -->
+  <div id="messageBox" class="message-box"></div>
+
+  <!-- Sidebar (Copied from dashboard, active link adjusted) -->
   <aside class="w-72 bg-white border-r border-gray-200 p-6 flex flex-col shadow-xl rounded-r-2xl overflow-y-auto sidebar-scroll">
     <div class="mb-10 flex items-center gap-3 transform transition-transform duration-200 hover:scale-105">
-      <!-- Using a placeholder image for the logo with a fallback -->
       <img src="https://placehold.co/40x40/6366f1/ffffff?text=RM" alt="RadMentor Logo" class="h-10 w-10 rounded-full shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/40x40/6366f1/ffffff?text=RM';">
       <span class="text-2xl font-extrabold text-gray-900">RadMentor</span>
     </div>
 
     <div class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3">Exam Preparation</div>
     <nav class="flex flex-col gap-2 mb-8">
-      <!-- Updated hrefs for dynamic linking -->
       <a href="frcr/index.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 ease-in-out">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
         </svg>
         FRCR
       </a>
-      <a href="MD_DNB/index.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 ease-in-out active">
+      <a href="MD_DNB/index.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 ease-in-out">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253" />
         </svg>
@@ -154,17 +117,24 @@
         Fellowship Exams
         <span class="ml-auto bg-purple-200 text-purple-800 text-xs font-semibold px-2 py-0.5 rounded-full">New!</span>
       </a>
+      <!-- RadScribe AI Link -->
+      <a href="report-generator.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out active">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v-4.477c0-1.155.26-2.29.75-3.376M9 17.25c-1.35 0-2.61-.527-3.556-1.474M9 17.25h.008m5.042-11.5c1.253 0 2.447.394 3.41 1.115m-3.41-1.115C13.626 4.31 12.09 3.75 10.5 3.75c-1.59 0-3.126.56-4.37 1.639m4.37-1.639h.008M15 17.25v-4.477c0-1.155-.26-2.29-.75-3.376M15 17.25c1.35 0 2.61-.527 3.556-1.474M15 17.25h.008m-5.042-11.5c-1.253 0-2.447-.394-3.41-1.115m3.41 1.115C10.374 4.31 11.91 3.75 13.5 3.75c1.59 0 3.126.56 4.37 1.639m-4.37-1.639h.008" />
+        </svg>
+        RadScribe AI
+      </a>
     </nav>
 
     <div class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3">My Account</div>
     <nav class="flex flex-col gap-2">
-      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out">
+      <a href="#profile-settings" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="profile-settings">
         <span class="mr-3 text-gray-600">🙋‍♂️</span> My Profile
       </a>
-      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out">
+      <a href="#my-bookmarks" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="my-bookmarks">
         <span class="mr-3 text-gray-600">📌</span> My Bookmarks
       </a>
-      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out">
+      <a href="#performance-ai" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="performance-ai">
         <span class="mr-3 text-gray-600">📈</span> Performance
       </a>
       <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out">
@@ -174,7 +144,7 @@
   </aside>
 
   <!-- Main Content -->
-  <main class="flex-1 p-8 overflow-y-auto">
+  <main class="flex-1 p-8 flex flex-col">
     <div class="flex items-center justify-between mb-8">
       <!-- Dynamic Greeting -->
       <h1 id="greeting" class="text-3xl font-extrabold text-gray-900"></h1>
@@ -183,77 +153,191 @@
       </button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> <!-- Decreased gap from gap-8 to gap-6 -->
+    <!-- Dynamic Content Area -->
+    <div id="content-area" class="flex-1 overflow-hidden">
 
-      <!-- Your Progress Card (Moved to top) -->
-      <div class="glass-card card-shadow card-enter col-span-1 md:col-span-2 lg:col-span-1" style="animation-delay: 0s;">
-        <h2 class="text-xl font-bold text-gray-800 mb-6">Your Progress</h2>
-        <div class="space-y-4">
-          <div>
-            <p class="text-sm font-medium text-gray-700 mb-1">Overall Completion</p>
-            <div class="w-full bg-gray-200 rounded-full h-2.5">
-              <div class="bg-blue-500 h-2.5 rounded-full" style="width: 75%;"></div>
-            </div>
-            <p class="text-right text-xs text-gray-500 mt-1">75% Complete</p>
-          </div>
-          <div>
-            <p class="text-sm font-medium text-gray-700 mb-1">QBank Accuracy</p>
-            <div class="w-full bg-gray-200 rounded-full h-2.5">
-              <div class="bg-green-500 h-2.5 rounded-full" style="width: 82%;"></div>
-            </div>
-            <p class="text-right text-xs text-gray-500 mt-1">82% Correct</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Continue Learning Card (Moved up, showing only 1 last course) -->
-      <div class="glass-card card-shadow card-enter col-span-1 md:col-span-1 lg:col-span-2" style="animation-delay: 0.1s;">
-        <h2 class="text-xl font-bold text-gray-800 mb-6">Continue Learning</h2>
-        <div class="flex flex-col gap-4">
-          <div class="bg-indigo-50 p-4 rounded-lg flex items-center gap-4 hover:bg-indigo-100 transition-colors cursor-pointer">
-            <img src="https://placehold.co/40x40/6366f1/ffffff?text=C" alt="Last Course" class="rounded-md object-cover">
+      <!-- Dashboard Content (Initial View) -->
+      <div id="dashboard-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 h-full overflow-y-auto pb-4">
+        <!-- Your Progress Card -->
+        <div class="glass-card card-shadow card-enter col-span-1 md:col-span-2 lg:col-span-1" style="animation-delay: 0s;">
+          <h2 class="text-xl font-bold text-gray-800 mb-6">Your Progress</h2>
+          <div class="space-y-4">
             <div>
-              <p class="font-semibold text-indigo-800">MD / DNB - June 2023 Paper 2</p>
-              <p class="text-xs text-indigo-600">Last accessed: 2 days ago</p>
+              <p class="text-sm font-medium text-gray-700 mb-1">Overall Completion</p>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-blue-500 h-2.5 rounded-full" style="width: 75%;"></div>
+              </div>
+              <p class="text-right text-xs text-gray-500 mt-1">75% Complete</p>
             </div>
-            <a href="#" class="ml-auto text-indigo-600 hover:text-indigo-800 font-semibold text-sm">Continue &rarr;</a>
+            <div>
+              <p class="text-sm font-medium text-gray-700 mb-1">QBank Accuracy</p>
+              <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div class="bg-green-500 h-2.5 rounded-full" style="width: 82%;"></div>
+              </div>
+              <p class="text-right text-xs text-gray-500 mt-1">82% Correct</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Continue Learning Card -->
+        <div class="glass-card card-shadow card-enter col-span-1 md:col-span-1 lg:col-span-2" style="animation-delay: 0.1s;">
+          <h2 class="text-xl font-bold text-gray-800 mb-6">Continue Learning</h2>
+          <div class="flex flex-col gap-4">
+            <div class="bg-indigo-50 p-4 rounded-lg flex items-center gap-4 hover:bg-indigo-100 transition-colors cursor-pointer">
+              <img src="https://placehold.co/40x40/6366f1/ffffff?text=C" alt="Last Course" class="rounded-md object-cover">
+              <div>
+                <p class="font-semibold text-indigo-800">MD / DNB - June 2023 Paper 2</p>
+                <p class="text-xs text-indigo-600">Last accessed: 2 days ago</p>
+              </div>
+              <a href="#" class="ml-auto text-indigo-600 hover:text-indigo-800 font-semibold text-sm">Continue &rarr;</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Daily Case Challenge Card -->
+        <div class="glass-card card-shadow card-enter col-span-1 md:col-span-2 lg:col-span-3" style="animation-delay: 0.2s;">
+          <h2 class="text-xl font-bold text-gray-800 mb-6">Daily Case Challenge</h2>
+          <div class="bg-red-50 p-4 rounded-lg flex flex-col items-center gap-4 text-center">
+            <img src="https://placehold.co/80x50/ef4444/ffffff?text=CT+Case" alt="Daily CT Case" class="rounded-md object-cover mb-2">
+            <p class="font-semibold text-red-800 text-base mb-2">Can you diagnose this?</p>
+            <p class="text-sm text-red-700 mb-4 max-w-prose">A 45-year-old male presents with sudden onset headache. CT scan provided.</p>
+            <button class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-shadow transform hover:-translate-y-0.5">
+              Start Challenge
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Links Card -->
+        <div class="glass-card card-shadow card-enter col-span-full" style="animation-delay: 0.3s;">
+          <h2 class="text-xl font-bold text-gray-800 mb-6">Quick Links</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-4 text-center">
+            <a href="#" class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-blue-50 hover:bg-blue-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md">
+              <img src="https://img.icons8.com/ios-filled/50/4a90e2/questions.png" class="h-8 w-8 object-contain icon-filter-blue" alt="QBank">
+              <span class="text-xs font-semibold text-blue-700 mt-1">QBank</span>
+            </a>
+            <a href="#" class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-green-50 hover:bg-green-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md">
+              <img src="https://img.icons8.com/fluency/48/test-passed.png" class="h-8 w-8 object-contain icon-filter-green" alt="Mock Exams">
+              <span class="text-xs font-semibold text-green-700 mt-1">Mock Exams</span>
+            </a>
+            <a href="#" class="relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-purple-50 hover:bg-purple-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md">
+              <img src="https://img.icons8.com/fluency/48/bookmark-ribbon.png" class="h-8 w-8 object-contain icon-filter-purple" alt="Bookmarks">
+              <span class="text-xs font-semibold text-purple-700 mt-1">Bookmarks</span>
+            </a>
+            <a href="#" class="relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-yellow-50 hover:bg-yellow-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md">
+              <img src="https://img.icons8.com/fluency/48/analytics.png" class="h-8 w-8 object-contain icon-filter-yellow" alt="Analytics">
+              <span class="text-xs font-semibold text-yellow-700 mt-1">Analytics</span>
+            </a>
           </div>
         </div>
       </div>
 
-      <!-- Daily Case Challenge Card -->
-      <div class="glass-card card-shadow card-enter col-span-1 md:col-span-2 lg:col-span-3" style="animation-delay: 0.2s;">
-        <h2 class="text-xl font-bold text-gray-800 mb-6">Daily Case Challenge</h2>
-        <div class="bg-red-50 p-4 rounded-lg flex flex-col items-center gap-4 text-center">
-          <img src="https://placehold.co/80x50/ef4444/ffffff?text=CT+Case" alt="Daily CT Case" class="rounded-md object-cover mb-2"> <!-- Smaller image -->
-          <p class="font-semibold text-red-800 text-base mb-2">Can you diagnose this?</p>
-          <p class="text-sm text-red-700 mb-4 max-w-prose">A 45-year-old male presents with sudden onset headache. CT scan provided.</p>
-          <button class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-shadow transform hover:-translate-y-0.5">
-            Start Challenge
+      <!-- My Profile Settings Content -->
+      <div id="profile-settings-content" class="hidden w-full h-full overflow-y-auto pb-4">
+        <div class="glass-card card-shadow card-enter col-span-full">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">My Profile Settings</h2>
+          <form id="profileForm" class="space-y-6">
+            <div>
+              <label for="userName" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+              <input type="text" id="userName" value="RadMentor User" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors text-base">
+            </div>
+            <div>
+              <label for="userEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input type="email" id="userEmail" value="user@radmentor.com" class="w-full p-3 border border-gray-300 bg-gray-100 rounded-lg cursor-not-allowed text-base" readonly>
+            </div>
+            <div>
+              <label for="userSpecialty" class="block text-sm font-medium text-gray-700 mb-1">Specialty</label>
+              <input type="text" id="userSpecialty" value="Radiology" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors text-base">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Theme</label>
+              <div class="flex items-center space-x-4">
+                <label class="inline-flex items-center">
+                  <input type="radio" class="form-radio text-blue-600" name="theme" value="light" checked>
+                  <span class="ml-2 text-gray-700">Light</span>
+                </label>
+                <label class="inline-flex items-center">
+                  <input type="radio" class="form-radio text-blue-600" name="theme" value="dark">
+                  <span class="ml-2 text-gray-700">Dark</span>
+                </label>
+              </div>
+            </div>
+            <button type="submit" class="w-full gradient-bg text-white text-base font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+              Save Changes
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- My Bookmarks Content -->
+      <div id="my-bookmarks-content" class="hidden w-full h-full overflow-y-auto pb-4">
+        <div class="glass-card card-shadow card-enter col-span-full">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">My Bookmarks</h2>
+          <ul id="bookmarksList" class="space-y-4">
+            <!-- Bookmarked MCQs will be loaded here -->
+            <li class="bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center justify-between hover:bg-gray-100 transition-colors cursor-pointer">
+              <p class="text-base text-gray-700 font-medium">MCQ: Identify the lesion in this T1W brain MRI</p>
+              <div class="flex items-center gap-2">
+                <button class="text-blue-600 hover:text-blue-800 text-sm font-semibold">View</button>
+                <button class="text-red-500 hover:text-red-700 text-xl">&times;</button>
+              </div>
+            </li>
+            <li class="bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center justify-between hover:bg-gray-100 transition-colors cursor-pointer">
+              <p class="text-base text-gray-700 font-medium">Case: Acute Appendicitis - USG Findings</p>
+              <div class="flex items-center gap-2">
+                <button class="text-blue-600 hover:text-blue-800 text-sm font-semibold">View</button>
+                <button class="text-red-500 hover:text-red-700 text-xl">&times;</button>
+              </div>
+            </li>
+            <li class="bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center justify-between hover:bg-gray-100 transition-colors cursor-pointer">
+              <p class="text-base text-gray-700 font-medium">Topic: Physics of X-ray Production</p>
+              <div class="flex items-center gap-2">
+                <button class="text-blue-600 hover:text-blue-800 text-sm font-semibold">View</button>
+                <button class="text-red-500 hover:text-red-700 text-xl">&times;</button>
+              </div>
+            </li>
+          </ul>
+          <button class="mt-6 w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg text-sm transition-colors">
+            Load More Bookmarks
           </button>
         </div>
       </div>
 
-      <!-- Quick Links Card (Moved to end, icons smaller) -->
-      <div class="glass-card card-shadow card-enter col-span-full" style="animation-delay: 0.3s;">
-        <h2 class="text-xl font-bold text-gray-800 mb-6">Quick Links</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-4 text-center">
-          <a href="#" class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-blue-50 hover:bg-blue-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md">
-            <img src="https://img.icons8.com/ios-filled/50/4a90e2/questions.png" class="h-8 w-8 object-contain icon-filter-blue" alt="QBank"> <!-- Smaller icon -->
-            <span class="text-xs font-semibold text-blue-700 mt-1">QBank</span>
-          </a>
-          <a href="#" class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-green-50 hover:bg-green-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md">
-            <img src="https://img.icons8.com/fluency/48/test-passed.png" class="h-8 w-8 object-contain icon-filter-green" alt="Mock Exams"> <!-- Smaller icon -->
-            <span class="text-xs font-semibold text-green-700 mt-1">Mock Exams</span>
-          </a>
-          <a href="#" class="relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-purple-50 hover:bg-purple-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md">
-            <img src="https://img.icons8.com/fluency/48/bookmark-ribbon.png" class="h-8 w-8 object-contain icon-filter-purple" alt="Bookmarks"> <!-- Smaller icon -->
-            <span class="text-xs font-semibold text-purple-700 mt-1">Bookmarks</span>
-          </a>
-          <a href="#" class="relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-yellow-50 hover:bg-yellow-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md">
-            <img src="https://img.icons8.com/fluency/48/analytics.png" class="h-8 w-8 object-contain icon-filter-yellow" alt="Analytics"> <!-- Smaller icon -->
-            <span class="text-xs font-semibold text-yellow-700 mt-1">Analytics</span>
-          </a>
+      <!-- Performance & AI Content -->
+      <div id="performance-ai-content" class="hidden w-full h-full overflow-y-auto pb-4">
+        <div class="glass-card card-shadow card-enter col-span-full">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Performance Overview & AI Insights</h2>
+          <div class="space-y-6">
+            <div>
+              <h3 class="text-xl font-bold text-gray-800 mb-4">Your Overall Progress</h3>
+              <div class="space-y-4">
+                <div>
+                  <p class="text-sm font-medium text-gray-700 mb-1">Overall Completion</p>
+                  <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div class="bg-blue-500 h-2.5 rounded-full" style="width: 75%;"></div>
+                  </div>
+                  <p class="text-right text-xs text-gray-500 mt-1">75% Complete</p>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-700 mb-1">QBank Accuracy</p>
+                  <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div class="bg-green-500 h-2.5 rounded-full" style="width: 82%;"></div>
+                  </div>
+                  <p class="text-right text-xs text-gray-500 mt-1">82% Correct</p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4">Weak Topics Curated by AI</h3>
+              <button id="generateWeakTopics" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                Generate Weak Topics Insights
+              </button>
+              <div id="weakTopicsOutput" class="mt-4 text-sm text-gray-700 space-y-2">
+                <!-- AI generated content will be loaded here -->
+                <p class="text-gray-500 italic">Click the button above to get personalized insights.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -261,44 +345,188 @@
   </main>
 
   <script>
+    // Global variable for username (simulated)
+    let currentUserName = "RadMentor User"; // Default username
+
+    // Function to display messages (replaces alert)
+    function showMessage(message, type = 'success') {
+      const messageBox = document.getElementById('messageBox');
+      messageBox.textContent = message;
+      messageBox.className = 'message-box show'; // Reset classes and show
+      if (type === 'error') {
+        messageBox.style.backgroundColor = '#f44336'; // Red for error
+      } else {
+        messageBox.style.backgroundColor = '#4CAF50'; // Green for success
+      }
+      setTimeout(() => {
+        messageBox.classList.remove('show');
+      }, 3000); // Hide after 3 seconds
+    }
+
+    // Function to show specific content section
+    function showContentSection(sectionId) {
+      const contentArea = document.getElementById('content-area');
+      const sections = contentArea.children; // Get all direct children of content-area
+
+      // Hide all sections
+      for (let i = 0; i < sections.length; i++) {
+        sections[i].classList.add('hidden');
+      }
+
+      // Show the requested section
+      const targetSection = document.getElementById(sectionId);
+      if (targetSection) {
+        targetSection.classList.remove('hidden');
+        // Re-apply entrance animation for newly visible card (optional, for visual flair)
+        targetSection.querySelectorAll('.card-enter').forEach(card => {
+            card.classList.remove('animate-in'); // Reset animation
+            void card.offsetWidth; // Trigger reflow
+            card.classList.add('animate-in'); // Re-add animation
+        });
+      }
+
+      // Update active state in sidebar
+      const sidebarLinks = document.querySelectorAll('.sidebar-link');
+      sidebarLinks.forEach(link => {
+        // Match data-section attribute with the sectionId (without '-content')
+        if (link.dataset.section && (link.dataset.section + '-content') === sectionId) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
+    }
+
+
     // JavaScript to set dynamic greeting based on time of day
     document.addEventListener('DOMContentLoaded', () => {
       const greetingElement = document.getElementById('greeting');
-      const date = new Date();
-      const hour = date.getHours();
-      let greeting;
 
-      if (hour < 12) {
-        greeting = "Good Morning, User 👋";
-      } else if (hour < 18) {
-        greeting = "Good Afternoon, User 👋";
-      } else {
-        greeting = "Good Evening, User 👋";
-      }
-      greetingElement.textContent = greeting;
+      // Function to update greeting
+      const updateGreeting = () => {
+        const date = new Date();
+        const hour = date.getHours();
+        let greetingPrefix;
 
-      // Highlight active sidebar link based on current page
-      const currentPath = window.location.pathname.split('/').pop();
-      const sidebarLinks = document.querySelectorAll('.sidebar-link');
-
-      sidebarLinks.forEach(link => {
-        const linkHref = link.getAttribute('href').split('/').pop();
-        // Check if the link's href matches the current page, or if it's the dashboard (index.html)
-        // or if it's the main dashboard page itself (empty string for currentPath)
-        if (linkHref === currentPath || (currentPath === '' && linkHref === 'md_dnb.html')) {
-          link.classList.add('active');
+        if (hour < 12) {
+          greetingPrefix = "Good Morning";
+        } else if (hour < 18) {
+          greetingPrefix = "Good Afternoon";
         } else {
-          link.classList.remove('active'); // Ensure only one is active
+          greetingPrefix = "Good Evening";
         }
+        greetingElement.innerHTML = `${greetingPrefix}, ${currentUserName} <span class="wave-emoji">👋</span>`;
+      };
+
+      // Initial greeting set
+      updateGreeting();
+
+      // Event listeners for My Account sidebar links
+      document.querySelectorAll('nav a[data-section]').forEach(link => {
+        link.addEventListener('click', (event) => {
+          event.preventDefault(); // Prevent default link behavior
+          const sectionId = link.dataset.section + '-content'; // Append -content to match div IDs
+          showContentSection(sectionId);
+        });
       });
 
-      // Apply entrance animation to cards
-      const cards = document.querySelectorAll('.card-enter');
-      cards.forEach((card, index) => {
-        // Stagger the animation slightly
+      // Handle initial URL hash for direct linking to sections
+      if (window.location.hash) {
+        const sectionIdFromHash = window.location.hash.substring(1) + '-content';
+        const targetSectionElement = document.getElementById(sectionIdFromHash);
+        if (targetSectionElement) {
+          showContentSection(sectionIdFromHash);
+        } else {
+          showContentSection('dashboard-content'); // Default to dashboard if hash invalid
+        }
+      } else {
+        showContentSection('dashboard-content'); // Show dashboard by default
+      }
+
+
+      // Apply entrance animation to cards (initial load for dashboard)
+      document.querySelectorAll('#dashboard-content .card-enter').forEach((card, index) => {
         card.style.animationDelay = `${index * 0.1}s`;
-        card.classList.add('animate-in'); // Trigger animation
+        card.classList.add('animate-in');
       });
+
+
+      // My Profile Settings - Form Submission
+      const profileForm = document.getElementById('profileForm');
+      if (profileForm) {
+        profileForm.addEventListener('submit', (event) => {
+          event.preventDefault(); // Prevent default form submission
+          const userNameInput = document.getElementById('userName');
+          const userSpecialty = document.getElementById('userSpecialty').value;
+
+          currentUserName = userNameInput.value; // Update global username
+          updateGreeting(); // Update the greeting with new username
+
+          // In a real app, you would send this data to a backend (e.g., Firebase Firestore)
+          console.log('Profile saved:', { userName: currentUserName, userSpecialty });
+          showMessage('Profile settings saved successfully!', 'success');
+        });
+      }
+
+      // AI Feature: Generate Weak Topics Insights
+      const generateWeakTopicsBtn = document.getElementById('generateWeakTopics');
+      const weakTopicsOutput = document.getElementById('weakTopicsOutput');
+
+      if (generateWeakTopicsBtn && weakTopicsOutput) {
+        generateWeakTopicsBtn.addEventListener('click', async () => {
+          weakTopicsOutput.innerHTML = '<p class="text-gray-500 italic">Generating insights...</p>';
+          generateWeakTopicsBtn.disabled = true; // Disable button during generation
+
+          const prompt = `Based on a medical student's performance in radiology exams (assume average scores in all areas, but slightly lower in "Pediatric Radiology" and "Musculoskeletal MRI"), generate a summary of 3-5 weak topics they should focus on. For each topic, provide a brief reason why it's weak and suggest a specific area of practice (e.g., "Review congenital heart anomalies in CXR"). Format as a numbered list.`;
+
+          // Simulate API call to Gemini
+          try {
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+            const apiKey = ""; // Canvas will provide this at runtime
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            // Implement exponential backoff for retries
+            const maxRetries = 3;
+            let retryCount = 0;
+            let response;
+            while (retryCount < maxRetries) {
+                try {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.ok) break; // Exit loop if successful
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                }
+                retryCount++;
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000)); // Exponential backoff
+            }
+
+            if (!response || !response.ok) {
+                throw new Error(`API call failed with status: ${response ? response.status : 'N/A'}`);
+            }
+
+            const result = await response.json();
+            if (result.candidates && result.candidates.length > 0 &&
+                result.candidates[0].content && result.candidates[0].content.parts &&
+                result.candidates[0].content.parts.length > 0) {
+              const aiText = result.candidates[0].content.parts[0].text;
+              weakTopicsOutput.innerHTML = `<p>${aiText.replace(/\n/g, '<br>')}</p>`; // Display as HTML
+            } else {
+              weakTopicsOutput.innerHTML = '<p class="text-red-500">Failed to generate insights. Please try again.</p>';
+            }
+          } catch (error) {
+            console.error('Error generating weak topics:', error);
+            weakTopicsOutput.innerHTML = `<p class="text-red-500">Error: ${error.message}. Could not generate insights.</p>`;
+          } finally {
+            generateWeakTopicsBtn.disabled = false; // Re-enable button
+          }
+        });
+      }
     });
   </script>
 </body>
