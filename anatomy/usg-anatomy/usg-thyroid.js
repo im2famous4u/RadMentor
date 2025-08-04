@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
         {
             id: 1,
             name: 'Longitudinal Scan',
+            shortDef: 'A longitudinal view provides a long-axis image of the thyroid lobe, essential for evaluating its length and overall morphology.',
             videoSrc: 'thy-long.mp4',
             imageSrc: 'long-img.png',
             options: [
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
         {
             id: 2,
             name: 'Transverse Scan',
+            shortDef: 'A transverse view provides a short-axis image, crucial for measuring width and depth, and assessing for nodules.',
             videoSrc: 'thy-long.mp4', // Placeholder
             imageSrc: 'long-img.png', // Placeholder
             options: [
@@ -33,9 +35,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             ]
         },
-        // ... (other steps)
-        { id: 3, name: 'Lobe Measurements', videoSrc: '', imageSrc: '', options: [ { title: 'Measurement Protocol', detailText: '<strong>Width & AP Diameter:</strong> Use the transverse view. <strong>Length:</strong> Use the longitudinal view.' } ] },
-        { id: 4, name: 'Isthmus Scan', videoSrc: '', imageSrc: '', options: [ { title: 'Isthmus Protocol', detailText: 'A transverse grayscale image is taken through the isthmus.' } ] }
+        { id: 3, name: 'Lobe Measurements', shortDef: 'Accurate measurements are crucial for assessing gland size and monitoring changes.', videoSrc: '', imageSrc: '', options: [ { title: 'Measurement Protocol', detailText: '<strong>Width & AP Diameter:</strong> Use the transverse view. <strong>Length:</strong> Use the longitudinal view.' } ] },
+        { id: 4, name: 'Isthmus Scan', shortDef: 'The isthmus connects the two lobes and must be evaluated for any abnormalities or nodules.', videoSrc: '', imageSrc: '', options: [ { title: 'Isthmus Protocol', detailText: 'A transverse grayscale image is taken through the isthmus. AP thickness should be measured.' } ] }
     ];
 
     let activeStepIndex = 0;
@@ -66,31 +67,36 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderDisplayPanel() {
         const step = protocolData[activeStepIndex];
 
-        // --- NEW: Build the static text block for the right column ---
-        let textContentHTML = `<div class="bg-gray-50 p-6 rounded-lg h-full space-y-6">`;
+        // --- NEW: Build the text block with definition first, then two boxes ---
+        let textContentHTML = `
+            <div class="bg-gray-50 p-6 rounded-lg h-full flex flex-col">
+                <h3 class="font-bold text-xl mb-2">${step.name}</h3>
+                <p class="text-gray-600 mb-6 pb-6 border-b">${step.shortDef}</p>
+                <div class="space-y-4">
+        `;
         step.options.forEach((option, index) => {
             textContentHTML += `
-                <div>
-                    <h4 class="font-bold text-lg text-gray-800">Option ${index + 1} - ${option.title}</h4>
-                    <p class="text-gray-600 mt-2">${option.detailText}</p>
+                <div class="bg-white p-4 rounded-lg border">
+                    <h4 class="font-semibold text-gray-800">${option.title}</h4>
+                    <p class="text-gray-600 mt-1 text-sm">${option.detailText}</p>
                 </div>
             `;
         });
-        textContentHTML += `</div>`;
+        textContentHTML += `</div></div>`;
 
 
-        // --- NEW: Build the visual area with NO BORDERS ---
+        // --- NEW: Compact visuals with performance attributes ---
         let visualHTML = `
-            <div class="flex flex-col h-full w-full gap-4">
-                <div class="h-3/5 rounded-lg overflow-hidden bg-black">
+            <div class="flex flex-col h-full w-full gap-2">
+                <div class="h-1/2 rounded-lg overflow-hidden bg-black">
                     ${step.videoSrc ? `
-                        <video key="${Date.now()}" class="w-full h-full object-cover" autoplay muted playsinline>
+                        <video key="${step.videoSrc}" class="w-full h-full object-cover" autoplay muted playsinline preload="metadata">
                             <source src="${step.videoSrc}" type="video/mp4">
                         </video>` : `<div class="w-full h-full flex items-center justify-center text-white">(No Video)</div>`}
                 </div>
-                <div class="h-2/5 rounded-lg overflow-hidden bg-white flex items-center justify-center">
+                <div class="h-1/2 rounded-lg overflow-hidden bg-white flex items-center justify-center">
                     ${step.imageSrc ? `
-                        <img src="${step.imageSrc}" alt="${step.name} illustration" class="max-h-full max-w-full object-contain">` : `<div class="w-full h-full flex items-center justify-center text-gray-500">(No Image)</div>`}
+                        <img src="${step.imageSrc}" alt="${step.name} illustration" class="max-h-full max-w-full object-contain" loading="lazy">` : `<div class="w-full h-full flex items-center justify-center text-gray-500">(No Image)</div>`}
                 </div>
             </div>
         `;
@@ -108,12 +114,10 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
     }
 
-    protocolChecklist.addEventListener('click', function(e) {
+    protocolChecklist.addEventListener('click', (e) => {
         const listItem = e.target.closest('li');
-        if (!listItem) return;
-        const index = parseInt(listItem.dataset.index);
-        if (index !== activeStepIndex) {
-            activeStepIndex = index;
+        if (listItem && parseInt(listItem.dataset.index) !== activeStepIndex) {
+            activeStepIndex = parseInt(listItem.dataset.index);
             renderProtocolList();
             renderDisplayPanel();
         }
