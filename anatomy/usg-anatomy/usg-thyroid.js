@@ -1,75 +1,60 @@
-<!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>USG Thyroid Anatomy - RadMentor</title>
+// Wait for the entire HTML document to be loaded and ready
+document.addEventListener('DOMContentLoaded', function() {
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    // --- PART 1: LOAD THE VIDEO ON THE RIGHT PANEL ---
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    const displayPanel = document.getElementById('display-panel');
+    if (displayPanel) {
+        // Set the content of the panel to be our video player
+        displayPanel.innerHTML = `
+            <video class="w-full h-auto rounded-lg" autoplay muted playsinline loop>
+                <source src="thy-long.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        `;
+    }
 
-    <script src="https://unpkg.com/feather-icons"></script>
+    // --- PART 2: POPULATE THE PROTOCOL CHECKLIST ON THE LEFT ---
 
-    <style>
-        .rad-gradient {
-            background-image: linear-gradient(to right, #4f46e5, #818cf8);
-        }
-        .rad-gradient-text {
-            background: linear-gradient(to right, #4f46e5, #818cf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-    </style>
-</head>
-<body class="bg-gray-100 text-gray-800 font-['Inter']">
+    const protocolChecklist = document.getElementById('protocol-checklist');
+    if (protocolChecklist) {
+        const steps = [
+            { name: 'Longitudinal Scan', active: true },
+            { name: 'Transverse Scan', active: false },
+            { name: 'Lobe Measurements', active: false },
+            { name: 'Isthmus Scan', active: false }
+        ];
 
-    <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
-        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
-            <div class="flex items-center">
-                <a href="../../index.html" class="flex items-center">
-                    <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
-                    <span class="text-2xl font-bold text-gray-800">RadMentor</span>
-                </a>
-            </div>
-            <nav class="hidden md:flex items-center space-x-8">
-                <a href="../../index.html#courses" class="text-gray-600 hover:text-blue-600">Courses</a>
-                <a href="../../anatomy/index.html" class="text-gray-600 hover:text-blue-600">Anatomy</a>
-            </nav>
-        </div>
-    </header>
+        let listItemsHTML = '';
+        steps.forEach((step, index) => {
+            // Check if the step is the active one to apply different styling
+            const isActive = step.active;
+            const bgColor = isActive ? 'bg-indigo-500' : 'bg-gray-100';
+            const textColor = isActive ? 'text-white' : 'text-gray-700';
+            const ringColor = isActive ? 'ring-indigo-300' : 'ring-gray-300';
+            const numberColor = isActive ? 'text-white' : 'text-indigo-600';
+            const chevronColor = isActive ? 'text-white' : 'text-gray-400';
 
-    <main class="container mx-auto px-6 pt-24 pb-12">
-        <div class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
-            <a href="../../index.html" class="hover:text-blue-600">RadMentor</a>
-            <span>/</span>
-            <a href="../index.html" class="hover:text-blue-600">anatomy</a>
-            <span>/</span>
-            <span class="font-semibold text-gray-700">usg-anatomy</span>
-        </div>
+            listItemsHTML += `
+                <li class="flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${bgColor} hover:bg-indigo-100 group">
+                    <div class="flex items-center">
+                        <span class="flex items-center justify-center w-6 h-6 mr-4 text-sm font-bold rounded-full ring-2 ${ringColor} ${numberColor}">
+                            ${index + 1}
+                        </span>
+                        <span class="font-semibold ${textColor}">
+                            ${step.name}
+                        </span>
+                    </div>
+                    <i data-feather="chevron-right" class="${chevronColor} group-hover:text-gray-600"></i>
+                </li>
+            `;
+        });
 
-        <h1 class="text-4xl font-bold text-gray-900 mb-2">Interactive Ultrasound: Thyroid</h1>
-        <p class="text-lg text-gray-600 mb-8">Follow the standard protocol steps to perform a complete thyroid ultrasound.</p>
+        // Set the generated HTML into the list
+        protocolChecklist.innerHTML = listItemsHTML;
 
-        <div class="flex flex-col lg:flex-row gap-8">
-            <aside class="lg:w-1/3">
-                <div class="bg-white p-6 rounded-xl shadow-md sticky top-24">
-                    <h2 class="text-xl font-bold mb-4">Thyroid Protocol</h2>
-                    <ol id="protocol-checklist" class="space-y-3">
-                    </ol>
-                </div>
-            </aside>
-
-            <div id="display-panel" class="lg:w-2/3 bg-black p-4 rounded-xl shadow-md min-h-[600px] flex items-center justify-center">
-            </div>
-        </div>
-    </main>
-    
-    <script>
+        // IMPORTANT: Call feather.replace() AGAIN after adding new icons
+        // This is necessary to make the chevron icons appear.
         feather.replace();
-    </script>
-    <script src="usg-thyroid.js"></script>
-</body>
-</html>
+    }
+});
