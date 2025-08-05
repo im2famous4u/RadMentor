@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile - RadScribe AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    .glass-card {
+      background-color: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 6px 6px rgba(0,0,0,0.03);
+    }
+    .gradient-bg {
+      background: linear-gradient(to right, #6366f1, #8b5cf6); /* Purple to Indigo gradient */
+    }
+  </style>
+</head>
+<body>
+  <div id="profile-settings-content" class="w-full h-full overflow-y-auto pb-4">
+    <div class="glass-card col-span-full">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">My Profile Settings</h2>
+      <form id="profileForm" class="space-y-6">
+        <div>
+          <label for="userName" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+          <input type="text" id="userName" value="RadMentor User" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors text-base">
+        </div>
+        <div>
+          <label for="userEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input type="email" id="userEmail" value="user@radmentor.com" class="w-full p-3 border border-gray-300 bg-gray-100 rounded-lg cursor-not-allowed text-base" readonly>
+        </div>
+        <div>
+          <label for="userSpecialty" class="block text-sm font-medium text-gray-700 mb-1">Specialty</label>
+          <input type="text" id="userSpecialty" value="Radiology" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors text-base">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Theme</label>
+          <div class="flex items-center space-x-4">
+            <label class="inline-flex items-center">
+              <input type="radio" class="form-radio text-blue-600" name="theme" value="light" checked>
+              <span class="ml-2 text-base text-gray-700">Light</span>
+            </label>
+            <label class="inline-flex items-center">
+              <input type="radio" class="form-radio text-blue-600" name="theme" value="dark">
+              <span class="ml-2 text-base text-gray-700">Dark</span>
+            </label>
+          </div>
+        </div>
+        <button type="submit" class="w-full gradient-bg text-white text-base font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+          Save Changes
+        </button>
+      </form>
+    </div>
+  </div>
+  <script>
+    // This script needs to interact with the parent frame's currentUserName
+    document.addEventListener('DOMContentLoaded', () => {
+        const profileForm = document.getElementById('profileForm');
+        const userNameInput = document.getElementById('userName');
+
+        // Initial load of username from parent (if available)
+        if (window.parent && window.parent.currentUserName) {
+            userNameInput.value = window.parent.currentUserName;
+        }
+
+        if (profileForm) {
+            profileForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const newUserName = userNameInput.value;
+                const userSpecialty = document.getElementById('userSpecialty').value;
+
+                // Update parent frame's username
+                if (window.parent) {
+                    window.parent.currentUserName = newUserName;
+                    if (window.parent.updateInitials) {
+                        window.parent.updateInitials(); // Call parent's function to update initials
+                    }
+                    if (window.parent.showMessage) {
+                        window.parent.showMessage('Profile settings saved successfully!', 'success');
+                    }
+                }
+                console.log('Profile saved:', { userName: newUserName, userSpecialty });
+            });
+        }
+    });
+  </script>
+</body>
+</html>
