@@ -39,11 +39,15 @@
     .card-shadow {
       box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 6px 6px rgba(0,0,0,0.03);
     }
-    /* Active tab style */
-    .tab-button.active {
-      background-color: #6366f1; /* indigo-500 */
-      color: white;
-      box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+    /* Active tab style for sidebar links */
+    .sidebar-link.active {
+      background-color: #e0e7ff; /* blue-100 */
+      color: #3b82f6; /* blue-500 */
+      font-weight: 600; /* semi-bold */
+      box-shadow: 0 2px 5px rgba(59, 130, 246, 0.2);
+    }
+    .sidebar-link.active svg {
+      color: #3b82f6; /* blue-500 */
     }
     /* Message Box styles */
     .message-box {
@@ -64,6 +68,115 @@
       display: block;
       opacity: 1;
     }
+
+    /* User profile icon and dropdown styles */
+    .user-profile-icon {
+        width: 40px;
+        height: 40px;
+        background-color: #6366f1; /* Indigo */
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        cursor: pointer;
+        user-select: none;
+        transition: transform 0.2s ease-in-out;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .user-profile-icon:hover {
+        transform: scale(1.05);
+    }
+
+    .user-dropdown {
+        position: absolute;
+        top: 55px; /* Adjust based on icon size and desired spacing */
+        right: 0;
+        background-color: white;
+        border-radius: 0.75rem; /* rounded-xl */
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        z-index: 50;
+        min-width: 180px;
+        padding: 0.5rem 0;
+        display: none;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+    }
+    .user-dropdown.show {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .user-dropdown a {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1.25rem;
+        font-size: 0.9rem;
+        color: #4a5568; /* gray-700 */
+        transition: background-color 0.2s, color 0.2s;
+    }
+    .user-dropdown a:hover {
+        background-color: #f0f4f8; /* Light blue-gray */
+        color: #3b82f6; /* blue-500 */
+    }
+    .user-dropdown a:last-child {
+        border-top: 1px solid #e2e8f0; /* gray-200 */
+        margin-top: 0.5rem;
+        padding-top: 0.75rem;
+    }
+
+    /* Goals dropdown styles */
+    .goals-dropdown-button {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        color: #4a5568;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .goals-dropdown-button:hover {
+        background-color: #f0f4f8;
+        color: #3b82f6;
+    }
+    .goals-dropdown {
+        position: absolute;
+        top: 55px; /* Adjust based on button size and desired spacing */
+        left: 0;
+        background-color: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        z-index: 50;
+        min-width: 200px;
+        padding: 0.5rem 0;
+        display: none;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+    }
+    .goals-dropdown.show {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .goals-dropdown a {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1.25rem;
+        font-size: 0.9rem;
+        color: #4a5568;
+        transition: background-color 0.2s, color 0.2s;
+    }
+    .goals-dropdown a:hover {
+        background-color: #e0e7ff; /* blue-100 */
+        color: #3b82f6; /* blue-500 */
+    }
   </style>
 </head>
 <body class="flex min-h-screen bg-gray-50 text-gray-800">
@@ -71,7 +184,7 @@
   <!-- Message Box -->
   <div id="messageBox" class="message-box"></div>
 
-  <!-- Sidebar (Copied from dashboard, active link adjusted) -->
+  <!-- Sidebar -->
   <aside class="w-72 bg-white border-r border-gray-200 p-6 flex flex-col shadow-xl rounded-r-2xl overflow-y-auto sidebar-scroll">
     <div class="mb-10 flex items-center gap-3 transform transition-transform duration-200 hover:scale-105">
       <img src="https://placehold.co/40x40/6366f1/ffffff?text=RM" alt="RadMentor Logo" class="h-10 w-10 rounded-full shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/40x40/6366f1/ffffff?text=RM';">
@@ -80,37 +193,50 @@
 
     <div class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3">Exam Preparation</div>
     <nav class="flex flex-col gap-2 mb-8">
-      <a href="frcr/index.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 ease-in-out">
+      <!-- Dashboard Link -->
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out active" data-section="dashboard">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        Dashboard
+      </a>
+      <!-- FRCR Link -->
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="frcr">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
         </svg>
         FRCR
       </a>
-      <a href="MD_DNB/index.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 ease-in-out">
+      <!-- MD / DNB Link -->
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="md-dnb">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253" />
         </svg>
         MD / DNB
       </a>
-      <a href="anatomy/index.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 ease-in-out">
+      <!-- Anatomy Link -->
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="anatomy">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0h.01M9 19h10a2 2 0 002-2v-6a2 2 0 00-2-2H9m11 0V7a2 2 0 00-2-2h-2M4 6h.01M6 6h.01" />
         </svg>
         Anatomy
       </a>
-      <a href="MICR/index.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 ease-in-out">
+      <!-- MICR Link -->
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="micr">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3m0 0l3 3m-3-3v8m0-9a9 9 0 110 18 9 9 0 010-18z" />
         </svg>
         MICR
       </a>
-      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 ease-in-out">
+      <!-- Superspeciality Link -->
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="superspeciality">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v-2m-2 2h2m5-12l2-2m2 2l-2-2m-3 12l2 2m2-2l-2 2m-3-7h.01M19 12h.01" />
         </svg>
         Superspeciality
       </a>
-      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 transition-all duration-200 ease-in-out">
+      <!-- Fellowship Exams Link -->
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="fellowship-exams">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V3m0 9v3m0 0h.01M12 12h.01M12 12l-2.58 2.58M12 12l2.58 2.58M12 12l-2.58-2.58M12 12l2.58-2.58M12 12l-2.58 2.58M12 12l2.58 2.58" />
         </svg>
@@ -118,26 +244,27 @@
         <span class="ml-auto bg-purple-200 text-purple-800 text-xs font-semibold px-2 py-0.5 rounded-full">New!</span>
       </a>
       <!-- RadScribe AI Link -->
-      <a href="RadScribe%20AI/Ai.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out active">
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="radscribe-ai">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v-4.477c0-1.155.26-2.29.75-3.376M9 17.25c-1.35 0-2.61-.527-3.556-1.474M9 17.25h.008m5.042-11.5c1.253 0 2.447.394 3.41 1.115m-3.41-1.115C13.626 4.31 12.09 3.75 10.5 3.75c-1.59 0-3.126.56-4.37 1.639m4.37-1.639h.008M15 17.25v-4.477c0-1.155-.26-2.29-.75-3.376M15 17.25c1.35 0 2.61-.527 3.556-1.474M15 17.25h.008m-5.042-11.5c-1.253 0-2.447-.394-3.41-1.115m3.41 1.115C10.374 4.31 11.91 3.75 13.5 3.75c1.59 0 3.126.56 4.37 1.639m-4.37-1.639h.008" />
         </svg>
         RadScribe AI
+        <span class="ml-auto bg-yellow-200 text-yellow-800 text-xs font-semibold px-2 py-0.5 rounded-full">Exclusive!</span>
       </a>
     </nav>
 
     <div class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3">My Account</div>
     <nav class="flex flex-col gap-2">
-      <a href="#profile-settings" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="profile-settings">
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="profile-settings">
         <span class="mr-3 text-gray-600">🙋‍♂️</span> My Profile
       </a>
-      <a href="#my-bookmarks" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="my-bookmarks">
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="my-bookmarks">
         <span class="mr-3 text-gray-600">📌</span> My Bookmarks
       </a>
-      <a href="#performance-ai" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="performance-ai">
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="performance-ai">
         <span class="mr-3 text-gray-600">📈</span> Performance
       </a>
-      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out">
+      <a href="#" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="ask-a-doubt">
         <span class="mr-3 text-gray-600">❓</span> Ask a Doubt
       </a>
     </nav>
@@ -145,85 +272,140 @@
 
   <!-- Main Content -->
   <main class="flex-1 p-8 flex flex-col">
-    <div class="flex items-center justify-between mb-8">
-      <!-- Dynamic Greeting -->
-      <h1 id="greeting" class="text-3xl font-extrabold text-gray-900"></h1>
-      <button class="gradient-bg text-white text-base font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out transform hover:-translate-y-0.5">
-        Logout
-      </button>
+    <div class="flex items-center justify-between mb-8 relative">
+      <!-- Goals Dropdown -->
+      <div class="relative">
+        <button id="goalsDropdownButton" class="goals-dropdown-button">
+          <span id="currentGoalText">Current Goal: Dashboard</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div id="goalsDropdown" class="goals-dropdown">
+            <a href="#" data-section="frcr">FRCR</a>
+            <a href="#" data-section="micr">MICR</a>
+            <a href="#" data-section="md-dnb">MD / DNB</a>
+            <a href="#" data-section="superspeciality">Superspeciality</a>
+        </div>
+      </div>
+
+      <!-- User Profile Icon and Dropdown -->
+      <div class="relative">
+        <div id="userProfileIcon" class="user-profile-icon">
+          <span id="userInitials">NY</span>
+        </div>
+        <div id="userDropdown" class="user-dropdown">
+            <a href="#" data-section="profile-settings">Profile</a>
+            <a href="#" data-section="dashboard">Prepare</a>
+            <a href="#" data-section="profile-settings">Settings</a>
+            <a href="/index.html" id="logoutLink">Log out</a>
+        </div>
+      </div>
     </div>
 
     <!-- Dynamic Content Area -->
     <div id="content-area" class="flex-1 overflow-hidden">
 
       <!-- Dashboard Content (Initial View) -->
-      <div id="dashboard-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 h-full overflow-y-auto pb-4">
-        <!-- Your Progress Card -->
-        <div class="glass-card card-shadow card-enter col-span-1 md:col-span-2 lg:col-span-1" style="animation-delay: 0s;">
-          <h2 class="text-xl font-bold text-gray-800 mb-6">Your Progress</h2>
+      <div id="dashboard-content" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 h-full overflow-y-auto pb-4">
+        <!-- Mastery Overview Card (formerly Your Progress) -->
+        <div class="glass-card card-shadow card-enter col-span-1 bg-blue-100" style="animation-delay: 0s;">
+          <h2 class="text-xl font-extrabold text-blue-900 mb-6 flex items-center">
+            <span class="text-3xl mr-3">📊</span> Mastery Overview
+          </h2>
           <div class="space-y-4">
             <div>
               <p class="text-sm font-medium text-gray-700 mb-1">Overall Completion</p>
-              <div class="w-full bg-gray-200 rounded-full h-2.5">
+              <div class="w-full bg-blue-200 rounded-full h-2.5">
                 <div class="bg-blue-500 h-2.5 rounded-full" style="width: 75%;"></div>
               </div>
               <p class="text-right text-xs text-gray-500 mt-1">75% Complete</p>
             </div>
             <div>
               <p class="text-sm font-medium text-gray-700 mb-1">QBank Accuracy</p>
-              <div class="w-full bg-gray-200 rounded-full h-2.5">
+              <div class="w-full bg-blue-200 rounded-full h-2.5">
                 <div class="bg-green-500 h-2.5 rounded-full" style="width: 82%;"></div>
               </div>
               <p class="text-right text-xs text-gray-500 mt-1">82% Correct</p>
             </div>
-          </div>
-        </div>
-
-        <!-- Continue Learning Card -->
-        <div class="glass-card card-shadow card-enter col-span-1 md:col-span-1 lg:col-span-2" style="animation-delay: 0.1s;">
-          <h2 class="text-xl font-bold text-gray-800 mb-6">Continue Learning</h2>
-          <div class="flex flex-col gap-4">
-            <div class="bg-indigo-50 p-4 rounded-lg flex items-center gap-4 hover:bg-indigo-100 transition-colors cursor-pointer">
-              <img src="https://placehold.co/40x40/6366f1/ffffff?text=C" alt="Last Course" class="rounded-md object-cover">
-              <div>
-                <p class="font-semibold text-indigo-800">MD / DNB - June 2023 Paper 2</p>
-                <p class="text-xs text-indigo-600">Last accessed: 2 days ago</p>
+            <!-- New Progress Bars -->
+            <div>
+              <p class="text-sm font-medium text-gray-700 mb-1">Mock Exam Score</p>
+              <div class="w-full bg-blue-200 rounded-full h-2.5">
+                <div class="bg-purple-500 h-2.5 rounded-full" style="width: 68%;"></div>
               </div>
-              <a href="#" class="ml-auto text-indigo-600 hover:text-indigo-800 font-semibold text-sm">Continue &rarr;</a>
+              <p class="text-right text-xs text-gray-500 mt-1">68% Average</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-700 mb-1">Topic Mastery</p>
+              <div class="w-full bg-blue-200 rounded-full h-2.5">
+                <div class="bg-yellow-500 h-2.5 rounded-full" style="width: 90%;"></div>
+              </div>
+              <p class="text-right text-xs text-gray-500 mt-1">90% Mastered</p>
             </div>
           </div>
         </div>
 
-        <!-- Daily Case Challenge Card -->
-        <div class="glass-card card-shadow card-enter col-span-1 md:col-span-2 lg:col-span-3" style="animation-delay: 0.2s;">
-          <h2 class="text-xl font-bold text-gray-800 mb-6">Daily Case Challenge</h2>
-          <div class="bg-red-50 p-4 rounded-lg flex flex-col items-center gap-4 text-center">
-            <img src="https://placehold.co/80x50/ef4444/ffffff?text=CT+Case" alt="Daily CT Case" class="rounded-md object-cover mb-2">
-            <p class="font-semibold text-red-800 text-base mb-2">Can you diagnose this?</p>
-            <p class="text-sm text-red-700 mb-4 max-w-prose">A 45-year-old male presents with sudden onset headache. CT scan provided.</p>
-            <button class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-shadow transform hover:-translate-y-0.5">
-              Start Challenge
+        <!-- Question of the Day Card -->
+        <div class="glass-card card-shadow card-enter col-span-1 bg-red-100" style="animation-delay: 0.1s;">
+          <h2 class="text-xl font-extrabold text-red-900 mb-4 flex items-center justify-center">
+            <span class="text-4xl mr-3">❓</span>
+            Question of the Day
+          </h2>
+          <div class="bg-red-50 p-4 rounded-lg flex flex-col gap-3 w-full text-center"> <!-- Reduced gap -->
+            <p class="font-semibold text-red-800 text-base mb-1"> <!-- Reduced mb -->
+              A 65-year-old male presents with chronic cough and hemoptysis. A chest X-ray shows a cavitating lesion in the right upper lobe. Which of the following is the most likely diagnosis?
+            </p>
+            <div class="flex flex-col gap-1 w-full text-left"> <!-- Reduced gap -->
+              <label class="inline-flex items-center">
+                <input type="radio" class="form-radio text-red-600" name="qotd-option" value="a">
+                <span class="ml-2 text-base text-gray-700">A) Tuberculosis</span> <!-- Increased text size -->
+              </label>
+              <label class="inline-flex items-center">
+                <input type="radio" class="form-radio text-red-600" name="qotd-option" value="b">
+                <span class="ml-2 text-base text-gray-700">B) Lung Carcinoma</span> <!-- Increased text size -->
+              </label>
+              <label class="inline-flex items-center">
+                <input type="radio" class="form-radio text-red-600" name="qotd-option" value="c">
+                <span class="ml-2 text-base text-gray-700">C) Abscess</span> <!-- Increased text size -->
+              </label>
+              <label class="inline-flex items-center">
+                <input type="radio" class="form-radio text-red-600" name="qotd-option" value="d">
+                <span class="ml-2 text-base text-gray-700">D) Fungal Infection</span> <!-- Increased text size -->
+              </label>
+            </div>
+            <button id="revealAnswerButton" class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-5 py-2.5 rounded-lg shadow-md hover:shadow-lg transition-shadow transform hover:-translate-y-0.5">
+              Reveal Answer
             </button>
+            <div id="qotdAnswer" class="hidden mt-4 text-left p-3 bg-red-200 rounded-lg border border-red-300">
+              <p class="font-semibold text-red-800">Correct Answer: A) Tuberculosis</p>
+              <p class="text-sm text-red-700 mt-2">
+                **Explanation:** Cavitating lesions in the upper lobes, along with chronic cough and hemoptysis, are classic features of pulmonary tuberculosis. While other conditions can cause cavitating lesions, the clinical presentation strongly points to TB.
+              </p>
+            </div>
           </div>
         </div>
 
         <!-- Quick Links Card -->
-        <div class="glass-card card-shadow card-enter col-span-full" style="animation-delay: 0.3s;">
-          <h2 class="text-xl font-bold text-gray-800 mb-6">Quick Links</h2>
+        <div class="glass-card card-shadow card-enter col-span-full bg-purple-100" style="animation-delay: 0.2s;">
+          <h2 class="text-xl font-extrabold text-purple-900 mb-6 flex items-center justify-center">
+            <span class="text-3xl mr-3">⚡</span> Quick Links
+          </h2>
           <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-4 text-center">
-            <a href="#" class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-blue-50 hover:bg-blue-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md">
+            <!-- Quiz links moved to top and linked -->
+            <a href="#" class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-blue-50 hover:bg-blue-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md" data-section="qbank">
               <img src="https://img.icons8.com/ios-filled/50/4a90e2/questions.png" class="h-8 w-8 object-contain icon-filter-blue" alt="QBank">
               <span class="text-xs font-semibold text-blue-700 mt-1">QBank</span>
             </a>
-            <a href="#" class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-green-50 hover:bg-green-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md">
+            <a href="#" class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-green-50 hover:bg-green-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md" data-section="mock-exams">
               <img src="https://img.icons8.com/fluency/48/test-passed.png" class="h-8 w-8 object-contain icon-filter-green" alt="Mock Exams">
               <span class="text-xs font-semibold text-green-700 mt-1">Mock Exams</span>
             </a>
-            <a href="#" class="relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-purple-50 hover:bg-purple-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md">
+            <a href="#" class="relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-purple-50 hover:bg-purple-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md" data-section="my-bookmarks"> <!-- Linked to my-bookmarks -->
               <img src="https://img.icons8.com/fluency/48/bookmark-ribbon.png" class="h-8 w-8 object-contain icon-filter-purple" alt="Bookmarks">
               <span class="text-xs font-semibold text-purple-700 mt-1">Bookmarks</span>
             </a>
-            <a href="#" class="relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-yellow-50 hover:bg-yellow-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md">
+            <a href="#" class="relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-yellow-50 hover:bg-yellow-100 transition-all duration-200 ease-in-out transform hover:-translate-y-1 hover:shadow-md" data-section="performance-ai"> <!-- Linked to performance-ai -->
               <img src="https://img.icons8.com/fluency/48/analytics.png" class="h-8 w-8 object-contain icon-filter-yellow" alt="Analytics">
               <span class="text-xs font-semibold text-yellow-700 mt-1">Analytics</span>
             </a>
@@ -231,9 +413,96 @@
         </div>
       </div>
 
+      <!-- FRCR Content -->
+      <div id="frcr-content" class="hidden w-full h-full overflow-y-auto pb-4">
+        <div class="glass-card card-shadow col-span-full">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">FRCR Exam Preparation</h2>
+          <p class="text-lg text-gray-700 mb-4">Welcome to the FRCR section! Here you can find resources, past papers, and mock exams tailored for the FRCR examination.</p> <!-- Increased text size -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-blue-50 p-4 rounded-lg">
+              <h3 class="font-semibold text-blue-800 mb-2">Part 1 - Physics & Anatomy</h3>
+              <p class="text-base text-blue-700">Detailed modules and question banks for FRCR Part 1.</p> <!-- Increased text size -->
+              <button class="mt-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Explore Part 1</button>
+            </div>
+            <div class="bg-blue-50 p-4 rounded-lg">
+              <h3 class="font-semibold text-blue-800 mb-2">Part 2A - Modules</h3>
+              <p class="text-base text-blue-700">Specialty-specific modules for FRCR 2A, including practice questions.</p> <!-- Increased text size -->
+              <button class="mt-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Explore Part 2A</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MD / DNB Content -->
+      <div id="md-dnb-content" class="hidden w-full h-full overflow-y-auto pb-4">
+        <div class="glass-card card-shadow col-span-full">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">MD / DNB Exam Resources</h2>
+          <p class="text-lg text-gray-700 mb-4">This section provides comprehensive materials for MD and DNB radiology examinations.</p> <!-- Increased text size -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-green-50 p-4 rounded-lg">
+              <h3 class="font-semibold text-green-800 mb-2">Theory Papers</h3>
+              <p class="text-base text-green-700">Access to previous years' theory papers and model answers.</p> <!-- Increased text size -->
+              <button class="mt-3 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">View Theory</button>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg">
+              <h3 class="font-semibold text-green-800 mb-2">Practical & Viva</h3>
+              <p class="text-base text-green-700">Guidance and practice cases for practical and viva exams.</p> <!-- Increased text size -->
+              <button class="mt-3 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Prepare Viva</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QBank Content -->
+      <div id="qbank-content" class="hidden w-full h-full overflow-y-auto pb-4">
+        <div class="glass-card card-shadow col-span-full">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Question Bank</h2>
+          <p class="text-lg text-gray-700 mb-4">Select a category to start practicing questions:</p> <!-- Increased text size -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-blue-50 p-4 rounded-lg text-center">
+              <h3 class="font-semibold text-blue-800 mb-2">FRCR QBank</h3>
+              <p class="text-base text-blue-700">Practice questions for FRCR exams.</p> <!-- Increased text size -->
+              <button class="mt-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Start FRCR QBank</button>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg text-center">
+              <h3 class="font-semibold text-green-800 mb-2">MD / DNB QBank</h3>
+              <p class="text-base text-green-700">Practice questions for MD/DNB exams.</p> <!-- Increased text size -->
+              <button class="mt-3 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Start MD/DNB QBank</button>
+            </div>
+            <div class="bg-yellow-50 p-4 rounded-lg text-center">
+              <h3 class="font-semibold text-yellow-800 mb-2">MICR QBank</h3>
+              <p class="text-base text-yellow-700">Practice questions for MICR exams.</p> <!-- Increased text size -->
+              <button class="mt-3 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Start MICR QBank</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mock Exams Content -->
+      <div id="mock-exams-content" class="hidden w-full h-full overflow-y-auto pb-4">
+        <div class="glass-card card-shadow col-span-full">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Mock Exams</h2>
+          <p class="text-lg text-gray-700 mb-4">Choose a mock exam to test your knowledge:</p> <!-- Increased text size -->
+          <ul class="space-y-4">
+            <li class="bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center justify-between hover:bg-gray-100 transition-colors cursor-pointer">
+              <p class="text-base text-gray-700 font-medium">January 2024 Mock Exam</p> <!-- Increased text size -->
+              <button class="text-blue-600 hover:text-blue-800 text-sm font-semibold">Start Exam</button>
+            </li>
+            <li class="bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center justify-between hover:bg-gray-100 transition-colors cursor-pointer">
+              <p class="text-base text-gray-700 font-medium">July 2024 Mock Exam</p> <!-- Increased text size -->
+              <button class="text-blue-600 hover:text-blue-800 text-sm font-semibold">Start Exam</button>
+            </li>
+            <li class="bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center justify-between hover:bg-gray-100 transition-colors cursor-pointer">
+              <p class="text-base text-gray-700 font-medium">Comprehensive Mock Exam (25 Questions)</p> <!-- Increased text size -->
+              <button class="text-blue-600 hover:text-blue-800 text-sm font-semibold">Start Exam</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+
       <!-- My Profile Settings Content -->
       <div id="profile-settings-content" class="hidden w-full h-full overflow-y-auto pb-4">
-        <div class="glass-card card-shadow card-enter col-span-full">
+        <div class="glass-card card-shadow col-span-full">
           <h2 class="text-2xl font-bold text-gray-800 mb-6">My Profile Settings</h2>
           <form id="profileForm" class="space-y-6">
             <div>
@@ -242,7 +511,7 @@
             </div>
             <div>
               <label for="userEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-              <input type="email" id="userEmail" value="user@radmentor.com" class="w-full p-3 border border-gray-300 bg-gray-100 rounded-lg cursor-not-allowed text-base" readonly>
+              <input type="email" id="userEmail" value="user@radmentor.com" class="w-full p-3 border border-gray-300 bg-gray-100 rounded-lg cursor-not-allowed text-base">
             </div>
             <div>
               <label for="userSpecialty" class="block text-sm font-medium text-gray-700 mb-1">Specialty</label>
@@ -253,11 +522,11 @@
               <div class="flex items-center space-x-4">
                 <label class="inline-flex items-center">
                   <input type="radio" class="form-radio text-blue-600" name="theme" value="light" checked>
-                  <span class="ml-2 text-gray-700">Light</span>
+                  <span class="ml-2 text-base text-gray-700">Light</span> <!-- Increased text size -->
                 </label>
                 <label class="inline-flex items-center">
                   <input type="radio" class="form-radio text-blue-600" name="theme" value="dark">
-                  <span class="ml-2 text-gray-700">Dark</span>
+                  <span class="ml-2 text-base text-gray-700">Dark</span> <!-- Increased text size -->
                 </label>
               </div>
             </div>
@@ -270,7 +539,7 @@
 
       <!-- My Bookmarks Content -->
       <div id="my-bookmarks-content" class="hidden w-full h-full overflow-y-auto pb-4">
-        <div class="glass-card card-shadow card-enter col-span-full">
+        <div class="glass-card card-shadow col-span-full">
           <h2 class="text-2xl font-bold text-gray-800 mb-6">My Bookmarks</h2>
           <ul id="bookmarksList" class="space-y-4">
             <!-- Bookmarked MCQs will be loaded here -->
@@ -304,7 +573,7 @@
 
       <!-- Performance & AI Content -->
       <div id="performance-ai-content" class="hidden w-full h-full overflow-y-auto pb-4">
-        <div class="glass-card card-shadow card-enter col-span-full">
+        <div class="glass-card card-shadow col-span-full">
           <h2 class="text-2xl font-bold text-gray-800 mb-6">Performance Overview & AI Insights</h2>
           <div class="space-y-6">
             <div>
@@ -312,14 +581,14 @@
               <div class="space-y-4">
                 <div>
                   <p class="text-sm font-medium text-gray-700 mb-1">Overall Completion</p>
-                  <div class="w-full bg-gray-200 rounded-full h-2.5">
+                  <div class="w-full bg-blue-100 rounded-full h-2.5"> <!-- Changed background to blue-100 -->
                     <div class="bg-blue-500 h-2.5 rounded-full" style="width: 75%;"></div>
                   </div>
                   <p class="text-right text-xs text-gray-500 mt-1">75% Complete</p>
                 </div>
                 <div>
                   <p class="text-sm font-medium text-gray-700 mb-1">QBank Accuracy</p>
-                  <div class="w-full bg-gray-200 rounded-full h-2.5">
+                  <div class="w-full bg-blue-100 rounded-full h-2.5"> <!-- Changed background to blue-100 -->
                     <div class="bg-green-500 h-2.5 rounded-full" style="width: 82%;"></div>
                   </div>
                   <p class="text-right text-xs text-gray-500 mt-1">82% Correct</p>
@@ -341,12 +610,87 @@
         </div>
       </div>
 
+      <!-- Anatomy Content (Placeholder) -->
+      <div id="anatomy-content" class="hidden w-full h-full overflow-y-auto pb-4">
+        <div class="glass-card card-shadow col-span-full">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Anatomy Modules</h2>
+          <p class="text-lg text-gray-700">Explore detailed anatomy modules with interactive diagrams and quizzes.</p> <!-- Increased text size -->
+          <ul class="list-disc list-inside mt-4 space-y-2 text-gray-700">
+            <li class="text-base">Neuroanatomy</li> <!-- Increased text size -->
+            <li class="text-base">Musculoskeletal Anatomy</li> <!-- Increased text size -->
+            <li class="text-base">Thoracic & Abdominal Anatomy</li> <!-- Increased text size -->
+          </ul>
+          <button class="mt-6 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Start Anatomy Review</button>
+        </div>
+      </div>
+
+      <!-- MICR Content (Placeholder) -->
+      <div id="micr-content" class="hidden w-full h-full overflow-y-auto pb-4">
+        <div class="glass-card card-shadow col-span-full">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">MICR Resources</h2>
+          <p class="text-lg text-gray-700">Access resources for the MICR examination, including case studies and mock vivas.</p> <!-- Increased text size -->
+          <ul class="list-disc list-inside mt-4 space-y-2 text-gray-700">
+            <li class="text-base">MICR Case Discussions</li> <!-- Increased text size -->
+            <li class="text-base">Image Interpretation Practice</li> <!-- Increased text size -->
+            <li class="text-base">Viva Preparation Guides</li> <!-- Increased text size -->
+          </ul>
+          <button class="mt-6 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Go to MICR Practice</button>
+        </div>
+      </div>
+
+      <!-- Superspeciality Content (Placeholder) -->
+      <div id="superspeciality-content" class="hidden w-full h-full overflow-y-auto pb-4">
+        <div class="glass-card card-shadow col-span-full">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Superspeciality Modules</h2>
+          <p class="text-lg text-gray-700">Dive deep into advanced topics for superspeciality exams.</p> <!-- Increased text size -->
+          <ul class="list-disc list-inside mt-4 space-y-2 text-gray-700">
+            <li class="text-base">Interventional Radiology</li> <!-- Increased text size -->
+            <li class="text-base">Pediatric Radiology</li> <!-- Increased text size -->
+            <li class="text-base">Breast Imaging</li> <!-- Increased text size -->
+          </ul>
+          <button class="mt-6 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Explore Superspecialities</button>
+        </div>
+      </div>
+
+      <!-- Fellowship Exams Content (Placeholder) -->
+      <div id="fellowship-exams-content" class="hidden w-full h-full overflow-y-auto pb-4">
+        <div class="glass-card card-shadow col-span-full">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Fellowship Exam Preparation</h2>
+          <p class="text-lg text-gray-700">Resources and guidance for various radiology fellowship examinations.</p> <!-- Increased text size -->
+          <ul class="list-disc list-inside mt-4 space-y-2 text-gray-700">
+            <li class="text-base">Neuro-Radiology Fellowship</li> <!-- Increased text size -->
+            <li class="text-base">Cardiothoracic Imaging Fellowship</li> <!-- Increased text size -->
+            <li class="text-base">Abdominal Imaging Fellowship</li> <!-- Increased text size -->
+          </ul>
+          <button class="mt-6 bg-pink-600 hover:bg-pink-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Prepare for Fellowships</button>
+        </div>
+      </div>
+
+      <!-- RadScribe AI Content (Placeholder - existing from previous version) -->
+      <div id="radscribe-ai-content" class="hidden w-full h-full overflow-y-auto pb-4">
+        <div class="glass-card card-shadow col-span-full">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">RadScribe AI - Report Generation</h2>
+          <p class="text-lg text-gray-700">Leverage AI to assist with radiology report generation and analysis.</p> <!-- Increased text size -->
+          <button class="mt-6 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Access AI Tool</button>
+        </div>
+      </div>
+
+      <!-- Ask a Doubt Content (Placeholder) -->
+      <div id="ask-a-doubt-content" class="hidden w-full h-full overflow-y-auto pb-4">
+        <div class="glass-card card-shadow col-span-full">
+          <h2 class="text-2xl font-bold text-gray-800 mb-6">Ask a Doubt</h2>
+          <p class="text-lg text-gray-700 mb-4">Submit your questions and get expert answers from our mentors.</p> <!-- Increased text size -->
+          <textarea class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors text-base h-32" placeholder="Type your doubt here..."></textarea>
+          <button class="mt-6 bg-gray-700 hover:bg-gray-800 text-white text-sm font-semibold px-4 py-2 rounded-lg">Submit Doubt</button>
+        </div>
+      </div>
+
     </div>
   </main>
 
   <script>
     // Global variable for username (simulated)
-    let currentUserName = "RadMentor User"; // Default username
+    let currentUserName = "Neel Yadav"; // Default username
 
     // Function to display messages (replaces alert)
     function showMessage(message, type = 'success') {
@@ -363,6 +707,32 @@
       }, 3000); // Hide after 3 seconds
     }
 
+    // Function to update the goals dropdown text
+    function updateGoalsDropdownText(sectionId) {
+        const currentGoalTextElement = document.getElementById('currentGoalText');
+        let goalName = "Dashboard"; // Default for dashboard
+
+        // Map section IDs to more readable names for the dropdown
+        const sectionNames = {
+            'frcr': 'FRCR',
+            'micr': 'MICR',
+            'md-dnb': 'MD / DNB',
+            'superspeciality': 'Superspeciality',
+            'dashboard': 'Dashboard' // Explicitly handle dashboard
+        };
+
+        if (sectionNames[sectionId]) {
+            goalName = sectionNames[sectionId];
+        } else {
+            // For other sections not explicitly listed as "goals", default to dashboard or a generic
+            // You might want to add more specific logic here if certain non-goal sections should
+            // still reflect in the dropdown (e.g., "My Profile" might show "Current Goal: Profile")
+            goalName = "Dashboard"; // Fallback
+        }
+        currentGoalTextElement.textContent = `Current Goal: ${goalName}`;
+    }
+
+
     // Function to show specific content section
     function showContentSection(sectionId) {
       const contentArea = document.getElementById('content-area');
@@ -374,7 +744,7 @@
       }
 
       // Show the requested section
-      const targetSection = document.getElementById(sectionId);
+      const targetSection = document.getElementById(sectionId + '-content'); // Append -content to match div IDs
       if (targetSection) {
         targetSection.classList.remove('hidden');
         // Re-apply entrance animation for newly visible card (optional, for visual flair)
@@ -388,67 +758,166 @@
       // Update active state in sidebar
       const sidebarLinks = document.querySelectorAll('.sidebar-link');
       sidebarLinks.forEach(link => {
-        // Match data-section attribute with the sectionId (without '-content')
-        if (link.dataset.section && (link.dataset.section + '-content') === sectionId) {
+        // Match data-section attribute with the sectionId
+        if (link.dataset.section === sectionId) {
           link.classList.add('active');
         } else {
           link.classList.remove('active');
         }
       });
+
+      // Update the goals dropdown text
+      updateGoalsDropdownText(sectionId);
     }
 
 
     // JavaScript to set dynamic greeting based on time of day
     document.addEventListener('DOMContentLoaded', () => {
-      const greetingElement = document.getElementById('greeting');
+      const userProfileIcon = document.getElementById('userProfileIcon');
+      const userDropdown = document.getElementById('userDropdown');
+      const userInitialsElement = document.getElementById('userInitials');
+      const revealAnswerButton = document.getElementById('revealAnswerButton');
+      const qotdAnswer = document.getElementById('qotdAnswer');
 
-      // Function to update greeting
-      const updateGreeting = () => {
-        const date = new Date();
-        const hour = date.getHours();
-        let greetingPrefix;
+      const goalsDropdownButton = document.getElementById('goalsDropdownButton');
+      const goalsDropdown = document.getElementById('goalsDropdown');
 
-        if (hour < 12) {
-          greetingPrefix = "Good Morning";
-        } else if (hour < 18) {
-          greetingPrefix = "Good Afternoon";
-        } else {
-          greetingPrefix = "Good Evening";
-        }
-        greetingElement.innerHTML = `${greetingPrefix}, ${currentUserName} <span class="wave-emoji">👋</span>`;
+
+      // Function to get initials from name
+      function getInitials(name) {
+        if (!name) return '';
+        const parts = name.split(' ').filter(word => word.length > 0);
+        if (parts.length === 0) return '';
+        if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+        return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+      }
+
+      // Function to update user initials
+      const updateInitials = () => {
+        userInitialsElement.textContent = getInitials(currentUserName);
       };
 
-      // Initial greeting set
-      updateGreeting();
+      // Initial initials set
+      updateInitials();
 
-      // Event listeners for My Account sidebar links
+      // Toggle user dropdown visibility
+      if (userProfileIcon && userDropdown) {
+        userProfileIcon.addEventListener('click', (event) => {
+          event.stopPropagation(); // Prevent click from immediately closing dropdown
+          userDropdown.classList.toggle('show');
+          // Close goals dropdown if open
+          if (goalsDropdown.classList.contains('show')) {
+              goalsDropdown.classList.remove('show');
+          }
+        });
+
+        // Close dropdown if clicked outside
+        document.addEventListener('click', (event) => {
+          if (userDropdown.classList.contains('show') && !userDropdown.contains(event.target) && event.target !== userProfileIcon) {
+            userDropdown.classList.remove('show');
+          }
+        });
+
+        // Handle clicks on dropdown links
+        userDropdown.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault(); // Prevent default link behavior
+                userDropdown.classList.remove('show'); // Close dropdown
+
+                if (link.id === 'logoutLink') {
+                    window.location.href = link.href; // Navigate for logout
+                } else {
+                    const sectionId = link.dataset.section;
+                    if (sectionId) {
+                        showContentSection(sectionId);
+                        window.location.hash = sectionId;
+                    }
+                }
+            });
+        });
+      }
+
+      // Toggle goals dropdown visibility
+      if (goalsDropdownButton && goalsDropdown) {
+          goalsDropdownButton.addEventListener('click', (event) => {
+              event.stopPropagation(); // Prevent click from immediately closing dropdown
+              goalsDropdown.classList.toggle('show');
+              // Close user dropdown if open
+              if (userDropdown.classList.contains('show')) {
+                  userDropdown.classList.remove('show');
+              }
+          });
+
+          // Close goals dropdown if clicked outside
+          document.addEventListener('click', (event) => {
+              if (goalsDropdown.classList.contains('show') && !goalsDropdown.contains(event.target) && event.target !== goalsDropdownButton) {
+                  goalsDropdown.classList.remove('show');
+              }
+          });
+
+          // Handle clicks on goals dropdown links
+          goalsDropdown.querySelectorAll('a').forEach(link => {
+              link.addEventListener('click', (event) => {
+                  event.preventDefault(); // Prevent default link behavior
+                  goalsDropdown.classList.remove('show'); // Close dropdown
+                  const sectionId = link.dataset.section;
+                  if (sectionId) {
+                      showContentSection(sectionId);
+                      window.location.hash = sectionId;
+                  }
+              });
+          });
+      }
+
+
+      // Event listener for "Reveal Answer" button
+      if (revealAnswerButton && qotdAnswer) {
+        revealAnswerButton.addEventListener('click', () => {
+          qotdAnswer.classList.remove('hidden'); // Show the answer
+          revealAnswerButton.disabled = true; // Disable the button after revealing
+          // Optionally, disable radio buttons too
+          document.querySelectorAll('input[name="qotd-option"]').forEach(radio => {
+            radio.disabled = true;
+          });
+        });
+      }
+
+
+      // Event listeners for all sidebar links with data-section
       document.querySelectorAll('nav a[data-section]').forEach(link => {
         link.addEventListener('click', (event) => {
           event.preventDefault(); // Prevent default link behavior
-          const sectionId = link.dataset.section + '-content'; // Append -content to match div IDs
+          const sectionId = link.dataset.section; // Get the section ID
           showContentSection(sectionId);
+          // Optional: Update URL hash for direct linking/bookmarking
+          window.location.hash = sectionId;
         });
       });
 
       // Handle initial URL hash for direct linking to sections
       if (window.location.hash) {
-        const sectionIdFromHash = window.location.hash.substring(1) + '-content';
-        const targetSectionElement = document.getElementById(sectionIdFromHash);
+        const sectionIdFromHash = window.location.hash.substring(1); // Remove '#'
+        // Check if the section exists before trying to show it
+        const targetSectionElement = document.getElementById(sectionIdFromHash + '-content');
         if (targetSectionElement) {
           showContentSection(sectionIdFromHash);
         } else {
-          showContentSection('dashboard-content'); // Default to dashboard if hash invalid
+          showContentSection('dashboard'); // Default to dashboard if hash invalid
         }
       } else {
-        showContentSection('dashboard-content'); // Show dashboard by default
+        showContentSection('dashboard'); // Show dashboard by default
       }
 
 
       // Apply entrance animation to cards (initial load for dashboard)
-      document.querySelectorAll('#dashboard-content .card-enter').forEach((card, index) => {
-        card.style.animationDelay = `${index * 0.1}s`;
-        card.classList.add('animate-in');
-      });
+      // This needs to be done after the initial content is set
+      const dashboardCards = document.querySelectorAll('#dashboard-content .card-enter');
+      if (dashboardCards.length > 0) {
+        dashboardCards.forEach((card, index) => {
+          card.style.animationDelay = `${index * 0.1}s`;
+          card.classList.add('animate-in');
+        });
+      }
 
 
       // My Profile Settings - Form Submission
@@ -460,7 +929,8 @@
           const userSpecialty = document.getElementById('userSpecialty').value;
 
           currentUserName = userNameInput.value; // Update global username
-          updateGreeting(); // Update the greeting with new username
+          updateInitials(); // Update the initials with new username
+          updateGoalsDropdownText(window.location.hash.substring(1) || 'dashboard'); // Re-evaluate current goal text
 
           // In a real app, you would send this data to a backend (e.g., Firebase Firestore)
           console.log('Profile saved:', { userName: currentUserName, userSpecialty });
@@ -525,6 +995,7 @@
           } finally {
             generateWeakTopicsBtn.disabled = false; // Re-enable button
           }
+          showMessage('AI insights generated!', 'success');
         });
       }
     });
