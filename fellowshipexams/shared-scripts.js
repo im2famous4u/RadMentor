@@ -5,16 +5,18 @@ let currentUserName = "Neel Yadav"; // Default username
 // Function to display messages (replaces alert)
 function showMessage(message, type = 'success') {
   const messageBox = document.getElementById('messageBox');
-  messageBox.textContent = message;
-  messageBox.className = 'message-box show'; // Reset classes and show
-  if (type === 'error') {
-    messageBox.style.backgroundColor = '#f44336'; // Red for error
-  } else {
-    messageBox.style.backgroundColor = '#4CAF50'; // Green for success
+  if (messageBox) { // Check if messageBox exists
+    messageBox.textContent = message;
+    messageBox.className = 'message-box show'; // Reset classes and show
+    if (type === 'error') {
+      messageBox.style.backgroundColor = '#f44336'; // Red for error
+    } else {
+      messageBox.style.backgroundColor = '#4CAF50'; // Green for success
+    }
+    setTimeout(() => {
+      messageBox.classList.remove('show');
+    }, 3000); // Hide after 3 seconds
   }
-  setTimeout(() => {
-    messageBox.classList.remove('show');
-  }, 3000); // Hide after 3 seconds
 }
 
 // Function to get initials from name
@@ -39,8 +41,8 @@ function updateGoalsDropdownText(iframeSrc) {
     const currentGoalTextElement = document.getElementById('currentGoalText');
     let goalName = "Dashboard"; // Default for dashboard
 
-    // Extract filename from path and remove .html extension
-    const filename = iframeSrc.split('/').pop().replace('.html', '');
+    // Remove the /fellowshipexams/ prefix and .html extension
+    const cleanFilename = iframeSrc.replace('/fellowshipexams/', '').replace('.html', '');
 
     // Map filenames to more readable names for the dropdown
     const sectionNames = {
@@ -49,10 +51,10 @@ function updateGoalsDropdownText(iframeSrc) {
         'md-dnb': 'MD / DNB',
         'superspeciality': 'Superspeciality',
         'dashboard': 'Dashboard',
-        'my-profile': 'Profile', // Add profile
-        'my-bookmarks': 'Bookmarks', // Add bookmarks
-        'performance-ai': 'Performance', // Add performance
-        'ask-a-doubt': 'Ask a Doubt', // Add ask a doubt
+        'my-profile': 'Profile',
+        'my-bookmarks': 'Bookmarks',
+        'performance-ai': 'Performance',
+        'ask-a-doubt': 'Ask a Doubt',
         'anatomy': 'Anatomy',
         'fellowship-exams': 'Fellowship Exams',
         'radscribe-ai': 'RadScribe AI',
@@ -60,12 +62,14 @@ function updateGoalsDropdownText(iframeSrc) {
         'mock-exams': 'Mock Exams'
     };
 
-    if (sectionNames[filename]) {
-        goalName = sectionNames[filename];
+    if (sectionNames[cleanFilename]) {
+        goalName = sectionNames[cleanFilename];
     } else {
         goalName = "Dashboard"; // Fallback if filename not explicitly mapped
     }
-    currentGoalTextElement.textContent = `Current Goal: ${goalName}`;
+    if (currentGoalTextElement) { // Check if element exists
+      currentGoalTextElement.textContent = `Current Goal: ${goalName}`;
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -111,8 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     contentFrame.src = targetPage;
                     // Update sidebar active state and goals dropdown text after iframe loads
                     contentFrame.onload = () => {
-                        updateSidebarActiveState(targetPage);
-                        updateGoalsDropdownText(targetPage);
+                        updateSidebarActiveState(contentFrame.contentWindow.location.pathname); // Use iframe's actual path
+                        updateGoalsDropdownText(contentFrame.contentWindow.location.pathname); // Use iframe's actual path
                     };
                 }
             }
@@ -148,8 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
                   contentFrame.src = targetPage;
                   // Update sidebar active state and goals dropdown text after iframe loads
                   contentFrame.onload = () => {
-                      updateSidebarActiveState(targetPage);
-                      updateGoalsDropdownText(targetPage);
+                      updateSidebarActiveState(contentFrame.contentWindow.location.pathname); // Use iframe's actual path
+                      updateGoalsDropdownText(contentFrame.contentWindow.location.pathname); // Use iframe's actual path
                   };
               }
           });
@@ -157,9 +161,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Function to update sidebar active state
-  function updateSidebarActiveState(currentSrc) {
+  function updateSidebarActiveState(currentPath) {
+    // Remove the /fellowshipexams/ prefix for comparison with data-section
+    const cleanPath = currentPath.replace('/fellowshipexams/', '');
     sidebarLinks.forEach(link => {
-      if (link.getAttribute('href') === currentSrc) {
+      const linkSection = link.dataset.section;
+      if (linkSection && linkSection + '.html' === cleanPath) {
         link.classList.add('active');
       } else {
         link.classList.remove('active');
@@ -171,12 +178,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (contentFrame) {
     // Set initial iframe src based on URL hash or default to dashboard.html
     const initialHash = window.location.hash.substring(1);
-    const initialSrc = initialHash ? `${initialHash}.html` : 'dashboard.html';
+    const initialSrc = initialHash ? `/fellowshipexams/${initialHash}.html` : '/fellowshipexams/dashboard.html';
     contentFrame.src = initialSrc;
 
     contentFrame.onload = () => {
-        updateSidebarActiveState(contentFrame.src.split('/').pop()); // Pass just the filename
-        updateGoalsDropdownText(contentFrame.src.split('/').pop()); // Pass just the filename
+        // Use the iframe's actual loaded path for accurate updates
+        updateSidebarActiveState(contentFrame.contentWindow.location.pathname);
+        updateGoalsDropdownText(contentFrame.contentWindow.location.pathname);
     };
   }
 
@@ -187,8 +195,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const targetPage = link.getAttribute('href');
       if (contentFrame && targetPage) {
         contentFrame.src = targetPage;
-        // Update URL hash to reflect current page
-        window.location.hash = targetPage.replace('.html', '');
+        // Update URL hash to reflect current page, stripping the prefix and .html
+        const newHash = targetPage.replace('/fellowshipexams/', '').replace('.html', '');
+        window.location.hash = newHash;
       }
     });
   });
@@ -196,8 +205,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Handle browser back/forward buttons
   window.addEventListener('hashchange', () => {
     const newHash = window.location.hash.substring(1);
-    const newSrc = newHash ? `${newHash}.html` : 'dashboard.html';
-    if (contentFrame.src.split('/').pop() !== newSrc) { // Prevent re-loading if already on page
+    const newSrc = newHash ? `/fellowshipexams/${newHash}.html` : '/fellowshipexams/dashboard.html';
+    if (contentFrame.src !== window.location.origin + newSrc) { // Compare full URLs
         contentFrame.src = newSrc;
     }
   });
