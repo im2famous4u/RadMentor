@@ -156,7 +156,7 @@
         .question-number { font-size: 1.1rem; font-weight: 500; color: #718096; /* Gray text */ margin-bottom: 15px; }
         .main-question-text { font-size: 1.4rem; font-weight: 600; line-height: 1.5; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0; }
         
-        .subset-item {
+        .subset-item { /* This style is now largely unused due to new question format */
             padding: 15px;
             margin-bottom: 15px;
             border: 1px solid #e2e8f0;
@@ -166,13 +166,43 @@
         .subset-item.correct { background-color: #d1fae5; border-color: #34d399; } /* bg-green-100, border-green-400 */
         .subset-item.incorrect { background-color: #fee2e2; border-color: #ef4444; } /* bg-red-100, border-red-500 */
 
-        .subset-q-container { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
-        .subset-q-text { flex-grow: 1; margin: 0; font-size: 1.1rem; line-height: 1.6; }
-        .subset-options { display: flex; gap: 10px; }
-        .subset-options label { display: block; padding: 8px 16px; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
-        .subset-options input[type="radio"] { display: none; }
-        .subset-options input[type="radio"]:checked + label { border-color: #3b82f6; background-color: #eff6ff; color: #212121; font-weight: 600; } /* border-blue-500, bg-blue-50 */
-        
+        /* Styles for multiple choice options */
+        .question-options label {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .question-options label:hover {
+            background-color: #f0f4f8;
+        }
+        .question-options input[type="radio"] {
+            margin-right: 12px;
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+            accent-color: #3b82f6; /* Blue accent for radio button */
+        }
+        .question-options label.selected-correct {
+            background-color: #d1fae5; /* bg-green-100 */
+            border-color: #34d399; /* border-green-400 */
+            font-weight: 600;
+        }
+        .question-options label.selected-incorrect {
+            background-color: #fee2e2; /* bg-red-100 */
+            border-color: #ef4444; /* border-red-500 */
+            font-weight: 600;
+        }
+        .question-options label.correct-answer { /* For showing correct answer if user chose wrong */
+            background-color: #e0f2fe; /* bg-blue-50 */
+            border-color: #60a5fa; /* border-blue-400 */
+            font-weight: 600;
+        }
+
         .all-explanations {
             margin-top: 25px;
             padding: 20px;
@@ -192,18 +222,21 @@
         .nav-button:disabled { background-color: #a0aec0; cursor: not-allowed; }
         #question-counter { font-size: 1.1rem; font-weight: 500; color: #718096; text-align: center; padding-top: 1rem; }
 
+        /* Bookmark button is removed, so these styles are no longer needed */
+        /*
         .bookmark-button {
             background: none;
             border: none;
-            font-size: 1.8rem; /* Adjust size as needed */
+            font-size: 1.8rem;
             cursor: pointer;
-            color: #cbd5e0; /* Gray for unbookmarked */
+            color: #cbd5e0;
             transition: color 0.2s;
             margin-left: 10px;
         }
         .bookmark-button.bookmarked {
-            color: #f6e05e; /* Yellow for bookmarked */
+            color: #f6e05e;
         }
+        */
     </style>
 </head>
 <body>
@@ -240,33 +273,29 @@
     </div>
 
     <script type="module">
-        // Import Firebase modules
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // No Firebase imports needed as per request
+        // import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        // import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Configuration ---
-        const GOOGLE_SHEET_ID = '1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8';
+        // IMPORTANT: Replace '1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8' with your actual Google Sheet ID
+        // Ensure your Google Sheet is publicly accessible ("Anyone with the link can view")
+        const GOOGLE_SHEET_ID = '1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8'; 
         const PHYSICS_TOPICS = [
+            // REPLACE GID values with your actual Google Sheet GIDs for each tab/sheet
+            // Each sheet should contain columns: question, a, b, c, d, Correct Answer, Explanation
             { name: "Basic Physics", gid: "2009849222", icon: "⚛️", color: "blue", totalModules: 54 },
             { name: "General Radiation Hazards & Protection", gid: "2009849222", icon: "☢️", color: "orange", totalModules: 49 },
             { name: "Image Quality & X-ray Production", gid: "1706416231", icon: "📸", color: "pink", totalModules: 39 },
-            { name: "Film Screen Radiography", gid: "1257614317", icon: "🎞️", color: "green", totalModules: 20 },
+            { name: "Film Screen Radiography", gid: "1257614317", icon: "🖼️", color: "green", totalModules: 20 }, // Changed icon
             { name: "Digital Radiography", gid: "917881905", icon: "🖥️", color: "yellow", totalModules: 30 },
-            { name: "Fluoroscopy", gid: "1461599884", icon: "⚡", color: "purple", totalModules: 25 },
-            { name: "Computed Tomography", gid: "986205874", icon: "🧠", color: "blue", totalModules: 40 },
-            { name: "Nuclear Medicine", gid: "2016453957", icon: "☢️", color: "orange", totalModules: 35 },
+            { name: "Fluoroscopy", gid: "1461599884", icon: "🎥", color: "purple", totalModules: 25 }, // Changed icon
+            { name: "Computed Tomography", gid: "986205874", icon: "🩻", color: "blue", totalModules: 40 }, // Changed icon
+            { name: "Nuclear Medicine", gid: "2016453957", icon: "🧪", color: "orange", totalModules: 35 }, // Changed icon
             { name: "Ultrasound", gid: "638565218", icon: "🔊", color: "pink", totalModules: 28 },
             { name: "Magnetic Resonance Imaging", gid: "2026917708", icon: "🧲", color: "green", totalModules: 45 },
         ];
-
-        // --- Firebase Variables ---
-        let app;
-        let db;
-        let auth;
-        let userId = null;
-        let userProgress = {}; // Stores completed question IDs per topic
-        let userBookmarks = []; // Stores bookmarked question IDs
 
         // --- State ---
         let allQuestions = [];
@@ -286,7 +315,7 @@
         const nextButton = document.getElementById('next-button');
         const questionCounter = document.getElementById('question-counter');
 
-        // Function to show messages in the parent frame
+        // Function to show messages in the parent frame (still useful for general messages)
         function showParentMessage(message, type = 'success') {
             if (window.parent && window.parent.showMessage) {
                 window.parent.showMessage(message, type);
@@ -295,126 +324,12 @@
             }
         }
 
-        // --- Firebase Initialization & Auth ---
-        async function initializeFirebase() {
-            try {
-                // Use global __firebase_config provided by Canvas
-                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-
-                // User is expected to be logged in, so attempt to sign in with custom token
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    // If token is missing, redirect to login as user should be authenticated
-                    showParentMessage('Authentication token missing. Redirecting to login.', 'error');
-                    setTimeout(() => {
-                        window.parent.location.href = '/fellowshipexams/index.html'; // Assuming this is the login page
-                    }, 2000);
-                    return; // Stop further execution
-                }
-
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        await loadUserData();
-                        populateTopics();
-                        showScreen('physics-category-screen');
-                    } else {
-                        // User somehow became unauthenticated after initial sign-in attempt.
-                        // This might happen if the token expires or is revoked.
-                        showParentMessage('Session expired or authentication failed. Redirecting to login.', 'error');
-                        setTimeout(() => {
-                            window.parent.location.href = '/fellowshipexams/index.html'; // Redirect to login
-                        }, 2000);
-                    }
-                    loadingContainer.style.display = 'none'; // Hide initial loading once auth is ready
-                });
-
-            } catch (error) {
-                console.error("Error initializing Firebase or authenticating:", error);
-                loadingContainer.style.display = 'none';
-                errorContainer.style.display = 'block';
-                errorContainer.textContent = `Failed to initialize app. Error: ${error.message}. Please try again.`;
-                showParentMessage(`Failed to initialize app. Error: ${error.message}`, 'error');
-            }
-        }
-
-        // --- Firestore Data Operations ---
-        async function loadUserData() {
-            if (!userId) return;
-
-            loadingContainer.style.display = 'block';
-            try {
-                // Load user progress
-                const progressDocRef = doc(db, `artifacts/${__app_id}/users/${userId}/physicsProgress`, "topics");
-                const progressDocSnap = await getDoc(progressDocRef);
-                if (progressDocSnap.exists()) {
-                    userProgress = progressDocSnap.data();
-                } else {
-                    userProgress = {};
-                }
-
-                // Load user bookmarks
-                const bookmarksDocRef = doc(db, `artifacts/${__app_id}/users/${userId}/bookmarks`, "questions");
-                const bookmarksDocSnap = await getDoc(bookmarksDocRef);
-                if (bookmarksDocSnap.exists() && bookmarksDocSnap.data().questionIds) {
-                    userBookmarks = bookmarksDocSnap.data().questionIds;
-                } else {
-                    userBookmarks = [];
-                }
-                showParentMessage('User data loaded successfully!', 'success');
-
-            } catch (error) {
-                console.error("Error loading user data:", error);
-                showParentMessage('Failed to load user data. Please try again.', 'error');
-            } finally {
-                loadingContainer.style.display = 'none';
-            }
-        }
-
-        async function saveUserProgress(topicGid, questionId) {
-            if (!userId || !db) return;
-
-            try {
-                const progressDocRef = doc(db, `artifacts/${__app_id}/users/${userId}/physicsProgress`, "topics");
-                await setDoc(progressDocRef, {
-                    [topicGid]: arrayUnion(questionId)
-                }, { merge: true });
-                showParentMessage('Progress saved!', 'success');
-            } catch (error) {
-                console.error("Error saving progress:", error);
-                showParentMessage('Failed to save progress.', 'error');
-            }
-        }
-
-        async function toggleBookmark(questionId, isBookmarked) {
-            if (!userId || !db) return;
-
-            try {
-                const bookmarksDocRef = doc(db, `artifacts/${__app_id}/users/${userId}/bookmarks`, "questions");
-                if (isBookmarked) {
-                    await updateDoc(bookmarksDocRef, {
-                        questionIds: arrayRemove(questionId)
-                    });
-                    showParentMessage('Bookmark removed!', 'success');
-                } else {
-                    await setDoc(bookmarksDocRef, {
-                        questionIds: arrayUnion(questionId)
-                    }, { merge: true });
-                    showParentMessage('Question bookmarked!', 'success');
-                }
-                // Update local state after successful Firestore operation
-                userBookmarks = isBookmarked ? userBookmarks.filter(id => id !== questionId) : [...userBookmarks, questionId];
-
-            } catch (error) {
-                console.error("Error toggling bookmark:", error);
-                showParentMessage('Failed to toggle bookmark.', 'error');
-            }
+        // --- Initialization (without Firebase) ---
+        async function initializeQuizApp() {
+            loadingContainer.style.display = 'block'; // Show loading immediately
+            populateTopics();
+            showScreen('physics-category-screen');
+            loadingContainer.style.display = 'none'; // Hide loading after topics populated
         }
 
         // --- Functions (Navigation & Setup) ---
@@ -423,7 +338,8 @@
         function populateTopics() {
             physicsTopicsGrid.innerHTML = '';
             PHYSICS_TOPICS.forEach(topic => {
-                const completedCount = userProgress[topic.gid] ? userProgress[topic.gid].length : 0;
+                // completedCount will always be 0 as progress saving is removed
+                const completedCount = 0; 
                 const button = document.createElement('div'); // Changed to div for card structure
                 button.className = `selection-button`; // Apply base card styles
                 button.innerHTML = `
@@ -489,35 +405,52 @@
             const rows = text.trim().split(/\r?\n/).map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(f => f.trim().replace(/^"|"$/g, '')));
             if (rows.length < 2) { return []; }
             const headers = rows[0].map(h => h.trim().toLowerCase());
-            const questionIndex = headers.indexOf('question');
-            if (questionIndex === -1) { console.error("Column 'question' not found."); return []; }
+            const dataRows = rows.slice(1);
+
+            const questionColIndex = headers.indexOf('question');
+            const optionAIndex = headers.indexOf('a');
+            const optionBIndex = headers.indexOf('b');
+            const optionCIndex = headers.indexOf('c');
+            const optionDIndex = headers.indexOf('d');
+            const correctAnswerIndex = headers.indexOf('correct answer');
+            const explanationIndex = headers.indexOf('explanation');
+
+            if (questionColIndex === -1 || correctAnswerIndex === -1) {
+                console.error("Required columns 'question' or 'correct answer' not found.");
+                return [];
+            }
             
-            return rows.slice(1).map((row, qIdx) => { // Use qIdx for unique question ID
-                const mainQuestionText = row[questionIndex];
+            return dataRows.map((row, qIdx) => {
+                const mainQuestionText = row[questionColIndex];
                 if (!mainQuestionText) return null;
-                
-                const subsets = [];
-                for (let i = 1; i <= 5; i++) {
-                    const subQHeader = i === 1 ? 'question a1' : `a${i}`;
-                    const ansHeader = `answer of a${i}`;
-                    const expHeader = `explanation of a${i}`;
-                    const subQIndex = headers.indexOf(subQHeader);
-                    const ansIndex = headers.indexOf(ansHeader);
-                    const expIndex = headers.indexOf(expHeader);
-                    if (subQIndex !== -1 && ansIndex !== -1) {
-                        const subQText = row[subQIndex];
-                        const correctAns = row[ansIndex];
-                        if (subQText && correctAns) {
-                            subsets.push({
-                                text: subQText,
-                                correctAnswer: correctAns,
-                                explanation: expIndex !== -1 ? row[expIndex] : ''
-                            });
-                        }
-                    }
+
+                const options = [];
+                if (optionAIndex !== -1 && row[optionAIndex]) options.push({ label: 'A', text: row[optionAIndex] });
+                if (optionBIndex !== -1 && row[optionBIndex]) options.push({ label: 'B', text: row[optionBIndex] });
+                if (optionCIndex !== -1 && row[optionCIndex]) options.push({ label: 'C', text: row[optionCIndex] });
+                if (optionDIndex !== -1 && row[optionDIndex]) options.push({ label: 'D', text: row[optionDIndex] });
+
+                const correctAnsLabel = row[correctAnswerIndex] ? row[correctAnswerIndex].toUpperCase() : ''; // e.g., 'A', 'B'
+                const explanation = explanationIndex !== -1 ? row[explanationIndex] : '';
+
+                // Find the correct answer text based on the label (A, B, C, D)
+                let correctAnsText = '';
+                const correctOption = options.find(opt => opt.label === correctAnsLabel);
+                if (correctOption) {
+                    correctAnsText = correctOption.text;
                 }
-                const questionId = `${currentTopic.gid}_q${qIdx}`; // Unique ID for question
-                return subsets.length > 0 ? { id: questionId, question: mainQuestionText, subsets } : null;
+
+                // Question ID is no longer needed for bookmarking/progress, but kept for unique element IDs if desired
+                const questionId = `${currentTopic.gid}_q${qIdx}`; 
+
+                return {
+                    id: questionId,
+                    question: mainQuestionText,
+                    options: options, // Array of { label: 'A', text: 'Option A text' }
+                    correctAnswer: correctAnsText, // The text of the correct answer
+                    correctAnswerLabel: correctAnsLabel, // The label of the correct answer (A, B, C, D)
+                    explanation: explanation
+                };
             }).filter(Boolean);
         }
 
@@ -526,91 +459,71 @@
             if (!allQuestions || allQuestions.length === 0) return;
             const q = allQuestions[index];
             
-            const allExplanations = [];
-            const subsetsHtml = q.subsets.map((subset, i) => {
-                if (subset.explanation) {
-                    allExplanations.push(`<div class="explanation-item"><p><strong>${String.fromCharCode(97 + i)})</strong> ${subset.explanation}</p></div>`);
-                }
-                return `
-                    <div class="subset-item" id="subset-${index}-${i}" data-answered="false">
-                        <div class="subset-q-container">
-                            <p class="subset-q-text"><strong>${String.fromCharCode(97 + i)})</strong> ${subset.text}</p>
-                            <div class="subset-options" data-subset-index="${i}">
-                                <input type="radio" id="q${index}s${i}t" name="q${index}s${i}" value="True"><label for="q${index}s${i}t">True</label>
-                                <input type="radio" id="q${index}s${i}f" name="q${index}s${i}" value="False"><label for="q${index}s${i}f">False</label>
-                            </div>
-                        </div>
-                    </div>`;
-            }).join('');
-
-            const explanationsContainerHtml = allExplanations.length > 0 ? `
-                <div class="all-explanations" id="explanations-${index}">
-                    <h3>Explanations</h3>
-                    ${allExplanations.join('')}
-                </div>
-            ` : '';
-
-            const isBookmarked = userBookmarks.includes(q.id);
-            const bookmarkClass = isBookmarked ? 'bookmarked' : '';
+            const optionsHtml = q.options.map((option) => `
+                <label class="question-option-label">
+                    <input type="radio" class="form-radio" name="q${index}" value="${option.label}">
+                    <span class="ml-2 text-base text-gray-700">${option.label}) ${option.text}</span>
+                </label>
+            `).join('');
 
             questionsDisplay.innerHTML = `
                 <div class="question-block" id="main-question-${index}">
                     <div class="question-number flex justify-between items-center">
                         <span>Question ${index + 1}</span>
-                        <button class="bookmark-button ${bookmarkClass}" data-question-id="${q.id}">⭐</button>
+                        <!-- Bookmark button removed -->
                     </div>
                     <p class="main-question-text">${q.question}</p>
-                    <div id="subsets-container">${subsetsHtml}</div>
-                    ${explanationsContainerHtml}
+                    <div class="question-options flex flex-col gap-2 w-full text-left">
+                        ${optionsHtml}
+                    </div>
+                    <div class="all-explanations" id="explanations-${index}">
+                        <h3>Explanation</h3>
+                        <p class="font-semibold text-gray-800">Correct Answer: ${q.correctAnswerLabel}) ${q.correctAnswer}</p>
+                        <p class="text-sm text-gray-700 mt-2">${q.explanation}</p>
+                    </div>
                 </div>`;
             
             updateNav(index);
-            attachSubsetListeners(index);
-            document.querySelector(`.bookmark-button[data-question-id="${q.id}"]`).addEventListener('click', (e) => {
-                const btn = e.target;
-                const qId = btn.dataset.questionId;
-                const currentlyBookmarked = btn.classList.contains('bookmarked');
-                toggleBookmark(qId, currentlyBookmarked);
-                btn.classList.toggle('bookmarked'); // Optimistic UI update
-            });
-
-            // If question was already answered, show explanations and disable radios
-            if (userProgress[currentTopic.gid] && userProgress[currentTopic.gid].includes(q.id)) {
-                evaluateAllAnswers(index); // Re-evaluate to show correct/incorrect and explanations
-                document.querySelectorAll(`#main-question-${index} input[type="radio"]`).forEach(radio => radio.disabled = true);
-            }
+            attachOptionListeners(index); // Attach listener for the new option structure
+            // Bookmark button event listener removed
         }
 
-        function attachSubsetListeners(questionIndex) {
-            const subsetsContainer = document.getElementById('subsets-container');
-            subsetsContainer.addEventListener('change', (e) => {
-                if (e.target.type === 'radio') {
-                    const subsetItem = e.target.closest('.subset-item');
-                    subsetItem.dataset.answered = "true";
-                    subsetItem.dataset.selected = e.target.value;
+        // Renamed from attachSubsetListeners to reflect multiple-choice options
+        function attachOptionListeners(questionIndex) {
+            const questionBlock = document.getElementById(`main-question-${questionIndex}`);
+            const radioButtons = questionBlock.querySelectorAll(`input[name="q${questionIndex}"]`);
+            
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    const selectedLabel = e.target.value;
+                    evaluateAnswer(questionIndex, selectedLabel);
+                }, { once: true }); // Ensure event listener fires only once per question
+            });
+        }
 
-                    const allAnswered = [...subsetsContainer.querySelectorAll('.subset-item')].every(item => item.dataset.answered === 'true');
-                    
-                    if (allAnswered) {
-                        evaluateAllAnswers(questionIndex);
-                        // Save progress for this question
-                        saveUserProgress(currentTopic.gid, allQuestions[questionIndex].id);
-                    }
+        function evaluateAnswer(qIndex, selectedLabel) {
+            const q = allQuestions[qIndex];
+            const isCorrect = selectedLabel === q.correctAnswerLabel;
+
+            const questionBlock = document.getElementById(`main-question-${qIndex}`);
+            const radioButtons = questionBlock.querySelectorAll(`input[name="q${qIndex}"]`);
+            const explanationsContainer = questionBlock.querySelector('.all-explanations');
+
+            radioButtons.forEach(radio => {
+                radio.disabled = true; // Disable all options after selection
+                const labelElement = radio.closest('label'); // Get the parent label for styling
+
+                if (radio.value === q.correctAnswerLabel) {
+                    labelElement.classList.add('selected-correct'); // Highlight correct answer
+                }
+                if (radio.value === selectedLabel && !isCorrect) {
+                    labelElement.classList.add('selected-incorrect'); // Highlight incorrect selected answer
+                } else if (radio.value !== selectedLabel && radio.value === q.correctAnswerLabel) {
+                    // If user chose wrong, but this is the correct answer, highlight it slightly differently
+                    labelElement.classList.add('correct-answer');
                 }
             });
-        }
 
-        function evaluateAllAnswers(qIndex) {
-            allQuestions[qIndex].subsets.forEach((subset, sIndex) => {
-                const container = document.getElementById(`subset-${qIndex}-${sIndex}`);
-                const selectedValue = container.dataset.selected;
-                const isCorrect = selectedValue && (selectedValue.toLowerCase() === subset.correctAnswer.toLowerCase());
-                
-                container.classList.add(isCorrect ? 'correct' : 'incorrect');
-                container.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = true);
-            });
-            
-            const explanationsContainer = document.getElementById(`explanations-${qIndex}`);
             if (explanationsContainer) {
                 explanationsContainer.classList.add('visible');
             }
@@ -624,8 +537,7 @@
 
         // --- Event Listeners (Initial Setup) ---
         document.addEventListener('DOMContentLoaded', () => {
-            loadingContainer.style.display = 'block'; // Show loading immediately
-            initializeFirebase(); // Start Firebase init and data load
+            initializeQuizApp(); // Start the quiz app initialization
         });
         
         prevButton.addEventListener('click', () => showQuestion(--currentQuestionIndex));
