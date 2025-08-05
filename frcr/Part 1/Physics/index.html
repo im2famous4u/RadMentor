@@ -49,7 +49,6 @@
 </head>
 <body class="bg-gray-100">
 
-  <!-- Main Content -->
   <div id="frcr-content" class="w-full h-full p-4 md:p-8">
     <div class="glass-card max-w-4xl mx-auto">
       <div class="flex justify-between items-start mb-6">
@@ -63,7 +62,6 @@
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Part 1 Card -->
         <div class="bg-blue-50/50 p-6 rounded-2xl border border-blue-100">
           <h3 class="text-xl font-semibold text-blue-800 mb-3">Part 1 - Physics & Anatomy</h3>
           <p class="text-base text-blue-700 mb-4">Detailed modules and question banks for FRCR Part 1.</p>
@@ -72,7 +70,6 @@
             <button onclick="checkTestHistory('physics_part1')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-all">Physics</button>
           </div>
         </div>
-        <!-- Part 2 Card -->
         <div class="bg-green-50/50 p-6 rounded-2xl border border-green-100">
           <h3 class="text-xl font-semibold text-green-800 mb-3">Part 2 - Modules</h3>
           <p class="text-base text-green-700 mb-4">Specialty-specific modules for FRCR 2A & 2B.</p>
@@ -85,7 +82,6 @@
     </div>
   </div>
 
-  <!-- History Modal -->
   <div id="history-modal" class="modal-backdrop">
     <div class="modal-content bg-white w-11/12 max-w-lg mx-auto rounded-2xl shadow-xl p-6 md:p-8">
       <div class="flex justify-between items-center mb-4">
@@ -93,8 +89,7 @@
         <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">&times;</button>
       </div>
       <div id="modal-body" class="max-h-80 overflow-y-auto">
-        <!-- History content will be injected here -->
-      </div>
+        </div>
       <div class="mt-6 flex justify-end gap-4">
         <button onclick="closeModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg">Close</button>
         <button onclick="startNewTest()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg">Start New Test</button>
@@ -102,21 +97,27 @@
     </div>
   </div>
 
-  <!-- Firebase and App Logic -->
   <script type="module">
     // --- Firebase SDK Imports ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // --- Firebase Configuration ---
-    // These variables are provided by the environment.
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    const firebaseConfig = {
+      apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
+      authDomain: "radiology-mcqs.firebaseapp.com",
+      projectId: "radiology-mcqs",
+      storageBucket: "radiology-mcqs.appspot.com",
+      messagingSenderId: "862300415358",
+      appId: "1:862300415358:web:097d5e413f388e30587f2f",
+      measurementId: "G-0V1SD1H95V"
+    };
 
     // --- App State ---
     let app, auth, db;
+    const appId = firebaseConfig.appId; // Use the appId from your config
     let currentUserId = null;
     let currentTestId = null;
 
@@ -145,18 +146,12 @@
           currentUserId = user.uid;
           console.log("User is signed in with UID:", currentUserId);
           authStatusEl.innerHTML = `<p class="text-xs text-gray-600">Logged In</p><p class="text-xs text-gray-500 font-mono break-all">${currentUserId}</p>`;
-          // You could add mock data for testing here
-          // addMockData(); 
         } else {
-          console.log("No user signed in, attempting to sign in...");
+          console.log("No user signed in, attempting anonymous sign in...");
           try {
-            if (initialAuthToken) {
-              await signInWithCustomToken(auth, initialAuthToken);
-            } else {
-              await signInAnonymously(auth);
-            }
+            await signInAnonymously(auth);
           } catch (error) {
-            console.error("Sign-in failed:", error);
+            console.error("Anonymous sign-in failed:", error);
             authStatusEl.innerHTML = `<p class="text-sm text-red-500">Auth Failed</p>`;
           }
         }
@@ -220,49 +215,13 @@
     
     window.startNewTest = () => {
         if (!currentTestId) return;
-        // In a real application, you would navigate to the test page.
-        // For now, we'll just log it and close the modal.
         console.log(`Starting a new test for: ${currentTestId}`);
         alert(`Starting a new test for: ${currentTestId}. \n(This is where you would navigate to the actual test page)`);
         closeModal();
     };
 
-    // --- Mock Data Function (for demonstration) ---
-    async function addMockData() {
-        if (!currentUserId) return;
-        console.log("Adding mock data for user:", currentUserId);
-        const attemptsCollection = collection(db, `artifacts/${appId}/users/${currentUserId}/testAttempts`);
-        
-        // Clear existing mock data if any, to avoid duplicates on re-run
-        const q = query(attemptsCollection, where("isMock", "==", true));
-        const oldMocks = await getDocs(q);
-        oldMocks.forEach(doc => deleteDoc(doc.ref));
-
-        // Add new mock data
-        await addDoc(attemptsCollection, {
-            testId: 'anatomy_part1',
-            score: 15,
-            totalQuestions: 20,
-            timestamp: serverTimestamp(),
-            isMock: true
-        });
-        await addDoc(attemptsCollection, {
-            testId: 'anatomy_part1',
-            score: 18,
-            totalQuestions: 20,
-            timestamp: serverTimestamp(),
-            isMock: true
-        });
-        await addDoc(attemptsCollection, {
-            testId: 'physics_part1',
-            score: 12,
-            totalQuestions: 20,
-            timestamp: serverTimestamp(),
-            isMock: true
-        });
-        console.log("Mock data added.");
-    }
-
+    // Note: The `addMockData` function has been removed from this final version as it was for testing.
+    // If you need it, you can copy it back in from your original file.
 
     // --- Initial Load ---
     document.addEventListener('DOMContentLoaded', initializeFirebase);
