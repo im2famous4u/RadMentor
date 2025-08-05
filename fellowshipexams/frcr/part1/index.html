@@ -1,41 +1,636 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FRCR - RadScribe AI</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    .glass-card {
-      background-color: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(10px);
-      border-radius: 1.5rem;
-      padding: 2rem;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 6px 6px rgba(0,0,0,0.03);
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>FRCR Physics Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <style>
+        /* Shared glass-card style from main layout */
+        .glass-card {
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 6px 6px rgba(0,0,0,0.03);
+        }
+
+        /* Specific styles for this quiz page to match main theme */
+        body {
+            font-family: 'Inter', sans-serif; /* Use Inter font */
+            background-color: #f0f4f8; /* Light blue-gray background matching main layout */
+            color: #212121; /* Dark text for light theme */
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box; /* Include padding in element's total width and height */
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* --- Screen Management --- */
+        .screen { display: none; width: 100%; }
+        .screen.active { display: block; }
+
+        /* --- Home and Category Screen Styles --- */
+        .selection-container {
+            background-color: #ffffff; /* Explicitly white for inner container */
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+        }
+        .quiz-header {
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0; /* Light border color */
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .quiz-header h1 {
+            font-size: 2.2rem;
+            margin: 0;
+            color: #1a202c; /* text-gray-900 equivalent */
+            text-align: left;
+            flex-grow: 1;
+            font-weight: 800; /* font-extrabold */
+        }
+        .back-button {
+            background-color: transparent;
+            color: #4a5568; /* Gray text */
+            border: 1px solid #e2e8f0; /* Light border */
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .back-button:hover{ background-color: #f0f4f8; /* Light blue-gray hover */ }
+
+        .selection-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Adjusted for better card size */
+            gap: 20px; 
+        }
+        .selection-button { /* This class is now for the outer card container */
+            background-color: #ffffff; /* White background for cards */
+            color: #212121; /* Default text color */
+            border: 1px solid #e2e8f0; /* Light border */
+            padding: 20px; /* Adjusted padding */
+            border-radius: 12px; /* Slightly more rounded */
+            cursor: pointer;
+            font-size: 1.1rem; /* Adjusted font size */
+            font-weight: 600;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.2s;
+            text-align: left; /* Align text left */
+            display: flex; /* Use flex for internal layout */
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* Subtle shadow */
+        }
+        .selection-button:hover { 
+            background-color: #f0f4f8; /* Light blue-gray hover */
+            transform: translateY(-3px); /* Slight lift */
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1); /* Enhanced shadow on hover */
+        }
+        .selection-button.disabled { background-color: #a0aec0; cursor: not-allowed; transform: none; }
+
+        /* Styles for the icon container within the selection button */
+        .selection-button-icon {
+            width: 50px; /* Increased icon container size */
+            height: 50px; /* Increased icon container size */
+            border-radius: 10px; /* Rounded corners for icon background */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem; /* Emoji size */
+            margin-right: 15px; /* Space between icon and text */
+            flex-shrink: 0; /* Prevent icon from shrinking */
+        }
+        /* Specific background colors for icons */
+        .icon-bg-blue { background-color: #e0f2fe; color: #2196f3; } /* Light blue, blue text */
+        .icon-bg-orange { background-color: #fff3e0; color: #ff9800; } /* Light orange, orange text */
+        .icon-bg-pink { background-color: #fce4ec; color: #e91e63; } /* Light pink, pink text */
+        .icon-bg-green { background-color: #e8f5e9; color: #4caf50; } /* Light green, green text */
+        .icon-bg-yellow { background-color: #fffde7; color: #ffeb3b; } /* Light yellow, yellow text */
+        .icon-bg-purple { background-color: #ede7f6; color: #9c27b0; } /* Light purple, purple text */
+
+
+        .selection-button-text {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Align text left within its column */
+        }
+        .selection-button-text .topic-name {
+            font-weight: 700; /* Bold topic name */
+            color: #2d3748; /* Darker text for topic name */
+            margin-bottom: 4px; /* Space below topic name */
+        }
+        .selection-button-text .completion-status {
+            font-size: 0.85rem; /* Smaller font for status */
+            color: #718096; /* Gray for status text */
+        }
+        .selection-button-arrow {
+            font-size: 1.5rem; /* Size of the arrow */
+            color: #a0aec0; /* Light gray arrow */
+            margin-left: 10px;
+        }
+
+        /* --- Quiz View Styles --- */
+        .quiz-container { background-color: #ffffff; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.07); display: flex; flex-direction: column; padding: 20px; }
+        
+        .loading-container, .error-container { text-align: center; padding: 40px; font-size: 1.2rem; }
+        .error-container { color: #c53030; background-color: #fed7d7; border: 1px solid #fbb6b6; border-radius: 8px; }
+
+        #questions-display { flex-grow: 1; }
+        .question-block { background-color: #ffffff; border-radius: 8px; padding: 20px; }
+        .question-number { font-size: 1.1rem; font-weight: 500; color: #718096; /* Gray text */ margin-bottom: 15px; }
+        .main-question-text { font-size: 1.4rem; font-weight: 600; line-height: 1.5; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0; }
+        
+        .subset-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .subset-item.correct { background-color: #d1fae5; border-color: #34d399; } /* bg-green-100, border-green-400 */
+        .subset-item.incorrect { background-color: #fee2e2; border-color: #ef4444; } /* bg-red-100, border-red-500 */
+
+        .subset-q-container { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+        .subset-q-text { flex-grow: 1; margin: 0; font-size: 1.1rem; line-height: 1.6; }
+        .subset-options { display: flex; gap: 10px; }
+        .subset-options label { display: block; padding: 8px 16px; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; transition: background-color 0.2s, border-color 0.2s; }
+        .subset-options input[type="radio"] { display: none; }
+        .subset-options input[type="radio"]:checked + label { border-color: #3b82f6; background-color: #eff6ff; color: #212121; font-weight: 600; } /* border-blue-500, bg-blue-50 */
+        
+        .all-explanations {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #eff6ff; /* bg-blue-50 */
+            border: 1px solid #bfdbfe; /* border-blue-200 */
+            border-radius: 8px;
+            display: none; /* Hidden by default */
+        }
+        .all-explanations.visible { display: block; }
+        .all-explanations h3 { margin-top: 0; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; color: #1e3a5f; /* Dark blue heading */ }
+        .explanation-item p { margin: 0 0 10px 0; line-height: 1.6; }
+        .explanation-item:last-child p { margin-bottom: 0; }
+
+        .navigation-controls { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid #e2e8f0; margin-top: 20px; }
+        .nav-button { background-color: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500; transition: background-color 0.2s; } /* bg-blue-600 */
+        .nav-button:hover:not(:disabled) { background-color: #1d4ed8; } /* hover:bg-blue-700 */
+        .nav-button:disabled { background-color: #a0aec0; cursor: not-allowed; }
+        #question-counter { font-size: 1.1rem; font-weight: 500; color: #718096; text-align: center; padding-top: 1rem; }
+
+        .bookmark-button {
+            background: none;
+            border: none;
+            font-size: 1.8rem; /* Adjust size as needed */
+            cursor: pointer;
+            color: #cbd5e0; /* Gray for unbookmarked */
+            transition: color 0.2s;
+            margin-left: 10px;
+        }
+        .bookmark-button.bookmarked {
+            color: #f6e05e; /* Yellow for bookmarked */
+        }
+    </style>
 </head>
 <body>
-  <div id="frcr-content" class="w-full h-full overflow-y-auto pb-4">
-    <div class="glass-card col-span-full">
-      <h2 class="text-2xl font-bold text-gray-800 mb-6">FRCR Exam Preparation</h2>
-      <p class="text-lg text-gray-700 mb-4">Welcome to the FRCR section! Here you can find resources, past papers, and mock exams tailored for the FRCR examination.</p>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="bg-blue-50 p-4 rounded-lg">
-          <h3 class="font-semibold text-blue-800 mb-2">Part 1 - Physics & Anatomy</h3>
-          <p class="text-base text-blue-700">Detailed modules and question banks for FRCR Part 1.</p>
-          <a href="/fellowshipexams/frcr/part1/anatomy" class="mt-3 inline-block bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Anatomy</a>
-          <a href="/fellowshipexams/frcr/part1/physics.html" class="mt-3 inline-block bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Physics</a>
+
+    <div class="main-container glass-card"> <!-- Wrapped in glass-card -->
+        <!-- Physics Category Screen (Now the initial screen) -->
+        <div id="physics-category-screen" class="screen active">
+            <div class="selection-container">
+                <div class="quiz-header">
+                    <h1>Physics Topics</h1>
+                    <button class="back-button" onclick="window.parent.document.getElementById('contentFrame').src = '/fellowshipexams/frcr.html';">Back</button>
+                </div>
+                <div id="physics-topics-grid" class="selection-grid"></div>
+            </div>
         </div>
-        <div class="bg-blue-50 p-4 rounded-lg">
-          <h3 class="font-semibold text-blue-800 mb-2">Part 2A - Modules</h3>
-          <p class="text-base text-blue-700">Specialty-specific modules for FRCR 2A, including practice questions.</p>
-          <a href="/fellowshipexams/frcr/part2a" class="mt-3 inline-block bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Part 2A</a>
-          <a href="/fellowshipexams/frcr/part2b" class="mt-3 inline-block bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Part 2B</a>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-container">
+                <div class="quiz-header">
+                    <h1 id="quiz-title">Physics Questions</h1>
+                    <button class="back-button" data-target="physics-category-screen" onclick="showScreen('physics-category-screen');">Back to Topics</button>
+                </div>
+                <div id="loading-container" class="loading-container"><p>Loading questions...</p></div>
+                <div id="error-container" class="error-container" style="display:none;"></div>
+                <div id="questions-display"></div>
+                <div id="navigation-controls" style="display: none;">
+                    <button id="prev-button" class="nav-button">Previous</button>
+                    <button id="next-button" class="nav-button">Next</button>
+                </div>
+                <div id="question-counter"></div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Configuration ---
+        const GOOGLE_SHEET_ID = '1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8';
+        const PHYSICS_TOPICS = [
+            { name: "Basic Physics", gid: "2009849222", icon: "⚛️", color: "blue", totalModules: 54 },
+            { name: "General Radiation Hazards & Protection", gid: "2009849222", icon: "☢️", color: "orange", totalModules: 49 },
+            { name: "Image Quality & X-ray Production", gid: "1706416231", icon: "📸", color: "pink", totalModules: 39 },
+            { name: "Film Screen Radiography", gid: "1257614317", icon: "🎞️", color: "green", totalModules: 20 },
+            { name: "Digital Radiography", gid: "917881905", icon: "🖥️", color: "yellow", totalModules: 30 },
+            { name: "Fluoroscopy", gid: "1461599884", icon: "⚡", color: "purple", totalModules: 25 },
+            { name: "Computed Tomography", gid: "986205874", icon: "🧠", color: "blue", totalModules: 40 },
+            { name: "Nuclear Medicine", gid: "2016453957", icon: "☢️", color: "orange", totalModules: 35 },
+            { name: "Ultrasound", gid: "638565218", icon: "🔊", color: "pink", totalModules: 28 },
+            { name: "Magnetic Resonance Imaging", gid: "2026917708", icon: "🧲", color: "green", totalModules: 45 },
+        ];
+
+        // --- Firebase Variables ---
+        let app;
+        let db;
+        let auth;
+        let userId = null;
+        let userProgress = {}; // Stores completed question IDs per topic
+        let userBookmarks = []; // Stores bookmarked question IDs
+
+        // --- State ---
+        let allQuestions = [];
+        let currentQuestionIndex = 0;
+        let currentTopic = null; // To keep track of the active topic
+
+        // --- DOM Elements ---
+        const screens = document.querySelectorAll('.screen');
+        const physicsTopicsGrid = document.getElementById('physics-topics-grid');
+        const quizTitle = document.getElementById('quiz-title');
+        
+        const loadingContainer = document.getElementById('loading-container');
+        const errorContainer = document.getElementById('error-container');
+        const questionsDisplay = document.getElementById('questions-display');
+        const navigationControls = document.getElementById('navigation-controls');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        const questionCounter = document.getElementById('question-counter');
+
+        // Function to show messages in the parent frame
+        function showParentMessage(message, type = 'success') {
+            if (window.parent && window.parent.showMessage) {
+                window.parent.showMessage(message, type);
+            } else {
+                console.log(`Message: ${message} (Type: ${type})`);
+            }
+        }
+
+        // --- Firebase Initialization & Auth ---
+        async function initializeFirebase() {
+            try {
+                // Use global __firebase_config provided by Canvas
+                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // User is expected to be logged in, so attempt to sign in with custom token
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    // If token is missing, redirect to login as user should be authenticated
+                    showParentMessage('Authentication token missing. Redirecting to login.', 'error');
+                    setTimeout(() => {
+                        window.parent.location.href = '/fellowshipexams/index.html'; // Assuming this is the login page
+                    }, 2000);
+                    return; // Stop further execution
+                }
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        await loadUserData();
+                        populateTopics();
+                        showScreen('physics-category-screen');
+                    } else {
+                        // User somehow became unauthenticated after initial sign-in attempt.
+                        // This might happen if the token expires or is revoked.
+                        showParentMessage('Session expired or authentication failed. Redirecting to login.', 'error');
+                        setTimeout(() => {
+                            window.parent.location.href = '/fellowshipexams/index.html'; // Redirect to login
+                        }, 2000);
+                    }
+                    loadingContainer.style.display = 'none'; // Hide initial loading once auth is ready
+                });
+
+            } catch (error) {
+                console.error("Error initializing Firebase or authenticating:", error);
+                loadingContainer.style.display = 'none';
+                errorContainer.style.display = 'block';
+                errorContainer.textContent = `Failed to initialize app. Error: ${error.message}. Please try again.`;
+                showParentMessage(`Failed to initialize app. Error: ${error.message}`, 'error');
+            }
+        }
+
+        // --- Firestore Data Operations ---
+        async function loadUserData() {
+            if (!userId) return;
+
+            loadingContainer.style.display = 'block';
+            try {
+                // Load user progress
+                const progressDocRef = doc(db, `artifacts/${__app_id}/users/${userId}/physicsProgress`, "topics");
+                const progressDocSnap = await getDoc(progressDocRef);
+                if (progressDocSnap.exists()) {
+                    userProgress = progressDocSnap.data();
+                } else {
+                    userProgress = {};
+                }
+
+                // Load user bookmarks
+                const bookmarksDocRef = doc(db, `artifacts/${__app_id}/users/${userId}/bookmarks`, "questions");
+                const bookmarksDocSnap = await getDoc(bookmarksDocRef);
+                if (bookmarksDocSnap.exists() && bookmarksDocSnap.data().questionIds) {
+                    userBookmarks = bookmarksDocSnap.data().questionIds;
+                } else {
+                    userBookmarks = [];
+                }
+                showParentMessage('User data loaded successfully!', 'success');
+
+            } catch (error) {
+                console.error("Error loading user data:", error);
+                showParentMessage('Failed to load user data. Please try again.', 'error');
+            } finally {
+                loadingContainer.style.display = 'none';
+            }
+        }
+
+        async function saveUserProgress(topicGid, questionId) {
+            if (!userId || !db) return;
+
+            try {
+                const progressDocRef = doc(db, `artifacts/${__app_id}/users/${userId}/physicsProgress`, "topics");
+                await setDoc(progressDocRef, {
+                    [topicGid]: arrayUnion(questionId)
+                }, { merge: true });
+                showParentMessage('Progress saved!', 'success');
+            } catch (error) {
+                console.error("Error saving progress:", error);
+                showParentMessage('Failed to save progress.', 'error');
+            }
+        }
+
+        async function toggleBookmark(questionId, isBookmarked) {
+            if (!userId || !db) return;
+
+            try {
+                const bookmarksDocRef = doc(db, `artifacts/${__app_id}/users/${userId}/bookmarks`, "questions");
+                if (isBookmarked) {
+                    await updateDoc(bookmarksDocRef, {
+                        questionIds: arrayRemove(questionId)
+                    });
+                    showParentMessage('Bookmark removed!', 'success');
+                } else {
+                    await setDoc(bookmarksDocRef, {
+                        questionIds: arrayUnion(questionId)
+                    }, { merge: true });
+                    showParentMessage('Question bookmarked!', 'success');
+                }
+                // Update local state after successful Firestore operation
+                userBookmarks = isBookmarked ? userBookmarks.filter(id => id !== questionId) : [...userBookmarks, questionId];
+
+            } catch (error) {
+                console.error("Error toggling bookmark:", error);
+                showParentMessage('Failed to toggle bookmark.', 'error');
+            }
+        }
+
+        // --- Functions (Navigation & Setup) ---
+        function showScreen(screenId) { screens.forEach(s => s.classList.toggle('active', s.id === screenId)); }
+        
+        function populateTopics() {
+            physicsTopicsGrid.innerHTML = '';
+            PHYSICS_TOPICS.forEach(topic => {
+                const completedCount = userProgress[topic.gid] ? userProgress[topic.gid].length : 0;
+                const button = document.createElement('div'); // Changed to div for card structure
+                button.className = `selection-button`; // Apply base card styles
+                button.innerHTML = `
+                    <div class="selection-button-icon icon-bg-${topic.color}">
+                        ${topic.icon}
+                    </div>
+                    <div class="selection-button-text">
+                        <span class="topic-name">${topic.name}</span>
+                        <span class="completion-status">${completedCount}/${topic.totalModules} completed</span>
+                    </div>
+                    <span class="selection-button-arrow">❯</span>
+                `;
+                button.addEventListener('click', () => startQuiz(topic));
+                physicsTopicsGrid.appendChild(button);
+            });
+        }
+
+        function startQuiz(topic) {
+            currentTopic = topic; // Store the current topic
+            quizTitle.textContent = topic.name;
+            showScreen('quiz-screen');
+            resetQuizView();
+            fetchQuizData(GOOGLE_SHEET_ID, topic);
+        }
+
+        function resetQuizView() {
+            loadingContainer.style.display = 'block';
+            errorContainer.style.display = 'none';
+            errorContainer.textContent = '';
+            questionsDisplay.innerHTML = '';
+            navigationControls.style.display = 'none';
+            allQuestions = [];
+            currentQuestionIndex = 0;
+        }
+
+        // --- Functions (Data Fetching & Parsing) ---
+        function fetchQuizData(sheetId, topic) {
+            const queryParam = topic.gid ? `gid=${topic.gid}` : `sheet=${encodeURIComponent(topic.sheetName)}`;
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&${queryParam}`;
+            
+            fetch(url)
+                .then(r => { if (!r.ok) throw new Error(`Network error: ${r.status}`); return r.text(); })
+                .then(csv => {
+                    allQuestions = parseCSVToQuestions(csv);
+                    if (allQuestions.length > 0) {
+                        navigationControls.style.display = 'flex';
+                        showQuestion(currentQuestionIndex);
+                    } else {
+                        errorContainer.style.display = 'block';
+                        errorContainer.textContent = 'No questions found in the selected topic.';
+                    }
+                    loadingContainer.style.display = 'none';
+                })
+                .catch(err => {
+                    console.error('Data fetch/parse error:', err);
+                    loadingContainer.style.display = 'none';
+                    errorContainer.style.display = 'block';
+                    errorContainer.textContent = `Error loading questions. Please check the Google Sheet ID, GID, and sharing settings. Details: ${err.message}`;
+                });
+        }
+
+        function parseCSVToQuestions(text) {
+            const rows = text.trim().split(/\r?\n/).map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(f => f.trim().replace(/^"|"$/g, '')));
+            if (rows.length < 2) { return []; }
+            const headers = rows[0].map(h => h.trim().toLowerCase());
+            const questionIndex = headers.indexOf('question');
+            if (questionIndex === -1) { console.error("Column 'question' not found."); return []; }
+            
+            return rows.slice(1).map((row, qIdx) => { // Use qIdx for unique question ID
+                const mainQuestionText = row[questionIndex];
+                if (!mainQuestionText) return null;
+                
+                const subsets = [];
+                for (let i = 1; i <= 5; i++) {
+                    const subQHeader = i === 1 ? 'question a1' : `a${i}`;
+                    const ansHeader = `answer of a${i}`;
+                    const expHeader = `explanation of a${i}`;
+                    const subQIndex = headers.indexOf(subQHeader);
+                    const ansIndex = headers.indexOf(ansHeader);
+                    const expIndex = headers.indexOf(expHeader);
+                    if (subQIndex !== -1 && ansIndex !== -1) {
+                        const subQText = row[subQIndex];
+                        const correctAns = row[ansIndex];
+                        if (subQText && correctAns) {
+                            subsets.push({
+                                text: subQText,
+                                correctAnswer: correctAns,
+                                explanation: expIndex !== -1 ? row[expIndex] : ''
+                            });
+                        }
+                    }
+                }
+                const questionId = `${currentTopic.gid}_q${qIdx}`; // Unique ID for question
+                return subsets.length > 0 ? { id: questionId, question: mainQuestionText, subsets } : null;
+            }).filter(Boolean);
+        }
+
+        // --- Functions (Quiz Rendering & Interaction) ---
+        function showQuestion(index) {
+            if (!allQuestions || allQuestions.length === 0) return;
+            const q = allQuestions[index];
+            
+            const allExplanations = [];
+            const subsetsHtml = q.subsets.map((subset, i) => {
+                if (subset.explanation) {
+                    allExplanations.push(`<div class="explanation-item"><p><strong>${String.fromCharCode(97 + i)})</strong> ${subset.explanation}</p></div>`);
+                }
+                return `
+                    <div class="subset-item" id="subset-${index}-${i}" data-answered="false">
+                        <div class="subset-q-container">
+                            <p class="subset-q-text"><strong>${String.fromCharCode(97 + i)})</strong> ${subset.text}</p>
+                            <div class="subset-options" data-subset-index="${i}">
+                                <input type="radio" id="q${index}s${i}t" name="q${index}s${i}" value="True"><label for="q${index}s${i}t">True</label>
+                                <input type="radio" id="q${index}s${i}f" name="q${index}s${i}" value="False"><label for="q${index}s${i}f">False</label>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            const explanationsContainerHtml = allExplanations.length > 0 ? `
+                <div class="all-explanations" id="explanations-${index}">
+                    <h3>Explanations</h3>
+                    ${allExplanations.join('')}
+                </div>
+            ` : '';
+
+            const isBookmarked = userBookmarks.includes(q.id);
+            const bookmarkClass = isBookmarked ? 'bookmarked' : '';
+
+            questionsDisplay.innerHTML = `
+                <div class="question-block" id="main-question-${index}">
+                    <div class="question-number flex justify-between items-center">
+                        <span>Question ${index + 1}</span>
+                        <button class="bookmark-button ${bookmarkClass}" data-question-id="${q.id}">⭐</button>
+                    </div>
+                    <p class="main-question-text">${q.question}</p>
+                    <div id="subsets-container">${subsetsHtml}</div>
+                    ${explanationsContainerHtml}
+                </div>`;
+            
+            updateNav(index);
+            attachSubsetListeners(index);
+            document.querySelector(`.bookmark-button[data-question-id="${q.id}"]`).addEventListener('click', (e) => {
+                const btn = e.target;
+                const qId = btn.dataset.questionId;
+                const currentlyBookmarked = btn.classList.contains('bookmarked');
+                toggleBookmark(qId, currentlyBookmarked);
+                btn.classList.toggle('bookmarked'); // Optimistic UI update
+            });
+
+            // If question was already answered, show explanations and disable radios
+            if (userProgress[currentTopic.gid] && userProgress[currentTopic.gid].includes(q.id)) {
+                evaluateAllAnswers(index); // Re-evaluate to show correct/incorrect and explanations
+                document.querySelectorAll(`#main-question-${index} input[type="radio"]`).forEach(radio => radio.disabled = true);
+            }
+        }
+
+        function attachSubsetListeners(questionIndex) {
+            const subsetsContainer = document.getElementById('subsets-container');
+            subsetsContainer.addEventListener('change', (e) => {
+                if (e.target.type === 'radio') {
+                    const subsetItem = e.target.closest('.subset-item');
+                    subsetItem.dataset.answered = "true";
+                    subsetItem.dataset.selected = e.target.value;
+
+                    const allAnswered = [...subsetsContainer.querySelectorAll('.subset-item')].every(item => item.dataset.answered === 'true');
+                    
+                    if (allAnswered) {
+                        evaluateAllAnswers(questionIndex);
+                        // Save progress for this question
+                        saveUserProgress(currentTopic.gid, allQuestions[questionIndex].id);
+                    }
+                }
+            });
+        }
+
+        function evaluateAllAnswers(qIndex) {
+            allQuestions[qIndex].subsets.forEach((subset, sIndex) => {
+                const container = document.getElementById(`subset-${qIndex}-${sIndex}`);
+                const selectedValue = container.dataset.selected;
+                const isCorrect = selectedValue && (selectedValue.toLowerCase() === subset.correctAnswer.toLowerCase());
+                
+                container.classList.add(isCorrect ? 'correct' : 'incorrect');
+                container.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = true);
+            });
+            
+            const explanationsContainer = document.getElementById(`explanations-${qIndex}`);
+            if (explanationsContainer) {
+                explanationsContainer.classList.add('visible');
+            }
+        }
+
+        function updateNav(index) {
+            questionCounter.textContent = `Question ${index + 1} of ${allQuestions.length}`;
+            prevButton.disabled = index === 0;
+            nextButton.disabled = index === allQuestions.length - 1;
+        }
+
+        // --- Event Listeners (Initial Setup) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadingContainer.style.display = 'block'; // Show loading immediately
+            initializeFirebase(); // Start Firebase init and data load
+        });
+        
+        prevButton.addEventListener('click', () => showQuestion(--currentQuestionIndex));
+        nextButton.addEventListener('click', () => showQuestion(++currentQuestionIndex));
+
+    </script>
 </body>
 </html>
