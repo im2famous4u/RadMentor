@@ -109,32 +109,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function submitProfile() {
-        const user = auth.currentUser;
-        if (!user) return;
-
-        const profileData = {
-            name: document.getElementById('name').value,
-            dob: document.getElementById('dob').value,
-            sex: document.getElementById('sex').value,
-            position: document.getElementById('position').value,
-            exam_pursuing: document.getElementById('exam_pursuing').value,
-            college: document.getElementById('college').value,
-            profileComplete: true
-        };
-
-        if (!profileData.name || !profileData.dob) {
-            alert('Please fill in at least your name and date of birth.');
-            return;
-        }
-
-        const userDocRef = doc(db, "users", user.uid);
-        try {
-            await setDoc(userDocRef, profileData, { merge: true });
-        } catch (error) {
-            console.error("Error updating profile:", error);
-            alert("Could not update profile. Please try again.");
-        }
+    // This is the new line for debugging.
+    console.log('Submit Profile button clicked!'); 
+    
+    const user = auth.currentUser;
+    if (!user) {
+        console.error("Submit profile failed: No user is logged in.");
+        return;
     }
+
+    const profileData = {
+        name: document.getElementById('name').value,
+        dob: document.getElementById('dob').value,
+        sex: document.getElementById('sex').value,
+        position: document.getElementById('position').value,
+        exam_pursuing: document.getElementById('exam_pursuing').value,
+        college: document.getElementById('college').value,
+        profileComplete: true
+    };
+
+    if (!profileData.name || !profileData.dob) {
+        alert('Please fill in at least your name and date of birth.');
+        return;
+    }
+
+    const userDocRef = doc(db, "users", user.uid);
+    try {
+        await setDoc(userDocRef, profileData, { merge: true });
+        console.log("Profile successfully saved to Firestore!"); // Added another log
+        
+        // Hide the form and show the main page
+        document.getElementById('profile-form-container').classList.add('hidden');
+        document.getElementById('landing-page').classList.remove('hidden');
+
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        alert("Could not update profile. Please check the console for errors.");
+    }
+}
+// Remember this line at the bottom makes it work with the button's onclick
+window.submitProfile = submitProfile;
     
     // --- MAIN STATE CONTROLLER ---
     console.log("Setting up onAuthStateChanged listener...");
