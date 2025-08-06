@@ -196,6 +196,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // This is the updated line:
     window.showDashboard = () => {
-        window.location.href = 'dashboard.html';
+        window.location.href = 'dashboard/dashboard.html';
     };
 });
