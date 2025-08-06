@@ -1,33 +1,1086 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fellowship Exams - RadScribe AI</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    .glass-card {
-      background-color: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(10px);
-      border-radius: 1.5rem;
-      padding: 2rem;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 6px 6px rgba(0,0,0,0.03);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fellowship Exams Quiz - RadScribe AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        /* Base Body and Glass Card styles from your original RadScribe AI app */
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .glass-card {
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 6px 6px rgba(0,0,0,0.03);
+            max-width: 800px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        /* Styles from the AIIMS SRship Exam code, adapted for consistency */
+        .quiz-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: transparent;
+            border-radius: 15px;
+            box-shadow: none;
+            overflow: hidden;
+            animation: fadeIn 0.5s;
+            touch-action: pan-y;
+            display: flex;
+            flex-direction: column;
+        }
+        @keyframes fadeIn {from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes slideIn {from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+        .quiz-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: white;
+            padding: 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            position: relative;
+            border-radius: 1.5rem 1.5rem 0 0;
+        }
+        .question-card {
+            border:none;
+            box-shadow:0 5px 20px rgba(0,0,0,0.06);
+            margin-bottom:25px;
+            border-radius:15px;
+            overflow:hidden;
+            transition:all 0.4s ease;
+            animation:slideIn 0.4s;
+            background-color: #ffffff;
+        }
+        .question-reference {background-color:#fce7f3;border-left:5px solid #ec4899;padding:15px;margin-bottom:15px;border-radius:5px; color: #333;}
+        .option-btn {
+            text-align:left;
+            padding:16px 20px;
+            margin-bottom:12px;
+            border-radius:12px;
+            transition:all 0.3s ease;
+            position:relative;
+            overflow:hidden;
+            border:1px solid #e2e8f0;
+            background-color: #f8fafc;
+            color: #333;
+        }
+        .option-btn:hover {background-color:#e2e8f0;transform:translateX(5px);box-shadow:0 3px 10px rgba(0,0,0,0.05)}
+        .option-btn.selected {background-color:#fce7f3;border-color:#f472b6;font-weight:500;box-shadow:0 5px 15px rgba(236,72,153,0.15); color: #333;}
+        .option-btn.correct {background-color:#dcfce7;border-color:#4ade80; color: #166534;}
+        .option-btn.incorrect {background-color:#fee2e2;border-color:#f87171; color: #b91c1c;}
+        .progress {height:8px;border-radius:4px;overflow:hidden}
+        .progress-bar {transition:width 1s linear}
+        .result-card {display:none;animation:fadeIn 0.5s; background-color: #ffffff; border-radius: 1.5rem; padding: 2rem;}
+        .score-highlight {font-size:48px;font-weight:700;color:#ec4899;text-align:center;margin:20px 0}
+        .quiz-pagination {display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin:15px 0;padding:10px 0}
+        .quiz-pagination .page-box {width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:600;background-color:#f8fafc;color:#555;border:1px solid #e2e8f0;cursor:pointer;transition:all 0.3s ease; border-radius: 0.5rem;}
+        .quiz-pagination .page-box.active {background-color:#ec4899;border-color:#ec4899;color:white}
+        .quiz-pagination .page-box:hover {transform:scale(1.1)}
+        .quiz-pagination .page-box.correct {background-color:#28a745;border-color:#28a745;color:white}
+        .quiz-pagination .page-box.incorrect {background-color:#dc3545;border-color:#dc3545;color:white}
+        .explanation {background-color:#f8fafc;padding:15px;border-radius:8px;margin-top:15px;border-left:3px solid #ec4899; color: #333;}
+        .explanation strong {
+            font-weight: bold;
+            color: #333;
+        }
+        .analysis-panel {background-color:#f8fafc;border-radius:10px;padding:15px;margin-top:20px;box-shadow:0 3px 10px rgba(0,0,0,0.05);border:1px solid #e2e8f0}
+        .analysis-item {display:flex;align-items:center;margin-bottom:10px}
+        .analysis-icon {width:24px;height:24px;margin-right:10px;display:flex;align-items:center;justify-content:center;border-radius:50%;color:white}
+        /* Buttons in quiz mode and results */
+        .btn-primary {background-color:#ec4899;border-color:#ec4899;border-radius:30px;padding:10px 25px;transition:all 0.3s ease; color: white;}
+        .btn-primary:hover {background-color:#be185d;border-color:#be185d;transform:translateY(-3px);box-shadow:0 5px 15px rgba(236,72,153,0.2)}
+        .btn-secondary {background-color:#6b7280;border-color:#6b7280;border-radius:30px;padding:10px 25px;transition:all 0.3s ease; color: white;}
+        .btn-secondary:hover {background-color:#4b5563;border-color:#4b5563;transform:translateY(-3px);box-shadow:0 5px 15px rgba(107,114,128,0.2)}
+        .btn-info {background-color:#0ea5e9;border-color:#0ea5e9;border-radius:30px;padding:10px 25px;transition:all 0.3s ease; color: white;}
+        .btn-info:hover {background-color:#0284c7;border-color:#0284c7;transform:translateY(-3px);box-shadow:0 5px 15px rgba(14,165,233,0.2)}
+        .btn-danger {background-color:#ef4444;border-color:#ef4444;border-radius:30px;padding:10px 25px;transition:all 0.3s ease; color: white;}
+        .btn-danger:hover {background-color:#dc2626;border-color:#dc2626;transform:translateY(-3px);box-shadow:0 5px 15px rgba(239,68,68,0.2)}
+
+        .confetti {position:fixed;width:10px;height:10px;background-color:#f00;position:absolute;top:0;z-index:9999}
+        .chart-container {height:220px}
+        .time-bar {height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;margin-top:5px}
+        .time-fill {height:100%;background:linear-gradient(90deg,#ec4899 0%,#f472b6 100%);border-radius:4px;transition:width 0.5s}
+        .badge-avg {background-color:#fce7f3;color:#ec4899;font-weight:500;padding:5px 10px;border-radius:20px}
+        .badge-fast {background-color:#dcfce7;color:#22c55e;font-weight:500;padding:5px 10px;border-radius:20px}
+        .badge-slow {background-color:#fee2e2;color:#ef4444;font-weight:500;padding:5px 10px;border-radius:20px}
+        .question-image, .explanation-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        #paperSelectionContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            padding: 20px;
+            text-align: center;
+        }
+        .quiz-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1001;
+        }
+        .quiz-controls .btn {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .bookmark-btn.bookmarked {
+            color: #f59e0b; /* A nice, bright gold/yellow for bookmarked state */
+        }
+        .bookmark-btn {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #d1d5db; /* A lighter gray for un-bookmarked state */
+            transition: color 0.2s ease-in-out;
+        }
+        .bookmark-btn:hover {
+            color: #eab308;
+        }
+        /* Paper Card Styles */
+        .paper-card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .paper-card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid #e2e8f0;
+        }
+        .paper-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            border-color: #ec4899;
+        }
+        .paper-card-icon {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        /* Specific icon background colors */
+        .paper-card-icon.bg-blue-100 { background-color: #e0f2fe; color: #3b82f6; }
+        .paper-card-icon.bg-orange-100 { background-color: #fff7ed; color: #f97316; }
+        .paper-card-icon.bg-pink-100 { background-color: #fdf2f8; color: #ec4899; }
+        .paper-card-icon.bg-green-100 { background-color: #f0fdf4; color: #22c55e; }
+        .paper-card-icon.bg-purple-100 { background-color: #f3e8ff; color: #a855f7; }
+        .paper-card-icon.bg-yellow-100 { background-color: #fffbeb; color: #eab308; }
+        .paper-card-icon.bg-red-100 { background-color: #fee2e2; color: #ef4444; }
+        .paper-card-icon.bg-teal-100 { background-color: #f0fdfa; color: #14b8a6; }
+        .paper-card-icon.bg-indigo-100 { background-color: #e0e7ff; color: #4f46e5; }
+        .paper-card-icon.bg-lime-100 { background-color: #f7fee7; color: #84cc16; }
+        /* Auth check screen */
+        .auth-check-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100vh;
+            background-color: #f0f2f5;
+        }
+    </style>
 </head>
 <body>
-  <div id="fellowship-exams-content" class="w-full h-full overflow-y-auto pb-4">
-    <div class="glass-card col-span-full">
-      <h2 class="text-2xl font-bold text-gray-800 mb-6">Fellowship Exam Preparation</h2>
-      <p class="text-lg text-gray-700">Resources and guidance for various radiology fellowship examinations.</p>
-      <ul class="list-disc list-inside mt-4 space-y-2 text-gray-700">
-        <li class="text-base">Neuro-Radiology Fellowship</li>
-        <li class="text-base">Cardiothoracic Imaging Fellowship</li>
-        <li class="text-base">Abdominal Imaging Fellowship</li>
-      </ul>
-      <button class="mt-6 bg-pink-600 hover:bg-pink-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Prepare for Fellowships</button>
+    <audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/269/269.wav" preload="auto"></audio>
+    <audio id="swipeSound" src="https://assets.mixkit.co/active_storage/sfx/1897/1897.wav" preload="auto"></audio>
+    <audio id="correctSound" src="https://assets.mixkit.co/active_storage/sfx/2870/2870.wav" preload="auto"></audio>
+    <audio id="wrongSound" src="https://assets.mixkit.co/active_storage/sfx/2964/2964.wav" preload="auto"></audio>
+
+    <div class="container my-4">
+        <div id="authCheckScreen" class="auth-check-screen" style="display: flex;">
+            <div class="text-center p-5 bg-white rounded-xl shadow">
+                <h1 class="text-3xl font-bold mb-4">Verifying Access...</h1>
+                <p class="text-gray-600">Please wait while we check your login status.</p>
+                <div class="spinner-border text-primary mt-4" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="quiz-container glass-card" id="quizContainer" style="display: none;">
+            <h1 class="text-3xl font-extrabold text-gray-900 text-center mb-6">Fellowship Exam Quiz</h1>
+
+            <div id="paperSelectionContainer" style="display: none;">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Select a Paper to Begin</h2>
+                <div id="paper-card-grid" class="paper-card-grid">
+                    </div>
+                <div class="d-flex justify-content-center mt-4">
+                    <a href="dashboard/bookmark.html" class="btn btn-info btn-lg px-5 py-2 rounded-pill shadow">
+                        <i class="fas fa-bookmark me-2"></i>My Bookmarks
+                    </a>
+                </div>
+            </div>
+
+            <div id="mainQuizContent" style="display: none;">
+                <div class="quiz-header shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="m-0 fw-bold">Paper <span id="currentPaperDisplay"></span></h2>
+                    </div>
+                    <div class="quiz-controls">
+                        <button id="homeBtn" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-home me-1"></i> Home
+                        </button>
+                    </div>
+                    <div class="mt-2 mb-2">
+                        <h5 class="m-0">Year : 2012</h5>
+                        <h5 class="m-0">Session : January</h5>
+                    </div>
+                    <div class="progress mt-3" id="practiceProgressBarContainer">
+                        <div id="practiceProgress" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width:0%"></div>
+                    </div>
+                </div>
+
+                <div class="p-4">
+                    <div id="questionContainer"></div>
+                    <div class="quiz-pagination" id="questionNav"></div>
+                </div>
+            </div>
+
+            <div id="resultContainer" class="result-card p-4" style="display: none;">
+                <h3 class="text-center fw-bold mb-4">Quiz Results</h3>
+                <div class="score-highlight" id="scoreDisplay"></div>
+                <div class="row" id="quizSummaryCharts">
+                    <div class="col-md-6">
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold">Score Summary</h5>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <div>Total Questions:</div>
+                                    <div id="totalQuestions" class="fw-bold"></div>
+                                </div>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <div>Correct Answers:</div>
+                                    <div id="correctAnswers" class="fw-bold text-success">0</div>
+                                </div>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <div>Incorrect Answers:</div>
+                                    <div id="incorrectAnswers" class="fw-bold text-danger">0</div>
+                                </div>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <div>Unattempted:</div>
+                                    <div id="unattempted" class="fw-bold text-warning">0</div>
+                                </div>
+                                <div class="d-flex justify-content-between mb-3">
+                                    <div>Negative Marking:</div>
+                                    <div id="negativeMarks" class="fw-bold text-danger">-0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold">Performance</h5>
+                                <div class="chart-container">
+                                    <canvas id="performanceChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" id="timeAnalysisCharts">
+                    <div class="col-12">
+                        <div class="card mb-4 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title fw-bold">Time Analysis</h5>
+                                <div class="chart-container">
+                                    <canvas id="timeAnalysisChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center mt-4">
+                    <button id="reviewBtn" class="btn btn-primary btn-lg px-5 py-2 rounded-pill shadow">
+                        <i class="fas fa-search me-2"></i>View Solution
+                    </button>
+                    <button id="restartQuizBtn" class="btn btn-secondary btn-lg px-5 py-2 rounded-pill shadow ms-3">
+                        <i class="fas fa-redo me-2"></i>Restart Quiz
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
+
+    <div id="custom-alert-modal" class="modal">
+        <div class="modal-content">
+            <p id="modal-message"></p>
+            <button id="modal-ok-button">OK</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module">
+        // Firebase imports for user authentication and Firestore
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, getDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+        // Your Firebase config (must be accurate for auth and bookmarks to work)
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
+            authDomain: "radiology-mcqs.firebaseapp.com",
+            projectId: "radiology-mcqs",
+            storageBucket: "radiology-mcqs.appspot.com",
+            messagingSenderId: "862300415358",
+            appId: "1:862300415358:web:097d5e413f388e30587f2f",
+            measurementId: "G-0V1SD1H95V"
+        };
+
+        // This object now stores Google Sheet IDs and GIDs for each paper.
+        const allQuizData = {
+            paper1: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "0" },
+            paper2: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1141721868" },
+            paper3: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1815658253" },
+            paper4: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1386284317" },
+            paper5: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "40352700" },
+            paper6: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "54400073" },
+            paper7: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1767827630" },
+            paper8: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "280434470" },
+            paper9: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "YOUR_GID_FOR_PAPER_9" },
+            paper10: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "YOUR_GID_FOR_PAPER_10" }
+        };
+
+        const paperMetadata = [
+            { id: 'paper1', name: 'Paper 1', displayNumber: 1, totalQuestions: 80, bgColor: 'bg-blue-100' },
+            { id: 'paper2', name: 'Paper 2', displayNumber: 2, totalQuestions: 80, bgColor: 'bg-orange-100' },
+            { id: 'paper3', name: 'Paper 3', displayNumber: 3, totalQuestions: 80, bgColor: 'bg-pink-100' },
+            { id: 'paper4', name: 'Paper 4', displayNumber: 4, totalQuestions: 80, bgColor: 'bg-green-100' },
+            { id: 'paper5', name: 'Paper 5', displayNumber: 5, totalQuestions: 80, bgColor: 'bg-purple-100' },
+            { id: 'paper6', name: 'Paper 6', displayNumber: 6, totalQuestions: 80, bgColor: 'bg-yellow-100' },
+            { id: 'paper7', name: 'Paper 7', displayNumber: 7, totalQuestions: 80, bgColor: 'bg-red-100' },
+            { id: 'paper8', name: 'Paper 8', displayNumber: 8, totalQuestions: 80, bgColor: 'bg-teal-100' },
+            { id: 'paper9', name: 'Paper 9', displayNumber: 9, totalQuestions: 80, bgColor: 'bg-indigo-100' },
+            { id: 'paper10', name: 'Paper 10', displayNumber: 10, totalQuestions: 80, bgColor: 'bg-lime-100' }
+        ];
+
+        let currentQuizData = [];
+        let currentPaperId = '';
+        let currentUser = null;
+        let userBookmarks = new Set();
+
+        const state = {
+            currentQuestion: 0,
+            answers: [],
+            startTime: new Date(),
+            timePerQuestion: [],
+            avgTimePerQuestion: 0,
+            totalTime: 0,
+            negativeMark: 0.25,
+            submitted: false,
+            mode: 'practice',
+            practiceScore: 0,
+            practiceAttempted: 0,
+            practiceCorrect: 0,
+            touchStartX: 0,
+            touchEndX: 0,
+            inReviewMode: false,
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const clickSound = document.getElementById('clickSound');
+        const swipeSound = document.getElementById('swipeSound');
+        const correctSound = document.getElementById('correctSound');
+        const wrongSound = document.getElementById('wrongSound');
+        const authCheckScreen = document.getElementById('authCheckScreen');
+        const quizContainer = document.getElementById('quizContainer');
+        const paperSelectionContainer = document.getElementById('paperSelectionContainer');
+        const mainQuizContent = document.getElementById('mainQuizContent');
+        const resultContainer = document.getElementById('resultContainer');
+        const currentPaperDisplay = document.getElementById('currentPaperDisplay');
+        const practiceProgressBarContainer = document.getElementById('practiceProgressBarContainer');
+        const practiceProgress = document.getElementById('practiceProgress');
+        const questionContainer = document.getElementById('questionContainer');
+        const questionNav = document.getElementById('questionNav');
+        const homeBtn = document.getElementById('homeBtn');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const totalQuestionsDisplay = document.getElementById('totalQuestions');
+        const correctAnswersDisplay = document.getElementById('correctAnswers');
+        const incorrectAnswersDisplay = document.getElementById('incorrectAnswers');
+        const unattemptedDisplay = document.getElementById('unattempted');
+        const negativeMarksDisplay = document.getElementById('negativeMarks');
+        const quizSummaryCharts = document.getElementById('quizSummaryCharts');
+        const timeAnalysisCharts = document.getElementById('timeAnalysisCharts');
+        const reviewBtn = document.getElementById('reviewBtn');
+        const restartQuizBtn = document.getElementById('restartQuizBtn');
+        const customAlertModal = document.getElementById('custom-alert-modal');
+        const modalMessage = document.getElementById('modal-message');
+        const modalOkButton = document.getElementById('modal-ok-button');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUser = user;
+                    console.log("User is logged in:", user.uid);
+                    authCheckScreen.style.display = 'none';
+                    quizContainer.style.display = 'block';
+                    showPaperSelection();
+                } else {
+                    console.log("User is not logged in. Redirecting...");
+                    showAlert("You must be logged in to access this page. Redirecting to home.");
+                    setTimeout(() => {
+                        window.location.href = '../'; // Adjust this path if needed
+                    }, 3000);
+                }
+            });
+            initEventListeners();
+            initSwipeDetection();
+        });
+
+        function initEventListeners() {
+            homeBtn.addEventListener('click', goHome);
+            reviewBtn.addEventListener('click', reviewAnswers);
+            restartQuizBtn.addEventListener('click', restartQuiz);
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') navigate(-1);
+                if (e.key === 'ArrowRight') navigate(1);
+            });
+            modalOkButton.onclick = () => {
+                customAlertModal.style.display = 'none';
+            };
+            customAlertModal.onclick = (event) => {
+                if (event.target === customAlertModal) {
+                    customAlertModal.style.display = 'none';
+                }
+            };
+        }
+
+        function initSwipeDetection() {
+            quizContainer.addEventListener('touchstart', (e) => {
+                state.touchStartX = e.changedTouches[0].screenX;
+            }, false);
+            quizContainer.addEventListener('touchend', (e) => {
+                state.touchEndX = e.changedTouches[0].screenX;
+                if (Math.abs(state.touchStartX - state.touchEndX) > 50) {
+                    swipeSound.currentTime = 0;
+                    swipeSound.play();
+                    navigate(state.touchStartX > state.touchEndX ? 1 : -1);
+                }
+            }, false);
+        }
+
+        function showAlert(message) {
+            modalMessage.textContent = message;
+            customAlertModal.style.display = 'flex';
+        }
+
+        function showPaperSelection() {
+            paperSelectionContainer.style.display = 'flex';
+            mainQuizContent.style.display = 'none';
+            resultContainer.style.display = 'none';
+            homeBtn.style.display = 'none';
+            renderPaperSelectionCards();
+        }
+
+        function renderPaperSelectionCards() {
+            const paperCardGrid = document.getElementById('paper-card-grid');
+            paperCardGrid.innerHTML = '';
+            paperMetadata.forEach(paper => {
+                const card = document.createElement('div');
+                card.classList.add('paper-card');
+                card.setAttribute('data-paper-id', paper.id);
+                const totalQuestionsForDisplay = paper.totalQuestions;
+
+                card.innerHTML = `
+                    <div class="paper-card-icon ${paper.bgColor}">
+                        ${paper.displayNumber}
+                    </div>
+                    <h3 class="text-lg font-semibold">${paper.name}</h3>
+                    <p class="text-sm text-gray-600">0/${totalQuestionsForDisplay} completed</p>
+                `;
+                paperCardGrid.appendChild(card);
+
+                card.addEventListener('click', () => {
+                    selectPaper(paper.id);
+                });
+            });
+        }
+
+        async function fetchQuizDataFromSheet(sheetId, gid) {
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
+            try {
+                const response = await fetch(url);
+                const csvText = await response.text();
+                return parseCsvToQuestions(csvText);
+            } catch (error) {
+                console.error("Failed to fetch data from Google Sheet:", error);
+                return [];
+            }
+        }
+
+        function parseCsvToQuestions(csvText) {
+            const lines = csvText.split('\n');
+            if (lines.length < 2) return [];
+            
+            // Assuming first line is header, second line is "question", "a", "b", "c", "d", "Correct Answer", "Explanation", "Image for Question", "Explanation Image"
+            const headers = lines[1].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(h => h.trim().replace(/^"|"$/g, ''));
+            const dataStartIndex = 2; // Start parsing from the third line
+
+            const questions = [];
+            for (let i = dataStartIndex; i < lines.length; i++) {
+                const parts = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(part => part.trim().replace(/^"|"$/g, ''));
+                if (parts.length < headers.length) continue;
+
+                const questionText = parts[0];
+                const options = [parts[1], parts[2], parts[3], parts[4]].filter(Boolean);
+                const correctAnswerText = parts[5];
+                const explanation = parts[6];
+                const imagesrc_question = parts[7];
+                const imagesrc_explanation = parts[8];
+
+                const correctIndex = options.findIndex(opt => opt.trim().toLowerCase() === correctAnswerText.trim().toLowerCase());
+                if (correctIndex === -1) {
+                    console.warn(`Could not find correct answer for question: "${questionText}"`);
+                    continue;
+                }
+
+                questions.push({
+                    id: questions.length,
+                    text: questionText,
+                    options: options,
+                    correctIndex: correctIndex,
+                    explanation: explanation,
+                    imagesrc_question: imagesrc_question,
+                    imagesrc_explanation: imagesrc_explanation
+                });
+            }
+            return questions;
+        }
+
+        async function selectPaper(paperId) {
+            currentPaperId = paperId;
+            const paperInfo = allQuizData[paperId];
+            if (!paperInfo) {
+                showAlert("Paper data not found.");
+                return;
+            }
+
+            // Show loading indicator
+            questionContainer.innerHTML = `
+                <div class="card question-card shadow-sm p-4 text-center">
+                    <h4 class="mb-4">Loading questions for ${paperMetadata.find(p => p.id === paperId)?.name || paperId}...</h4>
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>`;
+            questionNav.style.display = 'none';
+
+            try {
+                // Fetch bookmarks first
+                await fetchUserBookmarks();
+                currentQuizData = await fetchQuizDataFromSheet(paperInfo.sheetId, paperInfo.gid);
+
+                if (currentQuizData.length === 0) {
+                    showAlert("No questions loaded for this paper. Please check the data source.");
+                    questionContainer.innerHTML = `<div class="card question-card shadow-sm p-4 text-center"><h4 class="mb-4">No questions available.</h4><p class="text-muted">Please try a different paper or ensure the data is correctly configured.</p></div>`;
+                    return;
+                }
+                
+                // Initialize state variables based on the loaded data
+                state.currentQuestion = 0;
+                state.answers = Array(currentQuizData.length).fill(null);
+                state.startTime = new Date();
+                state.timePerQuestion = Array(currentQuizData.length).fill(0);
+                state.avgTimePerQuestion = 0;
+                state.totalTime = 30 * currentQuizData.length;
+                state.submitted = false;
+                state.inReviewMode = false;
+                state.practiceScore = 0;
+                state.practiceAttempted = 0;
+                state.practiceCorrect = 0;
+
+                // Update UI visibility
+                paperSelectionContainer.style.display = 'none';
+                mainQuizContent.style.display = 'block';
+                resultContainer.style.display = 'none';
+                homeBtn.style.display = 'inline-block';
+
+                // Practice mode specific UI
+                practiceProgressBarContainer.style.display = 'block';
+                practiceProgress.style.width = '0%';
+
+                currentPaperDisplay.textContent = paperMetadata.find(p => p.id === paperId)?.name || 'Selected Paper';
+                createNumberedNav();
+                renderQuestion(0);
+                quizSummaryCharts.style.display = 'none';
+                timeAnalysisCharts.style.display = 'none';
+                restartQuizBtn.style.display = 'none';
+
+            } catch (error) {
+                console.error("Error loading quiz data:", error);
+                showAlert("Failed to load quiz questions. Please check your internet connection or try a different paper.");
+                questionContainer.innerHTML = `<div class="card question-card shadow-sm p-4 text-center"><h4 class="mb-4">Error loading questions.</h4><p class="text-muted">Please check your internet connection or try a different paper.</p></div>`;
+                questionNav.style.display = 'none';
+                homeBtn.style.display = 'inline-block';
+            }
+        }
+
+        function navigate(direction) {
+            const newIndex = state.currentQuestion + direction;
+            if (newIndex >= 0 && newIndex < currentQuizData.length) {
+                renderQuestion(newIndex);
+            } else if (newIndex === currentQuizData.length) {
+                showConfirmationPrompt();
+            }
+        }
+
+        function createNumberedNav() {
+            questionNav.innerHTML = '';
+            currentQuizData.forEach((question, idx) => {
+                const box = document.createElement('div');
+                box.className = 'page-box';
+                box.textContent = idx + 1;
+                box.dataset.originalIndex = idx;
+                box.addEventListener('click', () => {
+                    renderQuestion(parseInt(box.dataset.originalIndex));
+                });
+                questionNav.appendChild(box);
+            });
+            updateQuestionNav();
+        }
+
+        function renderQuestion(idx) {
+            state.currentQuestion = idx;
+            const question = currentQuizData[idx];
+            if (!question) {
+                questionContainer.innerHTML = `<div class="card question-card shadow-sm p-4 text-center"><h4 class="mb-4">Question not found.</h4></div>`;
+                return;
+            }
+            
+            const isBookmarked = userBookmarks.has(`${currentPaperId}_q${idx}`);
+            
+            let html = `
+                <div class="card question-card shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="card-title mb-3 d-flex justify-content-between align-items-center">
+                            <span>Question ${idx + 1} of ${currentQuizData.length}</span>
+                            <i class="fas fa-bookmark bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" 
+                               onclick="window.toggleBookmark('${currentPaperId}_q${idx}', '${question.text.replace(/'/g, "\\'")}')"></i>
+                        </h5>`;
+
+            if (question.reference) html += `<div class="question-reference">${question.reference}</div>`;
+            html += `<p class="question-text mb-4 fw-bold">${question.text}</p>`;
+            if (question.imagesrc_question) html += `<img src="${question.imagesrc_question}" alt="Question Image" class="question-image" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/333333?text=Image+Not+Found';">`;
+            html += `<div class="options">`;
+
+            question.options.forEach((option, optionIdx) => {
+                let btnClass = 'option-btn w-100';
+                if (state.answers[idx] === optionIdx) {
+                    btnClass += ' selected';
+                }
+                if (state.answers[idx] !== null) {
+                    if (optionIdx === question.correctIndex) btnClass += ' correct';
+                    else if (state.answers[idx] === optionIdx) btnClass += ' incorrect';
+                }
+                html += `<button class="${btnClass}" data-index="${optionIdx}" ${state.answers[idx] !== null ? 'disabled' : ''}>${option}</button>`;
+            });
+
+            html += `</div>`;
+            html += `<div class="explanation mt-3" ${state.answers[idx] !== null ? '' : 'style="display:none"'}>
+                <h6 class="fw-bold"><i class="fas fa-lightbulb me-2"></i>Explanation</h6>
+                ${question.explanation}
+                ${question.imagesrc_explanation ? `<img src="${question.imagesrc_explanation}" alt="Explanation Image" class="explanation-image" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/333333?text=Image+Not+Found';">` : ''}
+                </div>`;
+            html += `</div></div>`;
+            questionContainer.innerHTML = html;
+
+            document.querySelectorAll('.option-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    clickSound.currentTime = 0;
+                    clickSound.play();
+                    const selectedOptionIndex = parseInt(e.target.dataset.index);
+                    selectOptionPractice(selectedOptionIndex);
+                });
+            });
+
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'd-flex justify-content-between align-items-center mt-3';
+
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'btn btn-primary px-5 py-2 rounded-pill shadow';
+            nextBtn.textContent = 'Next Question';
+            nextBtn.addEventListener('click', () => {
+                const nextQuestionIndex = state.currentQuestion + 1;
+                if (nextQuestionIndex < currentQuizData.length) {
+                    renderQuestion(nextQuestionIndex);
+                } else {
+                    showConfirmationPrompt();
+                }
+            });
+            buttonContainer.appendChild(nextBtn);
+
+            const submitPracticeBtn = document.createElement('button');
+            submitPracticeBtn.className = 'btn btn-info px-5 py-2 rounded-pill shadow';
+            submitPracticeBtn.textContent = 'View Results';
+            submitPracticeBtn.addEventListener('click', () => {
+                showConfirmationPrompt();
+            });
+            buttonContainer.appendChild(submitPracticeBtn);
+
+            if (questionContainer.querySelector('.card-body')) {
+                questionContainer.querySelector('.card-body').appendChild(buttonContainer);
+            }
+
+            updateQuestionNav();
+        }
+
+        function showConfirmationPrompt() {
+            questionContainer.innerHTML = `
+                <div class="card question-card shadow-sm p-4 text-center">
+                    <h4 class="mb-4">Do you want to submit the practice quiz?</h4>
+                    <p class="text-muted">You will not be able to change answers after submission.</p>
+                    <div class="d-flex justify-content-center mt-4">
+                        <button id="confirmYesBtn" class="btn btn-success btn-lg px-4 py-2 rounded-pill shadow me-3">Yes, Submit</button>
+                        <button id="confirmNoBtn" class="btn btn-danger btn-lg px-4 py-2 rounded-pill shadow">No, Continue</button>
+                    </div>
+                </div>
+            `;
+            questionNav.style.display = 'none';
+
+            document.getElementById('confirmYesBtn').addEventListener('click', showPracticeResults);
+            document.getElementById('confirmNoBtn').addEventListener('click', () => {
+                questionNav.style.display = 'flex';
+                renderQuestion(state.currentQuestion);
+            });
+        }
+
+        function updateQuestionNav() {
+            const navBoxes = document.querySelectorAll('#questionNav .page-box');
+            navBoxes.forEach((box) => {
+                const originalIdx = parseInt(box.dataset.originalIndex);
+                box.className = 'page-box';
+                if (originalIdx === state.currentQuestion) {
+                    box.classList.add('active');
+                }
+                if (state.answers[originalIdx] !== null) {
+                    if (state.answers[originalIdx] === currentQuizData[originalIdx].correctIndex) {
+                        box.classList.add('correct');
+                    } else {
+                        box.classList.add('incorrect');
+                    }
+                }
+            });
+        }
+
+        function selectOptionPractice(optionIdx) {
+            if (state.answers[state.currentQuestion] !== null) return;
+            state.answers[state.currentQuestion] = parseInt(optionIdx);
+            const question = currentQuizData[state.currentQuestion];
+            const isCorrect = parseInt(optionIdx) === question.correctIndex;
+            state.practiceAttempted++;
+
+            const answeredQuestionsCount = state.answers.filter(answer => answer !== null).length;
+            const totalQuestionsInPractice = currentQuizData.length;
+            const progressPercentage = (answeredQuestionsCount / totalQuestionsInPractice) * 100;
+            practiceProgress.style.width = `${progressPercentage}%`;
+
+            if (isCorrect) {
+                state.practiceCorrect++;
+                state.practiceScore++;
+                correctSound.currentTime = 0;
+                correctSound.play();
+            } else {
+                wrongSound.currentTime = 0;
+                wrongSound.play();
+            }
+            document.querySelectorAll('.option-btn').forEach(opt => {
+                opt.classList.remove('selected');
+                opt.disabled = true;
+                if (parseInt(opt.dataset.index) === question.correctIndex) {
+                    opt.classList.add('correct');
+                } else if (parseInt(opt.dataset.index) === parseInt(optionIdx)) {
+                    opt.classList.add('incorrect');
+                }
+            });
+            questionContainer.querySelector('.explanation').style.display = 'block';
+            renderQuestion(state.currentQuestion);
+            updateQuestionNav();
+        }
+
+        function showPracticeResults() {
+            state.submitted = true;
+            mainQuizContent.style.display = 'none';
+            resultContainer.style.display = 'block';
+            restartQuizBtn.style.display = 'block';
+            scoreDisplay.textContent = `${state.practiceCorrect} / ${state.practiceAttempted} (${(state.practiceCorrect / state.practiceAttempted * 100).toFixed(1)}%)`;
+            totalQuestionsDisplay.textContent = currentQuizData.length;
+            correctAnswersDisplay.textContent = state.practiceCorrect;
+            incorrectAnswersDisplay.textContent = state.practiceAttempted - state.practiceCorrect;
+            unattemptedDisplay.textContent = currentQuizData.length - state.practiceAttempted;
+            negativeMarksDisplay.textContent = `-0.00`;
+            quizSummaryCharts.style.display = 'flex';
+            timeAnalysisCharts.style.display = 'flex';
+            homeBtn.style.display = 'inline-block';
+            const practiceResultsForCharts = {
+                correct: state.practiceCorrect,
+                incorrect: state.practiceAttempted - state.practiceCorrect,
+                unattempted: currentQuizData.length - state.practiceAttempted,
+                score: state.practiceCorrect,
+                negativeMarks: 0
+            };
+            createPerformanceChart(practiceResultsForCharts);
+            createTimeAnalysisChart();
+            if ((state.practiceCorrect / state.practiceAttempted) * 100 >= 70) {
+                createConfetti();
+                correctSound.currentTime = 0;
+                correctSound.play();
+            } else if ((state.practiceCorrect / state.practiceAttempted) * 100 < 50) {
+                wrongSound.currentTime = 0;
+                wrongSound.play();
+            }
+        }
+
+        function createPerformanceChart(results) {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            if (window.performanceChartInstance) {
+                window.performanceChartInstance.destroy();
+            }
+            window.performanceChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Correct', 'Incorrect', 'Unattempted'],
+                    datasets: [{
+                        data: [results.correct, results.incorrect, results.unattempted],
+                        backgroundColor: ['#28a745', '#dc3545', '#ffc107']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function createTimeAnalysisChart() {
+            const ctx = document.getElementById('timeAnalysisChart').getContext('2d');
+            if (window.timeAnalysisChartInstance) {
+                window.timeAnalysisChartInstance.destroy();
+            }
+            const questionLabels = Array.from({length: currentQuizData.length}, (_, i) => `Q${i+1}`);
+            const correctData = [];
+            const incorrectData = [];
+            const unattemptedData = [];
+            state.answers.forEach((answer, idx) => {
+                const time = state.timePerQuestion[idx];
+                const question = currentQuizData[idx];
+                if (answer === null) {
+                    unattemptedData.push(time);
+                    correctData.push(0);
+                    incorrectData.push(0);
+                } else if (answer === question.correctIndex) {
+                    correctData.push(time);
+                    incorrectData.push(0);
+                    unattemptedData.push(0);
+                } else {
+                    incorrectData.push(time);
+                    correctData.push(0);
+                    unattemptedData.push(0);
+                }
+            });
+            window.timeAnalysisChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: questionLabels,
+                    datasets: [
+                        {
+                            label: 'Correct',
+                            data: correctData,
+                            backgroundColor: '#28a745',
+                            borderColor: '#28a745',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Incorrect',
+                            data: incorrectData,
+                            backgroundColor: '#dc3545',
+                            borderColor: '#dc3545',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Unattempted',
+                            data: unattemptedData,
+                            backgroundColor: '#ffc107',
+                            borderColor: '#ffc107',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true, title: { display: true, text: 'Questions' } },
+                        y: { stacked: true, title: { display: true, text: 'Time (seconds)' } }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                title: (tooltipItems) => `Question ${tooltipItems[0].dataIndex + 1}`,
+                                label: (context) => {
+                                    let label = context.dataset.label || '';
+                                    if (label && context.parsed.y > 0) {
+                                        label += `: ${context.parsed.y.toFixed(1)} seconds`;
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function reviewAnswers() {
+            state.inReviewMode = true;
+            mainQuizContent.style.display = 'block';
+            questionContainer.style.display = 'block';
+            questionNav.style.display = 'flex';
+            resultContainer.style.display = 'none';
+            homeBtn.style.display = 'inline-block';
+            renderQuestion(0);
+        }
+
+        function restartQuiz() {
+            resetQuizState();
+            showPaperSelection();
+        }
+
+        function goHome() {
+            resetQuizState();
+            showPaperSelection();
+        }
+
+        function resetQuizState() {
+            state.currentQuestion = 0;
+            state.answers = Array(currentQuizData.length).fill(null);
+            state.startTime = new Date();
+            state.timePerQuestion = Array(currentQuizData.length).fill(0);
+            state.avgTimePerQuestion = 0;
+            state.submitted = false;
+            state.inReviewMode = false;
+            state.practiceScore = 0;
+            state.practiceAttempted = 0;
+            state.practiceCorrect = 0;
+            if (window.performanceChartInstance) {
+                window.performanceChartInstance.destroy();
+                window.performanceChartInstance = null;
+            }
+            if (window.timeAnalysisChartInstance) {
+                window.timeAnalysisChartInstance.destroy();
+                window.timeAnalysisChartInstance = null;
+            }
+            updateQuestionNav();
+        }
+
+        function createConfetti() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+            for (let i = 0; i < 150; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.left = Math.random() * 100 + 'vw';
+                document.body.appendChild(confetti);
+                const animation = confetti.animate([
+                    { transform: 'translateY(0) rotate(0)', opacity: 1 },
+                    { transform: `translateY(${Math.random() * 500 + 500}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+                ], { duration: Math.random() * 3000 + 2000, easing: 'cubic-bezier(.23,1,.32,1)' });
+                animation.onfinish = () => confetti.remove();
+            }
+        }
+        
+        // --- NEW/UPDATED FIREBASE FUNCTIONS ---
+        async function fetchUserBookmarks() {
+            if (!currentUser) {
+                userBookmarks = new Set();
+                return;
+            }
+            const bookmarksRef = collection(db, "users", currentUser.uid, "bookmarks");
+            try {
+                const snapshot = await getDocs(bookmarksRef);
+                userBookmarks = new Set(snapshot.docs.map(doc => doc.id));
+            } catch (error) {
+                console.error("Could not fetch bookmarks:", error);
+                userBookmarks = new Set();
+            }
+        }
+
+        window.toggleBookmark = async (questionId, questionText) => {
+            if (!currentUser) {
+                showAlert("You must be logged in to bookmark questions.");
+                return;
+            }
+            
+            const bookmarkRef = doc(db, "users", currentUser.uid, "bookmarks", questionId);
+            const isBookmarked = userBookmarks.has(questionId);
+            const bookmarkButton = document.querySelector(`[onclick*="toggleBookmark('${questionId}'"]`);
+
+            if (isBookmarked) {
+                await deleteDoc(bookmarkRef);
+                userBookmarks.delete(questionId);
+                if (bookmarkButton) {
+                    bookmarkButton.classList.remove('bookmarked');
+                }
+            } else {
+                await setDoc(bookmarkRef, {
+                    question: questionText,
+                    paperId: currentPaperId,
+                    timestamp: serverTimestamp()
+                });
+                userBookmarks.add(questionId);
+                if (bookmarkButton) {
+                    bookmarkButton.classList.add('bookmarked');
+                }
+            }
+        };
+    </script>
 </body>
 </html>
