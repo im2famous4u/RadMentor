@@ -108,13 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function submitProfile() {
-        console.log('Submit Profile button clicked!');
         const user = auth.currentUser;
-        if (!user) {
-            console.error("Submit profile failed: No user is logged in.");
-            return;
-        }
-    
+        if (!user) { console.error("Submit profile failed: No user is logged in."); return; }
+
         const profileData = {
             name: document.getElementById('name').value,
             dob: document.getElementById('dob').value,
@@ -124,38 +120,29 @@ document.addEventListener('DOMContentLoaded', () => {
             college: document.getElementById('college').value,
             profileComplete: true
         };
-    
+
         if (!profileData.name || !profileData.dob) {
             alert('Please fill in at least your name and date of birth.');
             return;
         }
-    
+
         const userDocRef = doc(db, "users", user.uid);
         try {
-            // This part saves the data to Firestore
             await setDoc(userDocRef, profileData, { merge: true });
-            console.log("Profile successfully saved to Firestore!");
-    
-            // --- UPDATED UI LOGIC AFTER SAVING ---
-    
-            // 1. Hide the profile form and show the main page
+            
             profileForm.classList.add('hidden');
             landingPage.classList.remove('hidden');
-    
-            // 2. Update the header to the "logged in" state
+            
             const loggedOutElements = document.querySelectorAll('#header-logged-out, #mobile-logged-out');
             const loggedInElements = document.querySelectorAll('#header-logged-in, #mobile-logged-in');
             
             loggedInElements.forEach(el => el.classList.remove('hidden'));
             loggedOutElements.forEach(el => el.classList.add('hidden'));
             
-            // 3. And greet the user by their new name
             const userName = profileData.name;
             document.getElementById('user-greeting-header').textContent = userName ? userName.split(' ')[0] : 'User';
             
-            // 4. Make sure the icons are re-rendered
             feather.replace();
-    
         } catch (error) {
             console.error("Error updating profile:", error);
             alert("Could not update profile. Please check the console for errors.");
@@ -206,6 +193,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.handleAuth = handleAuth;
     window.submitProfile = submitProfile;
     window.logout = async () => { try { await signOut(auth); window.location.reload(); } catch (e) { console.error(e); } };
+    
+    // This is the updated line:
     window.showDashboard = () => {
-    window.location.href = 'dashboard.html';
-};
+        window.location.href = 'dashboard.html';
+    };
+});
