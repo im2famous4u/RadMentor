@@ -1,216 +1,406 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FRCR Part 1 - RadMentor</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-    .glass-card { background-color: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-radius: 1.5rem; padding: 2rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid rgba(255, 255, 255, 0.3); }
-    .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 50; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
-    .modal-backdrop.active { opacity: 1; visibility: visible; }
-    .modal-content { transform: scale(0.95); transition: transform 0.3s ease; }
-    .modal-backdrop.active .modal-content { transform: scale(1); }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>FRCR Physics Quiz - RadMentor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        :root {
+            --bg-color: #eef2f5;
+            --container-bg-color: #ffffff;
+            --text-color: #212121;
+            --text-color-light: #4a5568;
+            --header-text-color: #1e3a5f;
+            --button-bg-color: #1e88e5;
+            --button-hover-bg-color: #1565c0;
+            --selection-button-bg: #2c7a7b;
+            --selection-button-hover-bg: #319795;
+            --border-color: #e2e8f0;
+            --explanation-bg: #f7fafc;
+            --subset-item-correct-bg: #c6f6d5;
+            --subset-item-correct-border: #68d391;
+            --subset-item-incorrect-bg: #fed7d7;
+            --subset-item-incorrect-border: #fc8181;
+            --bookmark-color: #cbd5e0;
+            --bookmarked-color: #f59e0b;
+        }
+        body { font-family: 'Rubik', sans-serif; margin: 0; padding: 15px; background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; }
+        .main-container { width: 100%; max-width: 900px; }
+        .screen { display: none; width: 100%; }
+        .screen.active { display: block; }
+        .selection-container { background-color: var(--container-bg-color); border-radius: 12px; padding: 30px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.07); }
+        .selection-header h1 { font-size: 2.2rem; margin: 0; color: var(--header-text-color); }
+        .selection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .selection-button { background-color: var(--selection-button-bg); color: white; border: none; padding: 25px; border-radius: 8px; cursor: pointer; font-size: 1.3rem; font-weight: 600; transition: background-color 0.3s, transform 0.2s; text-align: center; }
+        .selection-button:hover { background-color: var(--selection-button-hover-bg); transform: translateY(-5px); }
+        .quiz-container { background-color: var(--container-bg-color); border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.07); display: flex; flex-direction: column; padding: 20px; }
+        .quiz-header { padding-bottom: 15px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .quiz-header h1 { font-size: 1.8rem; margin: 0; color: var(--header-text-color); }
+        .back-button { background-color: transparent; color: var(--text-color); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: background-color 0.2s; }
+        .back-button:hover{ background-color: var(--border-color); }
+        .loading-container, .error-container { text-align: center; padding: 40px; font-size: 1.2rem; }
+        .question-block { background-color: var(--container-bg-color); border-radius: 8px; padding: 20px; }
+        .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .question-number { font-size: 1.1rem; font-weight: 500; color: var(--text-color-light); }
+        .bookmark-button { background: none; border: none; cursor: pointer; color: var(--bookmark-color); }
+        .bookmark-button.bookmarked { color: var(--bookmarked-color); }
+        .bookmark-button svg { width: 24px; height: 24px; }
+        .main-question-text { font-size: 1.4rem; font-weight: 600; line-height: 1.5; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+        .subset-item { padding: 15px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 8px; transition: background-color 0.3s, border-color 0.3s; }
+        .subset-item.correct { background-color: var(--subset-item-correct-bg); border-color: var(--subset-item-correct-border); }
+        .subset-item.incorrect { background-color: var(--subset-item-incorrect-bg); border-color: var(--subset-item-incorrect-border); }
+        .subset-q-container { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+        .subset-q-text { flex-grow: 1; margin: 0; font-size: 1.1rem; line-height: 1.6; }
+        .subset-options { display: flex; gap: 10px; }
+        .subset-options label { padding: 8px 16px; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; }
+        .subset-options input[type="radio"] { display: none; }
+        .subset-options input[type="radio"]:checked + label { border-color: #4299e1; background-color: #ebf8ff; color: #212121; font-weight: 600; }
+        .all-explanations { margin-top: 25px; padding: 20px; background-color: var(--explanation-bg); border: 1px solid var(--border-color); border-radius: 8px; display: none; }
+        .all-explanations.visible { display: block; }
+        .all-explanations h3 { margin-top: 0; }
+        .navigation-controls { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid var(--border-color); margin-top: 20px; }
+        .nav-button { background-color: var(--button-bg-color); color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500; }
+        .nav-button:hover:not(:disabled) { background-color: var(--button-hover-bg-color); }
+        .nav-button:disabled { background-color: #a0aec0; cursor: not-allowed; }
+        #question-counter { font-size: 1.1rem; font-weight: 500; color: var(--text-color-light); padding-top: 1rem; text-align: center;}
+    </style>
 </head>
-<body class="bg-gray-100">
+<body>
 
-  <div id="frcr-content" class="w-full h-full p-4 md:p-8">
-    <div class="glass-card max-w-4xl mx-auto">
-      <div class="flex justify-between items-start mb-6">
-        <div>
-            <h2 class="text-3xl font-bold text-gray-800">FRCR Exam Preparation</h2>
-            <p class="text-lg text-gray-600 mt-2">Welcome! Select a module to view your history or start a new test.</p>
-        </div>
-        <div id="auth-status" class="text-right">
+    <div class="main-container">
+        <div id="auth-check-screen" class="screen active">
+            <div class="selection-container">
+                <h1 style="color: var(--header-text-color); font-size: 2rem;">Verifying User...</h1>
+                <p style="color: var(--text-color-light); margin-top: 1rem;">Please wait while we check your login status.</p>
             </div>
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-blue-50/50 p-6 rounded-2xl border border-blue-100">
-          <h3 class="text-xl font-semibold text-blue-800 mb-3">Part 1 - Physics & Anatomy</h3>
-          <p class="text-base text-blue-700 mb-4">Detailed modules and question banks for FRCR Part 1.</p>
-          <div class="flex flex-wrap gap-3">
-            <button onclick="checkTestHistory('anatomy_part1')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-all">Anatomy</button>
-            <button onclick="checkTestHistory('physics_part1')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-all">Physics</button>
-          </div>
         </div>
-        <div class="bg-green-50/50 p-6 rounded-2xl border border-green-100">
-          <h3 class="text-xl font-semibold text-green-800 mb-3">Part 2 - Modules</h3>
-          <p class="text-base text-green-700 mb-4">Specialty-specific modules for FRCR 2A & 2B.</p>
-          <div class="flex flex-wrap gap-3">
-            <button onclick="checkTestHistory('part2a')" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-all">Part 2A</button>
-            <button onclick="checkTestHistory('part2b')" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-all">Part 2B</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <div id="history-modal" class="modal-backdrop">
-    <div class="modal-content bg-white w-11/12 max-w-lg mx-auto rounded-2xl shadow-xl p-6 md:p-8">
-      <div class="flex justify-between items-center mb-4">
-        <h3 id="modal-title" class="text-2xl font-bold text-gray-800">Test History</h3>
-        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">&times;</button>
-      </div>
-      <div id="modal-body" class="max-h-80 overflow-y-auto"></div>
-      <div class="mt-6 flex justify-end gap-4">
-        <button onclick="closeModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg">Close</button>
-        <button onclick="startNewTest()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg">Start New Test</button>
-      </div>
-    </div>
-  </div>
-
-  <script type="module">
-    // --- Firebase SDK Imports ---
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-    import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-
-    // --- Firebase Configuration (Same as your main index.html) ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
-      authDomain: "radiology-mcqs.firebaseapp.com",
-      projectId: "radiology-mcqs",
-      storageBucket: "radiology-mcqs.appspot.com",
-      messagingSenderId: "862300415358",
-      appId: "1:862300415358:web:097d5e413f388e30587f2f",
-      measurementId: "G-0V1SD1H95V"
-    };
-
-    // --- App State ---
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    let currentUserId = null;
-    let currentTestId = null;
-
-    // --- DOM Elements ---
-    const authStatusEl = document.getElementById('auth-status');
-    const modal = document.getElementById('history-modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalBody = document.getElementById('modal-body');
-
-    // --- Authentication Check ---
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // User is signed in from the main page.
-        currentUserId = user.uid;
-        console.log("User is signed in with UID:", currentUserId);
-        authStatusEl.innerHTML = `<p class="text-sm text-green-600">Logged In</p>`;
-      } else {
-        // User is not signed in.
-        console.log("No user signed in.");
-        authStatusEl.innerHTML = `<p class="text-sm text-red-500">Not Logged In</p>`;
-        // Redirect them back to the main page to log in after a short delay
-        setTimeout(() => {
-          // You would replace '../index.html' with the actual URL of your main page
-          window.location.href = '../index.html'; 
-        }, 2000);
-      }
-    });
-
-    // --- Modal Logic ---
-    window.openModal = (title) => {
-        modalTitle.textContent = title;
-        modal.classList.add('active');
-    };
-    window.closeModal = () => {
-        modal.classList.remove('active');
-    };
-    
-    // --- Test History Logic (Updated to use correct Firestore path) ---
-    window.checkTestHistory = async (testId) => {
-      if (!currentUserId) {
-        alert("You must be logged in to view history. Redirecting to login page...");
-        window.location.href = '../index.html';
-        return;
-      }
-      
-      currentTestId = testId;
-      const testName = testId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-      openModal(`${testName} - History`);
-      modalBody.innerHTML = `<p class="text-gray-500">Fetching history...</p>`;
-
-      try {
-        // IMPORTANT: Using the correct path 'users/UID/testAttempts'
-        const attemptsCollection = collection(db, "users", currentUserId, "testAttempts");
-        const q = query(attemptsCollection, where("testModule", "==", testId));
-        const querySnapshot = await getDocs(q);
-
-        if (querySnapshot.empty) {
-          modalBody.innerHTML = `<p class="text-gray-600">You haven't attempted this test before.</p>`;
-        } else {
-          let historyHtml = '<ul class="space-y-3">';
-          querySnapshot.forEach(doc => {
-            const data = doc.data();
-            const score = data.score || 'N/A';
-            const total = data.total || 'N/A';
-            const date = data.timestamp?.toDate().toLocaleString() || 'Unknown Date';
-            historyHtml += `
-              <li class="bg-gray-50 p-4 rounded-lg flex justify-between items-center">
-                <div>
-                  <p class="font-semibold text-gray-700">Score: ${score} / ${total}</p>
-                  <p class="text-sm text-gray-500">${date}</p>
+        <div id="physics-category-screen" class="screen">
+            <div class="selection-container">
+                <div class="quiz-header">
+                    <h1>Physics Topics</h1>
+                    <button class="back-button" onclick="window.location.href='../../frcr/'">Back to FRCR</button>
                 </div>
-                <span class="text-lg font-bold text-indigo-600">${Math.round((score/total)*100)}%</span>
-              </li>
-            `;
-          });
-          historyHtml += '</ul>';
-          modalBody.innerHTML = historyHtml;
+                <div id="physics-topics-grid" class="selection-grid"></div>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-container">
+                <div class="quiz-header">
+                    <h1 id="quiz-title">Physics Questions</h1>
+                    <button class="back-button" id="back-to-topics-btn">Back to Topics</button>
+                </div>
+                <div id="loading-container" class="loading-container"><p>Loading questions...</p></div>
+                <div id="error-container" class="error-container" style="display:none;"></div>
+                <div id="questions-display"></div>
+                <div id="navigation-controls" style="display: none;">
+                    <button id="prev-button" class="nav-button">Previous</button>
+                    <button id="next-button" class="nav-button">Next</button>
+                </div>
+                <div id="question-counter"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // --- Firebase SDK Imports ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+        import { getFirestore, collection, doc, getDoc, addDoc, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+        // --- Firebase Configuration (Same as your main index.html) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
+            authDomain: "radiology-mcqs.firebaseapp.com",
+            projectId: "radiology-mcqs",
+            storageBucket: "radiology-mcqs.appspot.com",
+            messagingSenderId: "862300415358",
+            appId: "1:862300415358:web:097d5e413f388e30587f2f",
+            measurementId: "G-0V1SD1H95V"
+        };
+        
+        // --- Configuration ---
+        const GOOGLE_SHEET_ID = '1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8';
+        const PHYSICS_TOPICS = [
+            // Your topics array here...
+            { name: "Basic Physics", gid: "2009849222" },
+            { name: "General Radiation Hazards & Protection", gid: "2009849222" },
+            { name: "Image Quality & X-ray Production", gid: "1706416231" },
+            { name: "Film Screen Radiography", gid: "1257614317" },
+            { name: "Digital Radiography", gid: "917881905" },
+            { name: "Fluoroscopy", gid: "1461599884" },
+            { name: "Computed Tomography", gid: "986205874" },
+            { name: "Nuclear Medicine", gid: "2016453957" },
+            { name: "Ultrasound", gid: "638565218" },
+            { name: "Magnetic Resonance Imaging", gid: "2026917708" },
+        ];
+
+        // --- App State ---
+        let allQuestions = [];
+        let currentQuestionIndex = 0;
+        let currentUser = null;
+        let userBookmarks = new Set();
+        let currentTopic = null;
+
+        // --- Firebase Init ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- DOM Elements ---
+        const screens = document.querySelectorAll('.screen');
+        const physicsTopicsGrid = document.getElementById('physics-topics-grid');
+        const quizTitle = document.getElementById('quiz-title');
+        const loadingContainer = document.getElementById('loading-container');
+        const errorContainer = document.getElementById('error-container');
+        const questionsDisplay = document.getElementById('questions-display');
+        const navigationControls = document.getElementById('navigation-controls');
+        const prevButton = document.getElementById('prev-button');
+        const nextButton = document.getElementById('next-button');
+        const questionCounter = document.getElementById('question-counter');
+
+        // --- Core Functions ---
+        function showScreen(screenId) {
+            screens.forEach(s => s.classList.toggle('active', s.id === screenId));
+            feather.replace();
         }
-      } catch (error) {
-        console.error("Error fetching test history:", error);
-        modalBody.innerHTML = `<p class="text-red-500">Could not load history.</p>`;
-      }
-    };
-    
-    // --- Start New Test Logic (FIXED) ---
-    window.startNewTest = () => {
-        if (!currentTestId) return;
-        console.log(`Navigating to test page for: ${currentTestId}`);
-        // This will navigate to a page like 'physics_part1_test.html'
-        // You will need to create this test page!
-        window.location.href = `${currentTestId}_test.html`;
-        closeModal();
-    };
 
-    // --- NEW: Bookmark Logic (Example) ---
-    // You would call this from your actual test page, next to a question.
-    // Example: <button onclick="toggleBookmark('physics_q123', 'What is the T2 signal...')">Bookmark</button>
-    window.toggleBookmark = async (questionId, questionText) => {
-        if (!currentUserId) {
-            alert("You must be logged in to bookmark questions.");
-            return;
-        }
-
-        const bookmarkRef = doc(db, "users", currentUserId, "bookmarks", questionId);
-
-        try {
-            const docSnap = await getDoc(bookmarkRef);
-            if (docSnap.exists()) {
-                // Bookmark exists, so we delete it (un-bookmark)
-                await deleteDoc(bookmarkRef);
-                alert("Bookmark removed!");
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                populateTopics();
+                showScreen('physics-category-screen');
             } else {
-                // Bookmark doesn't exist, so we create it
+                // Redirect to main page if not logged in
+                document.getElementById('auth-check-screen').innerHTML = '<div class="selection-container"><h1>Redirecting...</h1><p>You must be logged in to access this page.</p></div>';
+                setTimeout(() => { window.location.href = '../../../'; }, 2000);
+            }
+        });
+        
+        function populateTopics() {
+            physicsTopicsGrid.innerHTML = '';
+            PHYSICS_TOPICS.forEach(topic => {
+                const button = document.createElement('button');
+                button.className = 'selection-button';
+                button.textContent = topic.name;
+                button.addEventListener('click', () => startQuiz(topic));
+                physicsTopicsGrid.appendChild(button);
+            });
+        }
+
+        async function startQuiz(topic) {
+            currentTopic = topic;
+            quizTitle.textContent = topic.name;
+            showScreen('quiz-screen');
+            resetQuizView();
+            // NEW: Fetch bookmarks before fetching questions
+            await fetchUserBookmarks();
+            fetchQuizData(GOOGLE_SHEET_ID, topic);
+        }
+
+        function resetQuizView() {
+            loadingContainer.style.display = 'block';
+            errorContainer.style.display = 'none';
+            questionsDisplay.innerHTML = '';
+            navigationControls.style.display = 'none';
+            allQuestions = [];
+            currentQuestionIndex = 0;
+        }
+
+        // Data Fetching from Google Sheets (your original logic)
+        function fetchQuizData(sheetId, topic) {
+            const queryParam = topic.gid ? `gid=${topic.gid}` : `sheet=${encodeURIComponent(topic.sheetName)}`;
+            const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&${queryParam}`;
+            
+            fetch(url).then(r => r.ok ? r.text() : Promise.reject(new Error(`Network error: ${r.status}`)))
+            .then(csv => {
+                allQuestions = parseCSVToQuestions(csv);
+                if (allQuestions.length > 0) {
+                    navigationControls.style.display = 'flex';
+                    showQuestion(currentQuestionIndex);
+                } else {
+                    errorContainer.style.display = 'block';
+                    errorContainer.textContent = 'No questions found for this topic.';
+                }
+                loadingContainer.style.display = 'none';
+            }).catch(err => {
+                console.error('Data fetch error:', err);
+                loadingContainer.style.display = 'none';
+                errorContainer.style.display = 'block';
+                errorContainer.textContent = `Error loading questions. Please check sheet settings.`;
+            });
+        }
+        
+        // CSV Parsing (your original logic, slightly adapted for unique question IDs)
+        function parseCSVToQuestions(text) {
+             const rows = text.trim().split(/\r?\n/).map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(f => f.trim().replace(/^"|"$/g, '')));
+             if (rows.length < 2) return [];
+             const headers = rows[0].map(h => h.trim().toLowerCase());
+             const dataRows = rows.slice(1);
+             const questionIndex = headers.indexOf('question');
+             if (questionIndex === -1) return [];
+             
+             return dataRows.map((row, rowIndex) => {
+                 const mainQuestionText = row[questionIndex];
+                 if (!mainQuestionText) return null;
+                 const subsets = [];
+                 for (let i = 1; i <= 5; i++) {
+                     const subQHeader = i === 1 ? 'question a1' : `a${i}`;
+                     const ansHeader = `answer of a${i}`;
+                     const expHeader = `explanation of a${i}`;
+                     const subQIndex = headers.indexOf(subQHeader);
+                     const ansIndex = headers.indexOf(ansHeader);
+                     const expIndex = headers.indexOf(expHeader);
+                     if (subQIndex !== -1 && ansIndex !== -1) {
+                         const subQText = row[subQIndex];
+                         const correctAns = row[ansIndex];
+                         if (subQText && correctAns) {
+                             subsets.push({
+                                 text: subQText,
+                                 correctAnswer: correctAns,
+                                 explanation: expIndex !== -1 ? row[expIndex] : ''
+                             });
+                         }
+                     }
+                 }
+                 if (subsets.length > 0) {
+                    return { 
+                        id: `physics_${currentTopic.gid}_q${rowIndex}`, // NEW: Create a unique ID for bookmarking
+                        question: mainQuestionText, 
+                        subsets 
+                    };
+                 }
+                 return null;
+             }).filter(Boolean);
+        }
+
+        // --- Quiz Rendering & Interaction ---
+        function showQuestion(index) {
+            const q = allQuestions[index];
+            const isBookmarked = userBookmarks.has(q.id);
+            const explanations = [];
+            const subsetsHtml = q.subsets.map((subset, i) => {
+                if (subset.explanation) explanations.push(`<div class="explanation-item"><p><strong>${String.fromCharCode(97 + i)})</strong> ${subset.explanation}</p></div>`);
+                return `<div class="subset-item" id="subset-${index}-${i}" data-answered="false"><div class="subset-q-container"><p class="subset-q-text"><strong>${String.fromCharCode(97 + i)})</strong> ${subset.text}</p><div class="subset-options">${['True', 'False'].map(opt => `<input type="radio" id="q${index}s${i}${opt[0]}" name="q${index}s${i}" value="${opt}"><label for="q${index}s${i}${opt[0]}">${opt}</label>`).join('')}</div></div></div>`;
+            }).join('');
+
+            questionsDisplay.innerHTML = `
+                <div class="question-block">
+                    <div class="question-header">
+                        <div class="question-number">Question ${index + 1}</div>
+                        <button class="bookmark-button ${isBookmarked ? 'bookmarked' : ''}" onclick="toggleBookmark('${q.id}', '${q.question.replace(/'/g, "\\'")}')" title="Bookmark Question">
+                            <i data-feather="bookmark"></i>
+                        </button>
+                    </div>
+                    <p class="main-question-text">${q.question}</p>
+                    <div id="subsets-container">${subsetsHtml}</div>
+                    <div class="all-explanations" id="explanations-${index}">${explanations.length>0 ? `<h3>Explanations</h3>${explanations.join('')}`:''}</div>
+                </div>`;
+            
+            updateNav(index);
+            feather.replace();
+            questionsDisplay.querySelector('#subsets-container').addEventListener('change', e => {
+                if (e.target.type === 'radio') {
+                    e.target.closest('.subset-item').dataset.answered = "true";
+                    e.target.closest('.subset-item').dataset.selected = e.target.value;
+                    const allAnswered = [...questionsDisplay.querySelectorAll('.subset-item')].every(item => item.dataset.answered === 'true');
+                    if (allAnswered) evaluateAllAnswers(index);
+                }
+            });
+        }
+
+        function evaluateAllAnswers(qIndex) {
+            let score = 0;
+            allQuestions[qIndex].subsets.forEach((subset, sIndex) => {
+                const container = document.getElementById(`subset-${qIndex}-${sIndex}`);
+                const isCorrect = container.dataset.selected.toLowerCase() === subset.correctAnswer.toLowerCase();
+                if (isCorrect) score++;
+                container.classList.add(isCorrect ? 'correct' : 'incorrect');
+                container.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = true);
+            });
+            allQuestions[qIndex].score = score;
+            document.getElementById(`explanations-${qIndex}`).classList.add('visible');
+        }
+
+        function updateNav(index) {
+            questionCounter.textContent = `Question ${index + 1} of ${allQuestions.length}`;
+            prevButton.disabled = index === 0;
+            nextButton.textContent = (index === allQuestions.length - 1) ? "Finish & Save" : "Next";
+        }
+
+        // --- NEW: Bookmark and History Functions ---
+        async function fetchUserBookmarks() {
+            if (!currentUser) return;
+            const bookmarksRef = collection(db, "users", currentUser.uid, "bookmarks");
+            try {
+                const snapshot = await getDocs(bookmarksRef);
+                userBookmarks = new Set(snapshot.docs.map(doc => doc.id));
+            } catch (error) {
+                console.error("Could not fetch bookmarks:", error);
+            }
+        }
+        
+        window.toggleBookmark = async (questionId, questionText) => {
+            if (!currentUser) return;
+            const bookmarkRef = doc(db, "users", currentUser.uid, "bookmarks", questionId);
+            const button = document.querySelector(`button[onclick*="'${questionId}'"]`);
+            
+            if (userBookmarks.has(questionId)) {
+                await deleteDoc(bookmarkRef);
+                userBookmarks.delete(questionId);
+                button.classList.remove('bookmarked');
+            } else {
                 await setDoc(bookmarkRef, {
                     question: questionText,
-                    // You would add a link to the question here
-                    // link: `/tests/physics_part1_test.html#${questionId}`,
+                    topicId: currentTopic.gid,
+                    topicName: currentTopic.name,
                     timestamp: serverTimestamp()
                 });
-                alert("Question bookmarked!");
+                userBookmarks.add(questionId);
+                button.classList.add('bookmarked');
             }
-        } catch (error) {
-            console.error("Error toggling bookmark:", error);
-            alert("There was an issue with your bookmark.");
-        }
-    };
+            feather.replace();
+        };
 
-  </script>
+        async function saveTestResult() {
+            let totalScore = 0;
+            let totalSubsets = 0;
+            allQuestions.forEach(q => {
+                totalScore += (q.score || 0);
+                totalSubsets += q.subsets.length;
+            });
+
+            const testAttemptsRef = collection(db, "users", currentUser.uid, "testAttempts");
+            try {
+                await addDoc(testAttemptsRef, {
+                    testModule: currentTopic.name,
+                    testId: currentTopic.gid,
+                    score: totalScore,
+                    total: totalSubsets,
+                    timestamp: serverTimestamp()
+                });
+                alert(`Quiz finished! Your score: ${totalScore}/${totalSubsets}\nResult saved to your history.`);
+                showScreen('physics-category-screen');
+            } catch (error) {
+                console.error("Error saving test result:", error);
+                alert("There was an error saving your score.");
+            }
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('back-to-topics-btn').addEventListener('click', () => showScreen('physics-category-screen'));
+        prevButton.addEventListener('click', () => showQuestion(--currentQuestionIndex));
+        nextButton.addEventListener('click', () => {
+            if (currentQuestionIndex === allQuestions.length - 1) {
+                saveTestResult();
+            } else {
+                showQuestion(++currentQuestionIndex);
+            }
+        });
+
+    </script>
 </body>
 </html>
