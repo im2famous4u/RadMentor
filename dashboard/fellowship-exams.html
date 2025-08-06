@@ -46,6 +46,12 @@
         .paper-card-icon { width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; border-radius: 50%; margin-bottom: 1rem; font-size: 2rem; font-weight: 700; }
         .paper-card-icon.bg-blue-100 { background-color: #e0f2fe; color: #3b82f6; }
         .paper-card-icon.bg-pink-100 { background-color: #fdf2f8; color: #ec4899; }
+        .paper-card-icon.bg-green-100 { background-color: #f0fdf4; color: #22c55e; }
+        .paper-card-icon.bg-yellow-100 { background-color: #fefce8; color: #eab308; }
+        .paper-card-icon.bg-purple-100 { background-color: #f5f3ff; color: #8b5cf6; }
+        .paper-card-icon.bg-red-100 { background-color: #fee2e2; color: #ef4444; }
+        .paper-card-icon.bg-teal-100 { background-color: #f0fdfa; color: #14b8a6; }
+        .paper-card-icon.bg-indigo-100 { background-color: #eef2ff; color: #6366f1; }
         #authCheckScreen { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #f0f2f5; z-index: 9999; }
     </style>
 </head>
@@ -153,10 +159,22 @@
         const allQuizData = {
             paper1: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "0" },
             paper2: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1141721868" },
+            paper3: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1815658253" },
+            paper4: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1386284317" },
+            paper5: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "40352700" },
+            paper6: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "54400073" },
+            paper7: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1767827630" },
+            paper8: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "280434470" }
         };
         const paperMetadata = [
             { id: 'paper1', name: 'Paper 1', displayNumber: 1, bgColor: 'bg-blue-100' },
             { id: 'paper2', name: 'Paper 2', displayNumber: 2, bgColor: 'bg-pink-100' },
+            { id: 'paper3', name: 'Paper 3', displayNumber: 3, bgColor: 'bg-green-100' },
+            { id: 'paper4', name: 'Paper 4', displayNumber: 4, bgColor: 'bg-yellow-100' },
+            { id: 'paper5', name: 'Paper 5', displayNumber: 5, bgColor: 'bg-purple-100' },
+            { id: 'paper6', name: 'Paper 6', displayNumber: 6, bgColor: 'bg-red-100' },
+            { id: 'paper7', name: 'Paper 7', displayNumber: 7, bgColor: 'bg-teal-100' },
+            { id: 'paper8', name: 'Paper 8', displayNumber: 8, bgColor: 'bg-indigo-100' },
         ];
         
         // --- Global State & Elements ---
@@ -299,13 +317,23 @@
             createNumberedNav();
             renderQuestion(0);
         }
+        
+        function createNumberedNav() {
+            dom.questionNav.innerHTML = '';
+            currentQuizData.forEach((q, idx) => {
+                const box = document.createElement('div');
+                box.className = 'page-box';
+                box.textContent = idx + 1;
+                box.onclick = () => renderQuestion(idx);
+                dom.questionNav.appendChild(box);
+            });
+        }
 
         function renderQuestion(idx) {
             if (reviewFilter.length > 0) {
-                // Handle review mode navigation by finding the position in the filtered array
                 const reviewIndex = reviewFilter.indexOf(idx);
-                if (reviewIndex === -1) { idx = reviewFilter[0]; } // Fallback to start of review if something goes wrong
-                state.currentQuestion = idx; // Store original index
+                if (reviewIndex === -1) { idx = reviewFilter[0]; }
+                state.currentQuestion = idx;
             } else {
                 state.currentQuestion = idx;
             }
@@ -359,7 +387,7 @@
             sounds.click.play();
             state.answers[qId] = optionIdx;
             
-            if (optionIdx === currentQuizData[qId].correctIndex) sounds.correct.play();
+            if (optionIdx === currentQuizData.find(q => q.id === qId).correctIndex) sounds.correct.play();
             else sounds.wrong.play();
             
             saveStateToLocalStorage();
@@ -448,7 +476,8 @@
                 reviewFilter = currentQuizData.map(q => q.id);
             } else if (filter === 'incorrect') {
                 state.answers.forEach((ans, idx) => {
-                    if (ans !== null && ans !== currentQuizData[idx].correctIndex) reviewFilter.push(currentQuizData[idx].id);
+                    const q = currentQuizData.find(q => q.id === idx);
+                    if (ans !== null && ans !== q.correctIndex) reviewFilter.push(q.id);
                 });
             } else if (filter === 'bookmarked') {
                 currentQuizData.forEach((q) => {
