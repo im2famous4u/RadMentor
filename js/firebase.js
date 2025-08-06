@@ -5,15 +5,15 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebas
 import { getAuth } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-// IMPORTANT: Replace this with your project's actual Firebase configuration object!
+// This is your actual Firebase configuration
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID",
-    measurementId: "YOUR_MEASUREMENT_ID"
+  apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
+  authDomain: "radiology-mcqs.firebaseapp.com",
+  projectId: "radiology-mcqs",
+  storageBucket: "radiology-mcqs.appspot.com",
+  messagingSenderId: "862300415358",
+  appId: "1:862300415358:web:097d5e413f388e30587f2f",
+  measurementId: "G-0V1SD1H95V"
 };
 
 // Initialize Firebase
