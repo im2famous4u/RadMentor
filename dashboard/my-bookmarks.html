@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Bookmarks - RadScribe AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    .glass-card {
+      background-color: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 6px 6px rgba(0,0,0,0.03);
+    }
+  </style>
+</head>
+<body>
+  <div id="my-bookmarks-content" class="w-full h-full overflow-y-auto pb-4">
+    <div class="glass-card col-span-full">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">My Bookmarks</h2>
+      <ul id="bookmarksList" class="space-y-4">
+        <!-- Bookmarked MCQs will be loaded here -->
+        <li class="bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center justify-between hover:bg-gray-100 transition-colors cursor-pointer">
+          <p class="text-base text-gray-700 font-medium">MCQ: Identify the lesion in this T1W brain MRI</p>
+          <div class="flex items-center gap-2">
+            <button class="text-blue-600 hover:text-blue-800 text-sm font-semibold">View</button>
+            <button class="text-red-500 hover:text-red-700 text-xl">&times;</button>
+          </div>
+        </li>
+        <li class="bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center justify-between hover:bg-gray-100 transition-colors cursor-pointer">
+          <p class="text-base text-gray-700 font-medium">Case: Acute Appendicitis - USG Findings</p>
+          <div class="flex items-center gap-2">
+            <button class="text-blue-600 hover:text-blue-800 text-sm font-semibold">View</button>
+            <button class="text-red-500 hover:text-red-700 text-xl">&times;</button>
+          </div>
+        </li>
+        <li class="bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center justify-between hover:bg-gray-100 transition-colors cursor-pointer">
+          <p class="text-base text-gray-700 font-medium">Topic: Physics of X-ray Production</p>
+          <div class="flex items-center gap-2">
+            <button class="text-blue-600 hover:text-blue-800 text-sm font-semibold">View</button>
+            <button class="text-red-500 hover:text-red-700 text-xl">&times;</button>
+          </div>
+        </li>
+      </ul>
+      <button class="mt-6 w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg text-sm transition-colors">
+        Load More Bookmarks
+      </button>
+    </div>
+  </div>
+</body>
+</html>

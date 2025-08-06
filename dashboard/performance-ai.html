@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Performance & AI - RadScribe AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    .glass-card {
+      background-color: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 6px 6px rgba(0,0,0,0.03);
+    }
+  </style>
+</head>
+<body>
+  <div id="performance-ai-content" class="w-full h-full overflow-y-auto pb-4">
+    <div class="glass-card col-span-full">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Performance Overview & AI Insights</h2>
+      <div class="space-y-6">
+        <div>
+          <h3 class="text-xl font-bold text-gray-800 mb-4">Your Overall Progress</h3>
+          <div class="space-y-4">
+            <div>
+              <p class="text-sm font-medium text-gray-700 mb-1">Overall Completion</p>
+              <div class="w-full bg-blue-100 rounded-full h-2.5">
+                <div class="bg-blue-500 h-2.5 rounded-full" style="width: 75%;"></div>
+              </div>
+              <p class="text-right text-xs text-gray-500 mt-1">75% Complete</p>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-700 mb-1">QBank Accuracy</p>
+              <div class="w-full bg-blue-100 rounded-full h-2.5">
+                <div class="bg-green-500 h-2.5 rounded-full" style="width: 82%;"></div>
+              </div>
+              <p class="text-right text-xs text-gray-500 mt-1">82% Correct</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4">Weak Topics Curated by AI</h3>
+          <button id="generateWeakTopics" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+            Generate Weak Topics Insights
+          </button>
+          <div id="weakTopicsOutput" class="mt-4 text-sm text-gray-700 space-y-2">
+            <p class="text-gray-500 italic">Click the button above to get personalized insights.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Page-specific JavaScript for performance-ai
+    document.addEventListener('DOMContentLoaded', () => {
+      const generateWeakTopicsBtn = document.getElementById('generateWeakTopics');
+      const weakTopicsOutput = document.getElementById('weakTopicsOutput');
+
+      if (generateWeakTopicsBtn && weakTopicsOutput) {
+        generateWeakTopicsBtn.addEventListener('click', async () => {
+          weakTopicsOutput.innerHTML = '<p class="text-gray-500 italic">Generating insights...</p>';
+          generateWeakTopicsBtn.disabled = true;
+
+          const prompt = `Based on a medical student's performance in radiology exams (assume average scores in all areas, but slightly lower in "Pediatric Radiology" and "Musculoskeletal MRI"), generate a summary of 3-5 weak topics they should focus on. For each topic, provide a brief reason why it's weak and suggest a specific area of practice (e.g., "Review congenital heart anomalies in CXR"). Format as a numbered list.`;
+
+          try {
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+            const apiKey = ""; // Canvas will provide this at runtime
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            const maxRetries = 3;
+            let retryCount = 0;
+            let response;
+            while (retryCount < maxRetries) {
+                try {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.ok) break;
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                }
+                retryCount++;
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+            }
+
+            if (!response || !response.ok) {
+                throw new Error(`API call failed with status: ${response ? response.status : 'N/A'}`);
+            }
+
+            const result = await response.json();
+            if (result.candidates && result.candidates.length > 0 &&
+                result.candidates[0].content && result.candidates[0].content.parts &&
+                result.candidates[0].content.parts.length > 0) {
+              const aiText = result.candidates[0].content.parts[0].text;
+              weakTopicsOutput.innerHTML = `<p>${aiText.replace(/\n/g, '<br>')}</p>`;
+            } else {
+              weakTopicsOutput.innerHTML = '<p class="text-red-500">Failed to generate insights. Please try again.</p>';
+            }
+          } catch (error) {
+            console.error('Error generating weak topics:', error);
+            weakTopicsOutput.innerHTML = `<p class="text-red-500">Error: ${error.message}. Could not generate insights.</p>`;
+          } finally {
+            generateWeakTopicsBtn.disabled = false;
+          }
+          // Call parent's showMessage if available
+          if (window.parent && window.parent.showMessage) {
+            window.parent.showMessage('AI insights generated!', 'success');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
