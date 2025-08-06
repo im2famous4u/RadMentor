@@ -81,9 +81,22 @@
             <div class="selection-container">
                 <div class="quiz-header">
                     <h1>Physics Topics</h1>
-                    <button class="back-button" onclick="window.location.href='../../frcr/'">Back to FRCR</button>
+                    <button class="back-button" onclick="window.location.href='../../../'">Back to FRCR</button>
                 </div>
                 <div id="physics-topics-grid" class="selection-grid"></div>
+                <button class="selection-button mt-6" onclick="showBookmarksScreen()">View Bookmarks</button>
+            </div>
+        </div>
+
+        <div id="bookmarks-screen" class="screen">
+            <div class="quiz-container">
+                <div class="quiz-header">
+                    <h1>My Bookmarks</h1>
+                    <button class="back-button" onclick="showScreen('physics-category-screen')">Back to Topics</button>
+                </div>
+                <div id="bookmarks-list">
+                    <p class="loading-container">Fetching bookmarks...</p>
+                </div>
             </div>
         </div>
 
@@ -91,7 +104,7 @@
             <div class="quiz-container">
                 <div class="quiz-header">
                     <h1 id="quiz-title">Physics Questions</h1>
-                    <button class="back-button" id="back-to-topics-btn">Back to Topics</button>
+                    <button class="back-button" id="back-to-topics-btn" onclick="showScreen('physics-category-screen')">Back to Topics</button>
                 </div>
                 <div id="loading-container" class="loading-container"><p>Loading questions...</p></div>
                 <div id="error-container" class="error-container" style="display:none;"></div>
@@ -109,7 +122,7 @@
         // --- Firebase SDK Imports ---
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, addDoc, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
         // --- Firebase Configuration (Same as your main index.html) ---
         const firebaseConfig = {
@@ -125,7 +138,6 @@
         // --- Configuration ---
         const GOOGLE_SHEET_ID = '1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8';
         const PHYSICS_TOPICS = [
-            // Your topics array here...
             { name: "Basic Physics", gid: "2009849222" },
             { name: "General Radiation Hazards & Protection", gid: "2009849222" },
             { name: "Image Quality & X-ray Production", gid: "1706416231" },
@@ -174,7 +186,6 @@
                 populateTopics();
                 showScreen('physics-category-screen');
             } else {
-                // Redirect to main page if not logged in
                 document.getElementById('auth-check-screen').innerHTML = '<div class="selection-container"><h1>Redirecting...</h1><p>You must be logged in to access this page.</p></div>';
                 setTimeout(() => { window.location.href = '../../../'; }, 2000);
             }
@@ -196,7 +207,6 @@
             quizTitle.textContent = topic.name;
             showScreen('quiz-screen');
             resetQuizView();
-            // NEW: Fetch bookmarks before fetching questions
             await fetchUserBookmarks();
             fetchQuizData(GOOGLE_SHEET_ID, topic);
         }
@@ -234,7 +244,7 @@
             });
         }
         
-        // CSV Parsing (your original logic, slightly adapted for unique question IDs)
+        // CSV Parsing (your original logic)
         function parseCSVToQuestions(text) {
              const rows = text.trim().split(/\r?\n/).map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(f => f.trim().replace(/^"|"$/g, '')));
              if (rows.length < 2) return [];
@@ -244,36 +254,36 @@
              if (questionIndex === -1) return [];
              
              return dataRows.map((row, rowIndex) => {
-                 const mainQuestionText = row[questionIndex];
-                 if (!mainQuestionText) return null;
-                 const subsets = [];
-                 for (let i = 1; i <= 5; i++) {
-                     const subQHeader = i === 1 ? 'question a1' : `a${i}`;
-                     const ansHeader = `answer of a${i}`;
-                     const expHeader = `explanation of a${i}`;
-                     const subQIndex = headers.indexOf(subQHeader);
-                     const ansIndex = headers.indexOf(ansHeader);
-                     const expIndex = headers.indexOf(expHeader);
-                     if (subQIndex !== -1 && ansIndex !== -1) {
-                         const subQText = row[subQIndex];
-                         const correctAns = row[ansIndex];
-                         if (subQText && correctAns) {
-                             subsets.push({
-                                 text: subQText,
-                                 correctAnswer: correctAns,
-                                 explanation: expIndex !== -1 ? row[expIndex] : ''
-                             });
-                         }
-                     }
-                 }
-                 if (subsets.length > 0) {
+                const mainQuestionText = row[questionIndex];
+                if (!mainQuestionText) return null;
+                const subsets = [];
+                for (let i = 1; i <= 5; i++) {
+                    const subQHeader = i === 1 ? 'question a1' : `a${i}`;
+                    const ansHeader = `answer of a${i}`;
+                    const expHeader = `explanation of a${i}`;
+                    const subQIndex = headers.indexOf(subQHeader);
+                    const ansIndex = headers.indexOf(ansHeader);
+                    const expIndex = headers.indexOf(expHeader);
+                    if (subQIndex !== -1 && ansIndex !== -1) {
+                        const subQText = row[subQIndex];
+                        const correctAns = row[ansIndex];
+                        if (subQText && correctAns) {
+                            subsets.push({
+                                text: subQText,
+                                correctAnswer: correctAns,
+                                explanation: expIndex !== -1 ? row[expIndex] : ''
+                            });
+                        }
+                    }
+                }
+                if (subsets.length > 0) {
                     return { 
-                        id: `physics_${currentTopic.gid}_q${rowIndex}`, // NEW: Create a unique ID for bookmarking
+                        id: `physics_${currentTopic.gid}_q${rowIndex}`,
                         question: mainQuestionText, 
                         subsets 
                     };
-                 }
-                 return null;
+                }
+                return null;
              }).filter(Boolean);
         }
 
@@ -297,7 +307,7 @@
                     </div>
                     <p class="main-question-text">${q.question}</p>
                     <div id="subsets-container">${subsetsHtml}</div>
-                    <div class="all-explanations" id="explanations-${index}">${explanations.length>0 ? `<h3>Explanations</h3>${explanations.join('')}`:''}</div>
+                    <div class="all-explanations" id="explanations-${index}">${explanations.length > 0 ? `<h3>Explanations</h3>${explanations.join('')}`:''}</div>
                 </div>`;
             
             updateNav(index);
@@ -330,8 +340,8 @@
             prevButton.disabled = index === 0;
             nextButton.textContent = (index === allQuestions.length - 1) ? "Finish & Save" : "Next";
         }
-
-        // --- NEW: Bookmark and History Functions ---
+        
+        // --- NEW: Bookmarks Functions ---
         async function fetchUserBookmarks() {
             if (!currentUser) return;
             const bookmarksRef = collection(db, "users", currentUser.uid, "bookmarks");
@@ -342,7 +352,63 @@
                 console.error("Could not fetch bookmarks:", error);
             }
         }
+
+        async function showBookmarksScreen() {
+            showScreen('bookmarks-screen');
+            const bookmarksList = document.getElementById('bookmarks-list');
+            bookmarksList.innerHTML = '<p class="loading-container">Fetching bookmarks...</p>';
+
+            if (!currentUser) {
+                bookmarksList.innerHTML = '<p class="loading-container">You must be logged in to view bookmarks.</p>';
+                return;
+            }
+
+            try {
+                const bookmarksRef = collection(db, "users", currentUser.uid, "bookmarks");
+                const snapshot = await getDocs(bookmarksRef);
+
+                if (snapshot.empty) {
+                    bookmarksList.innerHTML = '<p class="loading-container">You have no bookmarked questions.</p>';
+                } else {
+                    let html = '<div class="space-y-4">';
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const questionText = data.question;
+                        const topicName = data.topicName;
+                        html += `
+                            <div class="bg-gray-50 p-4 rounded-lg flex justify-between items-center border border-gray-200">
+                                <div>
+                                    <p class="font-semibold text-gray-800">${questionText}</p>
+                                    <p class="text-sm text-gray-500">Topic: ${topicName}</p>
+                                </div>
+                                <button onclick="removeBookmarkFromList('${doc.id}')" class="text-red-500 hover:text-red-700 transition-colors">
+                                    <i data-feather="x"></i>
+                                </button>
+                            </div>`;
+                    });
+                    html += '</div>';
+                    bookmarksList.innerHTML = html;
+                    feather.replace();
+                }
+            } catch (error) {
+                console.error("Error fetching bookmarks:", error);
+                bookmarksList.innerHTML = '<p class="loading-container text-red-500">Could not load bookmarks.</p>';
+            }
+        }
         
+        window.removeBookmarkFromList = async (questionId) => {
+            if (!currentUser) return;
+            const bookmarkRef = doc(db, "users", currentUser.uid, "bookmarks", questionId);
+            try {
+                await deleteDoc(bookmarkRef);
+                // Remove the item from the UI after successful deletion
+                document.getElementById('bookmarks-list').querySelector(`button[onclick*="'${questionId}'"]`).closest('div').remove();
+            } catch (error) {
+                console.error("Error removing bookmark:", error);
+                alert("Failed to remove bookmark. Please try again.");
+            }
+        };
+
         window.toggleBookmark = async (questionId, questionText) => {
             if (!currentUser) return;
             const bookmarkRef = doc(db, "users", currentUser.uid, "bookmarks", questionId);
@@ -391,7 +457,7 @@
         }
 
         // --- Event Listeners ---
-        document.getElementById('back-to-topics-btn').addEventListener('click', () => showScreen('physics-category-screen'));
+        // document.getElementById('back-to-topics-btn').addEventListener('click', () => showScreen('physics-category-screen'));
         prevButton.addEventListener('click', () => showQuestion(--currentQuestionIndex));
         nextButton.addEventListener('click', () => {
             if (currentQuestionIndex === allQuestions.length - 1) {
