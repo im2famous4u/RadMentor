@@ -6,28 +6,28 @@
     <title>FRCR Physics Quiz</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-    <script src="https://unpkg.com/feather-icons"></script> <!-- Feather Icons for bookmark -->
+    <script src="https://unpkg.com/feather-icons"></script>
     <style>
-        /* Shared glass-card style from main layout */
-        .glass-card {
-            background-color: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            border-radius: 1.5rem;
-            padding: 2rem;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 6px 6px rgba(0,0,0,0.03);
+        /* --- Base & Theme from Reference --- */
+        :root {
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --background-color: #f0f4f8;
+            --card-background: rgba(255, 255, 255, 0.7);
+            --text-primary: #1a202c;
+            --text-secondary: #718096;
+            --border-color: #e2e8f0;
         }
 
-        /* Specific styles for this quiz page to match main theme */
         body {
-            font-family: 'Inter', sans-serif; /* Use Inter font */
-            background-color: #f0f4f8; /* Light blue-gray background matching main layout */
-            color: #212121; /* Dark text for light theme */
-            padding: 15px;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
             display: flex;
             justify-content: center;
             align-items: flex-start;
             min-height: 100vh;
-            box-sizing: border-box; /* Include padding in element's total width and height */
+            padding: 1rem;
         }
 
         .main-container {
@@ -35,21 +35,30 @@
             max-width: 900px;
         }
 
+        .glass-card {
+            background-color: var(--card-background);
+            backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 6px 6px rgba(0,0,0,0.03);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
         /* --- Screen Management --- */
         .screen { display: none; width: 100%; }
         .screen.active { display: block; }
 
-        /* --- Home and Category Screen Styles --- */
-        .selection-container {
-            background-color: #ffffff; /* Explicitly white for inner container */
+        /* --- Shared Components from Reference --- */
+        .selection-container, .quiz-container {
+            background-color: #ffffff;
             border-radius: 12px;
             padding: 30px;
-            text-align: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.07);
         }
+
         .quiz-header {
             padding-bottom: 15px;
-            border-bottom: 1px solid #e2e8f0; /* Light border color */
+            border-bottom: 1px solid var(--border-color);
             margin-bottom: 20px;
             display: flex;
             justify-content: space-between;
@@ -58,192 +67,184 @@
         .quiz-header h1 {
             font-size: 2.2rem;
             margin: 0;
-            color: #1a202c; /* text-gray-900 equivalent */
-            text-align: left;
-            flex-grow: 1;
-            font-weight: 800; /* font-extrabold */
+            color: var(--text-primary);
+            font-weight: 800;
         }
+
         .back-button {
             background-color: transparent;
-            color: #4a5568; /* Gray text */
-            border: 1px solid #e2e8f0; /* Light border */
+            color: #4a5568;
+            border: 1px solid var(--border-color);
             padding: 8px 16px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 0.9rem;
             font-weight: 500;
             transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        .back-button:hover{ background-color: #f0f4f8; /* Light blue-gray hover */ }
+        .back-button:hover { background-color: #f0f4f8; }
 
+        /* --- Home and Category Screen --- */
         .selection-grid { 
             display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Adjusted for better card size */
-            gap: 20px; 
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem; 
         }
-        .selection-button { /* This class is now for the outer card container */
-            background-color: #ffffff; /* White background for cards */
-            color: #212121; /* Default text color */
-            border: 1px solid #e2e8f0; /* Light border */
-            padding: 20px; /* Adjusted padding */
-            border-radius: 12px; /* Slightly more rounded */
-            cursor: pointer;
-            font-size: 1.1rem; /* Adjusted font size */
-            font-weight: 600;
-            transition: background-color 0.3s, transform 0.2s, box-shadow 0.2s;
-            text-align: left; /* Align text left */
-            display: flex; /* Use flex for internal layout */
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* Subtle shadow */
-        }
-        .selection-button:hover { 
-            background-color: #f0f4f8; /* Light blue-gray hover */
-            transform: translateY(-3px); /* Slight lift */
-            box-shadow: 0 6px 12px rgba(0,0,0,0.1); /* Enhanced shadow on hover */
-        }
-        .selection-button.disabled { background-color: #a0aec0; cursor: not-allowed; transform: none; }
 
-        /* Styles for the icon container within the selection button */
-        .selection-button-icon {
-            width: 50px; /* Increased icon container size */
-            height: 50px; /* Increased icon container size */
-            border-radius: 10px; /* Rounded corners for icon background */
+        .topic-card {
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            text-align: left;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .topic-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+
+        .topic-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.8rem; /* Emoji size */
-            margin-right: 15px; /* Space between icon and text */
-            flex-shrink: 0; /* Prevent icon from shrinking */
+            font-size: 1.8rem;
+            flex-shrink: 0;
         }
-        /* Specific background colors for icons */
-        .icon-bg-blue { background-color: #e0f2fe; color: #2196f3; } /* Light blue, blue text */
-        .icon-bg-orange { background-color: #fff3e0; color: #ff9800; } /* Light orange, orange text */
-        .icon-bg-pink { background-color: #fce4ec; color: #e91e63; } /* Light pink, pink text */
-        .icon-bg-green { background-color: #e8f5e9; color: #4caf50; } /* Light green, green text */
-        .icon-bg-yellow { background-color: #fffde7; color: #ffeb3b; } /* Light yellow, yellow text */
-        .icon-bg-purple { background-color: #ede7f6; color: #9c27b0; } /* Light purple, purple text */
+        .icon-bg-blue { background-color: #e0f2fe; color: #2196f3; }
+        .icon-bg-orange { background-color: #fff3e0; color: #ff9800; }
+        .icon-bg-pink { background-color: #fce4ec; color: #e91e63; }
+        .icon-bg-green { background-color: #e8f5e9; color: #4caf50; }
+        .icon-bg-yellow { background-color: #fffde7; color: #ffeb3b; }
+        .icon-bg-purple { background-color: #ede7f6; color: #9c27b0; }
 
+        .topic-info { flex-grow: 1; }
+        .topic-info .topic-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+        .topic-info .completion-status {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .topic-arrow { font-size: 1.5rem; color: #a0aec0; }
 
-        .selection-button-text {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start; /* Align text left within its column */
+        .view-bookmarks-button {
+            display: block;
+            width: 100%;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            font-weight: 600;
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            text-align: center;
+            transition: background-color 0.2s;
         }
-        .selection-button-text .topic-name {
-            font-weight: 700; /* Bold topic name */
-            color: #2d3748; /* Darker text for topic name */
-            margin-bottom: 4px; /* Space below topic name */
-        }
-        .selection-button-text .completion-status {
-            font-size: 0.85rem; /* Smaller font for status */
-            color: #718096; /* Gray for status text */
-        }
-        .selection-button-arrow {
-            font-size: 1.5rem; /* Size of the arrow */
-            color: #a0aec0; /* Light gray arrow */
-            margin-left: 10px;
-        }
+        .view-bookmarks-button:hover { background-color: #f1f5f9; }
 
         /* --- Quiz View Styles --- */
-        .quiz-container { background-color: #ffffff; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.07); display: flex; flex-direction: column; padding: 20px; }
-        
-        .loading-container, .error-container { text-align: center; padding: 40px; font-size: 1.2rem; }
+        .loading-container, .error-container { text-align: center; padding: 3rem; font-size: 1.1rem; color: var(--text-secondary); }
         .error-container { color: #c53030; background-color: #fed7d7; border: 1px solid #fbb6b6; border-radius: 8px; }
 
-        #questions-display { flex-grow: 1; }
-        .question-block { background-color: #ffffff; border-radius: 8px; padding: 20px; }
-        .question-number { font-size: 1.1rem; font-weight: 500; color: #718096; /* Gray text */ margin-bottom: 15px; }
-        .main-question-text { font-size: 1.4rem; font-weight: 600; line-height: 1.5; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid #e2e8f0; }
+        .question-block { padding: 0.5rem; }
+        .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .question-number { font-size: 1rem; font-weight: 600; color: var(--text-secondary); }
         
-        .subset-item { /* This style is now largely unused due to new question format */
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            transition: background-color 0.3s, border-color 0.3s;
+        .bookmark-button {
+            background: none; border: none; cursor: pointer; color: #cbd5e0; transition: color 0.2s;
         }
-        .subset-item.correct { background-color: #d1fae5; border-color: #34d399; } /* bg-green-100, border-green-400 */
-        .subset-item.incorrect { background-color: #fee2e2; border-color: #ef4444; } /* bg-red-100, border-red-500 */
+        .bookmark-button.bookmarked { color: #f59e0b; }
+        .bookmark-button svg { width: 24px; height: 24px; }
 
-        /* Styles for multiple choice options */
+        .main-question-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            line-height: 1.5;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
         .question-options label {
             display: flex;
             align-items: center;
-            padding: 12px 15px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            margin-bottom: 10px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            margin-bottom: 0.75rem;
             cursor: pointer;
             transition: background-color 0.2s, border-color 0.2s;
         }
-        .question-options label:hover {
-            background-color: #f0f4f8;
-        }
+        .question-options label:hover { background-color: #f8fafc; }
         .question-options input[type="radio"] {
-            margin-right: 12px;
-            flex-shrink: 0;
-            width: 18px;
-            height: 18px;
-            accent-color: #3b82f6; /* Blue accent for radio button */
+            width: 18px; height: 18px; margin-right: 1rem; flex-shrink: 0; accent-color: var(--primary-color);
         }
         .question-options label.selected-correct {
-            background-color: #d1fae5; /* bg-green-100 */
-            border-color: #34d399; /* border-green-400 */
-            font-weight: 600;
+            background-color: #d1fae5; border-color: #34d399; font-weight: 600;
         }
         .question-options label.selected-incorrect {
-            background-color: #fee2e2; /* bg-red-100 */
-            border-color: #ef4444; /* border-red-500 */
-            font-weight: 600;
+            background-color: #fee2e2; border-color: #ef4444; font-weight: 600;
         }
-        .question-options label.correct-answer { /* For showing correct answer if user chose wrong */
-            background-color: #e0f2fe; /* bg-blue-50 */
-            border-color: #60a5fa; /* border-blue-400 */
-            font-weight: 600;
+        .question-options label.correct-answer {
+            background-color: #e0f2fe; border-color: #60a5fa; font-weight: 600;
         }
 
         .all-explanations {
-            margin-top: 25px;
-            padding: 20px;
-            background-color: #eff6ff; /* bg-blue-50 */
-            border: 1px solid #bfdbfe; /* border-blue-200 */
-            border-radius: 8px;
-            display: none; /* Hidden by default */
+            margin-top: 2rem; padding: 1.5rem; background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 0.75rem; display: none;
         }
         .all-explanations.visible { display: block; }
-        .all-explanations h3 { margin-top: 0; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; color: #1e3a5f; /* Dark blue heading */ }
-        .explanation-item p { margin: 0 0 10px 0; line-height: 1.6; }
-        .explanation-item:last-child p { margin-bottom: 0; }
+        .all-explanations h3 { margin-top: 0; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); color: #1e3a5f; font-weight: 700; }
+        .all-explanations p { margin: 0 0 0.5rem 0; line-height: 1.6; color: var(--text-secondary); }
+        .all-explanations p.font-semibold { color: var(--text-primary); }
 
-        .navigation-controls { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid #e2e8f0; margin-top: 20px; }
-        .nav-button { background-color: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 500; transition: background-color 0.2s; } /* bg-blue-600 */
-        .nav-button:hover:not(:disabled) { background-color: #1d4ed8; } /* hover:bg-blue-700 */
+        .navigation-controls {
+            display: flex; justify-content: space-between; align-items: center; padding-top: 1.5rem; border-top: 1px solid var(--border-color); margin-top: 1.5rem;
+        }
+        .nav-button {
+            background-color: var(--primary-color); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; cursor: pointer; font-size: 1rem; font-weight: 600; transition: background-color 0.2s;
+        }
+        .nav-button:hover:not(:disabled) { background-color: var(--primary-hover); }
         .nav-button:disabled { background-color: #a0aec0; cursor: not-allowed; }
-        #question-counter { font-size: 1.1rem; font-weight: 500; color: #718096; text-align: center; padding-top: 1rem; }
+        #question-counter { font-size: 1rem; font-weight: 500; color: var(--text-secondary); text-align: center; padding-top: 1rem; }
 
-        .bookmark-button {
-            background: none;
-            border: none;
-            font-size: 1.8rem; /* Adjust size as needed */
-            cursor: pointer;
-            color: #cbd5e0; /* Gray for unbookmarked */
-            transition: color 0.2s;
-            margin-left: 10px;
+        /* Bookmarks Screen Specifics */
+        #bookmarks-list .loading-container { padding: 2rem; }
+        .bookmark-item {
+            background-color: #f8fafc;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid var(--border-color);
         }
-        .bookmark-button.bookmarked {
-            color: #f59e0b; /* Yellow for bookmarked - using a specific hex for consistency */
-        }
+        .bookmark-item-text .question-text { font-weight: 600; color: var(--text-primary); }
+        .bookmark-item-text .topic-name { font-size: 0.8rem; color: var(--text-secondary); }
+        .bookmark-remove-btn { color: var(--text-secondary); transition: color 0.2s; }
+        .bookmark-remove-btn:hover { color: #ef4444; }
     </style>
 </head>
 <body>
 
-    <div class="main-container glass-card"> <!-- Wrapped in glass-card -->
+    <div class="main-container glass-card">
         <!-- Auth Check Screen -->
         <div id="auth-check-screen" class="screen active">
             <div class="selection-container">
-                <h1 class="text-gray-900 font-extrabold text-2xl">Verifying User...</h1>
+                <h1 class="font-extrabold text-2xl">Verifying User...</h1>
                 <p class="text-gray-700 mt-4">Please wait while we check your login status.</p>
             </div>
         </div>
@@ -253,10 +254,13 @@
             <div class="selection-container">
                 <div class="quiz-header">
                     <h1>Physics Topics</h1>
-                    <button class="back-button" onclick="window.parent.document.getElementById('contentFrame').src = '/fellowshipexams/frcr.html';">Back</button>
+                    <button class="back-button" onclick="window.parent.document.getElementById('contentFrame').src = '/fellowshipexams/frcr.html';">
+                        <i data-feather="arrow-left" style="width:16px; height:16px;"></i>
+                        <span>Back</span>
+                    </button>
                 </div>
                 <div id="physics-topics-grid" class="selection-grid"></div>
-                <button class="selection-button mt-6" onclick="showBookmarksScreen()">View Bookmarks</button>
+                <button class="view-bookmarks-button" onclick="showBookmarksScreen()">View Bookmarks</button>
             </div>
         </div>
 
@@ -265,7 +269,10 @@
             <div class="quiz-container">
                 <div class="quiz-header">
                     <h1>My Bookmarks</h1>
-                    <button class="back-button" onclick="showScreen('physics-category-screen')">Back to Topics</button>
+                    <button class="back-button" onclick="showScreen('physics-category-screen')">
+                        <i data-feather="arrow-left" style="width:16px; height:16px;"></i>
+                        <span>Back to Topics</span>
+                    </button>
                 </div>
                 <div id="bookmarks-list">
                     <p class="loading-container">Fetching bookmarks...</p>
@@ -278,7 +285,10 @@
             <div class="quiz-container">
                 <div class="quiz-header">
                     <h1 id="quiz-title">Physics Questions</h1>
-                    <button class="back-button" id="back-to-topics-btn" onclick="showScreen('physics-category-screen')">Back to Topics</button>
+                    <button class="back-button" id="back-to-topics-btn" onclick="showScreen('physics-category-screen')">
+                        <i data-feather="arrow-left" style="width:16px; height:16px;"></i>
+                        <span>Back to Topics</span>
+                    </button>
                 </div>
                 <div id="loading-container" class="loading-container"><p>Loading questions...</p></div>
                 <div id="error-container" class="error-container" style="display:none;"></div>
@@ -301,18 +311,14 @@
 
 
         // --- Configuration ---
-        // IMPORTANT: Replace '1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8' with your actual Google Sheet ID
-        // Ensure your Google Sheet is publicly accessible ("Anyone with the link can view")
         const GOOGLE_SHEET_ID = '1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8'; 
         const PHYSICS_TOPICS = [
-            // REPLACE GID values with your actual Google Sheet GIDs for each tab/sheet
-            // Each sheet should contain columns: question, a, b, c, d, Correct Answer, Explanation
             { name: "Basic Physics", gid: "2009849222", icon: "⚛️", color: "blue", totalModules: 54 },
             { name: "General Radiation Hazards & Protection", gid: "2009849222", icon: "☢️", color: "orange", totalModules: 49 },
             { name: "Image Quality & X-ray Production", gid: "1706416231", icon: "📸", color: "pink", totalModules: 39 },
             { name: "Film Screen Radiography", gid: "1257614317", icon: "🖼️", color: "green", totalModules: 20 },
             { name: "Digital Radiography", gid: "917881905", icon: "🖥️", color: "yellow", totalModules: 30 },
-            { name: "Fluoroscopy", gid: "1461599884", icon: "🎥", color: "purple", totalModules: 25 },
+            { name: "Fluoroscopy", gid: "1461599884", icon: "�", color: "purple", totalModules: 25 },
             { name: "Computed Tomography", gid: "986205874", icon: "🩻", color: "blue", totalModules: 40 },
             { name: "Nuclear Medicine", gid: "2016453957", icon: "🧪", color: "orange", totalModules: 35 },
             { name: "Ultrasound", gid: "638565218", icon: "🔊", color: "pink", totalModules: 28 },
@@ -322,17 +328,16 @@
         // --- App State ---
         let allQuestions = [];
         let currentQuestionIndex = 0;
-        let currentUser = null; // Will be set by onAuthStateChanged
-        let userBookmarks = new Set(); // Using Set for efficient lookups
-        let currentTopic = null; // To keep track of the active topic
+        let currentUser = null;
+        let userBookmarks = new Set();
+        let currentTopic = null;
 
         // --- DOM Elements ---
         const screens = document.querySelectorAll('.screen');
         const authCheckScreen = document.getElementById('auth-check-screen');
         const physicsTopicsGrid = document.getElementById('physics-topics-grid');
         const quizTitle = document.getElementById('quiz-title');
-        const bookmarksList = document.getElementById('bookmarks-list'); // For bookmarks screen
-        
+        const bookmarksList = document.getElementById('bookmarks-list');
         const loadingContainer = document.getElementById('loading-container');
         const errorContainer = document.getElementById('error-container');
         const questionsDisplay = document.getElementById('questions-display');
@@ -341,33 +346,36 @@
         const nextButton = document.getElementById('next-button');
         const questionCounter = document.getElementById('question-counter');
 
+        // --- Utility Functions ---
+        const showScreen = (screenId) => {
+            screens.forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId)?.classList.add('active');
+            feather.replace();
+        };
+        window.showScreen = showScreen;
+
         // --- Authentication State Listener ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
-                // Use __app_id for collection path as per Canvas instructions
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-                await fetchUserBookmarks(appId); // Pass appId
+                await fetchUserBookmarks(appId);
                 populateTopics();
                 showScreen('physics-category-screen');
             } else {
-                // User is not authenticated or session expired
                 authCheckScreen.innerHTML = `<div class="selection-container"><h1 class="text-red-600">Redirecting...</h1><p class="text-gray-700 mt-4">You must be logged in to access this page.</p></div>`;
                 showParentMessage('Session expired or authentication failed. Redirecting to login.', 'error');
-                setTimeout(() => {
-                    window.parent.location.href = '/fellowshipexams/index.html'; // Redirect to login
-                }, 2000);
+                setTimeout(() => { window.parent.location.href = '/fellowshipexams/index.html'; }, 2000);
             }
         });
 
         // --- Firestore Data Operations ---
-        async function fetchUserBookmarks(appId) { // Accept appId as argument
+        async function fetchUserBookmarks(appId) {
             if (!currentUser) return;
             const bookmarksRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/bookmarks`);
             try {
                 const snapshot = await getDocs(bookmarksRef);
                 userBookmarks = new Set(snapshot.docs.map(doc => doc.id));
-                showParentMessage('Bookmarks loaded!', 'success');
             } catch (error) {
                 console.error("Could not fetch bookmarks:", error);
                 showParentMessage('Failed to load bookmarks.', 'error');
@@ -381,7 +389,7 @@
             }
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
             const bookmarkDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/bookmarks`, questionId);
-            const button = document.querySelector(`button[data-question-id="${questionId}"]`); // Select by data attribute
+            const button = document.querySelector(`button[data-question-id="${questionId}"]`);
 
             try {
                 if (userBookmarks.has(questionId)) {
@@ -400,12 +408,12 @@
                     if (button) button.classList.add('bookmarked');
                     showParentMessage('Question bookmarked!', 'success');
                 }
-                feather.replace(); // Re-render feather icons after change
             } catch (error) {
                 console.error("Error toggling bookmark:", error);
                 showParentMessage('Failed to toggle bookmark.', 'error');
             }
         }
+        window.toggleBookmark = toggleBookmark;
 
         async function showBookmarksScreen() {
             showScreen('bookmarks-screen');
@@ -426,87 +434,72 @@
                     let html = '<div class="space-y-4">';
                     snapshot.forEach(doc => {
                         const data = doc.data();
-                        const questionText = data.question;
-                        const topicName = data.topicName;
-                        const questionId = doc.id; // Get the ID for removal
                         html += `
-                            <div class="bg-gray-50 p-4 rounded-lg flex justify-between items-center border border-gray-200">
-                                <div>
-                                    <p class="font-semibold text-gray-800">${questionText}</p>
-                                    <p class="text-sm text-gray-500">Topic: ${topicName}</p>
+                            <div class="bookmark-item">
+                                <div class="bookmark-item-text">
+                                    <p class="question-text">${data.question}</p>
+                                    <p class="topic-name">Topic: ${data.topicName}</p>
                                 </div>
-                                <button onclick="removeBookmarkFromList('${questionId}')" class="text-red-500 hover:text-red-700 transition-colors">
-                                    <i data-feather="x"></i>
+                                <button onclick="removeBookmarkFromList('${doc.id}')" class="bookmark-remove-btn">
+                                    <i data-feather="x-circle"></i>
                                 </button>
                             </div>`;
                     });
                     html += '</div>';
                     bookmarksList.innerHTML = html;
-                    feather.replace(); // Re-render feather icons
+                    feather.replace();
                 }
             } catch (error) {
                 console.error("Error fetching bookmarks:", error);
-                bookmarksList.innerHTML = '<p class="loading-container text-red-500">Could not load bookmarks.</p>';
-                showParentMessage('Error fetching bookmarks.', 'error');
+                bookmarksList.innerHTML = '<p class="error-container">Could not load bookmarks.</p>';
             }
         }
+        window.showBookmarksScreen = showBookmarksScreen;
         
-        // Make removeBookmarkFromList globally accessible
-        window.removeBookmarkFromList = async (questionId) => {
+        async function removeBookmarkFromList(questionId) {
             if (!currentUser) return;
             const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
             const bookmarkDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/bookmarks`, questionId);
             try {
                 await deleteDoc(bookmarkDocRef);
-                userBookmarks.delete(questionId); // Update local set
-                // Remove the item from the UI after successful deletion
-                const removedElement = bookmarksList.querySelector(`button[onclick*="'${questionId}'"]`);
-                if (removedElement) {
-                    removedElement.closest('div').remove();
-                    showParentMessage('Bookmark removed from list!', 'success');
-                }
-                // If the removed question is currently displayed in quiz, update its bookmark icon
+                userBookmarks.delete(questionId);
+                showBookmarksScreen(); // Refresh the list
                 const currentBookmarkButton = document.querySelector(`.bookmark-button[data-question-id="${questionId}"]`);
                 if(currentBookmarkButton) {
                     currentBookmarkButton.classList.remove('bookmarked');
-                    feather.replace();
                 }
-
+                showParentMessage('Bookmark removed!', 'success');
             } catch (error) {
                 console.error("Error removing bookmark:", error);
-                showParentMessage("Failed to remove bookmark. Please try again.", 'error');
+                showParentMessage("Failed to remove bookmark.", 'error');
             }
         };
-
-        // Make toggleBookmark globally accessible
-        window.toggleBookmark = toggleBookmark;
-
+        window.removeBookmarkFromList = removeBookmarkFromList;
 
         // --- Functions (Navigation & Setup) ---
         function populateTopics() {
             physicsTopicsGrid.innerHTML = '';
             PHYSICS_TOPICS.forEach(topic => {
-                const completedCount = 0; // Progress saving is removed
-                const button = document.createElement('div'); // Changed to div for card structure
-                button.className = `selection-button`; // Apply base card styles
+                const button = document.createElement('div');
+                button.className = `topic-card`;
                 button.innerHTML = `
-                    <div class="selection-button-icon icon-bg-${topic.color}">
+                    <div class="topic-icon icon-bg-${topic.color}">
                         ${topic.icon}
                     </div>
-                    <div class="selection-button-text">
-                        <span class="topic-name">${topic.name}</span>
-                        <span class="completion-status">${completedCount}/${topic.totalModules} completed</span>
+                    <div class="topic-info">
+                        <div class="topic-name">${topic.name}</div>
+                        <div class="completion-status">0/${topic.totalModules} completed</div>
                     </div>
-                    <span class="selection-button-arrow">❯</span>
+                    <span class="topic-arrow">❯</span>
                 `;
                 button.addEventListener('click', () => startQuiz(topic));
                 physicsTopicsGrid.appendChild(button);
             });
-            feather.replace(); // Re-render feather icons after populating topics
+            feather.replace();
         }
 
         function startQuiz(topic) {
-            currentTopic = topic; // Store the current topic
+            currentTopic = topic;
             quizTitle.textContent = topic.name;
             showScreen('quiz-screen');
             resetQuizView();
@@ -516,7 +509,6 @@
         function resetQuizView() {
             loadingContainer.style.display = 'block';
             errorContainer.style.display = 'none';
-            errorContainer.textContent = '';
             questionsDisplay.innerHTML = '';
             navigationControls.style.display = 'none';
             allQuestions = [];
@@ -537,21 +529,20 @@
                         showQuestion(currentQuestionIndex);
                     } else {
                         errorContainer.style.display = 'block';
-                        errorContainer.textContent = 'No questions found in the selected topic.';
+                        errorContainer.textContent = 'No questions found in this topic.';
                     }
                     loadingContainer.style.display = 'none';
                 })
                 .catch(err => {
-                    console.error('Data fetch/parse error:', err);
                     loadingContainer.style.display = 'none';
                     errorContainer.style.display = 'block';
-                    errorContainer.textContent = `Error loading questions. Please check the Google Sheet ID, GID, and sharing settings. Details: ${err.message}`;
+                    errorContainer.textContent = `Error loading questions. Check Sheet ID, GID, and sharing settings.`;
                 });
         }
 
         function parseCSVToQuestions(text) {
             const rows = text.trim().split(/\r?\n/).map(row => row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(f => f.trim().replace(/^"|"$/g, '')));
-            if (rows.length < 2) { return []; }
+            if (rows.length < 2) return [];
             const headers = rows[0].map(h => h.trim().toLowerCase());
             const dataRows = rows.slice(1);
 
@@ -563,39 +554,29 @@
             const correctAnswerIndex = headers.indexOf('correct answer');
             const explanationIndex = headers.indexOf('explanation');
 
-            if (questionColIndex === -1 || correctAnswerIndex === -1) {
-                console.error("Required columns 'question' or 'correct answer' not found.");
-                return [];
-            }
+            if (questionColIndex === -1 || correctAnswerIndex === -1) return [];
             
             return dataRows.map((row, qIdx) => {
                 const mainQuestionText = row[questionColIndex];
                 if (!mainQuestionText) return null;
 
-                const options = [];
-                if (optionAIndex !== -1 && row[optionAIndex]) options.push({ label: 'A', text: row[optionAIndex] });
-                if (optionBIndex !== -1 && row[optionBIndex]) options.push({ label: 'B', text: row[optionBIndex] });
-                if (optionCIndex !== -1 && row[optionCIndex]) options.push({ label: 'C', text: row[optionCIndex] });
-                if (optionDIndex !== -1 && row[optionDIndex]) options.push({ label: 'D', text: row[optionDIndex] });
+                const options = [
+                    { label: 'A', text: row[optionAIndex] },
+                    { label: 'B', text: row[optionBIndex] },
+                    { label: 'C', text: row[optionCIndex] },
+                    { label: 'D', text: row[optionDIndex] }
+                ].filter(opt => opt.text);
 
-                const correctAnsLabel = row[correctAnswerIndex] ? row[correctAnswerIndex].toUpperCase() : ''; // e.g., 'A', 'B'
-                const explanation = explanationIndex !== -1 ? row[explanationIndex] : '';
-
-                // Find the correct answer text based on the label (A, B, C, D)
-                let correctAnsText = '';
+                const correctAnsLabel = row[correctAnswerIndex]?.toUpperCase() || '';
+                const explanation = row[explanationIndex] || '';
                 const correctOption = options.find(opt => opt.label === correctAnsLabel);
-                if (correctOption) {
-                    correctAnsText = correctOption.text;
-                }
-
-                const questionId = `${currentTopic.gid}_q${qIdx}`; 
 
                 return {
-                    id: questionId,
+                    id: `${currentTopic.gid}_q${qIdx}`,
                     question: mainQuestionText,
-                    options: options, // Array of { label: 'A', text: 'Option A text' }
-                    correctAnswer: correctAnsText, // The text of the correct answer
-                    correctAnswerLabel: correctAnsLabel, // The label of the correct answer (A, B, C, D)
+                    options: options,
+                    correctAnswer: correctOption ? correctOption.text : 'N/A',
+                    correctAnswerLabel: correctAnsLabel,
                     explanation: explanation
                 };
             }).filter(Boolean);
@@ -607,37 +588,35 @@
             const q = allQuestions[index];
             
             const optionsHtml = q.options.map((option) => `
-                <label class="question-option-label">
-                    <input type="radio" class="form-radio" name="q${index}" value="${option.label}">
-                    <span class="ml-2 text-base text-gray-700">${option.label}) ${option.text}</span>
+                <label>
+                    <input type="radio" name="q${index}" value="${option.label}">
+                    <span>${option.label}) ${option.text}</span>
                 </label>
             `).join('');
 
-            const isBookmarked = userBookmarks.has(q.id); // Check against the Set
+            const isBookmarked = userBookmarks.has(q.id);
             const bookmarkClass = isBookmarked ? 'bookmarked' : '';
 
             questionsDisplay.innerHTML = `
                 <div class="question-block" id="main-question-${index}">
-                    <div class="question-header"> <!-- Use question-header for alignment -->
+                    <div class="question-header">
                         <div class="question-number">Question ${index + 1}</div>
                         <button class="bookmark-button ${bookmarkClass}" data-question-id="${q.id}" onclick="window.toggleBookmark('${q.id}', '${q.question.replace(/'/g, "\\'")}')" title="Bookmark Question">
                             <i data-feather="bookmark"></i>
                         </button>
                     </div>
                     <p class="main-question-text">${q.question}</p>
-                    <div class="question-options flex flex-col gap-2 w-full text-left">
-                        ${optionsHtml}
-                    </div>
+                    <div class="question-options">${optionsHtml}</div>
                     <div class="all-explanations" id="explanations-${index}">
                         <h3>Explanation</h3>
-                        <p class="font-semibold text-gray-800">Correct Answer: ${q.correctAnswerLabel}) ${q.correctAnswer}</p>
-                        <p class="text-sm text-gray-700 mt-2">${q.explanation}</p>
+                        <p class="font-semibold">Correct Answer: ${q.correctAnswerLabel}) ${q.correctAnswer}</p>
+                        <p>${q.explanation}</p>
                     </div>
                 </div>`;
             
             updateNav(index);
-            attachOptionListeners(index); // Attach listener for the new option structure
-            feather.replace(); // Re-render feather icons after content update
+            attachOptionListeners(index);
+            feather.replace();
         }
 
         function attachOptionListeners(questionIndex) {
@@ -646,9 +625,8 @@
             
             radioButtons.forEach(radio => {
                 radio.addEventListener('change', (e) => {
-                    const selectedLabel = e.target.value;
-                    evaluateAnswer(questionIndex, selectedLabel);
-                }, { once: true }); // Ensure event listener fires only once per question
+                    evaluateAnswer(questionIndex, e.target.value);
+                }, { once: true });
             });
         }
 
@@ -661,16 +639,15 @@
             const explanationsContainer = questionBlock.querySelector('.all-explanations');
 
             radioButtons.forEach(radio => {
-                radio.disabled = true; // Disable all options after selection
-                const labelElement = radio.closest('label'); // Get the parent label for styling
+                radio.disabled = true;
+                const labelElement = radio.closest('label');
 
                 if (radio.value === q.correctAnswerLabel) {
-                    labelElement.classList.add('selected-correct'); // Highlight correct answer
+                    labelElement.classList.add('selected-correct');
                 }
                 if (radio.value === selectedLabel && !isCorrect) {
-                    labelElement.classList.add('selected-incorrect'); // Highlight incorrect selected answer
+                    labelElement.classList.add('selected-incorrect');
                 } else if (radio.value !== selectedLabel && radio.value === q.correctAnswerLabel) {
-                    // If user chose wrong, but this is the correct answer, highlight it slightly differently
                     labelElement.classList.add('correct-answer');
                 }
             });
@@ -683,27 +660,14 @@
         function updateNav(index) {
             questionCounter.textContent = `Question ${index + 1} of ${allQuestions.length}`;
             prevButton.disabled = index === 0;
-            nextButton.disabled = index === allQuestions.length - 1; // Always disable next if it's the last question
-            // The "Finish & Save" logic is removed as per previous request
+            nextButton.disabled = index === allQuestions.length - 1;
         }
 
         // --- Event Listeners ---
-        document.addEventListener('DOMContentLoaded', () => {
-            // The onAuthStateChanged listener above will handle showing the correct screen
-        });
-        
         prevButton.addEventListener('click', () => showQuestion(--currentQuestionIndex));
-        nextButton.addEventListener('click', () => {
-            // If it's the last question, do nothing or show a "Quiz Completed" message
-            if (currentQuestionIndex === allQuestions.length - 1) {
-                showParentMessage('Quiz completed for this topic!', 'info');
-                // Optionally, navigate back to topics or show a summary
-                // showScreen('physics-category-screen'); 
-            } else {
-                showQuestion(++currentQuestionIndex);
-            }
-        });
+        nextButton.addEventListener('click', () => showQuestion(++currentQuestionIndex));
 
     </script>
 </body>
 </html>
+�
