@@ -6,16 +6,17 @@
     <title>RadMentor - Comprehensive Radiology Learning Source</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
     <script src="https://unpkg.com/feather-icons"></script>
-
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="text-gray-800 bg-gray-50">
+
+    <div id="loading-indicator" class="fixed inset-0 flex items-center justify-center bg-gray-50 z-50">
+        <p class="text-lg text-gray-600">Loading RadMentor...</p>
+    </div>
 
     <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
         <div class="container mx-auto px-6 py-3 flex justify-between items-center">
@@ -63,7 +64,7 @@
         </div>
     </header>
 
-    <div id="landing-page">
+    <div id="landing-page" class="hidden">
         <main>
             <section class="bg-white pt-32 pb-20">
                 <div class="container mx-auto px-6 text-center">
@@ -80,7 +81,6 @@
                     </div>
                 </div>
             </section>
-
             <section id="courses" class="py-20">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
@@ -115,7 +115,6 @@
                     </div>
                 </div>
             </section>
-
             <section id="features" class="py-20 bg-white">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
@@ -147,7 +146,6 @@
                     </div>
                 </div>
             </section>
-
             <section id="about" class="py-20">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
@@ -162,7 +160,6 @@
                 </div>
             </section>
         </main>
-
         <footer class="bg-gray-900 text-white">
             <div class="container mx-auto px-6 py-12">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -245,7 +242,7 @@
                     </select>
                 </div>
                 <div class="md:col-span-2">
-                    <label class="font-medium text-gray-700">_Medical College_</label>
+                    <label class="font-medium text-gray-700">Medical College</label>
                     <input list="colleges" id="college" placeholder="Type to search your college" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <datalist id="colleges">
                     </datalist>
@@ -254,13 +251,11 @@
             <button onclick="submitProfile()" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Submit Profile</button>
         </div>
     </div>
-
+    
     <div id="chatbot-container">
-        </div>
+    </div>
     <button id="chat-toggle-button">💬</button>
 
-
     <script type="module" src="js/main.js"></script>
-
 </body>
 </html>
