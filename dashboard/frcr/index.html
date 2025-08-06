@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FRCR Preparation - RadMentor</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .rad-gradient { background: linear-gradient(90deg, #1e40af, #3b82f6); }
+        .rad-gradient-text { background: linear-gradient(90deg, #1e40af, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .frcr-card { transition: all 0.2s ease-in-out; border: 1px solid #e5e7eb; }
+        .frcr-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); border-color: #3b82f6; }
+        .expandable-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out; }
+        .expandable-content.expanded { max-height: 500px; }
+        .coming-soon { position: relative; opacity: 0.6; }
+        .coming-soon::after { content: 'Coming Soon'; position: absolute; top: 1rem; right: 1rem; background: #fbbf24; color: #92400e; padding: 0.25rem 0.5rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; }
+        .modal-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; }
+        .modal-backdrop.active { opacity: 1; visibility: visible; }
+        .modal-content { transform: scale(0.95); transition: transform 0.3s ease; }
+        .modal-backdrop.active .modal-content { transform: scale(1); }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div id="loading-indicator" class="fixed inset-0 flex items-center justify-center bg-gray-50 z-[200]">
+        <p class="text-lg text-gray-600">Verifying Access...</p>
+    </div>
+
+    <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <a href="../" class="flex items-center">
+                <img src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/logo.png" alt="RadMentor Logo" class="h-10 mr-3"/>
+                <span class="text-2xl font-bold text-gray-800">RadMentor</span>
+            </a>
+            <div id="auth-status" class="flex items-center">
+                </div>
+        </div>
+    </header>
+
+    <main class="pt-32 pb-20 hidden">
+        <section class="bg-white">
+            <div class="container mx-auto px-6 text-center py-16">
+                <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
+                    <span class="rad-gradient-text">FRCR</span> Preparation
+                </h1>
+                <p class="mt-6 text-lg text-gray-600 max-w-3xl mx-auto">
+                    Master all parts of the Fellowship of the Royal College of Radiologists exam with our expert-curated content.
+                </p>
+            </div>
+        </section>
+
+        <section class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold text-gray-900">Choose Your FRCR Part</h2>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    <div class="frcr-card bg-white rounded-xl shadow-lg p-8 cursor-pointer" onclick="togglePart1()">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="rad-gradient w-16 h-16 rounded-full flex items-center justify-center shadow-lg">
+                                <i data-feather="book-open" class="text-white w-8 h-8"></i>
+                            </div>
+                            <i data-feather="chevron-down" id="part1-chevron" class="text-gray-400 w-6 h-6 transition-transform"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Part 1</h3>
+                        <p class="text-gray-600 mb-6">Foundation knowledge in anatomy and physics.</p>
+                        
+                        <div id="part1-content" class="expandable-content">
+                            <div class="border-t border-gray-200 pt-6 space-y-4">
+                                <a href="Part 1/Anatomy/" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center">
+                                        <i data-feather="user" class="text-blue-600 w-5 h-5 mr-3"></i>
+                                        <span class="font-semibold text-gray-800">FRCR Anatomy</span>
+                                    </div>
+                                    <i data-feather="arrow-right" class="text-gray-400 w-4 h-4"></i>
+                                </a>
+                                <a href="Part 1/Physics/" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <div class="flex items-center">
+                                        <i data-feather="zap" class="text-blue-600 w-5 h-5 mr-3"></i>
+                                        <span class="font-semibold text-gray-800">FRCR Physics</span>
+                                    </div>
+                                    <i data-feather="arrow-right" class="text-gray-400 w-4 h-4"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="frcr-card bg-white rounded-xl shadow-lg p-8 coming-soon">
+                         </div>
+
+                    <div class="frcr-card bg-white rounded-xl shadow-lg p-8 coming-soon">
+                         </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="history-modal" class="modal-backdrop">
+        </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+        import { getFirestore, collection, doc, getDoc, getDocs, query, where, addDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+        // Your Firebase config (ensure this is correct)
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
+            authDomain: "radiology-mcqs.firebaseapp.com",
+            projectId: "radiology-mcqs",
+            storageBucket: "radiology-mcqs.appspot.com",
+            messagingSenderId: "862300415358",
+            appId: "1:862300415358:web:097d5e413f388e30587f2f",
+            measurementId: "G-0V1SD1H95V"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const mainContent = document.querySelector('main');
+            const authStatusEl = document.getElementById('auth-status');
+
+            if (user) {
+                currentUser = user;
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+                const userName = userDoc.exists() ? userDoc.data().name.split(' ')[0] : 'User';
+
+                authStatusEl.innerHTML = `
+                    <span class="hidden sm:block text-gray-700 mr-4">Hi, ${userName}!</span>
+                    <button id="history-btn" class="text-gray-600 hover:text-blue-600 mr-6">My History</button>
+                    <a href="../" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                        Home
+                    </a>`;
+                
+                document.getElementById('history-btn').addEventListener('click', () => showHistoryModal('all'));
+                
+                mainContent.classList.remove('hidden');
+                loadingIndicator.classList.add('hidden');
+            } else {
+                authStatusEl.innerHTML = '<p class="text-red-500 font-semibold">Please log in to continue.</p>';
+                setTimeout(() => { window.location.href = '../'; }, 2000);
+            }
+            feather.replace();
+        });
+
+        // --- UI Logic ---
+        window.togglePart1 = () => {
+            document.getElementById('part1-content').classList.toggle('expanded');
+            document.getElementById('part1-chevron').classList.toggle('rotate-180');
+        };
+
+        // --- Modal Logic ---
+        const historyModal = document.getElementById('history-modal');
+        function showHistoryModal(testType) {
+            // Function to show history for specific test types, including bookmarks
+            // Placeholder - this would fetch and display the history/bookmarks
+            historyModal.innerHTML = `
+                <div class="modal-content bg-white w-11/12 max-w-2xl mx-auto rounded-2xl shadow-xl p-8">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-2xl font-bold text-gray-800">Your History (${testType})</h3>
+                        <button onclick="closeHistoryModal()" class="text-gray-400 hover:text-gray-600">&times;</button>
+                    </div>
+                    <div><p>History and bookmarks will be shown here.</p></div>
+                </div>`;
+            historyModal.classList.add('active');
+        }
+
+        window.closeHistoryModal = () => {
+            historyModal.classList.remove('active');
+        };
+
+        feather.replace();
+    </script>
+</body>
+</html>
