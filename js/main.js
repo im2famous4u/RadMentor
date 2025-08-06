@@ -1,15 +1,26 @@
 // js/main.js
+
+// Import our initialized services and all necessary Firebase functions
 import { auth, db } from './firebase.js';
 import {
-    createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
+    signOut
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import {
-    doc, setDoc, getDoc, serverTimestamp
+    doc,
+    setDoc,
+    getDoc,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
+
+// This event listener ensures that no code runs until the HTML is fully ready.
 document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM is ready. Initializing application.");
 
+    // --- DOM Element References ---
     const loadingIndicator = document.getElementById('loading-indicator');
     const landingPage = document.getElementById('landing-page');
     const profileForm = document.getElementById('profile-form-container');
@@ -22,8 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('mobile-menu');
 
-    let isSignIn = true;
+    let isSignIn = true; // Tracks if the modal is for sign-in or sign-up
 
+    // --- UI LOGIC ---
     if (mobileMenuButton && mobileMenu) {
         mobileMenuButton.addEventListener('click', () => {
             mobileMenu.classList.toggle('hidden');
@@ -59,22 +71,27 @@ document.addEventListener('DOMContentLoaded', () => {
             authBtn.textContent = 'Sign Up';
             toggleBtn.textContent = 'Already have an account? Sign in';
         }
-        authMessage.textContent = '';
+        // NOTE: We no longer clear the authMessage here, to prevent errors from disappearing.
     }
     
+    // --- AUTHENTICATION LOGIC ---
     async function handleAuth() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         authMessage.textContent = '';
+
         if (!email || !password) {
             authMessage.textContent = 'Please enter both email and password.';
             return;
         }
+
         authBtn.disabled = true;
         authBtn.textContent = 'Processing...';
+
         try {
             if (isSignIn) {
                 await signInWithEmailAndPassword(auth, email, password);
+                // onAuthStateChanged will handle closing the modal and UI changes on success
             } else {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
@@ -84,11 +101,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     createdAt: serverTimestamp(),
                     profileComplete: false
                 });
+                // onAuthStateChanged will now take over and show the profile form on success
             }
         } catch (error) {
+            // If an error happens, display it and reset the button
             authMessage.textContent = error.message;
-        } finally {
-            updateAuthModalUI();
+            authBtn.disabled = false;
+            authBtn.textContent = isSignIn ? 'Sign In' : 'Sign Up';
         }
     }
 
@@ -115,16 +134,14 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             await setDoc(userDocRef, profileData, { merge: true });
             console.log("Profile successfully saved to Firestore!");
-            profileForm.classList.add('hidden');
-            landingPage.classList.remove('hidden');
         } catch (error) {
             console.error("Error updating profile:", error);
             alert("Could not update profile. Please check the console for errors.");
         }
     }
     
+    // --- MAIN STATE CONTROLLER ---
     onAuthStateChanged(auth, async (user) => {
-        console.log("Auth state changed. User:", user ? user.uid : 'null');
         const loggedOutElements = document.querySelectorAll('#header-logged-out, #mobile-logged-out');
         const loggedInElements = document.querySelectorAll('#header-logged-in, #mobile-logged-in');
         try {
@@ -160,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- Expose functions to the global window object ---
     window.showAuthModal = showAuthModal;
     window.hideAuthModal = hideAuthModal;
     window.toggleAuth = toggleAuth;
