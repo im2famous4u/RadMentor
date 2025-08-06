@@ -5,23 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RadMentor - Comprehensive Radiology Learning Source</title>
 
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <!-- Feather Icons -->
     <script src="https://unpkg.com/feather-icons"></script>
 
-    <!-- Custom Stylesheet -->
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="text-gray-800">
+<body class="text-gray-800 bg-gray-50">
 
-    <!-- Header Section -->
     <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
         <div class="container mx-auto px-6 py-3 flex justify-between items-center">
             <div class="flex items-center">
@@ -68,10 +63,8 @@
         </div>
     </header>
 
-    <!-- Landing Page Content -->
     <div id="landing-page">
         <main>
-            <!-- Hero Section -->
             <section class="bg-white pt-32 pb-20">
                 <div class="container mx-auto px-6 text-center">
                     <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
@@ -88,7 +81,6 @@
                 </div>
             </section>
 
-            <!-- Courses Section -->
             <section id="courses" class="py-20">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
@@ -124,7 +116,6 @@
                 </div>
             </section>
 
-            <!-- Features Section -->
             <section id="features" class="py-20 bg-white">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
@@ -157,7 +148,6 @@
                 </div>
             </section>
 
-            <!-- About Section -->
             <section id="about" class="py-20">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
@@ -173,7 +163,6 @@
             </section>
         </main>
 
-        <!-- Footer Section -->
         <footer class="bg-gray-900 text-white">
             <div class="container mx-auto px-6 py-12">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -201,7 +190,6 @@
         </footer>
     </div>
 
-    <!-- Authentication Modal -->
     <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
             <button onclick="hideAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
@@ -225,7 +213,6 @@
         </div>
     </div>
     
-    <!-- Profile Form -->
     <div id="profile-form-container" class="fixed inset-0 bg-gray-100 z-50 p-4 hidden overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-auto my-8 p-8 md:p-12">
             <h1 class="text-3xl font-bold text-gray-900 text-center">Complete Your Profile</h1>
@@ -258,7 +245,7 @@
                     </select>
                 </div>
                 <div class="md:col-span-2">
-                    <label class="font-medium text-gray-700">Medical College</label>
+                    <label class="font-medium text-gray-700">_Medical College_</label>
                     <input list="colleges" id="college" placeholder="Type to search your college" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <datalist id="colleges">
                     </datalist>
@@ -268,32 +255,12 @@
         </div>
     </div>
 
-    <!-- Chatbot -->
     <div id="chatbot-container">
-        <div id="chatbot-header">RadMentor AI</div>
-        <div id="chatbox">
-            <div class="message-wrapper">
-                <div class="bot-message">Welcome to RadMentor! Ask me anything about radiology, exams, or anatomy.</div>
-            </div>
         </div>
-        <div id="input-area">
-            <input type="text" id="chat-userInput" placeholder="Ask a question..." onkeyup="if(event.keyCode===13)sendChatMessage()">
-            <button class="chat-submit-button" onclick="sendChatMessage()">➤</button>
-        </div>
-    </div>
     <button id="chat-toggle-button">💬</button>
 
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-
-    <!-- Custom JavaScript -->
-    <script src="js/firebase.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/chatbot.js"></script>
-    <script src="js/main.js"></script>
+    <script type="module" src="js/main.js"></script>
 
 </body>
 </html>
