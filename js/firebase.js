@@ -1,11 +1,8 @@
 // js/firebase.js
-
-// Import the functions you need from the latest Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
   authDomain: "radiology-mcqs.firebaseapp.com",
@@ -16,9 +13,6 @@ const firebaseConfig = {
   measurementId: "G-0V1SD1H95V"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// Initialize and export Firebase services for other files to use
 export const auth = getAuth(app);
 export const db = getFirestore(app);
