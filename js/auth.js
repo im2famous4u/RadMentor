@@ -21,20 +21,23 @@ const authSubtitle = document.getElementById('auth-subtitle');
 const authBtn = document.getElementById('auth-btn');
 const toggleBtn = document.getElementById('toggle-btn');
 const authMessage = document.getElementById('auth-message');
+const landingPage = document.getElementById('landing-page');
+const profileForm = document.getElementById('profile-form-container');
+const loadingIndicator = document.getElementById('loading-indicator');
 
-let isSignIn = true; // State to track if the modal is for sign-in or sign-up
+let isSignIn = true;
 
 // --- UI Functions ---
 function showAuthModal(mode) {
     isSignIn = (mode === 'signin');
     updateAuthModalUI();
     authModal.classList.remove('hidden');
-    feather.replace(); // Re-render icons if any in the modal
+    feather.replace();
 }
 
 function hideAuthModal() {
     authModal.classList.add('hidden');
-    authMessage.textContent = ''; // Clear any error messages
+    authMessage.textContent = '';
 }
 
 function toggleAuth() {
@@ -61,18 +64,25 @@ function updateAuthModalUI() {
 async function handleAuth() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    authMessage.textContent = ''; // Clear previous messages
+    authMessage.textContent = '';
 
     if (!email || !password) {
         authMessage.textContent = 'Please enter both email and password.';
         return;
     }
 
+    // Optional: Add loading state to button
+    authBtn.disabled = true;
+    authBtn.textContent = 'Processing...';
+
     if (isSignIn) {
         await signIn(email, password);
     } else {
         await signUp(email, password);
     }
+    
+    authBtn.disabled = false;
+    updateAuthModalUI(); // Reset button text
 }
 
 async function signUp(email, password) {
@@ -86,9 +96,7 @@ async function signUp(email, password) {
             createdAt: serverTimestamp(),
             profileComplete: false
         });
-
-        hideAuthModal();
-        document.getElementById('profile-form-container').classList.remove('hidden');
+        // onAuthStateChanged will handle hiding/showing the correct pages now
     } catch (error) {
         authMessage.textContent = error.message;
     }
@@ -97,7 +105,7 @@ async function signUp(email, password) {
 async function signIn(email, password) {
     try {
         await signInWithEmailAndPassword(auth, email, password);
-        // onAuthStateChanged will handle the UI changes
+        // onAuthStateChanged will handle the UI changes, so we don't need to do anything here
     } catch (error) {
         authMessage.textContent = error.message;
     }
@@ -106,8 +114,7 @@ async function signIn(email, password) {
 async function logout() {
     try {
         await signOut(auth);
-        // onAuthStateChanged will handle the UI changes
-        window.location.reload(); // Reload the page to reset state
+        window.location.reload();
     } catch (error) {
         console.error("Error signing out:", error);
     }
@@ -127,11 +134,16 @@ async function submitProfile() {
         profileComplete: true
     };
 
+    if (!profileData.name || !profileData.dob) {
+        alert('Please fill in at least your name and date of birth.');
+        return;
+    }
+
     const userDocRef = doc(db, "users", user.uid);
     try {
         await setDoc(userDocRef, profileData, { merge: true });
-        document.getElementById('profile-form-container').classList.add('hidden');
-        document.getElementById('landing-page').classList.remove('hidden');
+        profileForm.classList.add('hidden');
+        landingPage.classList.remove('hidden');
     } catch (error) {
         console.error("Error updating profile:", error);
         alert("Could not update profile. Please try again.");
@@ -150,33 +162,33 @@ onAuthStateChanged(auth, async (user) => {
         if (docSnap.exists()) {
             const userData = docSnap.data();
             if (userData.profileComplete) {
-                // User is fully logged in
                 loggedInElements.forEach(el => el.classList.remove('hidden'));
                 loggedOutElements.forEach(el => el.classList.add('hidden'));
                 document.getElementById('user-greeting-header').textContent = userData.name ? userData.name.split(' ')[0] : 'User';
                 hideAuthModal();
-                document.getElementById('profile-form-container').classList.add('hidden');
+                profileForm.classList.add('hidden');
+                landingPage.classList.remove('hidden');
             } else {
-                // User needs to complete their profile
-                document.getElementById('landing-page').classList.add('hidden');
-                document.getElementById('profile-form-container').classList.remove('hidden');
+                landingPage.classList.add('hidden');
+                profileForm.classList.remove('hidden');
                 hideAuthModal();
             }
         } else {
-             // Edge case: Auth user exists but no Firestore doc. Force profile completion.
-            document.getElementById('landing-page').classList.add('hidden');
-            document.getElementById('profile-form-container').classList.remove('hidden');
+            landingPage.classList.add('hidden');
+            profileForm.classList.remove('hidden');
             hideAuthModal();
         }
     } else {
-        // User is logged out
         loggedInElements.forEach(el => el.classList.add('hidden'));
         loggedOutElements.forEach(el => el.classList.remove('hidden'));
+        landingPage.classList.remove('hidden');
     }
-    feather.replace(); // Always re-render icons after UI changes
+
+    loadingIndicator.classList.add('hidden');
+    feather.replace();
 });
 
-// --- Expose functions to the global window object so HTML onclicks can find them ---
+// --- Expose functions to the global window object ---
 window.showAuthModal = showAuthModal;
 window.hideAuthModal = hideAuthModal;
 window.toggleAuth = toggleAuth;
@@ -184,6 +196,5 @@ window.handleAuth = handleAuth;
 window.submitProfile = submitProfile;
 window.logout = logout;
 window.showDashboard = () => {
-    // You can redirect to a dashboard page or show a dashboard modal here
     alert('Dashboard coming soon!');
 };
