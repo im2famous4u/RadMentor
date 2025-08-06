@@ -79,14 +79,14 @@
                         
                         <div id="part1-content" class="expandable-content">
                             <div class="border-t border-gray-200 pt-6 space-y-4">
-                                <a href="Part 1/Anatomy/" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                <a href="/dashboard/frcr/Part 1/Anatomy/" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                                     <div class="flex items-center">
                                         <i data-feather="user" class="text-blue-600 w-5 h-5 mr-3"></i>
                                         <span class="font-semibold text-gray-800">FRCR Anatomy</span>
                                     </div>
                                     <i data-feather="arrow-right" class="text-gray-400 w-4 h-4"></i>
                                 </a>
-                                <a href="Part 1/Physics/" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                <a href="/dashboard/frcr/Part 1/Physics/" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                                     <div class="flex items-center">
                                         <i data-feather="zap" class="text-blue-600 w-5 h-5 mr-3"></i>
                                         <span class="font-semibold text-gray-800">FRCR Physics</span>
@@ -114,6 +114,8 @@
     </main>
 
     <script type="module">
+        // The JavaScript does not need to be changed for this update.
+        // It correctly handles authentication and the expandable card.
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
@@ -157,13 +159,11 @@
             feather.replace();
         });
 
-        // UI Logic for the expandable card
         window.togglePart1 = () => {
             document.getElementById('part1-content').classList.toggle('expanded');
             document.getElementById('part1-chevron').classList.toggle('rotate-180');
         };
 
-        // Initial icon render
         feather.replace();
     </script>
 </body>
