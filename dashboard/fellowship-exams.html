@@ -543,7 +543,8 @@
                 });
             });
         }
-
+        
+        // --- CORRECTED CSV PARSER ---
         async function fetchQuizDataFromSheet(sheetId, gid) {
             const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
             try {
@@ -559,39 +560,54 @@
         function parseCsvToQuestions(csvText) {
             const lines = csvText.split('\n');
             if (lines.length < 2) return [];
-            
-            // Assuming first line is header, second line is "question", "a", "b", "c", "d", "Correct Answer", "Explanation", "Image for Question", "Explanation Image"
-            const headers = lines[1].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(h => h.trim().replace(/^"|"$/g, ''));
-            const dataStartIndex = 2; // Start parsing from the third line
+
+            const headers = lines[0].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(h => h.trim().replace(/^"|"$/g, ''));
+            const dataRows = lines.slice(1);
+
+            const headerMap = {
+                question: headers.indexOf('question'),
+                optionA: headers.indexOf('a'),
+                optionB: headers.indexOf('b'),
+                optionC: headers.indexOf('c'),
+                optionD: headers.indexOf('d'),
+                correctAnswer: headers.indexOf('Correct Answe'),
+                explanation: headers.indexOf('Explanation'),
+                imageQuestion: headers.indexOf('Image for Que'),
+                imageExplanation: headers.indexOf('Explanation Im')
+            };
 
             const questions = [];
-            for (let i = dataStartIndex; i < lines.length; i++) {
-                const parts = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(part => part.trim().replace(/^"|"$/g, ''));
-                if (parts.length < headers.length) continue;
+            dataRows.forEach((line, index) => {
+                const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(part => part.trim().replace(/^"|"$/g, ''));
+                if (parts.length < headers.length) return;
 
-                const questionText = parts[0];
-                const options = [parts[1], parts[2], parts[3], parts[4]].filter(Boolean);
-                const correctAnswerText = parts[5];
-                const explanation = parts[6];
-                const imagesrc_question = parts[7];
-                const imagesrc_explanation = parts[8];
+                const questionText = parts[headerMap.question];
+                const options = [
+                    parts[headerMap.optionA],
+                    parts[headerMap.optionB],
+                    parts[headerMap.optionC],
+                    parts[headerMap.optionD]
+                ].filter(Boolean);
+                const correctAnswerText = parts[headerMap.correctAnswer];
+                const explanation = parts[headerMap.explanation];
+                const imagesrc_question = parts[headerMap.imageQuestion];
+                const imagesrc_explanation = parts[headerMap.imageExplanation];
 
                 const correctIndex = options.findIndex(opt => opt.trim().toLowerCase() === correctAnswerText.trim().toLowerCase());
-                if (correctIndex === -1) {
-                    console.warn(`Could not find correct answer for question: "${questionText}"`);
-                    continue;
+                
+                if (questionText && correctIndex !== -1) {
+                    questions.push({
+                        id: questions.length,
+                        text: questionText,
+                        options: options,
+                        correctIndex: correctIndex,
+                        explanation: explanation,
+                        imagesrc_question: imagesrc_question,
+                        imagesrc_explanation: imagesrc_explanation
+                    });
                 }
+            });
 
-                questions.push({
-                    id: questions.length,
-                    text: questionText,
-                    options: options,
-                    correctIndex: correctIndex,
-                    explanation: explanation,
-                    imagesrc_question: imagesrc_question,
-                    imagesrc_explanation: imagesrc_explanation
-                });
-            }
             return questions;
         }
 
@@ -614,7 +630,6 @@
             questionNav.style.display = 'none';
 
             try {
-                // Fetch bookmarks first
                 await fetchUserBookmarks();
                 currentQuizData = await fetchQuizDataFromSheet(paperInfo.sheetId, paperInfo.gid);
 
@@ -624,7 +639,6 @@
                     return;
                 }
                 
-                // Initialize state variables based on the loaded data
                 state.currentQuestion = 0;
                 state.answers = Array(currentQuizData.length).fill(null);
                 state.startTime = new Date();
@@ -637,13 +651,11 @@
                 state.practiceAttempted = 0;
                 state.practiceCorrect = 0;
 
-                // Update UI visibility
                 paperSelectionContainer.style.display = 'none';
                 mainQuizContent.style.display = 'block';
                 resultContainer.style.display = 'none';
                 homeBtn.style.display = 'inline-block';
 
-                // Practice mode specific UI
                 practiceProgressBarContainer.style.display = 'block';
                 practiceProgress.style.width = '0%';
 
