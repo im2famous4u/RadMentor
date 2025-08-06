@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -294,11 +293,11 @@
     </div>
 
     <script type="module">
-        // --- Firebase SDK Imports ---
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { collection, getDocs, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // Import Firebase instances and utility from your centralized auth.js
+        import { auth, db, showParentMessage } from '/fellowshipexams/js/auth.js';
+        // Import Firestore specific functions needed here
+        import { collection, doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, getDocs, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
 
         // --- Configuration ---
@@ -320,16 +319,11 @@
             { name: "Magnetic Resonance Imaging", gid: "2026917708", icon: "🧲", color: "green", totalModules: 45 },
         ];
 
-        // --- Firebase Variables ---
-        let app;
-        let db;
-        let auth;
-        let currentUser = null; // Changed from userId to currentUser for consistency with provided code
-        let userBookmarks = new Set(); // Using Set for efficient lookups
-
-        // --- State ---
+        // --- App State ---
         let allQuestions = [];
         let currentQuestionIndex = 0;
+        let currentUser = null; // Will be set by onAuthStateChanged
+        let userBookmarks = new Set(); // Using Set for efficient lookups
         let currentTopic = null; // To keep track of the active topic
 
         // --- DOM Elements ---
@@ -347,32 +341,13 @@
         const nextButton = document.getElementById('next-button');
         const questionCounter = document.getElementById('question-counter');
 
-        // Function to show messages in the parent frame (still useful for general messages)
-        function showParentMessage(message, type = 'success') {
-            if (window.parent && window.parent.showMessage) {
-                window.parent.showMessage(message, type);
-            } else {
-                console.log(`Message: ${message} (Type: ${type})`);
-            }
-        }
-
-        // --- Firebase Initialization & Auth ---
-        // Initialize Firebase app immediately
-        try {
-            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-        } catch (error) {
-            console.error("Error initializing Firebase:", error);
-            authCheckScreen.innerHTML = `<div class="selection-container"><h1 class="text-red-600">Error!</h1><p class="text-gray-700 mt-4">Failed to initialize app. Please try again later.</p></div>`;
-        }
-
-        // Auth state listener
+        // --- Authentication State Listener ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
-                await fetchUserBookmarks(); // Fetch bookmarks once authenticated
+                // Use __app_id for collection path as per Canvas instructions
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                await fetchUserBookmarks(appId); // Pass appId
                 populateTopics();
                 showScreen('physics-category-screen');
             } else {
@@ -386,10 +361,9 @@
         });
 
         // --- Firestore Data Operations ---
-        async function fetchUserBookmarks() {
+        async function fetchUserBookmarks(appId) { // Accept appId as argument
             if (!currentUser) return;
-            // Use __app_id for collection path as per Canvas instructions
-            const bookmarksRef = collection(db, `artifacts/${__app_id}/users/${currentUser.uid}/bookmarks`);
+            const bookmarksRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/bookmarks`);
             try {
                 const snapshot = await getDocs(bookmarksRef);
                 userBookmarks = new Set(snapshot.docs.map(doc => doc.id));
@@ -405,8 +379,8 @@
                 showParentMessage('You must be logged in to bookmark questions.', 'error');
                 return;
             }
-            // Use __app_id for document path as per Canvas instructions
-            const bookmarkDocRef = doc(db, `artifacts/${__app_id}/users/${currentUser.uid}/bookmarks`, questionId);
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const bookmarkDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/bookmarks`, questionId);
             const button = document.querySelector(`button[data-question-id="${questionId}"]`); // Select by data attribute
 
             try {
@@ -441,10 +415,9 @@
                 bookmarksList.innerHTML = '<p class="loading-container">You must be logged in to view bookmarks.</p>';
                 return;
             }
-
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
             try {
-                // Use __app_id for collection path as per Canvas instructions
-                const bookmarksRef = collection(db, `artifacts/${__app_id}/users/${currentUser.uid}/bookmarks`);
+                const bookmarksRef = collection(db, `artifacts/${appId}/users/${currentUser.uid}/bookmarks`);
                 const snapshot = await getDocs(bookmarksRef);
 
                 if (snapshot.empty) {
@@ -481,8 +454,8 @@
         // Make removeBookmarkFromList globally accessible
         window.removeBookmarkFromList = async (questionId) => {
             if (!currentUser) return;
-            // Use __app_id for document path as per Canvas instructions
-            const bookmarkDocRef = doc(db, `artifacts/${__app_id}/users/${currentUser.uid}/bookmarks`, questionId);
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const bookmarkDocRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/bookmarks`, questionId);
             try {
                 await deleteDoc(bookmarkDocRef);
                 userBookmarks.delete(questionId); // Update local set
@@ -716,7 +689,6 @@
 
         // --- Event Listeners ---
         document.addEventListener('DOMContentLoaded', () => {
-            // No need for initializeQuizApp, as auth state listener handles initial screen
             // The onAuthStateChanged listener above will handle showing the correct screen
         });
         
