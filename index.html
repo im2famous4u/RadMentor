@@ -4,11 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RadMentor - Comprehensive Radiology Learning Source</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <script src="https://unpkg.com/feather-icons"></script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="text-gray-800 bg-gray-50">
@@ -65,20 +69,201 @@
 
     <div id="landing-page" class="hidden">
         <main>
-            </main>
-        <footer>
-            </footer>
+            <section class="bg-white pt-32 pb-20">
+                <div class="container mx-auto px-6 text-center">
+                    <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
+                        The World’s Most Comprehensive <br class="hidden md:block" /> <span class="rad-gradient-text">Radiology Learning Source</span>
+                    </h1>
+                    <p class="mt-6 text-lg text-gray-600 max-w-3xl mx-auto">
+                        Master radiology with our expert-curated Q-banks, mock exams, and in-depth content. Built by radiologists, for future radiologists.
+                    </p>
+                    <div class="mt-8 flex justify-center gap-4">
+                        <button onclick="showAuthModal('signup')" class="rad-gradient text-white font-bold px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-lg">
+                            Get Started for Free
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="courses" class="py-20">
+                <div class="container mx-auto px-6">
+                    <div class="text-center mb-12">
+                        <h2 class="text-4xl font-bold text-gray-900">Prepare for Any Exam</h2>
+                        <p class="mt-4 text-lg text-gray-600">Targeted preparation for all major radiology exams.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 cursor-pointer" onclick="window.location.href='frcr/'">
+                            <h3 class="text-2xl font-bold text-gray-800">FRCR</h3>
+                            <p class="mt-2 text-gray-600">Comprehensive question banks and mock tests for the FRCR exam.</p>
+                        </div>
+                        <a href="MD_DNB/index.html" class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 flex flex-col items-center justify-center text-center">
+                            <h3 class="text-2xl font-bold text-gray-800">MD / DNB</h3>
+                            <p class="mt-2 text-gray-600">Master your final year exams with our targeted content.</p>
+                        </a>
+                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 cursor-pointer" onclick="window.location.href='anatomy/'">
+                            <h3 class="text-2xl font-bold text-gray-800">Anatomy</h3>
+                            <p class="mt-2 text-gray-600">Detailed anatomical modules to build a strong foundation.</p>
+                        </div>
+                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 cursor-pointer" onclick="alert('MICR content coming soon!')">
+                            <h3 class="text-2xl font-bold text-gray-800">MICR</h3>
+                            <p class="mt-2 text-gray-600">Practice with MCQs tailored for the MICR examination.</p>
+                        </div>
+                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 cursor-pointer" onclick="alert('Superspeciality content coming soon!')">
+                            <h3 class="text-2xl font-bold text-gray-800">Superspeciality</h3>
+                            <p class="mt-2 text-gray-600">Prepare for NEET SS & INICET SS with high-yield questions.</p>
+                        </div>
+                        <div class="bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl transition-shadow border border-gray-100 cursor-pointer"  onclick="window.location.href='fellowshipexams/'">
+                            <h3 class="text-2xl font-bold text-gray-800">Fellowship Exams</h3>
+                            <p class="mt-2 text-gray-600">Excel in your fellowship exams with our specialized modules.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="features" class="py-20 bg-white">
+                <div class="container mx-auto px-6">
+                    <div class="text-center mb-12">
+                        <h2 class="text-4xl font-bold text-gray-900">Why RadMentor?</h2>
+                        <p class="mt-4 text-lg text-gray-600">Everything you need to succeed, all in one place.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-10 text-center">
+                        <div class="p-6">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg">
+                                <i data-feather="award" class="text-white"></i>
+                            </div>
+                            <h3 class="mt-6 text-xl font-bold">Expert-Curated Content</h3>
+                            <p class="mt-2 text-gray-600">All questions and explanations are created and verified by top radiologists.</p>
+                        </div>
+                        <div class="p-6">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg">
+                                <i data-feather="target" class="text-white"></i>
+                            </div>
+                            <h3 class="mt-6 text-xl font-bold">Realistic Exam Simulation</h3>
+                            <p class="mt-2 text-gray-600">Experience the real exam environment with our timed mock tests.</p>
+                        </div>
+                        <div class="p-6">
+                            <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg">
+                                <i data-feather="bar-chart-2" class="text-white"></i>
+                            </div>
+                            <h3 class="mt-6 text-xl font-bold">Performance Analytics</h3>
+                            <p class="mt-2 text-gray-600">Track your progress, identify weak areas, and improve your scores.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="about" class="py-20">
+                <div class="container mx-auto px-6">
+                    <div class="text-center mb-12">
+                        <h2 class="text-4xl font-bold text-gray-900">Built by Doctors, for Doctors</h2>
+                    </div>
+                    <div class="max-w-4xl mx-auto bg-white p-10 rounded-xl shadow-lg text-center">
+                        <p class="text-lg text-gray-600">
+                            We are two radiologists trained at one of India’s premier medical institutes, united by a shared vision: to make high-quality radiology education accessible, affordable, and reliable for all. Every question, explanation, and update is curated by us, backed by evidence, and rooted in real-world radiology practice.
+                        </p>
+                        <p class="mt-4 text-lg font-semibold text-gray-800">Welcome to a community built with precision and care.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="bg-gray-900 text-white">
+            <div class="container mx-auto px-6 py-12">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold">RadMentor</h3>
+                        <p class="mt-2 text-gray-400">The future of radiology education.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold">Quick Links</h3>
+                        <ul class="mt-2 space-y-2">
+                            <li><a href="#courses" class="text-gray-400 hover:text-white">Courses</a></li>
+                            <li><a href="#features" class="text-gray-400 hover:text-white">Features</a></li>
+                            <li><a href="#" onclick="showAuthModal('signup')" class="text-gray-400 hover:text-white">Sign Up</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold">Contact</h3>
+                        <p class="mt-2 text-gray-400">Email: <a href="mailto:support@radmentor.com" class="hover:text-white">support@radmentor.com</a></p>
+                    </div>
+                </div>
+                <div class="mt-8 pt-8 border-t border-gray-800 text-center text-gray-500">
+                    &copy; 2024 RadMentor. All Rights Reserved.
+                </div>
+            </div>
+        </footer>
     </div>
 
     <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
+            <button onclick="hideAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
+                <i data-feather="x" class="w-7 h-7"></i>
+            </button>
+            <div class="p-8 md:p-12">
+                <div id="auth-container">
+                    <h1 id="auth-title" class="text-3xl font-bold text-gray-900 text-center mb-2">Login to RadMentor</h1>
+                    <p id="auth-subtitle" class="text-gray-600 text-center mb-8">Welcome back!</p>
+                    <div class="space-y-4">
+                        <input type="email" id="email" placeholder="Email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <input type="password" id="password" placeholder="Password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <button onclick="handleAuth()" id="auth-btn" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Sign In</button>
+                    <div class="text-center mt-6">
+                        <button onclick="toggleAuth()" id="toggle-btn" class="text-blue-600 hover:underline">Don't have an account? Sign up</button>
+                    </div>
+                    <p id="auth-message" class="text-red-500 text-center mt-4 font-medium"></p>
+                </div>
+            </div>
         </div>
+    </div>
     
     <div id="profile-form-container" class="fixed inset-0 bg-gray-100 z-50 p-4 hidden overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-auto my-8 p-8 md:p-12">
+            <h1 class="text-3xl font-bold text-gray-900 text-center">Complete Your Profile</h1>
+            <p class="text-gray-600 text-center mb-8">Please provide a few more details to get started.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2"><input type="text" id="name" placeholder="Full Name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
+                <div>
+                    <label class="font-medium text-gray-700">Date of Birth</label>
+                    <input type="date" id="dob" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="font-medium text-gray-700">Sex</label>
+                    <select id="sex" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="" disabled selected>Select Sex</option>
+                        <option>Male</option><option>Female</option><option>Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="font-medium text-gray-700">Position</label>
+                    <select id="position" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="" disabled selected>Select Position</option>
+                        <option>Intern</option><option>Junior Resident</option><option>Senior Resident</option><option>Consultant</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="font-medium text-gray-700">Exam Pursuing</label>
+                    <select id="exam_pursuing" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="" disabled selected>Select Exam</option>
+                        <option>Final year exam</option><option>DNB</option><option>FRCR</option><option>NEET SS</option><option>INICET SS</option><option>Fellowship exams</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="font-medium text-gray-700">Medical College</label>
+                    <input list="colleges" id="college" placeholder="Type to search your college" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <datalist id="colleges">
+                    </datalist>
+                </div>
+            </div>
+            <button onclick="submitProfile()" class="w-full rad-gradient text-white font-bold py-3 rounded-lg mt-8 text-lg hover:shadow-lg transition-shadow">Submit Profile</button>
         </div>
-    
-    <div id="chatbot-container"></div>
+    </div>
+
+    <div id="chatbot-container">
+        </div>
     <button id="chat-toggle-button">💬</button>
 
     <script type="module" src="js/main.js"></script>
+
 </body>
 </html>
