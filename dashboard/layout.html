@@ -10,12 +10,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     /* Custom styles for better aesthetics and overrides */
+    html, body {
+      height: 100%;
+    }
     body {
       font-family: 'Inter', sans-serif;
     }
     /* Custom scrollbar for sidebar */
     .sidebar-scroll {
-      -ms-overflow-style: none;  /* IE and Edge */
+      -ms-overflow-style: none; /* IE and Edge */
       scrollbar-width: none;  /* Firefox */
     }
     .sidebar-scroll::-webkit-scrollbar {
@@ -187,17 +190,17 @@
     }
   </style>
 </head>
-<body class="flex min-h-screen bg-gray-50 text-gray-800">
+<body class="flex h-screen bg-gray-50 text-gray-800">
 
   <!-- Message Box -->
   <div id="messageBox" class="message-box"></div>
 
   <!-- Sidebar -->
   <aside class="w-72 bg-white border-r border-gray-200 p-6 flex flex-col shadow-xl rounded-r-2xl overflow-y-auto sidebar-scroll">
-    <div class="mb-10 flex items-center gap-3 transform transition-transform duration-200 hover:scale-105">
+    <a href="/dashboard/index.html" class="mb-10 flex items-center gap-3 transform transition-transform duration-200 hover:scale-105">
       <img src="https://placehold.co/40x40/6366f1/ffffff?text=RM" alt="RadMentor Logo" class="h-10 w-10 rounded-full shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/40x40/6366f1/ffffff?text=RM';">
       <span class="text-2xl font-extrabold text-gray-900">RadMentor</span>
-    </div>
+    </a>
 
     <div class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3">Exam Preparation</div>
     <nav class="flex flex-col gap-2 mb-8">
@@ -279,7 +282,7 @@
   </aside>
 
   <!-- Main Content -->
-  <main class="flex-1 p-8 flex flex-col">
+  <main class="flex-1 p-8 flex flex-col h-full">
     <div class="flex items-center justify-between mb-8 relative">
       <!-- Goals Dropdown -->
       <div class="relative">
@@ -312,12 +315,44 @@
     </div>
 
     <!-- The iframe will load content pages here -->
-    <iframe id="contentFrame" src="/dashboard/dashboard.html"></iframe>
+    <iframe id="contentFrame" src="/dashboard/dashboard.html" class="flex-1 overflow-y-auto"></iframe>
 
   </main>
 
   <!-- Shared JavaScript -->
-  <script src="/dashboard/shared-scripts.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Dropdown menu logic (for goals and user profile)
+      const goalsDropdownButton = document.getElementById('goalsDropdownButton');
+      const goalsDropdown = document.getElementById('goalsDropdown');
+      const userProfileIcon = document.getElementById('userProfileIcon');
+      const userDropdown = document.getElementById('userDropdown');
+
+      // Toggle goals dropdown
+      if (goalsDropdownButton) {
+        goalsDropdownButton.addEventListener('click', () => {
+          goalsDropdown.classList.toggle('show');
+        });
+      }
+
+      // Toggle user dropdown
+      if (userProfileIcon) {
+        userProfileIcon.addEventListener('click', () => {
+          userDropdown.classList.toggle('show');
+        });
+      }
+
+      // Close dropdowns when clicking outside
+      window.addEventListener('click', (event) => {
+        if (goalsDropdown && goalsDropdownButton && !goalsDropdownButton.contains(event.target) && !goalsDropdown.contains(event.target)) {
+          goalsDropdown.classList.remove('show');
+        }
+        if (userDropdown && userProfileIcon && !userProfileIcon.contains(event.target) && !userDropdown.contains(event.target)) {
+          userDropdown.classList.remove('show');
+        }
+      });
+    });
+  </script>
 
 </body>
 </html>
