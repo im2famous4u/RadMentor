@@ -71,7 +71,7 @@
                 <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Select a Paper to Begin</h2>
                 <div id="paper-card-grid" class="paper-card-grid"></div>
                 <div class="d-flex justify-content-center mt-5">
-                    <a href="dashboard/bookmark.html" class="btn btn-info btn-lg px-5 py-2 rounded-pill shadow">
+                    <a href="../dashboard/bookmark.html" class="btn btn-info btn-lg px-5 py-2 rounded-pill shadow">
                         <i class="fas fa-bookmark me-2"></i>My Bookmarks
                     </a>
                 </div>
@@ -79,7 +79,7 @@
 
             <div id="mainQuizContent" style="display: none;">
                 <div class="quiz-header shadow-sm">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items: center">
                         <h2 class="m-0 fw-bold">Paper <span id="currentPaperDisplay"></span></h2>
                         <div class="quiz-controls">
                              <button id="homeBtn" class="btn btn-secondary btn-sm"><i class="fas fa-home me-1"></i> Home</button>
@@ -144,30 +144,19 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-
-        // --- IMPORTANT: Replace with your actual Firebase config ---
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
+        // --- CORRECT WAY: Import the SHARED services from your central file ---
+        import { auth, db } from '../js/firebase.js'; // Assumes this file is in a 'fellowshipexams' folder
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+        import { collection, doc, setDoc, deleteDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
         
         // --- Data Configuration ---
         const allQuizData = {
             paper1: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "0" },
             paper2: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1141721868" },
-            // Add other papers here
         };
         const paperMetadata = [
             { id: 'paper1', name: 'Paper 1', displayNumber: 1, bgColor: 'bg-blue-100' },
             { id: 'paper2', name: 'Paper 2', displayNumber: 2, bgColor: 'bg-pink-100' },
-            // Add metadata for other papers
         ];
         
         // --- Global State & Elements ---
@@ -197,12 +186,7 @@
             currentPaperDisplay: document.getElementById('currentPaperDisplay'),
             practiceProgress: document.getElementById('practiceProgress')
         };
-
-        // --- Firebase Initialization ---
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
+        
         // --- App Initialization & Auth ---
         document.addEventListener('DOMContentLoaded', () => {
             onAuthStateChanged(auth, (user) => {
@@ -257,7 +241,7 @@
         }
 
         function parseCsvToQuestions(csvText) {
-            const lines = csvText.trim().split('\n').slice(1);
+            const lines = csvText.trim().split('\n').slice(1); // Skip header row
             return lines.map((line, index) => {
                 const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''));
                 const [question, a, b, c, d, correctAns, explanation, imgQ, imgE] = parts;
@@ -318,14 +302,15 @@
 
         function renderQuestion(idx) {
             if (reviewFilter.length > 0) {
-                // Handle review mode navigation
-                state.currentQuestion = reviewFilter.indexOf(idx);
-                if (state.currentQuestion === -1) idx = reviewFilter[0]; // Fallback
+                // Handle review mode navigation by finding the position in the filtered array
+                const reviewIndex = reviewFilter.indexOf(idx);
+                if (reviewIndex === -1) { idx = reviewFilter[0]; } // Fallback to start of review if something goes wrong
+                state.currentQuestion = idx; // Store original index
             } else {
                 state.currentQuestion = idx;
             }
 
-            const q = currentQuizData[idx];
+            const q = currentQuizData.find(q => q.id === idx);
             if (!q) return;
 
             const isBookmarked = userBookmarks.has(`${currentPaperId}_q${q.id}`);
@@ -342,45 +327,43 @@
                 ${q.imagesrc_question ? `<img src="${q.imagesrc_question}" alt="Question Image" class="question-image">` : ''}
                 <div class="options">`;
 
-            const answered = state.answers[idx] !== null;
+            const answered = state.answers[q.id] !== null;
             q.options.forEach((option, optionIdx) => {
                 let btnClass = 'option-btn w-100';
                 if (answered || state.submitted) {
                     if (optionIdx === q.correctIndex) btnClass += ' correct';
-                    else if (optionIdx === state.answers[idx]) btnClass += ' incorrect';
+                    else if (optionIdx === state.answers[q.id]) btnClass += ' incorrect';
                 }
                 html += `<button class="${btnClass}" data-index="${optionIdx}" ${answered || state.submitted ? 'disabled' : ''}>${option}</button>`;
             });
 
             html += `</div>`;
             if (answered || state.submitted) {
-                html += `<div class="explanation mt-3"><h6><i class="fas fa-lightbulb me-2"></i>Explanation</h6><p>${q.explanation}</p>${q.imagesrc_explanation ? `<img src="${q.imagesrc_explanation}" alt="Explanation Image" class="explanation-image">` : ''}</div>`;
+                html += `<div class="explanation mt-3"><h6><i class="fas fa-lightbulb me-2"></i>Explanation</h6><p>${q.explanation || 'No explanation available.'}</p>${q.imagesrc_explanation ? `<img src="${q.imagesrc_explanation}" alt="Explanation Image" class="explanation-image">` : ''}</div>`;
             }
             
-            const navHtml = reviewFilter.length > 0 ? createReviewNavButtons(idx) : createQuizNavButtons(idx);
+            const navHtml = reviewFilter.length > 0 ? createReviewNavButtons() : createQuizNavButtons();
             html += `${navHtml}</div></div>`;
 
             dom.questionContainer.innerHTML = html;
             if (!state.submitted) {
                 dom.questionContainer.querySelectorAll('.option-btn:not([disabled])').forEach(button => {
-                    button.addEventListener('click', e => selectOption(idx, parseInt(e.target.dataset.index)));
+                    button.addEventListener('click', e => selectOption(q.id, parseInt(e.target.dataset.index)));
                 });
             }
             updateQuestionNav();
         }
         
-        function selectOption(qIndex, optionIdx) {
-            if (state.answers[qIndex] !== null) return;
+        function selectOption(qId, optionIdx) {
+            if (state.answers[qId] !== null) return;
             sounds.click.play();
-            state.answers[qIndex] = optionIdx;
+            state.answers[qId] = optionIdx;
             
-            if (optionIdx === currentQuizData[qIndex].correctIndex) {
-                sounds.correct.play();
-            } else {
-                sounds.wrong.play();
-            }
+            if (optionIdx === currentQuizData[qId].correctIndex) sounds.correct.play();
+            else sounds.wrong.play();
+            
             saveStateToLocalStorage();
-            renderQuestion(qIndex); // Re-render to show feedback
+            renderQuestion(qId);
         }
 
         // --- Navigation & UI Updates ---
@@ -391,10 +374,11 @@
             if (index > -1) state.markedForReview.splice(index, 1);
             else state.markedForReview.push(questionId);
             saveStateToLocalStorage();
-            renderQuestion(currentQuizData.findIndex(q => q.id === questionId));
+            renderQuestion(questionId);
         };
 
-        function createQuizNavButtons(idx) {
+        function createQuizNavButtons() {
+            const idx = state.currentQuestion;
             const nextAction = (idx === currentQuizData.length - 1) ? `showResults()` : `MapsToQuestion(${idx + 1})`;
             const nextText = (idx === currentQuizData.length - 1) ? 'Finish Quiz' : 'Next';
             return `<div class="d-flex justify-content-between mt-4">
@@ -403,8 +387,8 @@
             </div>`;
         }
         
-        function createReviewNavButtons(idx) {
-            const currentReviewIndex = reviewFilter.indexOf(idx);
+        function createReviewNavButtons() {
+            const currentReviewIndex = reviewFilter.indexOf(state.currentQuestion);
             const prevIdx = currentReviewIndex > 0 ? reviewFilter[currentReviewIndex - 1] : -1;
             const nextIdx = currentReviewIndex < reviewFilter.length - 1 ? reviewFilter[currentReviewIndex + 1] : -1;
             return `<div class="d-flex justify-content-between mt-4">
@@ -415,14 +399,14 @@
 
         function updateQuestionNav() {
             dom.questionNav.innerHTML = '';
-            const targetArray = reviewFilter.length > 0 ? reviewFilter : Array.from(currentQuizData.keys());
-            targetArray.forEach(idx => {
-                const q = currentQuizData[idx];
+            const navIds = reviewFilter.length > 0 ? reviewFilter : currentQuizData.map(q => q.id);
+            navIds.forEach(idx => {
+                const q = currentQuizData.find(q => q.id === idx);
                 const box = document.createElement('div');
                 box.className = 'page-box';
                 box.textContent = idx + 1;
                 box.onclick = () => renderQuestion(idx);
-                if (idx === currentQuizData.findIndex(q => q.id === state.currentQuestion)) box.classList.add('active');
+                if (idx === state.currentQuestion) box.classList.add('active');
                 if (state.answers[idx] !== null) box.classList.add(state.answers[idx] === q.correctIndex ? 'correct' : 'incorrect');
                 if (state.markedForReview.includes(q.id)) box.classList.add('marked-for-review');
                 dom.questionNav.appendChild(box);
@@ -461,46 +445,33 @@
         function reviewAnswers(filter) {
             reviewFilter = [];
             if (filter === 'all') {
-                reviewFilter = Array.from(currentQuizData.keys());
+                reviewFilter = currentQuizData.map(q => q.id);
             } else if (filter === 'incorrect') {
                 state.answers.forEach((ans, idx) => {
-                    if (ans !== null && ans !== currentQuizData[idx].correctIndex) reviewFilter.push(idx);
+                    if (ans !== null && ans !== currentQuizData[idx].correctIndex) reviewFilter.push(currentQuizData[idx].id);
                 });
             } else if (filter === 'bookmarked') {
-                currentQuizData.forEach((q, idx) => {
-                    if (userBookmarks.has(`${currentPaperId}_q${q.id}`)) reviewFilter.push(idx);
+                currentQuizData.forEach((q) => {
+                    if (userBookmarks.has(`${currentPaperId}_q${q.id}`)) reviewFilter.push(q.id);
                 });
             }
 
-            if (reviewFilter.length === 0) {
-                alert(`No ${filter} questions to review.`);
-                return;
-            }
+            if (reviewFilter.length === 0) { alert(`No ${filter} questions to review.`); return; }
             
-            state.submitted = true; // Enter review mode
+            state.submitted = true;
             dom.resultContainer.style.display = 'none';
             dom.mainQuizContent.style.display = 'block';
             renderQuestion(reviewFilter[0]);
         }
         
-        function goHome() {
-            reviewFilter = []; state.submitted = false; showPaperSelection();
-        }
-
-        function restartQuiz() {
-            localStorage.removeItem(`quizState_${currentPaperId}`);
-            selectPaper(currentPaperId);
-        }
+        function goHome() { reviewFilter = []; state.submitted = false; showPaperSelection(); }
+        function restartQuiz() { localStorage.removeItem(`quizState_${currentPaperId}`); selectPaper(currentPaperId); }
 
         // --- Local Storage for Resume ---
         function saveStateToLocalStorage() {
-            const stateToSave = {
-                answers: state.answers,
-                markedForReview: state.markedForReview
-            };
+            const stateToSave = { answers: state.answers, markedForReview: state.markedForReview };
             localStorage.setItem(`quizState_${currentPaperId}`, JSON.stringify(stateToSave));
         }
-
         function loadStateFromLocalStorage() {
             const savedStateJSON = localStorage.getItem(`quizState_${currentPaperId}`);
             return savedStateJSON ? JSON.parse(savedStateJSON) : null;
@@ -513,7 +484,6 @@
             const snapshot = await getDocs(bookmarksRef);
             userBookmarks = new Set(snapshot.docs.map(doc => doc.id));
         }
-
         async function toggleBookmark(bookmarkId) {
             if (!currentUser) return alert("You must be logged in.");
             const bookmarkRef = doc(db, "users", currentUser.uid, "bookmarks", bookmarkId);
@@ -525,13 +495,11 @@
                 userBookmarks.delete(bookmarkId);
             } else {
                 await setDoc(bookmarkRef, {
-                    questionText: questionData.text,
-                    paperId: currentPaperId,
-                    timestamp: serverTimestamp()
+                    questionText: questionData.text, paperId: currentPaperId, timestamp: serverTimestamp()
                 });
                 userBookmarks.add(bookmarkId);
             }
-            renderQuestion(currentQuizData.findIndex(q => q.id === questionId));
+            renderQuestion(questionId);
         }
         
         // --- Chart & Animation ---
@@ -539,31 +507,19 @@
             const ctx = document.getElementById('performanceChart').getContext('2d');
             if (window.performanceChartInstance) window.performanceChartInstance.destroy();
             window.performanceChartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Correct', 'Incorrect', 'Unattempted'],
-                    datasets: [{
-                        data: [results.correct, results.incorrect, results.unattempted],
-                        backgroundColor: ['#28a745', '#dc3545', '#ffc107']
-                    }]
-                },
+                type: 'doughnut', data: { labels: ['Correct', 'Incorrect', 'Unattempted'], datasets: [{ data: [results.correct, results.incorrect, results.unattempted], backgroundColor: ['#28a745', '#dc3545', '#ffc107'] }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });
         }
-        
         function createConfetti() {
-            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
             for (let i = 0; i < 150; i++) {
                 const confetti = document.createElement('div');
                 confetti.className = 'confetti';
-                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
                 confetti.style.left = Math.random() * 100 + 'vw';
                 document.body.appendChild(confetti);
-                const animation = confetti.animate([
-                    { transform: 'translateY(0) rotate(0)', opacity: 1 },
-                    { transform: `translateY(${Math.random() * 500 + 500}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }
-                ], { duration: Math.random() * 3000 + 2000, easing: 'cubic-bezier(.23,1,.32,1)' });
-                animation.onfinish = () => confetti.remove();
+                const anim = confetti.animate([ { transform: 'translateY(0) rotate(0)', opacity: 1 }, { transform: `translateY(${Math.random() * 500 + 500}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }], { duration: Math.random() * 3000 + 2000, easing: 'cubic-bezier(.23,1,.32,1)' });
+                anim.onfinish = () => confetti.remove();
             }
         }
     </script>
