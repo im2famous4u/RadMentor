@@ -184,5 +184,5 @@ document.addEventListener('DOMContentLoaded', () => {
     window.handleAuth = handleAuth;
     window.submitProfile = submitProfile;
     window.logout = async () => { try { await signOut(auth); window.location.reload(); } catch (e) { console.error(e); } };
-    window.showDashboard = () => alert('Dashboard coming soon!');
+    window.showDashboard = () => { window.location.href = 'dashboard.html'; };
 });
