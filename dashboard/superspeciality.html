@@ -227,8 +227,15 @@
     const TIME_PER_QUESTION = 90; // 90 seconds per question in exam mode
 
     // --- NEW: FIREBASE AUTH & BOOKMARKING ---
-    const firebaseConfig = { apiKey: "AIza...", authDomain: "...", projectId: "radiology-mcqs" }; // Replace with your full config
-    let db; // Firestore instance
+const firebaseConfig = {
+    apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
+    authDomain: "radiology-mcqs.firebaseapp.com",
+    projectId: "radiology-mcqs",
+    storageBucket: "radiology-mcqs.appspot.com",
+    messagingSenderId: "862300415358",
+    appId: "1:862300415358:web:097d5e413f388e30587f2f",
+    measurementId: "G-0V1SD1H95V"
+};
 
     /** Dynamically loads a script */
     function loadScript(src) {
