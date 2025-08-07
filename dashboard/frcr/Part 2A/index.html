@@ -202,21 +202,34 @@
         };
         
         // --- AUTH & NAVIGATION ---
-        function showScreen(screenId) { dom.screens.forEach(s => s.classList.toggle('active', s.id === screenId)); feather.replace(); }
+        function showScreen(screenId) { 
+            dom.screens.forEach(s => s.classList.toggle('active', s.id === screenId)); 
+            // The feather.replace() call needs to be delayed to ensure the DOM is updated.
+            setTimeout(() => {
+                try {
+                    feather.replace();
+                } catch (e) {
+                    console.error("Feather Error:", e);
+                }
+            }, 0);
+        }
         
         onAuthStateChanged(auth, (user) => {
-            const authCheckScreen = document.getElementById('authCheckScreen');
             currentUser = user;
             if (user) {
-                authCheckScreen.style.display = 'none';
                 handleDirectLink(user);
             } else {
-                 authCheckScreen.innerHTML = '<div class="selection-container"><p>You must be logged in to continue.</p></div>';
+                 // This will now only be called if signInAnonymously fails
+                 showScreen('authCheckScreen');
+                 document.getElementById('authCheckScreen').innerHTML = '<div class="selection-container"><p>You must be logged in to continue.</p></div>';
             }
         });
 
         // --- INITIALIZE APP ---
-        signInUser(); 
+        // Wrap the initialization in a DOMContentLoaded listener to prevent race conditions.
+        document.addEventListener('DOMContentLoaded', () => {
+            signInUser();
+        });
 
 
         function handleDirectLink(user) {
@@ -395,7 +408,6 @@
                  dom.questionsDisplay.querySelectorAll('.option-btn').forEach(btn => btn.addEventListener('click', handleOptionClick));
             }
             updateQuestionNav();
-            feather.replace();
         }
         
         function handleOptionClick(e) {
