@@ -1,212 +1,145 @@
-// Global variable for username (simulated)
-let currentUserName = "Neel Yadav"; // Default username
+// dashboard/shared-scripts.js
 
-// Function to display messages (replaces alert)
-function showMessage(message, type = 'success') {
-  const messageBox = document.getElementById('messageBox');
-  if (messageBox) { // Check if messageBox exists
-    messageBox.textContent = message;
-    messageBox.className = 'message-box show'; // Reset classes and show
-    if (type === 'error') {
-      messageBox.style.backgroundColor = '#f44336'; // Red for error
-    } else {
-      messageBox.style.backgroundColor = '#4CAF50'; // Green for success
-    }
-    setTimeout(() => {
-      messageBox.classList.remove('show');
-    }, 3000); // Hide after 3 seconds
-  }
-}
+// This script is self-contained and dynamically loads Firebase to avoid changing the HTML file.
+(function() {
+    'use strict';
 
-// Function to get initials from name
-function getInitials(name) {
-  if (!name) return '';
-  const parts = name.split(' ').filter(word => word.length > 0);
-  if (parts.length === 0) return '';
-  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-}
+    // --- Step 1: Configuration ---
+    // Your Firebase project configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
+        authDomain: "radiology-mcqs.firebaseapp.com",
+        projectId: "radiology-mcqs",
+        storageBucket: "radiology-mcqs.appspot.com",
+        messagingSenderId: "862300415358",
+        appId: "1:862300415358:web:097d5e413f388e30587f2f",
+        measurementId: "G-0V1SD1H95V"
+    };
 
-// Function to update user initials
-function updateInitials() {
-  const userInitialsElement = document.getElementById('userInitials');
-  if (userInitialsElement) {
-    userInitialsElement.textContent = getInitials(currentUserName);
-  }
-}
+    // --- Step 2: Dynamic Script Loading ---
+    // Helper function to load a script file and return a promise
+    function loadScript(src) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.async = true;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+            document.head.appendChild(script);
+        });
+    }
 
-// Function to update the goals dropdown text based on current iframe content
-function updateGoalsDropdownText(iframeSrc) {
-    const currentGoalTextElement = document.getElementById('currentGoalText');
-    let goalName = "Dashboard"; // Default for dashboard
+    // --- Step 3: Main Application Logic ---
+    // This function runs after the Firebase SDKs are loaded
+    function initializeDashboard(auth, db) {
+        // --- DOM Element References ---
+        const userProfileIcon = document.getElementById('userProfileIcon');
+        const userDropdown = document.getElementById('userDropdown');
+        const userInitials = document.getElementById('userInitials');
+        const logoutLink = document.getElementById('logoutLink');
+        const contentFrame = document.getElementById('contentFrame');
+        const sidebarLinks = document.querySelectorAll('.sidebar-link');
+        const goalsDropdownButton = document.getElementById('goalsDropdownButton');
+        const goalsDropdown = document.getElementById('goalsDropdown');
+        const body = document.body;
 
-    // Remove the /prefix and .html extension
-    const cleanFilename = iframeSrc.replace('/dashboard/', '').replace('.html', '');
+        // --- Authentication Check ---
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                // User is signed in, fetch their data from Firestore
+                const userDocRef = db.collection("users").doc(user.uid);
+                try {
+                    const docSnap = await userDocRef.get();
+                    if (docSnap.exists) {
+                        const userData = docSnap.data();
+                        const name = userData.name || 'User';
+                        // Generate initials from name for the profile icon
+                        const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
+                        userInitials.textContent = initials;
+                    } else {
+                        userInitials.textContent = '??';
+                    }
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                    userInitials.textContent = 'E'; // 'E' for Error
+                }
+                // Make the page content visible now that auth is confirmed
+                body.style.visibility = 'visible';
+            } else {
+                // No user is signed in, redirect to the main login page
+                window.location.href = '/index.html';
+            }
+        });
 
-    // Map filenames to more readable names for the dropdown
-    const sectionNames = {
-        'frcr': 'FRCR',
-        'micr': 'MICR',
-        'md-dnb': 'MD / DNB',
-        'superspeciality': 'Superspeciality',
-        'dashboard': 'Dashboard',
-        'my-profile': 'Profile',
-        'my-bookmarks': 'Bookmarks',
-        'performance-ai': 'Performance',
-        'ask-a-doubt': 'Ask a Doubt',
-        'anatomy': 'Anatomy',
-        'fellowship-exams': 'Fellowship Exams',
-        'radscribe-ai': 'RadScribe AI',
-        'qbank': 'QBank',
-        'mock-exams': 'Mock Exams'
-    };
+        // --- Logout Button ---
+        if (logoutLink) {
+            logoutLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                auth.signOut().catch((error) => console.error('Sign out error:', error));
+                // The onAuthStateChanged listener above will handle the redirect
+            });
+        }
 
-    if (sectionNames[cleanFilename]) {
-        goalName = sectionNames[cleanFilename];
-    } else {
-        goalName = "Dashboard"; // Fallback if filename not explicitly mapped
-    }
-    if (currentGoalTextElement) { // Check if element exists
-      currentGoalTextElement.textContent = `Current Goal: ${goalName}`;
-    }
-}
+        // --- UI Interaction Logic (Dropdowns, etc.) ---
+        if (userProfileIcon) userProfileIcon.addEventListener('click', () => userDropdown.classList.toggle('show'));
+        if (goalsDropdownButton) goalsDropdownButton.addEventListener('click', () => goalsDropdown.classList.toggle('show'));
 
-document.addEventListener('DOMContentLoaded', () => {
-  const userProfileIcon = document.getElementById('userProfileIcon');
-  const userDropdown = document.getElementById('userDropdown');
-  const goalsDropdownButton = document.getElementById('goalsDropdownButton');
-  const goalsDropdown = document.getElementById('goalsDropdown');
-  const contentFrame = document.getElementById('contentFrame');
-  const sidebarLinks = document.querySelectorAll('.sidebar-link');
+        window.addEventListener('click', (e) => {
+            if (userProfileIcon && !userProfileIcon.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.remove('show');
+            }
+            if (goalsDropdownButton && !goalsDropdownButton.contains(e.target) && !goalsDropdown.contains(e.target)) {
+                goalsDropdown.classList.remove('show');
+            }
+        });
 
-  // Initial update of user initials
-  updateInitials();
+        // --- Iframe Navigation Logic ---
+        const setActiveLink = (section) => {
+            sidebarLinks.forEach(link => {
+                link.classList.toggle('active', link.dataset.section === section);
+            });
+        };
 
-  // Toggle user dropdown visibility
-  if (userProfileIcon && userDropdown) {
-    userProfileIcon.addEventListener('click', (event) => {
-      event.stopPropagation(); // Prevent click from immediately closing dropdown
-      userDropdown.classList.toggle('show');
-      // Close goals dropdown if open
-      if (goalsDropdown && goalsDropdown.classList.contains('show')) {
-          goalsDropdown.classList.remove('show');
-      }
-    });
+        document.querySelectorAll('a[data-section]').forEach(link => {
+            if (link.id !== 'logoutLink') { // Make sure not to override logout link
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const url = this.getAttribute('href');
+                    const section = this.dataset.section;
+                    if (url && url !== '#') contentFrame.src = url;
+                    setActiveLink(section);
+                    if (userDropdown) userDropdown.classList.remove('show');
+                    if (goalsDropdown) goalsDropdown.classList.remove('show');
+                });
+            }
+        });
 
-    // Close dropdown if clicked outside
-    document.addEventListener('click', (event) => {
-      if (userDropdown.classList.contains('show') && !userDropdown.contains(event.target) && event.target !== userProfileIcon) {
-        userDropdown.classList.remove('show');
-      }
-    });
+        // Set the initial active link based on the iframe's default src
+        const initialLink = document.querySelector(`.sidebar-link[href='${contentFrame.getAttribute('src')}']`);
+        setActiveLink(initialLink ? initialLink.dataset.section : 'dashboard');
+    }
 
-    // Handle clicks on user dropdown links
-    userDropdown.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', (event) => {
-            event.preventDefault(); // Prevent default link behavior
-            userDropdown.classList.remove('show'); // Close dropdown
+    // --- Step 4: Entry Point ---
+    // Start the process when the document is ready
+    document.addEventListener('DOMContentLoaded', () => {
+        // URLs for the Firebase SDK (version 8 "compat" for global access)
+        const FIREBASE_SDK_URL = "https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js";
+        const FIREBASE_AUTH_URL = "https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js";
+        const FIREBASE_FIRESTORE_URL = "https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js";
 
-            if (link.id === 'logoutLink') {
-                window.location.href = link.href; // Navigate for logout
-            } else {
-                const targetPage = link.getAttribute('href'); // Get the href directly
-                if (contentFrame && targetPage) {
-                    contentFrame.src = targetPage;
-                    // Update sidebar active state and goals dropdown text after iframe loads
-                    contentFrame.onload = () => {
-                        updateSidebarActiveState(contentFrame.contentWindow.location.pathname); // Use iframe's actual path
-                        updateGoalsDropdownText(contentFrame.contentWindow.location.pathname); // Use iframe's actual path
-                    };
-                }
-            }
-        });
-    });
-  }
-
-  // Toggle goals dropdown visibility
-  if (goalsDropdownButton && goalsDropdown) {
-      goalsDropdownButton.addEventListener('click', (event) => {
-          event.stopPropagation(); // Prevent click from immediately closing dropdown
-          goalsDropdown.classList.toggle('show');
-          // Close user dropdown if open
-          if (userDropdown && userDropdown.classList.contains('show')) {
-              userDropdown.classList.remove('show');
-          }
-      });
-
-      // Close goals dropdown if clicked outside
-      document.addEventListener('click', (event) => {
-          if (goalsDropdown.classList.contains('show') && !goalsDropdown.contains(event.target) && event.target !== goalsDropdownButton) {
-              goalsDropdown.classList.remove('show');
-          }
-      });
-
-      // Handle clicks on goals dropdown links
-      goalsDropdown.querySelectorAll('a').forEach(link => {
-          link.addEventListener('click', (event) => {
-              event.preventDefault(); // Prevent default link behavior
-              goalsDropdown.classList.remove('show'); // Close dropdown
-              const targetPage = link.getAttribute('href');
-              if (contentFrame && targetPage) {
-                  contentFrame.src = targetPage;
-                  // Update sidebar active state and goals dropdown text after iframe loads
-                  contentFrame.onload = () => {
-                      updateSidebarActiveState(contentFrame.contentWindow.location.pathname); // Use iframe's actual path
-                      updateGoalsDropdownText(contentFrame.contentWindow.location.pathname); // Use iframe's actual path
-                  };
-              }
-          });
-      });
-  }
-
-  // Function to update sidebar active state
-  function updateSidebarActiveState(currentPath) {
-    // Remove the /dashboard/ prefix for comparison with data-section
-    const cleanPath = currentPath.replace('/dashboard/', '');
-    sidebarLinks.forEach(link => {
-      const linkSection = link.dataset.section;
-      if (linkSection && linkSection + '.html' === cleanPath) {
-        link.classList.add('active');
-      } else {
-        link.classList.remove('active');
-      }
-    });
-  }
-
-  // Handle initial iframe load and sidebar/goals update
-  if (contentFrame) {
-    // Set initial iframe src based on URL hash or default to dashboard.html
-    const initialHash = window.location.hash.substring(1);
-    const initialSrc = initialHash ? `/dashboard/${initialHash}.html` : '/dashboard/dashboard.html';
-    contentFrame.src = initialSrc;
-
-    contentFrame.onload = () => {
-        // Use the iframe's actual loaded path for accurate updates
-        updateSidebarActiveState(contentFrame.contentWindow.location.pathname);
-        updateGoalsDropdownText(contentFrame.contentWindow.location.pathname);
-    };
-  }
-
-  // Event listeners for all sidebar links
-  sidebarLinks.forEach(link => {
-    link.addEventListener('click', (event) => {
-      event.preventDefault(); // Prevent default link behavior
-      const targetPage = link.getAttribute('href');
-      if (contentFrame && targetPage) {
-        contentFrame.src = targetPage;
-        // Update URL hash to reflect current page, stripping the prefix and .html
-        const newHash = targetPage.replace('/dashboard/', '').replace('.html', '');
-        window.location.hash = newHash;
-      }
-    });
-  });
-
-  // Handle browser back/forward buttons
-  window.addEventListener('hashchange', () => {
-    const newHash = window.location.hash.substring(1);
-    const newSrc = newHash ? `/dashboard/${newHash}.html` : '/dashboard/dashboard.html';
-    if (contentFrame.src !== window.location.origin + newSrc) { // Compare full URLs
-        contentFrame.src = newSrc;
-    }
-  });
-});
+        // Load scripts sequentially, then initialize the app
+        loadScript(FIREBASE_SDK_URL)
+            .then(() => loadScript(FIREBASE_AUTH_URL))
+            .then(() => loadScript(FIREBASE_FIRESTORE_URL))
+            .then(() => {
+                // Now that all scripts are loaded, the global `firebase` object is available
+                firebase.initializeApp(firebaseConfig);
+                initializeDashboard(firebase.auth(), firebase.firestore());
+            })
+            .catch(error => {
+                console.error("Fatal Error: Could not load Firebase libraries.", error);
+                document.body.innerHTML = `<div style="padding:40px;text-align:center;"><h1>Error</h1><p>Could not initialize the application. Please check the console.</p></div>`;
+                document.body.style.visibility = 'visible';
+            });
+    });
+})();
