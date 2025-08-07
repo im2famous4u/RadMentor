@@ -204,13 +204,22 @@
             
             try {
                 const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.statusText}`);
+                }
                 const text = await response.text();
                 allQuestions = parseCSV(text, paperKey);
+
+                if (allQuestions.length === 0) {
+                    dom.appLoader.innerHTML = `<p>Error: No questions found for this paper. Please check the Google Sheet format or content.</p>`;
+                    return;
+                }
+
                 dom.appLoader.style.display = 'none';
                 startQuiz();
             } catch (err) {
                 console.error(`Failed to load paper: ${paperKey}`, err);
-                dom.appLoader.innerHTML = `<p>Error loading questions. Please check the Google Sheet link and permissions.</p>`;
+                dom.appLoader.innerHTML = `<p>Error loading questions. Please check the Google Sheet link, ensure it's public, and verify the format.</p>`;
             }
         }
 
@@ -230,7 +239,7 @@
                     questionImage: columns[7] || null,
                     explanationImage: columns[8] || null,
                 };
-            }).filter(q => q && q.correctIndex !== -1);
+            }).filter(q => q && q.correctIndex !== -1 && q.text !== "No question text");
         }
 
         function startQuiz() {
