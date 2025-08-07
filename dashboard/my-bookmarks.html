@@ -5,109 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Bookmarks - RadMentor</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-    <script src="https://unpkg.com/feather-icons"></script>
     <style>
         :root {
-            --bg-color: #f4f7f9;
-            --container-bg-color: #ffffff;
-            --text-color: #334155;
-            --text-color-light: #64748b;
-            --header-text-color: #0f172a;
-            --primary-color: #0ea5e9;
-            --border-color: #e2e8f0;
-            --topic-bg-color: #ede9fe; /* Violet */
-            --topic-text-color: #5b21b6;
+            --bg-color: #f4f7f9; --container-bg-color: #ffffff; --text-color: #334155; --text-color-light: #64748b;
+            --header-text-color: #0f172a; --primary-color: #0ea5e9; --border-color: #e2e8f0;
         }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 2rem;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-        }
-
-        .main-container {
-            width: 100%;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--header-text-color);
-            margin: 0;
-        }
-
-        .back-button {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: background-color 0.2s;
-        }
-
-        .back-button:hover {
-            background-color: #0284c7; /* Darker Blue */
-        }
-
-        #bookmarks-container {
-            display: grid;
-            gap: 1.5rem;
-        }
-
-        .bookmark-card {
-            background-color: var(--container-bg-color);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            border: 1px solid var(--border-color);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .bookmark-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-        }
-
-        .bookmark-topic {
-            display: inline-block;
-            background-color: var(--topic-bg-color);
-            color: var(--topic-text-color);
-            font-size: 0.8rem;
-            font-weight: 600;
-            padding: 0.25rem 0.75rem;
-            border-radius: 99px;
-            margin-bottom: 1rem;
-        }
-
-        .bookmark-question {
-            font-size: 1.1rem;
-            font-weight: 500;
-            line-height: 1.6;
-            margin: 0 0 1rem 0;
-        }
-        
-        .loading-message {
-            text-align: center;
-            font-size: 1.2rem;
-            color: var(--text-color-light);
-            padding: 4rem;
-        }
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 1.5rem; background-color: var(--bg-color); color: var(--text-color); }
+        .main-container { width: 100%; max-width: 900px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); }
+        .header h1 { font-size: 2rem; font-weight: 700; color: var(--header-text-color); margin: 0; }
+        .back-button { background-color: var(--primary-color); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; text-decoration: none; transition: background-color 0.2s; }
+        .back-button:hover { background-color: #0284c7; }
+        .bookmark-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; }
+        .tab-button { background-color: #e2e8f0; color: var(--text-color-light); border: none; padding: 0.6rem 1.2rem; border-radius: 99px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .tab-button.active { background-color: var(--primary-color); color: white; }
+        #bookmarks-container { display: grid; gap: 1rem; }
+        .bookmark-card { display: block; background-color: var(--container-bg-color); border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); transition: transform 0.2s, box-shadow 0.2s; text-decoration: none; color: inherit; }
+        .bookmark-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+        .bookmark-topic { display: inline-block; background-color: #e0f2fe; color: #0c4a6e; font-size: 0.8rem; font-weight: 600; padding: 0.25rem 0.75rem; border-radius: 99px; margin-bottom: 1rem; }
+        .bookmark-question { font-size: 1.1rem; font-weight: 500; line-height: 1.6; margin: 0; }
+        .loading-message { text-align: center; font-size: 1.2rem; color: var(--text-color-light); padding: 4rem; }
     </style>
 </head>
 <body>
@@ -118,54 +35,42 @@
             <a href="dashboard.html" class="back-button">Back to Dashboard</a>
         </div>
         
+        <div id="bookmark-tabs" class="bookmark-tabs"></div>
         <div id="bookmarks-container">
             <p class="loading-message">Loading your bookmarks...</p>
         </div>
     </div>
 
     <script type="module">
-        // Import Firebase services
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
         import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-        // Your Firebase configuration object
         const firebaseConfig = {
-            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
-            authDomain: "radiology-mcqs.firebaseapp.com",
-            projectId: "radiology-mcqs",
-            storageBucket: "radiology-mcqs.appspot.com",
-            messagingSenderId: "862300415358",
-            appId: "1:862300415358:web:097d5e413f388e30587f2f"
+            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw", authDomain: "radiology-mcqs.firebaseapp.com", projectId: "radiology-mcqs",
+            storageBucket: "radiology-mcqs.appspot.com", messagingSenderId: "862300415358", appId: "1:862300415358:web:097d5e413f388e30587f2f"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
         const bookmarksContainer = document.getElementById('bookmarks-container');
+        const tabsContainer = document.getElementById('bookmark-tabs');
+        let allBookmarks = []; // Store all bookmarks to avoid re-fetching
 
-        // Listen for authentication state changes
         onAuthStateChanged(auth, user => {
             if (user) {
-                // If user is logged in, fetch their bookmarks
                 loadUserBookmarks(user.uid);
             } else {
-                // If user is not logged in, show a message
                 bookmarksContainer.innerHTML = '<p class="loading-message">Please log in to view your bookmarks.</p>';
             }
         });
 
         async function loadUserBookmarks(userId) {
             try {
-                // 1. Create a reference to the user's central bookmarks collection
                 const bookmarksRef = collection(db, "users", userId, "bookmarks");
-                
-                // 2. Create a query to get all bookmarks, ordered by newest first
                 const q = query(bookmarksRef, orderBy("timestamp", "desc"));
-                
-                // 3. Execute the query
                 const querySnapshot = await getDocs(q);
 
                 if (querySnapshot.empty) {
@@ -173,30 +78,52 @@
                     return;
                 }
 
-                // Clear the "Loading..." message
-                bookmarksContainer.innerHTML = '';
+                allBookmarks = querySnapshot.docs.map(doc => doc.data());
                 
-                // 4. Loop through each bookmark document and create HTML for it
-                querySnapshot.forEach((doc) => {
-                    const bookmark = doc.data();
-                    
-                    const bookmarkCard = document.createElement('div');
-                    bookmarkCard.className = 'bookmark-card';
-                    
-                    bookmarkCard.innerHTML = `
-                        <span class="bookmark-topic">${bookmark.topic || 'General'}</span>
-                        <p class="bookmark-question">${bookmark.questionText}</p>
-                    `;
-                    // Note: The "Go to Question" link is omitted for simplicity,
-                    // as it requires more complex routing. This design focuses on reviewing the question text directly.
-                    
-                    bookmarksContainer.appendChild(bookmarkCard);
+                // Create tabs from unique topics
+                const topics = ['All', ...new Set(allBookmarks.map(bm => bm.topic))];
+                tabsContainer.innerHTML = topics.map(topic => `<button class="tab-button" data-topic="${topic}">${topic}</button>`).join('');
+                
+                // Add event listeners to tabs
+                tabsContainer.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        tabsContainer.querySelector('.active')?.classList.remove('active');
+                        e.target.classList.add('active');
+                        renderBookmarks(e.target.dataset.topic);
+                    });
                 });
+                
+                // Activate the 'All' tab and render bookmarks
+                tabsContainer.querySelector('.tab-button[data-topic="All"]').click();
 
             } catch (error) {
                 console.error("Error fetching bookmarks:", error);
-                bookmarksContainer.innerHTML = '<p class="loading-message" style="color: red;">Could not load bookmarks. Please try again later.</p>';
+                bookmarksContainer.innerHTML = '<p class="loading-message" style="color: red;">Could not load bookmarks.</p>';
             }
+        }
+
+        function renderBookmarks(filterTopic) {
+            bookmarksContainer.innerHTML = '';
+            
+            const filteredBookmarks = (filterTopic === 'All')
+                ? allBookmarks
+                : allBookmarks.filter(bm => bm.topic === filterTopic);
+            
+            if (filteredBookmarks.length === 0) {
+                 bookmarksContainer.innerHTML = '<p class="loading-message">No bookmarks in this category.</p>';
+                return;
+            }
+
+            filteredBookmarks.forEach(bookmark => {
+                const card = document.createElement('a');
+                card.className = 'bookmark-card';
+                card.href = bookmark.linkToQuestion || '#'; // Link to the question page
+                card.innerHTML = `
+                    <span class="bookmark-topic">${bookmark.topic}</span>
+                    <p class="bookmark-question">${bookmark.questionText}</p>
+                `;
+                bookmarksContainer.appendChild(card);
+            });
         }
     </script>
 </body>
