@@ -93,7 +93,7 @@
         </ul>
     </div>
 
-    <script src="config.js"></script>
+    <script src="/dashboard/quizzes/config.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const quizListEl = document.getElementById('quiz-list');
@@ -108,7 +108,7 @@
                 const quiz = QUIZ_CONFIG[key];
                 listHTML += `
                     <li>
-                        <a href="quiz.html?quiz=${key}" class="quiz-link">
+                        <a href="/dashboard/quizzes/quiz.html?quiz=${key}" class="quiz-link">
                             <span>${quiz.name}</span>
                             <i data-feather="arrow-right"></i>
                         </a>
