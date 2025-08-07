@@ -22,7 +22,7 @@
         @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
         
         /* UPDATED: Auth Screen Style */
-        #authCheckScreen .selection-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; }
+        #authCheckScreen .selection-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; background: transparent; box-shadow: none; }
         .loader { width: 40px; height: 40px; border: 4px solid var(--primary-color); border-bottom-color: transparent; border-radius: 50%; animation: rotation 1s linear infinite; }
         @keyframes rotation { to { transform: rotate(360deg); } }
 
@@ -79,8 +79,11 @@
         .results-btn.primary:hover { background-color: var(--primary-hover-color); }
         .results-btn.secondary { background-color: var(--container-bg-color); color: var(--text-color); border-color: var(--border-color); }
         .results-btn.secondary:hover { background-color: var(--bg-color); }
-        .results-btn.danger { background-color: var(--incorrect-bg); color: var(--incorrect-text); border-color: var(--incorrect-border); }
-        .results-btn.danger:hover { background-color: var(--incorrect-text); color: white; }
+        .results-btn.danger { background-color: var(--incorrect-text); color: white; }
+        .results-btn.danger:hover { background-color: #991b1b; }
+        .results-btn.warning { background-color: var(--bookmarked-color); color: white; }
+        .results-btn.warning:hover { background-color: #d97706; }
+
     </style>
 </head>
 <body>
@@ -102,13 +105,13 @@
 
         <div id="quiz-screen" class="screen">
             <div class="quiz-container">
-                <div id="loading-container" style="text-align:center; padding: 4rem;">Loading...</div>
+                <div id="loading-container" style="text-align:center; padding: 4rem;"><div class="loader"></div></div>
                 <div id="quiz-content" style="display:none;">
                     <div class="quiz-header">
                         <h1 id="quiz-title"></h1>
                         <div class="header-controls">
                             <div class="mode-toggle">
-                                <span>Practice</span>
+                                <span style="color: var(--text-color-light);">Practice</span>
                                 <label class="switch">
                                     <input type="checkbox" id="mode-toggle-checkbox">
                                     <span class="slider"></span>
@@ -142,13 +145,13 @@
 
         // --- CONFIGURATION ---
         const GOOGLE_AI_API_KEY = 'YOUR_API_KEY_HERE';
-        const ALL_QUIZ_DATA = { /* ... your data remains unchanged ... */ 
+        const ALL_QUIZ_DATA = {
              paper1: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "0" }, paper2: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1141721868" },
              paper3: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1815658253" }, paper4: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1386284317" },
              paper5: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "40352700" }, paper6: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "54400073" },
              paper7: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1767827630" }, paper8: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "280434470" }
         };
-        const PAPER_METADATA = [ /* ... your data remains unchanged ... */ 
+        const PAPER_METADATA = [
              { id: 'paper1', name: 'Paper 1'}, { id: 'paper2', name: 'Paper 2'},
              { id: 'paper3', name: 'Paper 3'}, { id: 'paper4', name: 'Paper 4'},
              { id: 'paper5', name: 'Paper 5'}, { id: 'paper6', name: 'Paper 6'},
@@ -175,7 +178,7 @@
              paginationHeader: document.getElementById('quiz-pagination-header'), timerEl: document.getElementById('timer'), resultsScreen: document.getElementById('results-screen'),
              finishQuizBtn: document.getElementById('finish-quiz-btn'),
              soundToggleBtn: document.getElementById('sound-toggle-btn'), correctSound: document.getElementById('correct-sound'), wrongSound: document.getElementById('wrong-sound'),
-             modeToggle: document.getElementById('mode-toggle-checkbox') // NEW: Mode toggle reference
+             modeToggle: document.getElementById('mode-toggle-checkbox') // NEW
         };
         
         // --- AUTH & NAVIGATION ---
@@ -188,8 +191,7 @@
                 authCheckScreen.style.display = 'none';
                 handleDirectLink(user);
             } else {
-                 authCheckScreen.innerHTML = '<div class="selection-container"><h1>Redirecting...</h1><p>You must be logged in.</p></div>';
-                 setTimeout(() => { if (window.self === window.top) { window.location.href = '../index.html'; } }, 2000);
+                 authCheckScreen.innerHTML = '<div class="selection-container"><p>You must be logged in to continue.</p></div>';
             }
         });
 
@@ -197,55 +199,58 @@
             const urlParams = new URLSearchParams(window.location.search);
             const directQuestionId = urlParams.get('questionId');
             if(user && directQuestionId) {
-                // ... direct link logic remains unchanged ...
-                return; 
+                const paperId = urlParams.get('paperId');
+                const paper = PAPER_METADATA.find(p => p.id === paperId);
+                if(paper) {
+                    currentPaper = paper;
+                    quizMode = 'practice';
+                    startQuiz(null, directQuestionId);
+                    return; 
+                }
             }
             showScreen('topic-screen');
             dom.paperCardGrid.innerHTML = PAPER_METADATA.map(paper => `<button class="paper-button" data-id="${paper.id}" data-name="${paper.name}">${paper.name}</button>`).join('');
         }
 
-        // UPDATED: Event listener for paper selection now starts quiz directly
         dom.paperCardGrid.addEventListener('click', (e) => {
             if (e.target.matches('.paper-button')) {
                 const { id, name } = e.target.dataset;
                 currentPaper = { id, name };
-                quizMode = 'practice'; // Default to practice mode
+                quizMode = 'practice';
                 checkResumeAndStart();
             }
         });
-        
-        // NEW: Event listener for the mode toggle switch
+
         dom.modeToggle.addEventListener('change', () => {
             const newMode = dom.modeToggle.checked ? 'exam' : 'practice';
-            if (confirm(`Switching to ${newMode} mode will restart your current progress for this paper. Continue?`)) {
+            if (confirm(`Switching to ${newMode} mode will restart your progress for this paper. Continue?`)) {
                 setQuizMode(newMode);
             } else {
-                dom.modeToggle.checked = !dom.modeToggle.checked; // Revert the toggle if user cancels
+                dom.modeToggle.checked = !dom.modeToggle.checked;
             }
         });
         
-        // NEW: Function to handle mode changes
         function setQuizMode(newMode) {
             quizMode = newMode;
-            // Clear previous session state to start fresh
             localStorage.removeItem(`radmentor_quiz_fellowship_${currentUser.uid}_${currentPaper.id}_${quizMode}`);
             startQuiz(null);
         }
-
+        
         function checkResumeAndStart() {
-            // ... resume logic remains unchanged ...
             const savedState = localStorage.getItem(`radmentor_quiz_fellowship_${currentUser.uid}_${currentPaper.id}_${quizMode}`);
             if (savedState) {
-                if (confirm(`You have an unfinished ${quizMode} session. Resume?`)) startQuiz(JSON.parse(savedState));
-                else {
+                if (confirm(`You have an unfinished ${quizMode} session. Resume?`)) {
+                    startQuiz(JSON.parse(savedState));
+                } else {
                     localStorage.removeItem(`radmentor_quiz_fellowship_${currentUser.uid}_${currentPaper.id}_${quizMode}`);
                     startQuiz(null);
                 }
-            } else startQuiz(null);
+            } else {
+                startQuiz(null);
+            }
         }
 
         async function startQuiz(resumeState, directQuestionId = null) {
-            // ... startQuiz logic remains largely unchanged ...
             isReviewing = false; reviewFilter = [];
             userAnswers = resumeState?.answers || {};
             currentQuestionIndex = resumeState?.index || 0;
@@ -259,27 +264,187 @@
             initializeSound();
             await Promise.all([fetchQuizData(), fetchUserBookmarks()]);
 
-            // Set the toggle switch to the correct state for the current session
             dom.modeToggle.checked = quizMode === 'exam';
 
             dom.loadingContainer.style.display = 'none';
             dom.quizContent.style.display = 'block';
             dom.quizTitle.textContent = `${currentPaper.name}`;
-            dom.finishQuizBtn.textContent = 'Finish Session';
+            dom.finishQuizBtn.textContent = 'Finish';
             dom.finishQuizBtn.style.display = 'block';
             createQuestionNav();
 
-            if (directQuestionId) { /* ... */ } 
-            else { showQuestion(currentQuestionIndex); }
+            if (directQuestionId) {
+                const questionIndex = allQuestions.findIndex(q => q.id === directQuestionId);
+                showQuestion(questionIndex >= 0 ? questionIndex : 0);
+            } else {
+                showQuestion(currentQuestionIndex);
+            }
             startTimer();
         }
 
-        // --- ALL OTHER FUNCTIONS (fetchQuizData, parse, showQuestion, etc.) remain the same ---
-        // ...
-        // [The rest of your extensive JS logic would go here, unchanged except for the results screen]
-        // ...
+        async function fetchQuizData() {
+            const paperData = ALL_QUIZ_DATA[currentPaper.id];
+            const url = `https://docs.google.com/spreadsheets/d/${paperData.sheetId}/gviz/tq?tqx=out:csv&gid=${paperData.gid}`;
+            try {
+                const response = await fetch(url);
+                const csvText = await response.text();
+                allQuestions = parseCSVToQuestions(csvText);
+            } catch (error) { console.error("Fetch Error:", error); }
+        }
 
-        // UPDATED: finishExam function to use new button styles
+        function parseCSVToQuestions(csvText) {
+            const lines = csvText.trim().split('\n').slice(1);
+            return lines.map((line, index) => {
+                const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''));
+                const [question, a, b, c, d, correctAns, explanation] = parts;
+                const options = [a, b, c, d].filter(Boolean);
+                const letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3};
+                const correctIndex = letterMap[(correctAns || '').trim().toLowerCase()];
+                if (question && correctIndex !== undefined && options.length > 0) {
+                    return { id: `${currentPaper.id}-${index}`, text: question, options, correctIndex, explanation: explanation || "N/A" };
+                }
+                return null;
+            }).filter(Boolean);
+        }
+
+        async function fetchUserBookmarks() {
+            if (!currentUser) return;
+            const bookmarksRef = collection(db, "users", currentUser.uid, "bookmarks");
+            const snapshot = await getDocs(bookmarksRef);
+            userBookmarks = new Set(snapshot.docs.map(doc => doc.id));
+        }
+
+        function showQuestion(index) {
+            if (reviewFilter.length > 0 && !reviewFilter.includes(index)) {
+                 index = reviewFilter.find(i => i >= index) || reviewFilter[0];
+            }
+            currentQuestionIndex = index;
+            const q = allQuestions[index];
+            if (!q) return;
+
+            const isBookmarked = userBookmarks.has(q.id);
+            const isFlagged = flaggedQuestions.has(q.id);
+            const isAnswered = userAnswers[index] !== undefined;
+
+            let questionHTML = `
+                <div class="question-title-bar">
+                    <span class="question-number">Question ${index + 1} of ${allQuestions.length}</span>
+                    <div class="question-controls">
+                        <button class="icon-btn flag-btn ${isFlagged ? 'flagged' : ''}" onclick="window.toggleFlag('${q.id}')" ${isReviewing ? 'disabled' : ''}><i data-feather="flag"></i></button>
+                        <button class="icon-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" onclick="window.toggleBookmark('${q.id}', '${q.text.replace(/'/g, "\\'")}')" ${isReviewing ? 'disabled' : ''}><i data-feather="bookmark"></i></button>
+                    </div>
+                </div>
+                <p class="main-question-text">${q.text}</p>
+                <div>${q.options.map((option, i) => {
+                    const shouldDisable = isReviewing || (quizMode === 'practice' && isAnswered);
+                    let btnClass = 'option-btn';
+                    if (quizMode === 'exam' && i === userAnswers[index]) {
+                        btnClass += ' selected';
+                    }
+                    if (shouldDisable && i === q.correctIndex) btnClass += ' correct';
+                    else if (shouldDisable && i === userAnswers[index]) btnClass += ' incorrect';
+                    
+                    return `<button class="${btnClass}" data-index="${i}" ${shouldDisable ? 'disabled' : ''}>${option}</button>`;
+                }).join('')}</div>`;
+            
+            if ((quizMode === 'practice' && isAnswered) || isReviewing) {
+                questionHTML += `<div class="explanation-box"><h4>Explanation</h4><p>${q.explanation}</p></div>`;
+            }
+
+            dom.questionsDisplay.innerHTML = questionHTML;
+            if (!isReviewing && !(quizMode === 'practice' && isAnswered)) {
+                 dom.questionsDisplay.querySelectorAll('.option-btn').forEach(btn => btn.addEventListener('click', handleOptionClick));
+            }
+            updateQuestionNav();
+            feather.replace();
+        }
+        
+        function handleOptionClick(e) {
+            const selectedIndex = parseInt(e.target.dataset.index);
+            userAnswers[currentQuestionIndex] = selectedIndex;
+            const q = allQuestions[currentQuestionIndex];
+            const isCorrect = selectedIndex === q.correctIndex;
+
+            if (quizMode === 'practice') {
+                if(isSoundOn) (isCorrect ? dom.correctSound : dom.wrongSound).play();
+                showQuestion(currentQuestionIndex);
+            } else {
+                showQuestion(currentQuestionIndex);
+            }
+            saveState();
+        }
+
+        function createQuestionNav() {
+            dom.paginationHeader.innerHTML = allQuestions.map((_, i) => `<div class="page-box" data-index="${i}">${i + 1}</div>`).join('');
+            dom.paginationHeader.querySelectorAll('.page-box').forEach(box => box.addEventListener('click', () => showQuestion(parseInt(box.dataset.index))));
+        }
+
+        function updateQuestionNav() {
+            dom.paginationHeader.querySelectorAll('.page-box').forEach(box => {
+                const index = parseInt(box.dataset.index);
+                box.className = 'page-box';
+                if (index === currentQuestionIndex) box.classList.add('active');
+                if (userAnswers[index] !== undefined) {
+                     if (quizMode === 'practice' || isReviewing) {
+                        const isCorrect = userAnswers[index] === allQuestions[index].correctIndex;
+                        box.classList.add(isCorrect ? 'answered-correct' : 'answered-incorrect');
+                     } else {
+                         box.classList.add('answered-correct');
+                         box.style.backgroundColor = 'var(--primary-color)';
+                         box.style.borderColor = 'var(--primary-color)';
+                         box.style.color = 'white';
+                     }
+                }
+                if (flaggedQuestions.has(allQuestions[index].id)) box.classList.add('flagged');
+            });
+            const activeBox = dom.paginationHeader.querySelector('.page-box.active');
+            if(activeBox) activeBox.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+        
+        function initializeSound() {
+            const savedSoundPref = localStorage.getItem('radmentor_sound_pref');
+            isSoundOn = savedSoundPref !== 'off';
+            updateSoundIcon();
+        }
+
+        window.toggleSound = () => {
+            isSoundOn = !isSoundOn;
+            localStorage.setItem('radmentor_sound_pref', isSoundOn ? 'on' : 'off');
+            updateSoundIcon();
+        };
+
+        function updateSoundIcon() {
+            const iconName = isSoundOn ? 'volume-2' : 'volume-x';
+            dom.soundToggleBtn.innerHTML = `<i data-feather="${iconName}"></i>`;
+            feather.replace();
+        }
+        dom.soundToggleBtn.addEventListener('click', window.toggleSound);
+
+        window.toggleFlag = (id) => { flaggedQuestions.has(id) ? flaggedQuestions.delete(id) : flaggedQuestions.add(id); updateQuestionNav(); saveState(); };
+        
+        window.toggleBookmark = async (questionId, questionText) => {
+            if (!currentUser) return;
+            const bookmarkRef = doc(db, "users", currentUser.uid, "bookmarks", questionId);
+            const button = event.currentTarget;
+            if (userBookmarks.has(questionId)) {
+                await deleteDoc(bookmarkRef);
+                userBookmarks.delete(questionId);
+                button.classList.remove('bookmarked');
+            } else {
+                await setDoc(bookmarkRef, { questionText, topic: `Fellowship ${currentPaper.name}`, timestamp: serverTimestamp(), linkToQuestion: `${window.location.pathname}?paperId=${currentPaper.id}&questionId=${questionId}` });
+                userBookmarks.add(questionId);
+                button.classList.add('bookmarked');
+            }
+        };
+        
+        dom.finishQuizBtn.addEventListener('click', () => {
+             if (quizMode === 'exam') {
+                if(confirm('Are you sure you want to finish the exam?')) finishExam();
+             } else {
+                 if(confirm('Are you sure you want to finish this practice session?')) finishExam();
+             }
+        });
+
         async function finishExam() {
             clearInterval(quizInterval);
             showScreen('results-screen');
@@ -311,9 +476,10 @@
                      </div>
                   </div>
                   <div class="results-actions">
-                      <button class="results-btn secondary" id="review-all-btn">Review All</button>
+                      <button class="results-btn primary" id="review-all-btn">Review All</button>
                       <button class="results-btn danger" id="review-incorrect-btn">Review Incorrect</button>
-                      <button class="results-btn primary" id="back-to-topics-btn">Back to Papers</button>
+                      <button class="results-btn warning" id="review-flagged-btn">Review Flagged</button>
+                      <button class="results-btn secondary" id="back-to-topics-btn">Back to Papers</button>
                   </div>
               </div>`;
             
@@ -327,43 +493,103 @@
             
             localStorage.removeItem(`radmentor_quiz_fellowship_${currentUser.uid}_${currentPaper.id}_${quizMode}`);
             
-            const attemptData = { score: correctCount, total: allQuestions.length };
-            const { average, percentile } = await saveTestResultAndGetStats(attemptData);
-            document.getElementById('average-score').textContent = `${average.toFixed(1)}%`;
-            document.getElementById('percentile-rank').textContent = percentile.toFixed(1);
-            
-            getAIInsights(incorrectQuestions);
-            
-            document.getElementById('back-to-topics-btn').addEventListener('click', () => showScreen('topic-screen'));
+            if (quizMode === 'exam') {
+                const attemptData = { score: correctCount, total: allQuestions.length };
+                const { average, percentile } = await saveTestResultAndGetStats(attemptData);
+                document.getElementById('average-score').textContent = `${average.toFixed(1)}%`;
+                document.getElementById('percentile-rank').textContent = percentile.toFixed(1);
+                getAIInsights(incorrectQuestions);
+            } else {
+                 document.getElementById('peer-comparison-content').innerHTML = '<p>Peer comparison is only available in Exam Mode.</p>';
+                 document.getElementById('ai-insights-content').innerHTML = '<p>AI Insights are only available for Exam Mode results.</p>';
+            }
+
+            document.getElementById('back-to-topics-btn').addEventListener('click', () => { showScreen('topic-screen'); handleDirectLink(currentUser); });
             document.getElementById('review-all-btn').addEventListener('click', () => setupReview('all'));
             document.getElementById('review-incorrect-btn').addEventListener('click', () => setupReview('incorrect'));
-            // Note: Review flagged button was removed from results to simplify, as it's less common.
+            document.getElementById('review-flagged-btn').addEventListener('click', () => setupReview('flagged'));
         }
 
-        // --- Paste the rest of your unchanged JavaScript functions here ---
-        // (saveTestResultAndGetStats, getAIInsights, saveState, startTimer, setupReview, etc.)
+        async function saveTestResultAndGetStats(attempt) {
+            const aggregatesRef = doc(db, "quizAggregates", currentPaper.id);
+            let finalStats = { average: 0, percentile: 0 };
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const aggDoc = await transaction.get(aggregatesRef);
+                    const scorePercent = allQuestions.length > 0 ? (attempt.score / allQuestions.length) * 100 : 0;
+                    if (!aggDoc.exists()) {
+                        transaction.set(aggregatesRef, { totalAttempts: 1, averageScore: scorePercent, scores: [scorePercent] });
+                        finalStats = { average: scorePercent, percentile: 100 };
+                    } else {
+                        const data = aggDoc.data();
+                        const scores = data.scores || [];
+                        finalStats.percentile = scores.length > 0 ? (scores.filter(s => s < scorePercent).length / scores.length) * 100 : 100;
+                        const newTotalAttempts = data.totalAttempts + 1;
+                        const newAverageScore = ((data.averageScore * data.totalAttempts) + scorePercent) / newTotalAttempts;
+                        scores.push(scorePercent);
+                        transaction.update(aggregatesRef, { totalAttempts: newTotalAttempts, averageScore: newAverageScore, scores });
+                        finalStats.average = newAverageScore;
+                    }
+                });
+            } catch (e) { console.error("Transaction failed: ", e); }
+            return finalStats;
+        }
         
-        // --- Full list of functions from your original script to ensure everything is included ---
-        async function fetchQuizData() { /* ... as before ... */ }
-        function parseCSVToQuestions(csvText) { /* ... as before ... */ }
-        async function fetchUserBookmarks() { /* ... as before ... */ }
-        function showQuestion(index) { /* ... as before ... */ }
-        function handleOptionClick(e) { /* ... as before ... */ }
-        function createQuestionNav() { /* ... as before ... */ }
-        function updateQuestionNav() { /* ... as before ... */ }
-        function initializeSound() { /* ... as before ... */ }
-        window.toggleSound = () => { /* ... as before ... */ };
-        function updateSoundIcon() { /* ... as before ... */ }
-        dom.soundToggleBtn.addEventListener('click', window.toggleSound);
-        window.toggleFlag = (id) => { /* ... as before ... */ };
-        window.toggleBookmark = async (questionId, questionText) => { /* ... as before ... */ };
-        dom.finishQuizBtn.addEventListener('click', () => { /* ... as before ... */ });
-        async function saveTestResultAndGetStats(attempt) { /* ... as before ... */ }
-        async function getAIInsights(incorrectQs) { /* ... as before ... */ }
-        function saveState() { /* ... as before ... */ }
-        function startTimer() { /* ... as before ... */ }
-        function setupReview(filterType) { /* ... as before ... */ }
+        async function getAIInsights(incorrectQs) {
+            const insightsDiv = document.getElementById('ai-insights-content');
+            if (GOOGLE_AI_API_KEY === 'YOUR_API_KEY_HERE') {
+                insightsDiv.innerHTML = '<p>AI features are not enabled. Please add a Google AI API key.</p>'; return;
+            }
+            if(incorrectQs.length === 0) {
+                 insightsDiv.innerHTML = '<p>Flawless victory! No incorrect answers to analyze.</p>'; return;
+            }
+            try {
+                const genAI = new GoogleGenerativeAI(GOOGLE_AI_API_KEY);
+                const model = genAI.getGenerativeModel({ model: "gemini-pro"});
+                const prompt = `A user answered these radiology fellowship exam questions incorrectly. Identify 2-3 core concepts they are struggling with and give concise, actionable study advice. Questions:\n${incorrectQs.map(q => `- ${q.text}`).join('\n')}`;
+                const result = await model.generateContent(prompt);
+                insightsDiv.innerHTML = result.response.text().replace(/\n/g, '<br>').replace(/\*/g, '');
+            } catch (error) {
+                insightsDiv.innerHTML = '<p>Could not retrieve AI insights at this time.</p>';
+                console.error("AI Error:", error);
+            }
+        }
+        
+        function saveState() {
+             if (!currentUser || !currentPaper || isReviewing) return;
+             const state = { answers: userAnswers, index: currentQuestionIndex, elapsedSeconds: elapsedSeconds, flags: Array.from(flaggedQuestions) };
+             localStorage.setItem(`radmentor_quiz_fellowship_${currentUser.uid}_${currentPaper.id}_${quizMode}`, JSON.stringify(state));
+        }
+        
+        function startTimer() {
+            clearInterval(quizInterval);
+            let startTime = Date.now() - (elapsedSeconds * 1000);
+            quizInterval = setInterval(() => {
+                elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                dom.timerEl.textContent = `${String(Math.floor(elapsedSeconds/60)).padStart(2,'0')}:${String(elapsedSeconds%60).padStart(2,'0')}`;
+            }, 1000);
+        }
 
+        function setupReview(filterType) {
+            isReviewing = true;
+            if (filterType === 'all') {
+                reviewFilter = allQuestions.map((_, i) => i);
+            } else if (filterType === 'incorrect') {
+                reviewFilter = allQuestions.map((q, i) => i).filter(i => userAnswers[i] !== undefined && userAnswers[i] !== q.correctIndex);
+            } else if (filterType === 'flagged') {
+                reviewFilter = allQuestions.map((q, i) => i).filter(i => flaggedQuestions.has(q.id));
+            }
+            
+            if (reviewFilter.length === 0) {
+                alert(`No ${filterType} questions to review.`);
+                isReviewing = false;
+                return;
+            }
+            dom.finishQuizBtn.style.display = 'none';
+            showScreen('quiz-screen');
+            createQuestionNav();
+            showQuestion(reviewFilter[0]);
+        }
     </script>
 </body>
 </html>
