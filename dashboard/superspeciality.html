@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RadMentor Quiz</title>
+    <title>RadMentor Quiz - Superspeciality</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -78,14 +78,12 @@
         .explanation-box h4 { margin-top: 0; font-size: 1.1rem; font-weight: 700; color: var(--heading-color); }
         .explanation-image { max-width: 100%; border-radius: 0.75rem; margin-top: 1rem; border: 1px solid var(--border-color); }
         
-        /* Navigation */
+        /* Navigation & Results */
         .navigation-controls { display: flex; justify-content: space-between; margin-top: 2rem; }
         .nav-btn { background-color: var(--card-bg); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
         .nav-btn.next { background-color: var(--primary-color); color: white; }
         .nav-btn:hover:not(:disabled) { transform: translateY(-2px); }
         .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        
-        /* Results Screen */
         .results-header { text-align: center; margin-bottom: 2rem; }
         .results-header h2 { font-size: 2.5rem; margin: 0; font-weight: 800; color: var(--heading-color); }
         .final-score-percent { font-size: 4rem; font-weight: 800; color: var(--primary-color); margin-bottom: 1rem; display: block; text-align: center; }
@@ -98,7 +96,7 @@
         .results-actions .primary-btn { background-color: var(--primary-color); color: white; }
         .results-actions .secondary-btn { background-color: var(--card-bg); color: var(--text-color); border-color: var(--border-color); }
 
-        /* Side Panel & Modal (retained logic, improved styles) */
+        /* Side Panel & Modal */
         .side-panel-toggle { position: fixed; top: 50%; right: 0; transform: translateY(-50%); background-color: var(--primary-color); color: white; border: none; width: 40px; height: 60px; border-radius: 8px 0 0 8px; cursor: pointer; z-index: 999; display: flex; align-items: center; justify-content: center; box-shadow: -5px 0 15px rgba(0,0,0,0.1); }
         .side-panel { position: fixed; top: 0; right: 0; width: 300px; height: 100%; background-color: white; box-shadow: -10px 0 30px rgba(0,0,0,0.1); transform: translateX(100%); transition: transform 0.4s ease-in-out; z-index: 998; display: flex; flex-direction: column; }
         .side-panel.active { transform: translateX(0); }
@@ -122,7 +120,7 @@
         .modal-content { background-color: var(--card-bg); padding: 2rem; border-radius: 1rem; width: 90%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; }
         
         /* Loader */
-        #app-loader { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 80vh; gap: 1rem; }
+        #app-loader { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 50vh; gap: 1rem; }
         .loader { width: 48px; height: 48px; border: 5px solid var(--primary-color); border-bottom-color: transparent; border-radius: 50%; animation: rotation 1s linear infinite; }
         @keyframes rotation { to { transform: rotate(360deg); } }
     </style>
@@ -130,7 +128,7 @@
 <body>
 
     <div id="main-container" class="main-container">
-        <div id="app-loader">
+        <div id="app-loader" class="screen active">
             <div class="loader"></div>
             <p>Initializing...</p>
         </div>
@@ -212,7 +210,7 @@
     </div>
 
 <script>
-    // --- EMBEDDED CONFIG & OLD LOGIC (UNCHANGED) ---
+    // --- CONFIGURATION ---
     const QUIZ_CONFIG = {
       "ini-ss": { name: "INI-SS Exam", sheetId: "1Zd-UhR966r8FE5pJ3yqqPInQBrAzLSG4pTc_wytr4I0", papers: { "Paper 1": "0", "Paper 2": "123269442", "Paper 3": "1278979358", "Paper 4": "470498245", "Paper 5": "94227388", "Paper 6": "855680808", "Paper 7": "1771985316", "Paper 8": "153180989", "Paper 9": "1725673059" } },
       "neet-ss": { name: "NEET SS Exam", sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", papers: { "Paper 1": "0", "Paper 2": "385825325", "Paper 3": "1302055466", "Paper 4": "472403230", "Paper 5": "1502909003" } }
@@ -224,20 +222,20 @@
     let quizMode = 'practice', quizInterval = null, timeRemaining = 0, totalTime = 0, userAnswers = {};
     let isReviewing = false, reviewFilter = [], currentReviewIndex = 0;
     let dom, currentUser, userBookmarks = new Set();
-    const TIME_PER_QUESTION = 90; // 90 seconds per question in exam mode
+    const TIME_PER_QUESTION = 90;
 
-    // --- NEW: FIREBASE AUTH & BOOKMARKING ---
-const firebaseConfig = {
-    apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
-    authDomain: "radiology-mcqs.firebaseapp.com",
-    projectId: "radiology-mcqs",
-    storageBucket: "radiology-mcqs.appspot.com",
-    messagingSenderId: "862300415358",
-    appId: "1:862300415358:web:097d5e413f388e30587f2f",
-    measurementId: "G-0V1SD1H95V"
-};
+    // --- FIREBASE SETUP ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
+        authDomain: "radiology-mcqs.firebaseapp.com",
+        projectId: "radiology-mcqs",
+        storageBucket: "radiology-mcqs.appspot.com",
+        messagingSenderId: "862300415358",
+        appId: "1:862300415358:web:097d5e413f388e30587f2f",
+        measurementId: "G-0V1SD1H95V"
+    };
+    let db; // To be initialized after SDKs load
 
-    /** Dynamically loads a script */
     function loadScript(src) {
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
@@ -248,7 +246,26 @@ const firebaseConfig = {
         });
     }
 
-    /** Toggles a question's bookmark status in Firestore */
+    // --- NEW: FUNCTION TO SAVE QUIZ ATTEMPTS ---
+    async function saveQuizAttempt(attemptData) {
+        if (!currentUser || !currentPaperKey || !currentQuizKey) return;
+        try {
+            const attemptsRef = firebase.firestore().collection("users").doc(currentUser.uid).collection("quizAttempts");
+            await attemptsRef.add({
+                paperId: `${currentQuizKey}-${currentPaperKey}`.replace(/\s/g, '-'),
+                paperName: `${QUIZ_CONFIG[currentQuizKey].name} - ${currentPaperKey}`,
+                score: attemptData.score,
+                totalQuestions: attemptData.total,
+                percentage: (attemptData.score / attemptData.total) * 100,
+                mode: quizMode,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            console.log("Quiz attempt saved!");
+        } catch (error) {
+            console.error("Error saving quiz attempt: ", error);
+        }
+    }
+    
     window.toggleBookmark = async (questionId, questionText) => {
         if (!currentUser) return;
         const bookmarkRef = firebase.firestore().doc(`users/${currentUser.uid}/bookmarks/${questionId}`);
@@ -270,12 +287,12 @@ const firebaseConfig = {
             button?.classList.add('active');
             showModal("Bookmark Added!", "", null, 1500);
         }
-        updateSidePanel(); // Refresh bookmark list
+        updateSidePanel();
     };
     
     // --- CORE APP LOGIC ---
     document.addEventListener('DOMContentLoaded', async () => {
-        dom = { // UPDATED: DOM element references to match new HTML
+        dom = {
             mainContainer: document.getElementById('main-container'),
             appLoader: document.getElementById('app-loader'),
             screens: document.querySelectorAll('.screen'),
@@ -312,6 +329,7 @@ const firebaseConfig = {
             firebase.auth().onAuthStateChanged(user => {
                 currentUser = user;
                 if(user) {
+                    showScreen('home-screen');
                     initHomeScreen();
                 } else {
                     dom.appLoader.innerHTML = "<p>Please log in to access quizzes.</p>";
@@ -323,12 +341,21 @@ const firebaseConfig = {
     });
 
     function setupEventListeners() {
-        dom.modeToggle.addEventListener('change', () => setQuizMode(dom.modeToggle.checked ? 'exam' : 'practice'));
+        dom.modeToggle.addEventListener('change', () => {
+             const newMode = dom.modeToggle.checked ? 'exam' : 'practice';
+             if (confirm(`Switching to ${newMode} mode will restart your progress. Continue?`)) {
+                setQuizMode(newMode);
+             } else {
+                dom.modeToggle.checked = !dom.modeToggle.checked;
+             }
+        });
         dom.finishQuizBtn.addEventListener('click', () => {
             const unattempted = allQuestions.length - Object.keys(userAnswers).length;
-            if (quizMode === 'exam' && unattempted > 0 && timeRemaining > 0) {
+            if (quizMode === 'exam' && unattempted > 0) {
                 showModal('Finish Exam?', `You have ${unattempted} unattempted questions. Are you sure?`, finishQuiz);
-            } else { finishQuiz(); }
+            } else { 
+                finishQuiz();
+            }
         });
         dom.sidePanelToggle.addEventListener('click', () => {
              dom.sidePanel.classList.toggle('active');
@@ -366,7 +393,6 @@ const firebaseConfig = {
         dom.quizListContainer.querySelectorAll('.selection-item').forEach(link => {
             link.addEventListener('click', (e) => showPaperScreen(e.currentTarget.dataset.quizKey));
         });
-        showScreen('home-screen');
     }
 
     function showPaperScreen(quizKey) {
@@ -383,7 +409,6 @@ const firebaseConfig = {
     }
 
     async function loadQuizData(quizKey, paperKey) {
-        dom.appLoader.style.display = 'flex';
         showScreen('app-loader');
         const config = QUIZ_CONFIG[quizKey];
         const gid = config.papers[paperKey];
@@ -408,12 +433,11 @@ const firebaseConfig = {
 
     async function startQuiz() {
         isReviewing = false; userAnswers = {}; currentQuestionIndex = 0;
-        dom.appLoader.style.display = 'none';
         showScreen('quiz-screen');
         dom.quizContent.style.display = 'block';
         dom.finishQuizBtn.style.display = 'block';
         setupEventListeners();
-        setQuizMode(dom.modeToggle.checked ? 'exam' : 'practice'); // Start with current mode
+        setQuizMode(dom.modeToggle.checked ? 'exam' : 'practice', false); 
         if(currentUser) {
             const snapshot = await db.collection(`users/${currentUser.uid}/bookmarks`).get();
             userBookmarks = new Set(snapshot.docs.map(doc => doc.id));
@@ -421,12 +445,18 @@ const firebaseConfig = {
         showQuestion(0);
     }
 
-    function finishQuiz() {
+    async function finishQuiz() {
         clearInterval(quizInterval);
         let correctCount = 0;
         allQuestions.forEach((q, i) => {
             if (userAnswers[i] === q.correctIndex) correctCount++;
         });
+        
+        // --- ADDITION: Save results before showing them ---
+        if (quizMode === 'exam') {
+            await saveQuizAttempt({ score: correctCount, total: allQuestions.length });
+        }
+        
         const scorePercent = allQuestions.length > 0 ? (correctCount / allQuestions.length * 100) : 0;
         const incorrectCount = Object.keys(userAnswers).length - correctCount;
         const unattemptedCount = allQuestions.length - Object.keys(userAnswers).length;
@@ -442,18 +472,18 @@ const firebaseConfig = {
             </div>
             <div class="results-actions">
                 <button class="btn primary-btn" id="review-all-btn">Review Answers</button>
-                <button class="btn secondary-btn" onclick="showPaperScreen(currentQuizKey)">Back to Papers</button>
-            </div>
-        `;
+                <button class="btn secondary-btn" id="back-to-papers-btn">Back to Papers</button>
+            </div>`;
         document.getElementById('results-content').innerHTML = resultsHTML;
         new Chart(document.getElementById('performanceChart'), { type: 'doughnut', data: { labels: ['Correct', 'Incorrect', 'Unattempted'], datasets: [{ data: [correctCount, incorrectCount, unattemptedCount], backgroundColor: ['#22c55e', '#ef4444', '#e2e8f0'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins:{legend:{display:false}} } });
         document.getElementById('review-all-btn').addEventListener('click', () => setupReview());
+        document.getElementById('back-to-papers-btn').addEventListener('click', () => showPaperScreen(currentQuizKey));
         showScreen('results-screen');
     }
 
     function setupReview() {
         isReviewing = true; currentReviewIndex = 0;
-        reviewFilter = allQuestions.map((_, i) => i); // Review all questions
+        reviewFilter = allQuestions.map((_, i) => i);
         if (reviewFilter.length === 0) { showModal('No Questions', 'There are no questions to review.'); isReviewing = false; return; }
         dom.finishQuizBtn.style.display = 'none';
         showScreen('quiz-screen');
@@ -505,7 +535,7 @@ const firebaseConfig = {
     function handleOptionClick(e) {
         userAnswers[currentQuestionIndex] = parseInt(e.currentTarget.dataset.index);
         if (quizMode === 'practice') {
-            showQuestion(currentQuestionIndex); // Re-render to show explanation
+            showQuestion(currentQuestionIndex);
             if(Object.keys(userAnswers).length === allQuestions.length) setTimeout(finishQuiz, 1200);
         }
         updateQuizUI();
@@ -595,7 +625,11 @@ const firebaseConfig = {
         }, 1000);
     }
     
-    function setQuizMode(mode) {
+    function setQuizMode(mode, restart = true) {
+        if (restart) {
+            userAnswers = {};
+            currentQuestionIndex = 0;
+        }
         quizMode = mode;
         dom.quizTitle.textContent = `${currentPaperKey} (${mode} mode)`;
         if (mode === 'exam') {
