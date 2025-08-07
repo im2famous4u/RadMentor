@@ -16,7 +16,7 @@
         :root {
             --primary-color-start: #1e3a8a;  /* A deeper, calming blue */
             --primary-color-end: #3b82f6;    /* A vibrant sky blue */
-            --accent-color: #10b981;        /* A vibrant green */
+            --accent-color: #10b981;         /* A vibrant green */
         }
         
         /* Custom styles for better aesthetics and overrides */
@@ -96,7 +96,7 @@
             width: 120%;
             height: 120%;
             background-image: radial-gradient(circle at 10% 20%, rgba(30, 58, 138, 0.2) 0%, transparent 50%),
-                                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.2) 0%, transparent 50%);
+                              radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.2) 0%, transparent 50%);
             animation: float 15s infinite ease-in-out;
         }
         .pulse-btn {
@@ -117,13 +117,16 @@
 </head>
 <body class="text-gray-800 bg-gray-50">
 
+    <!-- Loading Indicator -->
     <div id="loading-indicator" class="fixed inset-0 flex items-center justify-center bg-gray-50 z-50">
         <p class="text-lg text-gray-600">Loading RadMentor...</p>
     </div>
 
+    <!-- Header -->
     <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
         <div class="container mx-auto px-6 py-3 flex justify-between items-center">
             <div class="flex items-center">
+                <!-- A simple SVG logo is used to make the code self-contained -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 mr-3">
                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                 </svg>
@@ -143,16 +146,20 @@
                     </button>
                 </div>
                 <div id="header-logged-in" class="hidden items-center">
-                    <span class="hidden sm:block text-gray-700 mr-4">Hi, <span id="user-greeting-header">User</span>!</span>
+                    <span class="hidden sm:block text-gray-700 mr-4">Hi, <span id="user-greeting-header"></span>!</span>
                     <button onclick="showDashboard()" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                         Dashboard
                     </button>
                     <button onclick="logout()" class="ml-4 text-gray-600 hover:text-blue-600" title="Logout">
-                        <i data-feather="log-out"></i>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
                     </button>
                 </div>
                 <button id="mobile-menu-button" class="md:hidden ml-4 text-gray-700">
-                    <i data-feather="menu"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
                 </button>
             </div>
         </div>
@@ -173,6 +180,7 @@
 
     <div id="landing-page" class="hidden">
         <main>
+            <!-- Hero Section -->
             <section class="bg-white pt-32 pb-20 hero-bg-animated">
                 <div class="container mx-auto px-6 text-center relative z-10">
                     <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
@@ -189,6 +197,7 @@
                 </div>
             </section>
 
+            <!-- Courses Section -->
             <section id="courses" class="py-20 fade-in">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
@@ -196,10 +205,12 @@
                         <p class="mt-4 text-lg text-gray-600">Targeted preparation for all major radiology exams.</p>
                     </div>
                     <div id="courses-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        </div>
+                        <!-- Course cards and their details will be generated here by JavaScript -->
+                    </div>
                 </div>
             </section>
             
+            <!-- Pricing Section -->
             <section id="pricing" class="py-20 bg-white fade-in">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
@@ -207,6 +218,7 @@
                         <p class="mt-4 text-lg text-gray-600">Choose the plan that's right for you. Get started for free!</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                        <!-- Free Plan Card -->
                         <div class="bg-gray-50 p-8 rounded-xl shadow-xl flex flex-col justify-between">
                             <div>
                                 <h3 class="text-3xl font-bold text-gray-900">Free Plan</h3>
@@ -226,6 +238,7 @@
                             </button>
                         </div>
                         
+                        <!-- Gold Plan Card -->
                         <div class="bg-white p-8 rounded-xl shadow-xl border-2 border-blue-600 flex flex-col justify-between transform scale-105">
                             <div>
                                 <div class="flex justify-between items-center">
@@ -251,6 +264,7 @@
                             </button>
                         </div>
 
+                        <!-- All Access Plan Card -->
                         <div class="bg-gray-50 p-8 rounded-xl shadow-xl flex flex-col justify-between">
                             <div>
                                 <div class="flex justify-between items-center">
@@ -279,6 +293,8 @@
                 </div>
             </section>
 
+
+            <!-- Features Section -->
             <section id="features" class="py-20 fade-in">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
@@ -317,6 +333,7 @@
                 </div>
             </section>
 
+            <!-- About Us Section -->
             <section id="about" class="py-20 bg-gray-50 fade-in">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
@@ -332,6 +349,7 @@
             </section>
         </main>
 
+        <!-- Footer -->
         <footer class="bg-gray-900 text-white">
             <div class="container mx-auto px-6 py-12">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -360,14 +378,15 @@
         </footer>
     </div>
 
+    <!-- Auth Modal -->
     <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
             <button onclick="hideAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
-                <i data-feather="x"></i>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
             <div class="p-8 md:p-12">
                 <div id="auth-container">
-                    <h1 id="auth-title" class="text-3xl font-bold text-gray-900 text-center mb-2">Login</h1>
+                    <h1 id="auth-title" class="text-3xl font-bold text-gray-900 text-center mb-2">Login to RadMentor</h1>
                     <p id="auth-subtitle" class="text-gray-600 text-center mb-8">Welcome back!</p>
                     <div class="space-y-4">
                         <input type="email" id="email" placeholder="Email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -383,15 +402,16 @@
         </div>
     </div>
     
+    <!-- Profile Form -->
     <div id="profile-form-container" class="fixed inset-0 bg-gray-100 z-50 p-4 hidden overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-auto my-8 p-8 md:p-12">
             <h1 class="text-3xl font-bold text-gray-900 text-center">Complete Your Profile</h1>
             <p class="text-gray-600 text-center mb-8">Please provide a few more details to get started.</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="md:col-span-2"><input type="text" id="name" placeholder="Full Name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required></div>
+                <div class="md:col-span-2"><input type="text" id="name" placeholder="Full Name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
                 <div>
                     <label class="font-medium text-gray-700">Date of Birth</label>
-                    <input type="date" id="dob" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <input type="date" id="dob" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
                     <label class="font-medium text-gray-700">Sex</label>
@@ -425,10 +445,196 @@
         </div>
     </div>
 
+    <!-- Placeholder Message Box (replaces alert()) -->
     <div id="message-box" class="fixed bottom-4 right-4 bg-gray-900 text-white p-4 rounded-lg shadow-lg z-[100] hidden">
         <p id="message-content"></p>
     </div>
 
+    <!-- Scripts -->
+    <script>
+        const coursesData = {
+            frcr: {
+                title: 'FRCR Exam Preparation',
+                description: 'Comprehensive question banks and mock tests for the FRCR exam.',
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>`,
+                features: [
+                    'Great App design for an intuitive experience.',
+                    'Practice tests with the same layout and feel as the RCR website.',
+                    'Comprehensive question banks.',
+                    'Expert-curated content by top radiologists.'
+                ]
+            },
+            md_dnb: {
+                title: 'MD / DNB Final Year Exams',
+                description: 'Master your final year exams with our targeted content.',
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253" /></svg>`,
+                features: [
+                    'Previous year question papers for all DNB and MD exams.',
+                    'Focus on recent and high-yield topics.',
+                    'Clear and concise "Lucid Notes".',
+                    'Expert tips for viva examinations.',
+                    '**Gamification & Progress:** Track your progress with visual dashboards and earn rewards for milestones.'
+                ]
+            },
+            anatomy: {
+                title: 'Anatomy Modules',
+                description: 'Detailed anatomical modules to build a strong foundation.',
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0h.01M9 19h10a2 2 0 002-2v-6a2 2 0 00-2-2H9m11 0V7a2 2 0 00-2-2h-2M4 6h.01M6 6h.01" /></svg>`,
+                features: [
+                    'A dedicated section for ready referencing of anatomy.',
+                    'Detailed anatomical diagrams and explanations.',
+                    'Quiz-style questions to test your knowledge.'
+                ]
+            },
+            superspeciality: {
+                title: 'Superspeciality Exams',
+                description: 'Prepare for NEET SS & INICET SS with high-yield questions.',
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v-2m-2 2h2m5-12l2-2m2 2l-2-2m-3 12l2 2m2-2l-2 2m-3-7h.01M19 12h.01" /></svg>`,
+                features: [
+                    'Previous Year Questions (PYQs) for NEET SS & INI SS.',
+                    'Comprehensive Grand Tests to simulate full exams.',
+                    'Targeted content for high-stakes superspeciality exams.'
+                ]
+            },
+            fellowship: {
+                title: 'Fellowship Exams',
+                description: 'Excel in your fellowship exams with our specialized modules.',
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V3m0 9v3m0 0h.01M12 12h.01M12 12l-2.58 2.58M12 12l2.58 2.58M12 12l-2.58-2.58M12 12l2.58-2.58M12 12l-2.58 2.58M12 12l2.58 2.58" /></svg>`,
+                features: [
+                    'Specialized question banks for various fellowships.',
+                    'Detailed content for Thoracic, Fetal, GI, and MSK radiology.',
+                    'General radiology topics also included in the question bank.'
+                ]
+            },
+             radscribe_ai: {
+                title: 'RadScribe AI',
+                description: 'An AI-powered tool for generating accurate radiology reports.',
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v-4.477c0-1.155.26-2.29.75-3.376M9 17.25c-1.35 0-2.61-.527-3.556-1.474M9 17.25h.008m5.042-11.5c1.253 0 2.447.394 3.41 1.115m-3.41-1.115C13.626 4.31 12.09 3.75 10.5 3.75c-1.59 0-3.126.56-4.37 1.639m4.37-1.639h.008M15 17.25v-4.477c0-1.155-.26-2.29-.75-3.376M15 17.25c1.35 0 2.61-.527 3.556-1.474M15 17.25h.008m-5.042-11.5c-1.253 0-2.447-.394-3.41-1.115m3.41 1.115C10.374 4.31 11.91 3.75 13.5 3.75c1.59 0 3.126.56 4.37 1.639m-4.37-1.639h.008" /></svg>`,
+                features: [
+                    'AI-powered report generation from clinical findings.',
+                    'Helps you practice writing professional radiology reports.',
+                    'Quickly generate templates for common conditions.',
+                    'Saves time and ensures accuracy in your reporting practice.'
+                ]
+            }
+        };
+
+        function showContentMessage(message) {
+            const msgBox = document.getElementById('message-box');
+            const msgContent = document.getElementById('message-content');
+            msgContent.textContent = message;
+            msgBox.classList.remove('hidden');
+            setTimeout(() => {
+                msgBox.classList.add('hidden');
+            }, 3000);
+        }
+
+        let isLoggedIn = false;
+        const user = { name: 'Dr. Smith' };
+
+        function updateUI() {
+            const landingPage = document.getElementById('landing-page');
+            const headerLoggedIn = document.getElementById('header-logged-in');
+            const headerLoggedOut = document.getElementById('header-logged-out');
+            const userGreeting = document.getElementById('user-greeting-header');
+            const mobileLoggedIn = document.getElementById('mobile-logged-in');
+            const mobileLoggedOut = document.getElementById('mobile-logged-out');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const heroSignupButton = document.getElementById('hero-signup-button-container');
+
+            // Hide loading indicator once the page is ready
+            loadingIndicator.classList.add('hidden');
+
+            // Show the landing page
+            landingPage.classList.remove('hidden');
+
+            if (isLoggedIn) {
+                headerLoggedIn.classList.remove('hidden');
+                headerLoggedIn.classList.add('flex');
+                headerLoggedOut.classList.add('hidden');
+                mobileLoggedIn.classList.remove('hidden');
+                mobileLoggedOut.classList.add('hidden');
+                userGreeting.textContent = user.name;
+                
+                // Hide the "Get Started for Free" button in the hero section
+                if (heroSignupButton) {
+                    heroSignupButton.classList.add('hidden');
+                }
+
+            } else {
+                headerLoggedOut.classList.remove('hidden');
+                headerLoggedOut.classList.add('flex');
+                headerLoggedIn.classList.add('hidden');
+                mobileLoggedOut.classList.remove('hidden');
+                mobileLoggedIn.classList.add('hidden');
+
+                // Show the "Get Started for Free" button in the hero section
+                if (heroSignupButton) {
+                    heroSignupButton.classList.remove('hidden');
+                }
+            }
+        }
+
+        // Dynamically generate the course cards on page load
+        function generateCourseCards() {
+            const coursesGrid = document.getElementById('courses-grid');
+            coursesGrid.innerHTML = ''; // Clear existing content
+            const courseKeys = Object.keys(coursesData);
+            
+            // Loop through each course key and generate a card
+            courseKeys.forEach(key => {
+                const course = coursesData[key];
+                const card = document.createElement('div'); // Using a div for the card container
+                card.className = "relative group";
+
+                card.innerHTML = `
+                    <a href="#" class="bg-white p-8 rounded-xl shadow-lg transition-all duration-300 border border-gray-100 cursor-pointer course-card flex flex-col items-center justify-center text-center">
+                        <div class="rad-gradient w-16 h-16 rounded-full mx-auto flex items-center justify-center shadow-lg mb-6">
+                            ${course.icon}
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800 text-center">${course.title}</h3>
+                        <p class="mt-2 text-gray-600 text-center">${course.description}</p>
+                    </a>
+                    <div class="course-details">
+                        <h4 class="text-xl font-bold text-gray-900 mb-4 text-center">${course.title} Features</h4>
+                        <ul class="space-y-3 text-gray-700">
+                            ${course.features.map(feature => `
+                                <li class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 mr-2"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>
+                                    <span>${feature}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+
+                coursesGrid.appendChild(card);
+            });
+        }
+        
+        // On page load, simulate an auth check and generate course cards
+        window.onload = function() {
+            updateUI();
+            generateCourseCards();
+
+            // Intersection Observer to add fade-in effect on scroll
+            const sections = document.querySelectorAll('.fade-in');
+            const observerOptions = {
+                root: null,
+                threshold: 0.2
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            sections.forEach(section => observer.observe(section));
+        }
     <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     <script type="module" src="js/main.js"></script>
     
