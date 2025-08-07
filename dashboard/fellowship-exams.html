@@ -11,7 +11,7 @@
         :root {
             --bg-color: #f4f7f9; --container-bg-color: #ffffff; --text-color: #334155; --text-color-light: #64748b;
             --header-text-color: #0f172a; --primary-color: #3b82f6; --primary-hover-color: #2563eb; /* Blue Theme */
-            --selection-button-bg: #8b5cf6; --selection-button-hover-bg: #7c3aed;
+            --selection-button-bg: #8b5cf6; --selection-button-hover-bg: #7c3aed; /* Violet for modes */
             --border-color: #e2e8f0; --explanation-bg: #f8fafc; --correct-bg: #dcfce7; --correct-border: #4ade80;
             --correct-text: #166534; --incorrect-bg: #fee2e2; --incorrect-border: #f87171; --incorrect-text: #b91c1c;
             --bookmark-color: #94a3b8; --bookmarked-color: #f59e0b; --flag-color: #94a3b8; --flagged-color: #ef4444;
@@ -110,9 +110,13 @@
     <audio id="wrong-sound" src="https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/sounds/wrong.mp3" preload="auto"></audio>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-        import { getFirestore, doc, runTransaction, collection, getDocs, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+        // --- CORRECTED: Import shared Firebase services ---
+        // This path assumes your 'js' folder is at the root of your project,
+        // and this HTML file is inside a folder like 'dashboard/'. Adjust if needed.
+        import { auth, db } from '../../js/firebase.js';
+        
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+        import { doc, runTransaction, collection, getDocs, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
         import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai/+esm";
 
         // --- CONFIGURATION ---
@@ -129,10 +133,6 @@
              { id: 'paper5', name: 'Paper 5'}, { id: 'paper6', name: 'Paper 6'},
              { id: 'paper7', name: 'Paper 7'}, { id: 'paper8', name: 'Paper 8'},
         ];
-        const firebaseConfig = {
-            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw", authDomain: "radiology-mcqs.firebaseapp.com", projectId: "radiology-mcqs",
-            storageBucket: "radiology-mcqs.appspot.com", messagingSenderId: "862300415358", appId: "1:862300415358:web:097d5e413f388e30587f2f"
-        };
         
         // --- APP STATE & INITIALIZATION ---
         let allQuestions = [], currentQuestionIndex = 0, currentUser = null;
@@ -140,9 +140,6 @@
         let currentPaper = null, quizMode = 'practice', quizInterval = null, elapsedSeconds = 0;
         let userAnswers = {};
         let isReviewing = false;
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
         const dom = {
              screens: document.querySelectorAll('.screen'), paperCardGrid: document.getElementById('paper-card-grid'), quizTitle: document.getElementById('quiz-title'),
              loadingContainer: document.getElementById('loading-container'), questionsDisplay: document.getElementById('questions-display'), quizContent: document.getElementById('quiz-content'),
@@ -155,6 +152,7 @@
         function showScreen(screenId) { dom.screens.forEach(s => s.classList.toggle('active', s.id === screenId)); feather.replace(); }
         
         onAuthStateChanged(auth, (user) => {
+            const authCheckScreen = document.getElementById('authCheckScreen');
             const urlParams = new URLSearchParams(window.location.search);
             const directQuestionId = urlParams.get('questionId');
 
@@ -172,11 +170,16 @@
 
             currentUser = user;
             if (user) {
+                authCheckScreen.style.display = 'none';
                 showScreen('topic-screen');
                 dom.paperCardGrid.innerHTML = PAPER_METADATA.map(paper => `<button class="paper-button" data-id="${paper.id}" data-name="${paper.name}">${paper.name}</button>`).join('');
             } else {
-                 document.getElementById('authCheckScreen').innerHTML = '<div class="selection-container"><h1>Redirecting...</h1><p>You must be logged in.</p></div>';
-                 setTimeout(() => { window.location.href = '../'; }, 2000);
+                 authCheckScreen.innerHTML = '<div class="selection-container"><h1>Redirecting...</h1><p>You must be logged in.</p></div>';
+                 setTimeout(() => { 
+                     if (window.self === window.top) {
+                         window.location.href = '../../index.html';
+                     }
+                 }, 2000);
             }
         });
 
@@ -446,7 +449,7 @@
             try {
                 await runTransaction(db, async (transaction) => {
                     const aggDoc = await transaction.get(aggregatesRef);
-                    const scorePercent = (attempt.score / allQuestions.length) * 100;
+                    const scorePercent = allQuestions.length > 0 ? (attempt.score / allQuestions.length) * 100 : 0;
                     if (!aggDoc.exists()) {
                         transaction.set(aggregatesRef, { totalAttempts: 1, averageScore: scorePercent, scores: [scorePercent] });
                         finalStats = { average: scorePercent, percentile: 100 };
