@@ -10,8 +10,8 @@
     <style>
         :root {
             --bg-color: #f4f7f9; --container-bg-color: #ffffff; --text-color: #334155; --text-color-light: #64748b;
-            --header-text-color: #0f172a; --primary-color: #ec4899; --primary-hover-color: #db2777; /* Pink Theme */
-            --selection-button-bg: #8b5cf6; --selection-button-hover-bg: #7c3aed; /* Violet Theme */
+            --header-text-color: #0f172a; --primary-color: #3b82f6; --primary-hover-color: #2563eb; /* Blue Theme */
+            --selection-button-bg: #8b5cf6; --selection-button-hover-bg: #7c3aed;
             --border-color: #e2e8f0; --explanation-bg: #f8fafc; --correct-bg: #dcfce7; --correct-border: #4ade80;
             --correct-text: #166534; --incorrect-bg: #fee2e2; --incorrect-border: #f87171; --incorrect-text: #b91c1c;
             --bookmark-color: #94a3b8; --bookmarked-color: #f59e0b; --flag-color: #94a3b8; --flagged-color: #ef4444;
@@ -22,14 +22,14 @@
         .screen.active { display: block; animation: fadeIn 0.5s; }
         @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
         .selection-container { background-color: var(--container-bg-color); border-radius: 1rem; padding: 2rem; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .selection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 2rem; }
-        .selection-button { background-color: var(--selection-button-bg); color: white; border: none; padding: 1.5rem; border-radius: 0.75rem; cursor: pointer; font-size: 1.1rem; font-weight: 600; transition: all 0.2s ease-in-out; }
-        .selection-button:hover { background-color: var(--selection-button-hover-bg); transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .paper-button-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+        .paper-button { background-color: var(--container-bg-color); color: var(--primary-color); border: 2px solid var(--primary-color); padding: 2rem; border-radius: 0.75rem; cursor: pointer; font-size: 1.25rem; font-weight: 700; transition: all 0.2s ease-in-out; }
+        .paper-button:hover { background-color: var(--primary-color); color: white; transform: translateY(-5px); box-shadow: 0 6px 15px rgba(59, 130, 246, 0.2); }
         .quiz-container, .results-container { background-color: var(--container-bg-color); border-radius: 1rem; box-shadow: 0 6px 20px rgba(0,0,0,0.05); overflow: hidden; }
         .quiz-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
         .quiz-header h1 { font-size: 1.25rem; margin: 0; color: var(--header-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .header-controls { display: flex; align-items: center; gap: 1rem; }
-        .timer { font-size: 1.1rem; font-weight: 600; color: var(--primary-color); background-color: #fdf2f8; padding: 0.5rem 1rem; border-radius: 0.5rem; }
+        .timer { font-size: 1.1rem; font-weight: 600; color: var(--primary-color); background-color: #eff6ff; padding: 0.5rem 1rem; border-radius: 0.5rem; }
         .finish-btn-header { background-color: var(--primary-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
         .finish-btn-header:hover { background-color: var(--primary-hover-color); }
         .question-area { padding: 1.5rem; }
@@ -43,7 +43,7 @@
         .flag-btn.flagged { color: var(--flagged-color); }
         .main-question-text { font-size: 1.25rem; font-weight: 600; line-height: 1.5; margin-bottom: 1.5rem; }
         .option-btn { display: block; width: 100%; text-align: left; padding: 1rem; margin-bottom: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.75rem; background-color: #f8fafc; cursor: pointer; transition: all 0.2s; }
-        .option-btn:hover { border-color: var(--primary-color); background-color: #fdf2f8; }
+        .option-btn:hover { border-color: var(--primary-color); background-color: #eff6ff; }
         .option-btn.correct { background-color: var(--correct-bg); border-color: var(--correct-border); color: var(--correct-text); font-weight: 600; }
         .option-btn.incorrect { background-color: var(--incorrect-bg); border-color: var(--incorrect-border); color: var(--incorrect-text); font-weight: 600; }
         .quiz-pagination-header { background-color: #f8fafc; padding: 1rem; border-bottom: 1px solid var(--border-color); overflow-x: auto; white-space: nowrap; scrollbar-width: thin; scrollbar-color: var(--primary-color) var(--border-color); }
@@ -67,8 +67,9 @@
     <div class="main-container">
         <div id="topic-screen" class="screen">
             <div class="selection-container">
-                 <h1>Fellowship Exam Papers</h1>
-                <div id="paper-card-grid" class="selection-grid"></div>
+                 <h1 style="color: var(--header-text-color); font-size: 2.2rem; font-weight: 800;">Gear Up for Success</h1>
+                 <p style="color: var(--text-color-light); font-size: 1.1rem; max-width: 600px; margin: 1rem auto 0;">Excel in the top fellowship exams from around the world with our curated question papers.</p>
+                <div id="paper-card-grid" class="paper-button-grid"></div>
             </div>
         </div>
 
@@ -172,7 +173,7 @@
             currentUser = user;
             if (user) {
                 showScreen('topic-screen');
-                dom.paperCardGrid.innerHTML = PAPER_METADATA.map(paper => `<button class="selection-button" data-id="${paper.id}" data-name="${paper.name}">${paper.name}</button>`).join('');
+                dom.paperCardGrid.innerHTML = PAPER_METADATA.map(paper => `<button class="paper-button" data-id="${paper.id}" data-name="${paper.name}">${paper.name}</button>`).join('');
             } else {
                  document.getElementById('authCheckScreen').innerHTML = '<div class="selection-container"><h1>Redirecting...</h1><p>You must be logged in.</p></div>';
                  setTimeout(() => { window.location.href = '../'; }, 2000);
@@ -180,7 +181,7 @@
         });
 
         dom.paperCardGrid.addEventListener('click', (e) => {
-            if (e.target.matches('.selection-button')) {
+            if (e.target.matches('.paper-button')) {
                 const { id, name } = e.target.dataset;
                 currentPaper = { id, name };
                 dom.modeSelectionTitle.textContent = `Select Mode for ${name}`;
@@ -323,7 +324,7 @@
                 (isCorrect ? dom.correctSound : dom.wrongSound).play();
                 showQuestion(currentQuestionIndex);
             } else { // Exam Mode
-                updateQuestionNav(); // Update nav to show it's answered
+                updateQuestionNav();
             }
             saveState();
         }
