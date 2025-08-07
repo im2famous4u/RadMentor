@@ -275,7 +275,18 @@
             document.getElementById('review-incorrect-btn').addEventListener('click', () => setupReview('incorrect'));
         }
         
-        // Other functions (setupReview, showQuestion, etc.) remain the same
+        function setupReview(filterType) {
+            isReviewing = true; currentReviewIndex = 0;
+            if (filterType === 'all') { reviewFilter = allQuestions.map((_, i) => i); } 
+            else if (filterType === 'incorrect') { reviewFilter = allQuestions.map((q, i) => i).filter(i => userAnswers[i] !== undefined && userAnswers[i] !== q.correctIndex); }
+            if (reviewFilter.length === 0) { showModal('No Questions to Review', `You have no ${filterType === 'all' ? '' : 'incorrect'} questions to review.`); isReviewing = false; return; }
+            dom.finishQuizBtn.style.display = 'none';
+            dom.practiceProgressContainer.style.display = 'none';
+            dom.examTimerContainer.style.display = 'none';
+            showScreen('quiz-screen');
+            showQuestion(reviewFilter[0]);
+        }
+
         function showQuestion(index) {
             dom.questionArea.innerHTML = ''; // Clear for animation
             setTimeout(() => {
@@ -470,7 +481,7 @@
                 totalTime = allQuestions.length * TIME_PER_QUESTION;
                 timeRemaining = totalTime;
             } else {
-                timeRemaining = Object.keys(userAnswers).reduce((acc, key) => acc + (userAnswers[key].time || 0), 0);
+                timeRemaining = 0; // Reset practice timer
             }
             startTimer();
             showQuestion(currentQuestionIndex); // Re-render question for the new mode
