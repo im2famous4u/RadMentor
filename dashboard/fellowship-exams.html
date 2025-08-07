@@ -123,10 +123,10 @@
              paper7: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1767827630" }, paper8: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "280434470" }
         };
         const PAPER_METADATA = [
-             { id: 'paper1', name: 'Paper 1', displayNumber: 1, bgColor: 'bg-blue-100' }, { id: 'paper2', name: 'Paper 2', displayNumber: 2, bgColor: 'bg-pink-100' },
-             { id: 'paper3', name: 'Paper 3', displayNumber: 3, bgColor: 'bg-green-100' }, { id: 'paper4', name: 'Paper 4', displayNumber: 4, bgColor: 'bg-yellow-100' },
-             { id: 'paper5', name: 'Paper 5', displayNumber: 5, bgColor: 'bg-purple-100' }, { id: 'paper6', name: 'Paper 6', displayNumber: 6, bgColor: 'bg-red-100' },
-             { id: 'paper7', name: 'Paper 7', displayNumber: 7, bgColor: 'bg-teal-100' }, { id: 'paper8', name: 'Paper 8', displayNumber: 8, bgColor: 'bg-indigo-100' },
+             { id: 'paper1', name: 'Paper 1', displayNumber: 1 }, { id: 'paper2', name: 'Paper 2', displayNumber: 2 },
+             { id: 'paper3', name: 'Paper 3', displayNumber: 3 }, { id: 'paper4', name: 'Paper 4', displayNumber: 4 },
+             { id: 'paper5', name: 'Paper 5', displayNumber: 5 }, { id: 'paper6', name: 'Paper 6', displayNumber: 6 },
+             { id: 'paper7', name: 'Paper 7', displayNumber: 7 }, { id: 'paper8', name: 'Paper 8', displayNumber: 8 },
         ];
         const firebaseConfig = {
             apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw", authDomain: "radiology-mcqs.firebaseapp.com", projectId: "radiology-mcqs",
@@ -279,7 +279,7 @@
                     return `<button class="${btnClass}" data-index="${i}" ${shouldDisable ? 'disabled' : ''}>${option}</button>`;
                 }).join('')}</div>`;
             
-            if (quizMode === 'practice' && isAnswered || isReviewing) {
+            if ((quizMode === 'practice' && isAnswered) || isReviewing) {
                 questionHTML += `<div class="explanation-box"><h4>Explanation</h4><p>${q.explanation}</p></div>`;
             }
 
@@ -301,7 +301,7 @@
                 (isCorrect ? dom.correctSound : dom.wrongSound).play();
                 showQuestion(currentQuestionIndex);
             } else { // Exam Mode
-                showQuestion(currentQuestionIndex + 1 < allQuestions.length ? currentQuestionIndex + 1 : currentQuestionIndex);
+                updateQuestionNav(); // Update nav to show it's answered
             }
             saveState();
         }
@@ -340,7 +340,7 @@
                 userBookmarks.delete(questionId);
                 button.classList.remove('bookmarked');
             } else {
-                await setDoc(bookmarkRef, { questionText, topic: `Fellowship ${currentPaper.name}`, timestamp: serverTimestamp() });
+                await setDoc(bookmarkRef, { questionText, topic: `Fellowship ${currentPaper.name}`, timestamp: serverTimestamp(), linkToQuestion: `${window.location.pathname}?paperId=${currentPaper.id}&questionId=${questionId}` });
                 userBookmarks.add(questionId);
                 button.classList.add('bookmarked');
             }
