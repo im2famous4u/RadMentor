@@ -1,16 +1,15 @@
 // dashboard.js
 
-// IMPORTANT: Ensure this path correctly points to your main firebase configuration file.
-// It assumes `dashboard.html` is in the `dashboard/` folder and `firebase.js` is in `js/` at the root.
+// IMPORTANT: This path must correctly point to your main Firebase configuration file.
+// It assumes `dashboard.html` is in a `dashboard/` folder and `firebase.js` is in a `js/` folder at the root.
 import { auth, db } from '../js/firebase.js'; 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import { collection, getDocs, query } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Page-specific JavaScript for QOTD
+    // Logic for the Question of the Day card
     const revealAnswerButton = document.getElementById('revealAnswerButton');
     const qotdAnswer = document.getElementById('qotdAnswer');
-
     if (revealAnswerButton && qotdAnswer) {
         revealAnswerButton.addEventListener('click', () => {
             qotdAnswer.classList.remove('hidden');
@@ -26,8 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     onAuthStateChanged(auth, (user) => {
         if (user) {
+            // If user is logged in, fetch their stats
             fetchAndCalculateStats(user.uid);
         } else {
+            // If not logged in, show a message
             statsLoader.innerHTML = '<p class="text-gray-500">Please log in to view your progress.</p>';
         }
     });
@@ -38,16 +39,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const snapshot = await getDocs(q);
         const allAttempts = snapshot.docs.map(doc => doc.data());
 
+        // If user has no attempts, show the empty dashboard
         if (allAttempts.length === 0) {
             statsLoader.style.display = 'none';
             statsContent.style.display = 'block';
-            feather.replace();
             return;
         }
 
         // --- Calculate Stats ---
-        // NOTE: Define the total number of papers available on your platform.
-        const TOTAL_AVAILABLE_PAPERS = 20; // Adjust this number as you add more papers
+        // NOTE: Adjust the total number of papers available on your platform.
+        const TOTAL_AVAILABLE_PAPERS = 28; // 8 fellowship + 10 physics + 10 superspeciality papers
         const uniquePapersAttempted = new Set(allAttempts.map(attempt => attempt.paperId));
         const completion = (uniquePapersAttempted.size / TOTAL_AVAILABLE_PAPERS) * 100;
 
@@ -62,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const masteredPapers = new Set();
         allAttempts.forEach(attempt => {
+            // A topic is "mastered" if the user has scored above 60% on it at least once.
             if (attempt.percentage > 60) {
                 masteredPapers.add(attempt.paperId);
             }
@@ -75,18 +77,16 @@ document.addEventListener('DOMContentLoaded', () => {
         statsLoader.style.display = 'none';
         statsContent.style.display = 'block';
 
-        document.getElementById('completion-value').textContent = `${stats.completion.toFixed(0)}%`;
         document.getElementById('completion-bar').style.width = `${stats.completion}%`;
+        document.getElementById('completion-value').textContent = `${stats.completion.toFixed(0)}% Complete`;
 
-        document.getElementById('accuracy-value').textContent = `${stats.accuracy.toFixed(0)}% Correct`;
         document.getElementById('accuracy-bar').style.width = `${stats.accuracy}%`;
+        document.getElementById('accuracy-value').textContent = `${stats.accuracy.toFixed(0)}% Correct`;
 
-        document.getElementById('mock-score-value').textContent = `${stats.mockScore.toFixed(0)}% Avg`;
         document.getElementById('mock-score-bar').style.width = `${stats.mockScore}%`;
+        document.getElementById('mock-score-value').textContent = `${stats.mockScore.toFixed(0)}% Average`;
 
-        document.getElementById('mastery-value').textContent = `${stats.mastery.toFixed(0)}% Mastered`;
         document.getElementById('mastery-bar').style.width = `${stats.mastery}%`;
-
-        feather.replace();
+        document.getElementById('mastery-value').textContent = `${stats.mastery.toFixed(0)}% Mastered`;
     }
 });
