@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RadMentor - Comprehensive Radiology Learning Source</title>
 
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Google Fonts - Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -18,7 +16,7 @@
         :root {
             --primary-color-start: #1e3a8a;  /* A deeper, calming blue */
             --primary-color-end: #3b82f6;    /* A vibrant sky blue */
-            --accent-color: #10b981;         /* A vibrant green */
+            --accent-color: #10b981;        /* A vibrant green */
         }
         
         /* Custom styles for better aesthetics and overrides */
@@ -98,7 +96,7 @@
             width: 120%;
             height: 120%;
             background-image: radial-gradient(circle at 10% 20%, rgba(30, 58, 138, 0.2) 0%, transparent 50%),
-                              radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.2) 0%, transparent 50%);
+                                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.2) 0%, transparent 50%);
             animation: float 15s infinite ease-in-out;
         }
         .pulse-btn {
@@ -119,16 +117,13 @@
 </head>
 <body class="text-gray-800 bg-gray-50">
 
-    <!-- Loading Indicator -->
     <div id="loading-indicator" class="fixed inset-0 flex items-center justify-center bg-gray-50 z-50">
         <p class="text-lg text-gray-600">Loading RadMentor...</p>
     </div>
 
-    <!-- Header -->
     <header class="bg-white/80 backdrop-blur-lg fixed top-0 left-0 right-0 z-50 shadow-sm">
         <div class="container mx-auto px-6 py-3 flex justify-between items-center">
             <div class="flex items-center">
-                <!-- A simple SVG logo is used to make the code self-contained -->
                 <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 mr-3">
                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                 </svg>
@@ -152,7 +147,6 @@
                     <a href="dashboard/index.html" class="rad-gradient text-white font-semibold px-5 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
                 Dashboard
 </a>
-                    </button>
                     <button onclick="logout()" class="ml-4 text-gray-600 hover:text-blue-600" title="Logout">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>
@@ -175,7 +169,7 @@
                 <button onclick="showAuthModal('signin')" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Login</button>
             </div>
             <div id="mobile-logged-in" class="hidden">
-                <button onclick="showDashboard()" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Dashboard</button>
+                <a href="dashboard/index.html" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Dashboard</a>
                 <button onclick="logout()" class="block w-full text-left py-2 text-gray-600 hover:text-blue-600">Logout</button>
             </div>
         </div>
@@ -183,7 +177,6 @@
 
     <div id="landing-page" class="hidden">
         <main>
-            <!-- Hero Section -->
             <section class="bg-white pt-32 pb-20 hero-bg-animated">
                 <div class="container mx-auto px-6 text-center relative z-10">
                     <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
@@ -200,7 +193,6 @@
                 </div>
             </section>
 
-            <!-- Courses Section -->
             <section id="courses" class="py-20 fade-in">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
@@ -208,12 +200,10 @@
                         <p class="mt-4 text-lg text-gray-600">Targeted preparation for all major radiology exams.</p>
                     </div>
                     <div id="courses-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <!-- Course cards and their details will be generated here by JavaScript -->
-                    </div>
+                        </div>
                 </div>
             </section>
             
-            <!-- Pricing Section -->
             <section id="pricing" class="py-20 bg-white fade-in">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
@@ -221,7 +211,6 @@
                         <p class="mt-4 text-lg text-gray-600">Choose the plan that's right for you. Get started for free!</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                        <!-- Free Plan Card -->
                         <div class="bg-gray-50 p-8 rounded-xl shadow-xl flex flex-col justify-between">
                             <div>
                                 <h3 class="text-3xl font-bold text-gray-900">Free Plan</h3>
@@ -241,7 +230,6 @@
                             </button>
                         </div>
                         
-                        <!-- Gold Plan Card -->
                         <div class="bg-white p-8 rounded-xl shadow-xl border-2 border-blue-600 flex flex-col justify-between transform scale-105">
                             <div>
                                 <div class="flex justify-between items-center">
@@ -267,7 +255,6 @@
                             </button>
                         </div>
 
-                        <!-- All Access Plan Card -->
                         <div class="bg-gray-50 p-8 rounded-xl shadow-xl flex flex-col justify-between">
                             <div>
                                 <div class="flex justify-between items-center">
@@ -297,7 +284,6 @@
             </section>
 
 
-            <!-- Features Section -->
             <section id="features" class="py-20 fade-in">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
@@ -336,7 +322,6 @@
                 </div>
             </section>
 
-            <!-- About Us Section -->
             <section id="about" class="py-20 bg-gray-50 fade-in">
                 <div class="container mx-auto px-6">
                     <div class="text-center mb-12">
@@ -352,7 +337,6 @@
             </section>
         </main>
 
-        <!-- Footer -->
         <footer class="bg-gray-900 text-white">
             <div class="container mx-auto px-6 py-12">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -381,7 +365,6 @@
         </footer>
     </div>
 
-    <!-- Auth Modal -->
     <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
             <button onclick="hideAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
@@ -405,13 +388,12 @@
         </div>
     </div>
     
-    <!-- Profile Form -->
     <div id="profile-form-container" class="fixed inset-0 bg-gray-100 z-50 p-4 hidden overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-auto my-8 p-8 md:p-12">
             <h1 class="text-3xl font-bold text-gray-900 text-center">Complete Your Profile</h1>
             <p class="text-gray-600 text-center mb-8">Please provide a few more details to get started.</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="md:col-span-2"><input type="text" id="name" placeholder="Full Name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
+                <div class="md:col-span-2"><input type="text" id="name" placeholder="Full Name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required></div>
                 <div>
                     <label class="font-medium text-gray-700">Date of Birth</label>
                     <input type="date" id="dob" class="w-full mt-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -448,12 +430,10 @@
         </div>
     </div>
 
-    <!-- Placeholder Message Box (replaces alert()) -->
     <div id="message-box" class="fixed bottom-4 right-4 bg-gray-900 text-white p-4 rounded-lg shadow-lg z-[100] hidden">
         <p id="message-content"></p>
     </div>
 
-    <!-- Scripts -->
     <script>
         const coursesData = {
             frcr: {
@@ -522,6 +502,9 @@
             }
         };
 
+        // --- NEW: Central state for the logged-in user ---
+        let currentUser = null;
+
         function showContentMessage(message) {
             const msgBox = document.getElementById('message-box');
             const msgContent = document.getElementById('message-content');
@@ -531,9 +514,6 @@
                 msgBox.classList.add('hidden');
             }, 3000);
         }
-
-        let isLoggedIn = false;
-        const user = { name: 'Dr. Smith' };
 
         function updateUI() {
             const landingPage = document.getElementById('landing-page');
@@ -545,21 +525,20 @@
             const loadingIndicator = document.getElementById('loading-indicator');
             const heroSignupButton = document.getElementById('hero-signup-button-container');
 
-            // Hide loading indicator once the page is ready
             loadingIndicator.classList.add('hidden');
-
-            // Show the landing page
             landingPage.classList.remove('hidden');
 
-            if (isLoggedIn) {
+            // --- CHANGED: Checks for the currentUser object instead of a separate variable ---
+            if (currentUser) {
                 headerLoggedIn.classList.remove('hidden');
                 headerLoggedIn.classList.add('flex');
                 headerLoggedOut.classList.add('hidden');
                 mobileLoggedIn.classList.remove('hidden');
                 mobileLoggedOut.classList.add('hidden');
-                userGreeting.textContent = user.name;
                 
-                // Hide the "Get Started for Free" button in the hero section
+                // --- CHANGED: Sets the greeting from the currentUser object ---
+                userGreeting.textContent = currentUser.name; 
+                
                 if (heroSignupButton) {
                     heroSignupButton.classList.add('hidden');
                 }
@@ -571,23 +550,21 @@
                 mobileLoggedOut.classList.remove('hidden');
                 mobileLoggedIn.classList.add('hidden');
 
-                // Show the "Get Started for Free" button in the hero section
                 if (heroSignupButton) {
                     heroSignupButton.classList.remove('hidden');
                 }
             }
         }
 
-        // Dynamically generate the course cards on page load
         function generateCourseCards() {
             const coursesGrid = document.getElementById('courses-grid');
-            coursesGrid.innerHTML = ''; // Clear existing content
+            if (!coursesGrid) return;
+            coursesGrid.innerHTML = '';
             const courseKeys = Object.keys(coursesData);
             
-            // Loop through each course key and generate a card
             courseKeys.forEach(key => {
                 const course = coursesData[key];
-                const card = document.createElement('div'); // Using a div for the card container
+                const card = document.createElement('div');
                 card.className = "relative group";
 
                 card.innerHTML = `
@@ -615,18 +592,39 @@
             });
         }
         
-        // On page load, simulate an auth check and generate course cards
+        // --- NEW: A helper function to log the user in ---
+        function login(userData) {
+            currentUser = userData;
+            // Save user to browser storage to stay logged in
+            localStorage.setItem('radmentorUser', JSON.stringify(currentUser)); 
+
+            document.getElementById('profile-form-container').classList.add('hidden');
+            document.getElementById('landing-page').classList.remove('hidden');
+            updateUI();
+            showContentMessage(`Welcome, ${currentUser.name}!`);
+        }
+
+        function logout() {
+            currentUser = null;
+            // Remove user from browser storage
+            localStorage.removeItem('radmentorUser');
+            updateUI();
+            showContentMessage("You have been logged out.");
+        }
+
+        // --- On page load, initialize the app ---
         window.onload = function() {
+            // --- NEW: Check for a saved user in localStorage ---
+            const savedUser = localStorage.getItem('radmentorUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+            }
+
             updateUI();
             generateCourseCards();
 
-            // Intersection Observer to add fade-in effect on scroll
             const sections = document.querySelectorAll('.fade-in');
-            const observerOptions = {
-                root: null,
-                threshold: 0.2
-            };
-
+            const observerOptions = { root: null, threshold: 0.2 };
             const observer = new IntersectionObserver((entries, observer) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -635,7 +633,6 @@
                     }
                 });
             }, observerOptions);
-
             sections.forEach(section => observer.observe(section));
         }
         
@@ -674,37 +671,35 @@
             }
         }
         
+        // --- CHANGED: This now shows the profile form instead of logging in directly ---
         function handleAuth() {
-            // This is a placeholder function. In a real app, this would handle
-            // user sign-up or sign-in using a service like Firebase Auth.
-            console.log("Simulating auth...");
-            isLoggedIn = true;
+            // This is still a placeholder. In a real app, this would handle actual
+            // authentication. Here, we'll just show the profile form.
+            console.log("Simulating auth... Showing profile form.");
             hideAuthModal();
-            updateUI();
-        }
-
-        function submitProfile() {
-            // This is a placeholder function. In a real app, this would save
-            // the user's profile data to a database.
-            console.log("Submitting profile...");
-            document.getElementById('profile-form-container').classList.add('hidden');
-            showDashboard();
-        }
-
-        function showDashboard() {
-            // This is a placeholder function.
-            console.log("Showing dashboard...");
             document.getElementById('landing-page').classList.add('hidden');
+            document.getElementById('profile-form-container').classList.remove('hidden');
         }
-        
-        function logout() {
-            // This is a placeholder for the actual logout logic.
-            // In a real application with Firebase, you would call:
-            // firebase.auth().signOut().then(() => { ... });
-            console.log("Logging out...");
-            isLoggedIn = false;
-            updateUI();
-            showContentMessage("You have been logged out.");
+
+        // --- CHANGED: This function now gets the name and logs the user in ---
+        function submitProfile() {
+            const nameInput = document.getElementById('name');
+            const userName = nameInput.value.trim();
+
+            if (!userName) {
+                showContentMessage("Please enter your name.");
+                return; // Stop the function if name is empty
+            }
+            
+            // In a real app, this would save the full profile to a database.
+            const profileData = {
+                name: userName,
+                // you can add other fields here if needed
+                // dob: document.getElementById('dob').value, 
+            };
+
+            // Log the user in with the collected name
+            login(profileData);
         }
 
         document.getElementById('mobile-menu-button').addEventListener('click', () => {
