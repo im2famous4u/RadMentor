@@ -163,6 +163,21 @@
         function showScreen(screenId) { dom.screens.forEach(s => s.classList.toggle('active', s.id === screenId)); feather.replace(); }
         
         onAuthStateChanged(auth, (user) => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const directQuestionId = urlParams.get('questionId');
+
+            if(user && directQuestionId) {
+                currentUser = user;
+                const topicGid = urlParams.get('topicGid');
+                const topic = PHYSICS_TOPICS.find(t => t.gid === topicGid);
+                if(topic) {
+                    currentTopic = topic;
+                    quizMode = 'practice'; // Default to practice mode for reviewing a single question
+                    startQuiz(null, directQuestionId); // Call startQuiz with the specific ID
+                    return; 
+                }
+            }
+            
             currentUser = user;
             if (user) {
                 showScreen('topic-screen');
@@ -200,7 +215,7 @@
             } else startQuiz(null);
         }
 
-        async function startQuiz(resumeState) {
+        async function startQuiz(resumeState, directQuestionId = null) {
             isReviewing = false; reviewFilter = [];
             userAnswers = resumeState?.answers || {};
             currentQuestionIndex = resumeState?.index || 0;
@@ -219,7 +234,14 @@
             dom.finishQuizBtn.textContent = quizMode === 'exam' ? 'Finish Exam' : 'Finish Practice';
             dom.finishQuizBtn.style.display = 'block';
             createQuestionNav();
-            showQuestion(currentQuestionIndex);
+            
+            if (directQuestionId) {
+                const questionIndex = allQuestions.findIndex(q => q.id === directQuestionId);
+                showQuestion(questionIndex >= 0 ? questionIndex : 0);
+            } else {
+                showQuestion(currentQuestionIndex);
+            }
+            
             startTimer();
         }
 
@@ -296,10 +318,8 @@
                     </div>`;
                 }).join('')}</div>`;
             
-            if (quizMode === 'practice' && isAnswered) {
+            if (quizMode === 'practice' && isAnswered || isReviewing) {
                 questionHTML += `<div class="explanation-box"><h4>Explanations</h4>${q.subsets.map(s => `<p><strong>-</strong> ${s.explanation}</p>`).join('')}</div>`;
-            } else if (isReviewing) {
-                 questionHTML += `<div class="explanation-box"><h4>Explanations</h4>${q.subsets.map(s => `<p><strong>-</strong> ${s.explanation}</p>`).join('')}</div>`;
             }
 
             dom.questionsDisplay.innerHTML = questionHTML;
@@ -351,12 +371,10 @@
         }
         
         window.toggleFlag = (id) => { flaggedQuestions.has(id) ? flaggedQuestions.delete(id) : flaggedQuestions.add(id); updateQuestionNav(); saveState(); };
-
         window.toggleBookmark = async (questionId, questionText) => {
-            if (!currentUser || isReviewing) return;
+            if (!currentUser) return;
             const bookmarkRef = doc(db, "users", currentUser.uid, "bookmarks", questionId);
             const button = event.currentTarget;
-
             if (userBookmarks.has(questionId)) {
                 await deleteDoc(bookmarkRef);
                 userBookmarks.delete(questionId);
@@ -371,14 +389,13 @@
                 userBookmarks.add(questionId);
                 button.classList.add('bookmarked');
             }
-            feather.replace();
         };
         
         dom.finishQuizBtn.addEventListener('click', () => {
              if (quizMode === 'exam') {
                 if(confirm('Are you sure you want to finish the exam?')) finishExam();
              } else {
-                 alert('Practice session complete! You can review your answers or start a new quiz.');
+                 alert('Practice session complete!');
                  showScreen('topic-screen');
              }
         });
@@ -411,10 +428,7 @@
                     <div class="stat-card"><h3>Performance Chart</h3><canvas id="performanceChart" style="max-height: 200px;"></canvas></div>
                     <div class="stat-card"><h3>Peer Comparison</h3><div id="peer-comparison-content"><p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p><p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p></div></div>
                     <div class="stat-card">
-                        <h3 style="display: flex; justify-content: space-between; align-items: center;">
-                            <span>🤖 RadMentor Insights</span>
-                            <span style="background-color: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 99px; text-transform: uppercase;">Exclusive</span>
-                        </h3>
+                        <h3 style="display: flex; justify-content: space-between; align-items: center;"><span>🤖 RadMentor Insights</span><span style="background-color: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 99px; text-transform: uppercase;">Exclusive</span></h3>
                         <div id="ai-insights-content"><p>Generating feedback...</p></div>
                    </div>
                 </div>
