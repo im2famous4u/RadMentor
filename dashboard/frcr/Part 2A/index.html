@@ -138,7 +138,6 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-        // UPDATED: Added signInAnonymously to imports
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
         import { getFirestore, doc, runTransaction, collection, getDocs, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
         import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai/+esm";
@@ -192,7 +191,6 @@
         };
 
         // --- AUTHENTICATION ---
-        // This function signs the user in anonymously, which then triggers the onAuthStateChanged listener.
         const signInUser = async () => {
             try {
                 await signInAnonymously(auth);
@@ -210,17 +208,15 @@
             const authCheckScreen = document.getElementById('authCheckScreen');
             currentUser = user;
             if (user) {
-                // Once a user (even anonymous) is available, hide the loading screen and show the app.
                 authCheckScreen.style.display = 'none';
                 handleDirectLink(user);
             } else {
-                 // This part will now only show if anonymous sign-in fails and the user is explicitly signed out.
                  authCheckScreen.innerHTML = '<div class="selection-container"><p>You must be logged in to continue.</p></div>';
             }
         });
 
         // --- INITIALIZE APP ---
-        signInUser(); // Start the sign-in process as soon as the app loads.
+        signInUser(); 
 
 
         function handleDirectLink(user) {
@@ -251,7 +247,6 @@
 
         dom.modeToggle.addEventListener('change', () => {
             const newMode = dom.modeToggle.checked ? 'exam' : 'practice';
-            // NOTE: A custom modal would be a better user experience than a native confirm dialog.
             if (window.confirm(`Switching to ${newMode} mode will restart your progress for this paper. Continue?`)) {
                 setQuizMode(newMode);
             } else {
@@ -330,18 +325,14 @@
             const lines = csvText.trim().split('\n').slice(1);
 
             return lines.map((line, index) => {
-                // This regex handles CSV fields that might be quoted (e.g., containing commas).
                 const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''));
                 
-                // Format for 5 options: Question, A, B, C, D, E, CorrectAns, Explanation
                 const [question, a, b, c, d, e, correctAns, explanation] = parts;
-                const options = [a, b, c, d, e].filter(Boolean); // Filter out any empty options
+                const options = [a, b, c, d, e].filter(Boolean);
 
-                // Map answer letter (a, b, c, etc.) to a zero-based index.
                 const letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4};
                 const correctIndex = letterMap[(correctAns || '').trim().toLowerCase()];
 
-                // Ensure the question has all the necessary parts before adding it.
                 if (question && correctIndex !== undefined && options.length > 0) {
                     return { 
                         id: `${currentPaper.id}-${index}`, 
@@ -352,7 +343,7 @@
                     };
                 }
                 return null;
-            }).filter(Boolean); // Filter out any null entries that resulted from parsing errors.
+            }).filter(Boolean);
         }
         
         async function fetchUserBookmarks() {
@@ -415,9 +406,9 @@
 
             if (quizMode === 'practice') {
                 if(isSoundOn) (isCorrect ? dom.correctSound : dom.wrongSound).play();
-                showQuestion(currentQuestionIndex); // Re-render to show explanation
+                showQuestion(currentQuestionIndex);
             } else {
-                showQuestion(currentQuestionIndex); // Re-render to show selection
+                showQuestion(currentQuestionIndex);
             }
             saveState();
         }
@@ -430,14 +421,14 @@
         function updateQuestionNav() {
             dom.paginationHeader.querySelectorAll('.page-box').forEach(box => {
                 const index = parseInt(box.dataset.index);
-                box.className = 'page-box'; // Reset classes
+                box.className = 'page-box';
                 if (index === currentQuestionIndex) box.classList.add('active');
                 if (userAnswers[index] !== undefined) {
                      if (quizMode === 'practice' || isReviewing) {
                          const isCorrect = userAnswers[index] === allQuestions[index].correctIndex;
                          box.classList.add(isCorrect ? 'answered-correct' : 'answered-incorrect');
-                     } else { // Exam mode, before review
-                          box.classList.add('answered-correct'); // Use a neutral "answered" style
+                     } else {
+                          box.classList.add('answered-correct');
                           box.style.backgroundColor = 'var(--primary-color)';
                           box.style.borderColor = 'var(--primary-color)';
                           box.style.color = 'white';
@@ -627,7 +618,6 @@
             }
             
             if (reviewFilter.length === 0) {
-                // NOTE: A custom modal would be better here as well.
                 alert(`No ${filterType} questions to review.`);
                 isReviewing = false;
                 return;
@@ -639,4 +629,4 @@
         }
     </script>
 </body>
-</ht
+</html>
