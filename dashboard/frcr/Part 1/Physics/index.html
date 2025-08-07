@@ -9,27 +9,12 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-color: #f4f7f9;
-            --container-bg-color: #ffffff;
-            --text-color: #334155;
-            --text-color-light: #64748b;
-            --header-text-color: #0f172a;
-            --primary-color: #0ea5e9; /* Sky Blue */
-            --primary-hover-color: #0284c7;
-            --selection-button-bg: #14b8a6; /* Teal */
-            --selection-button-hover-bg: #0d9488;
-            --border-color: #e2e8f0;
-            --explanation-bg: #f8fafc;
-            --correct-bg: #dcfce7;
-            --correct-border: #4ade80;
-            --correct-text: #166534;
-            --incorrect-bg: #fee2e2;
-            --incorrect-border: #f87171;
-            --incorrect-text: #b91c1c;
-            --bookmark-color: #94a3b8;
-            --bookmarked-color: #f59e0b; /* Amber */
-            --flag-color: #94a3b8;
-            --flagged-color: #ef4444; /* Red */
+            --bg-color: #f4f7f9; --container-bg-color: #ffffff; --text-color: #334155; --text-color-light: #64748b;
+            --header-text-color: #0f172a; --primary-color: #0ea5e9; --primary-hover-color: #0284c7;
+            --selection-button-bg: #14b8a6; --selection-button-hover-bg: #0d9488; --border-color: #e2e8f0;
+            --explanation-bg: #f8fafc; --correct-bg: #dcfce7; --correct-border: #4ade80; --correct-text: #166534;
+            --incorrect-bg: #fee2e2; --incorrect-border: #f87171; --incorrect-text: #b91c1c;
+            --bookmark-color: #94a3b8; --bookmarked-color: #f59e0b; --flag-color: #94a3b8; --flagged-color: #ef4444;
         }
         body { font-family: 'Inter', sans-serif; margin: 0; padding: 15px; background-color: var(--bg-color); color: var(--text-color); }
         .main-container { width: 100%; max-width: 900px; margin: 0 auto; }
@@ -68,13 +53,13 @@
         .subset-options input[type="radio"]:checked + label { border-color: var(--primary-color); background-color: #f0f9ff; color: var(--primary-hover-color); font-weight: 600; }
         .subset-options input[type="radio"]:disabled + label { cursor: not-allowed; background-color: #f1f5f9; opacity: 0.7; }
         .quiz-pagination-header { background-color: #f8fafc; padding: 1rem; border-bottom: 1px solid var(--border-color); overflow-x: auto; white-space: nowrap; scrollbar-width: thin; scrollbar-color: var(--primary-color) var(--border-color); }
-        .quiz-pagination-header::-webkit-scrollbar { height: 8px; }
-        .quiz-pagination-header::-webkit-scrollbar-thumb { background-color: var(--primary-color); border-radius: 4px; }
         .page-box { display: inline-flex; width: 40px; height: 40px; align-items: center; justify-content: center; font-weight: 600; background-color: #fff; border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s ease; border-radius: 0.5rem; position: relative; margin-right: 0.5rem; }
         .page-box.active { border-color: var(--primary-color); background-color: var(--primary-color); color: white; transform: scale(1.1); }
         .page-box.answered-correct { background-color: var(--correct-bg); border-color: var(--correct-border); color: var(--correct-text); }
         .page-box.answered-incorrect { background-color: var(--incorrect-bg); border-color: var(--incorrect-border); color: var(--incorrect-text); }
         .page-box.flagged::after { content: ''; position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; background-color: var(--flagged-color); border-radius: 50%; }
+        .quiz-footer { padding: 1.5rem; border-top: 1px solid var(--border-color); text-align: right; }
+        .explanation-box { margin-top: 1.5rem; padding: 1.5rem; background-color: var(--explanation-bg); border-radius: 0.75rem; border-left: 4px solid var(--primary-color); }
         .results-container { padding: 2rem; }
         .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
         .stat-card { background-color: #f8fafc; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border-color); }
@@ -85,9 +70,7 @@
 
     <div class="main-container">
         <div class="breadcrumb">
-            <a href="../../../dashboard.html">Dashboard</a> &gt; 
-            <a href="../../">FRCR</a> &gt; 
-            <span>Physics</span>
+            <a href="../../../dashboard.html">Dashboard</a> &gt; <a href="../../">FRCR</a> &gt; <span>Physics</span>
         </div>
         
         <div id="auth-check-screen" class="screen active">
@@ -98,6 +81,17 @@
             <div class="selection-container">
                  <h1>Physics Topics</h1>
                 <div id="physics-topics-grid" class="selection-grid"></div>
+            </div>
+        </div>
+
+        <div id="mode-screen" class="screen">
+            <div class="selection-container">
+                 <h1 id="mode-selection-title">Select Mode</h1>
+                 <div class="selection-grid">
+                     <button class="selection-button" data-mode="practice">✍️ Practice Mode</button>
+                     <button class="selection-button" data-mode="exam">🏆 Exam Mode</button>
+                 </div>
+                 <p style="color: var(--text-color-light); margin-top: 2rem;">Practice mode gives instant feedback. Exam mode simulates a real test.</p>
             </div>
         </div>
 
@@ -113,45 +107,15 @@
                     <div class="question-area">
                         <div id="questions-display"></div>
                     </div>
+                    <div class="quiz-footer">
+                        <button class="selection-button" id="finish-quiz-btn">Finish Exam</button>
+                    </div>
                 </div>
             </div>
         </div>
         
         <div id="results-screen" class="screen">
-            <div class="results-container">
-                <h2 class="text-center" style="font-size: 2.2rem; font-weight: 700; color: var(--header-text-color);">Test Results</h2>
-                <div class="results-grid" style="margin-top: 2rem;">
-                    <div class="stat-card">
-                        <h3>Score Summary</h3>
-                        <p style="font-size: 3rem; font-weight: 700; color: var(--primary-color);" id="final-score-percent"></p>
-                        <p><strong>Correct:</strong> <span id="correct-count"></span></p>
-                        <p><strong>Incorrect:</strong> <span id="incorrect-count"></span></p>
-                        <p><strong>Unattempted:</strong> <span id="unattempted-count"></span></p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Performance Chart</h3>
-                        <canvas id="performanceChart" style="max-height: 200px;"></canvas>
-                    </div>
-                    <div class="stat-card">
-                         <h3>Peer Comparison</h3>
-                         <div id="peer-comparison-content">
-                            <p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p>
-                            <p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p>
-                         </div>
-                    </div>
-                    <div class="stat-card">
-                         <h3>🤖 AI Insights</h3>
-                         <div id="ai-insights-content"><p>Generating feedback...</p></div>
-                    </div>
-                </div>
-                <div style="text-align: center; margin-top: 2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;">
-                    <button class="selection-button" id="review-all-btn">Review All</button>
-                    <button class="selection-button" id="review-incorrect-btn" style="background-color: var(--incorrect-text);">Review Incorrect</button>
-                    <button class="selection-button" id="review-flagged-btn" style="background-color: var(--flagged-color);">Review Flagged</button>
-                    <button class="selection-button" id="back-to-topics-btn" style="background-color: var(--text-color-light);">Back to Topics</button>
-                </div>
-            </div>
-        </div>
+             </div>
     </div>
     
     <audio id="correct-sound" src="https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/sounds/correct.mp3" preload="auto"></audio>
@@ -164,7 +128,7 @@
         import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai/+esm";
 
         // --- CONFIGURATION ---
-        const GOOGLE_AI_API_KEY = 'YOUR_API_KEY_HERE'; // <-- IMPORTANT: Add your key here
+        const GOOGLE_AI_API_KEY = 'YOUR_API_KEY_HERE';
         const GOOGLE_SHEET_ID = '1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8';
         const PHYSICS_TOPICS = [
              { name: "Basic Physics", gid: "2009849222" }, { name: "Radiation Hazards & Protection", gid: "2009849222" }, { name: "Image Quality & X-ray", gid: "1706416231" },
@@ -179,7 +143,7 @@
         // --- APP STATE & INITIALIZATION ---
         let allQuestions = [], currentQuestionIndex = 0, currentUser = null;
         let flaggedQuestions = new Set(), reviewFilter = [];
-        let currentTopic = null, quizInterval = null, elapsedSeconds = 0;
+        let currentTopic = null, quizMode = 'practice', quizInterval = null, elapsedSeconds = 0;
         let userAnswers = {};
         let isReviewing = false;
         const app = initializeApp(firebaseConfig);
@@ -189,6 +153,7 @@
              screens: document.querySelectorAll('.screen'), physicsTopicsGrid: document.getElementById('physics-topics-grid'), quizTitle: document.getElementById('quiz-title'),
              loadingContainer: document.getElementById('loading-container'), questionsDisplay: document.getElementById('questions-display'), quizContent: document.getElementById('quiz-content'),
              paginationHeader: document.getElementById('quiz-pagination-header'), timerEl: document.getElementById('timer'), resultsScreen: document.getElementById('results-screen'),
+             modeSelectionTitle: document.getElementById('mode-selection-title'), finishQuizBtn: document.getElementById('finish-quiz-btn'),
              correctSound: document.getElementById('correct-sound'), wrongSound: document.getElementById('wrong-sound')
         };
         
@@ -210,16 +175,24 @@
             if (e.target.matches('.selection-button')) {
                 const { gid, name } = e.target.dataset;
                 currentTopic = { gid, name };
+                dom.modeSelectionTitle.textContent = `Select Mode for ${name}`;
+                showScreen('mode-screen');
+            }
+        });
+
+        document.getElementById('mode-screen').addEventListener('click', (e) => {
+            if(e.target.matches('.selection-button')) {
+                quizMode = e.target.dataset.mode;
                 checkResumeAndStart();
             }
         });
         
         function checkResumeAndStart() {
-            const savedState = localStorage.getItem(`radmentor_quiz_${currentUser.uid}_${currentTopic.gid}`);
+            const savedState = localStorage.getItem(`radmentor_quiz_${currentUser.uid}_${currentTopic.gid}_${quizMode}`);
             if (savedState) {
-                if (confirm('You have an unfinished quiz. Resume?')) startQuiz(JSON.parse(savedState));
+                if (confirm(`You have an unfinished ${quizMode} session. Resume?`)) startQuiz(JSON.parse(savedState));
                 else {
-                    localStorage.removeItem(`radmentor_quiz_${currentUser.uid}_${currentTopic.gid}`);
+                    localStorage.removeItem(`radmentor_quiz_${currentUser.uid}_${currentTopic.gid}_${quizMode}`);
                     startQuiz(null);
                 }
             } else startQuiz(null);
@@ -240,7 +213,8 @@
 
             dom.loadingContainer.style.display = 'none';
             dom.quizContent.style.display = 'block';
-            dom.quizTitle.textContent = currentTopic.name;
+            dom.quizTitle.textContent = `${currentTopic.name} (${quizMode} mode)`;
+            dom.finishQuizBtn.style.display = 'block';
             createQuestionNav();
             showQuestion(currentQuestionIndex);
             startTimer();
@@ -284,31 +258,39 @@
             if (!q) return;
 
             const isFlagged = flaggedQuestions.has(q.id);
+            const isAnswered = userAnswers[index] !== undefined;
 
-            dom.questionsDisplay.innerHTML = `
+            let questionHTML = `
                 <div class="question-title-bar">
                     <span class="question-number">Question ${index + 1} of ${allQuestions.length}</span>
                     <div class="question-controls">
-                        <button class="icon-btn flag-btn ${isFlagged ? 'flagged' : ''}" onclick="window.toggleFlag('${q.id}')"><i data-feather="flag"></i></button>
+                        <button class="icon-btn flag-btn ${isFlagged ? 'flagged' : ''}" onclick="window.toggleFlag('${q.id}')" ${isReviewing ? 'disabled' : ''}><i data-feather="flag"></i></button>
                     </div>
                 </div>
                 <p class="main-question-text">${q.question}</p>
                 <div id="subsets-container">${q.subsets.map((subset, i) => {
                     const savedAnswer = userAnswers[index]?.[i];
-                    const isAnswered = savedAnswer !== undefined;
-                    const isCorrect = isAnswered && savedAnswer.toLowerCase() === subset.correctAnswer.toLowerCase();
-                    const itemClass = (isReviewing || isAnswered) ? (isCorrect ? 'correct' : 'incorrect') : '';
+                    const shouldDisable = isReviewing || (quizMode === 'practice' && isAnswered);
+                    const itemClass = (shouldDisable) ? (savedAnswer?.toLowerCase() === subset.correctAnswer.toLowerCase() ? 'correct' : 'incorrect') : '';
                     return `<div class="subset-item ${itemClass}">
                         <div class="subset-q-container">
                             <p class="subset-q-text">${subset.text}</p>
                             <div class="subset-options">${['True', 'False'].map(opt => `
                                 <input type="radio" id="q${index}s${i}${opt}" name="q${index}s${i}" value="${opt}" 
-                                    ${savedAnswer === opt ? 'checked' : ''} ${isAnswered || isReviewing ? 'disabled' : ''}>
+                                    ${savedAnswer === opt ? 'checked' : ''} ${shouldDisable ? 'disabled' : ''}>
                                 <label for="q${index}s${i}${opt}">${opt}</label>
                             `).join('')}</div>
                         </div>
                     </div>`;
                 }).join('')}</div>`;
+            
+            if (quizMode === 'practice' && isAnswered) {
+                questionHTML += `<div class="explanation-box"><h4>Explanations</h4>${q.subsets.map(s => `<p><strong>-</strong> ${s.explanation}</p>`).join('')}</div>`;
+            } else if (isReviewing) {
+                 questionHTML += `<div class="explanation-box"><h4>Explanations</h4>${q.subsets.map(s => `<p><strong>-</strong> ${s.explanation}</p>`).join('')}</div>`;
+            }
+
+            dom.questionsDisplay.innerHTML = questionHTML;
             updateQuestionNav();
             feather.replace();
         }
@@ -320,15 +302,13 @@
                  if (!userAnswers[qIndex]) userAnswers[qIndex] = {};
                  userAnswers[qIndex][sIndex] = e.target.value;
 
-                 const allAnswered = Object.keys(userAnswers[qIndex]).length === allQuestions[qIndex].subsets.length;
-                 if (allAnswered) {
-                     const isCorrect = allQuestions[qIndex].subsets.every((subset, i) => userAnswers[qIndex][i]?.toLowerCase() === subset.correctAnswer.toLowerCase());
-                     (isCorrect ? dom.correctSound : dom.wrongSound).play();
-                     showQuestion(qIndex);
-                     setTimeout(() => {
-                        if (currentQuestionIndex < allQuestions.length - 1) showQuestion(currentQuestionIndex + 1);
-                        else finishQuiz();
-                     }, 1200);
+                 if (quizMode === 'practice') {
+                     const allAnswered = Object.keys(userAnswers[qIndex]).length === allQuestions[qIndex].subsets.length;
+                     if (allAnswered) {
+                         const isCorrect = allQuestions[qIndex].subsets.every((subset, i) => userAnswers[qIndex][i]?.toLowerCase() === subset.correctAnswer.toLowerCase());
+                         (isCorrect ? dom.correctSound : dom.wrongSound).play();
+                         showQuestion(qIndex); // Re-render to show colors and explanation
+                     }
                  }
                  saveState();
             }
@@ -345,17 +325,33 @@
                 box.className = 'page-box'; // Reset classes
                 if (index === currentQuestionIndex) box.classList.add('active');
                 if (userAnswers[index]) {
-                    const isCorrect = allQuestions[index].subsets.every((s, i) => userAnswers[index][i]?.toLowerCase() === s.correctAnswer.toLowerCase());
-                    box.classList.add(isCorrect ? 'answered-correct' : 'answered-incorrect');
+                     if (quizMode === 'practice' || isReviewing) {
+                        const isCorrect = allQuestions[index].subsets.every((s, i) => userAnswers[index][i]?.toLowerCase() === s.correctAnswer.toLowerCase());
+                        box.classList.add(isCorrect ? 'answered-correct' : 'answered-incorrect');
+                     } else {
+                         box.classList.add('active'); // In exam mode, just show as active/answered
+                     }
                 }
                 if (flaggedQuestions.has(allQuestions[index].id)) box.classList.add('flagged');
             });
+            // Auto-scroll the active nav item into view
+            const activeBox = dom.paginationHeader.querySelector('.page-box.active');
+            if(activeBox) activeBox.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
         
         window.toggleFlag = (id) => { flaggedQuestions.has(id) ? flaggedQuestions.delete(id) : flaggedQuestions.add(id); updateQuestionNav(); saveState(); };
+        
+        dom.finishQuizBtn.addEventListener('click', () => {
+             if (quizMode === 'exam') {
+                if(confirm('Are you sure you want to finish the exam?')) finishExam();
+             } else {
+                 alert('Practice session complete! You can review your answers or start a new quiz.');
+                 showScreen('topic-screen');
+             }
+        });
 
         // --- RESULTS & ANALYSIS ---
-        async function finishQuiz() {
+        async function finishExam() {
             clearInterval(quizInterval);
             showScreen('results-screen');
             let correctCount = 0, incorrectCount = 0;
@@ -374,6 +370,23 @@
             const unattemptedCount = allQuestions.length - (correctCount + incorrectCount);
             const scorePercent = allQuestions.length > 0 ? (correctCount / allQuestions.length * 100) : 0;
 
+            dom.resultsScreen.innerHTML = `
+             <div class="results-container">
+                <h2 class="text-center" style="font-size: 2.2rem; font-weight: 700; color: var(--header-text-color);">Test Results</h2>
+                <div class="results-grid" style="margin-top: 2rem;">
+                    <div class="stat-card"><h3>Score Summary</h3><p style="font-size: 3rem; font-weight: 700; color: var(--primary-color);" id="final-score-percent"></p><p><strong>Correct:</strong> <span id="correct-count"></span></p><p><strong>Incorrect:</strong> <span id="incorrect-count"></span></p><p><strong>Unattempted:</strong> <span id="unattempted-count"></span></p></div>
+                    <div class="stat-card"><h3>Performance Chart</h3><canvas id="performanceChart" style="max-height: 200px;"></canvas></div>
+                    <div class="stat-card"><h3>Peer Comparison</h3><div id="peer-comparison-content"><p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p><p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p></div></div>
+                    <div class="stat-card"><h3>🤖 AI Insights</h3><div id="ai-insights-content"><p>Generating feedback...</p></div></div>
+                </div>
+                <div style="text-align: center; margin-top: 2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;">
+                    <button class="selection-button" id="review-all-btn">Review All</button>
+                    <button class="selection-button" id="review-incorrect-btn" style="background-color: var(--incorrect-text);">Review Incorrect</button>
+                    <button class="selection-button" id="review-flagged-btn" style="background-color: var(--flagged-color);">Review Flagged</button>
+                    <button class="selection-button" id="back-to-topics-btn" style="background-color: var(--text-color-light);">Back to Topics</button>
+                </div>
+            </div>`;
+            
             document.getElementById('final-score-percent').textContent = `${scorePercent.toFixed(1)}%`;
             document.getElementById('correct-count').textContent = correctCount;
             document.getElementById('incorrect-count').textContent = incorrectCount;
@@ -382,7 +395,7 @@
             if(window.performanceChart instanceof Chart) window.performanceChart.destroy();
             window.performanceChart = new Chart(document.getElementById('performanceChart'), { type: 'doughnut', data: { labels: ['Correct', 'Incorrect', 'Unattempted'], datasets: [{ data: [correctCount, incorrectCount, unattemptedCount], backgroundColor: ['#22c55e', '#ef4444', '#f59e0b'] }]}});
             
-            localStorage.removeItem(`radmentor_quiz_${currentUser.uid}_${currentTopic.gid}`);
+            localStorage.removeItem(`radmentor_quiz_${currentUser.uid}_${currentTopic.gid}_${quizMode}`);
             
             const attemptData = { score: correctCount, total: allQuestions.length };
             const { average, percentile } = await saveTestResultAndGetStats(attemptData);
@@ -390,6 +403,11 @@
             document.getElementById('percentile-rank').textContent = percentile.toFixed(1);
             
             getAIInsights(incorrectQuestions);
+            
+            document.getElementById('back-to-topics-btn').addEventListener('click', () => showScreen('topic-screen'));
+            document.getElementById('review-all-btn').addEventListener('click', () => setupReview('all'));
+            document.getElementById('review-incorrect-btn').addEventListener('click', () => setupReview('incorrect'));
+            document.getElementById('review-flagged-btn').addEventListener('click', () => setupReview('flagged'));
         }
 
         async function saveTestResultAndGetStats(attempt) {
@@ -398,7 +416,7 @@
             try {
                 await runTransaction(db, async (transaction) => {
                     const aggDoc = await transaction.get(aggregatesRef);
-                    const scorePercent = (attempt.score / attempt.total) * 100;
+                    const scorePercent = (attempt.score / allQuestions.length) * 100;
                     if (!aggDoc.exists()) {
                         transaction.set(aggregatesRef, { totalAttempts: 1, averageScore: scorePercent, scores: [scorePercent] });
                         finalStats = { average: scorePercent, percentile: 100 };
@@ -441,7 +459,7 @@
         function saveState() {
              if (!currentUser || !currentTopic || isReviewing) return;
              const state = { answers: userAnswers, index: currentQuestionIndex, elapsedSeconds: elapsedSeconds, flags: Array.from(flaggedQuestions) };
-             localStorage.setItem(`radmentor_quiz_${currentUser.uid}_${currentTopic.gid}`, JSON.stringify(state));
+             localStorage.setItem(`radmentor_quiz_${currentUser.uid}_${currentTopic.gid}_${quizMode}`, JSON.stringify(state));
         }
         
         function startTimer() {
@@ -468,16 +486,11 @@
                 isReviewing = false;
                 return;
             }
+            dom.finishQuizBtn.style.display = 'none';
             showScreen('quiz-screen');
-            createQuestionNav(); // Re-create nav for the filter
+            createQuestionNav();
             showQuestion(reviewFilter[0]);
         }
-        
-        document.getElementById('back-to-topics-btn').addEventListener('click', () => showScreen('topic-screen'));
-        document.getElementById('review-all-btn').addEventListener('click', () => setupReview('all'));
-        document.getElementById('review-incorrect-btn').addEventListener('click', () => setupReview('incorrect'));
-        document.getElementById('review-flagged-btn').addEventListener('click', () => setupReview('flagged'));
-
     </script>
 </body>
 </html>
