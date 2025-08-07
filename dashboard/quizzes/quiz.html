@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -172,8 +171,8 @@
         </div>
     </div>
 
-    <script src="config.js"></script>
-    <script src="auth.js"></script>
+    <script src="/dashboard/quizzes/config.js"></script>
+    <script src="/dashboard/quizzes/auth.js"></script>
     <script>
         // --- GLOBAL STATE ---
         let QUIZ_DATA = {};
@@ -245,7 +244,7 @@
         function parseCSV(text, paperName) {
             const rows = text.split('\n').slice(1); // Skip header row
             const questions = rows.map((row, index) => {
-                const columns = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g).map(c => c.replace(/"/g, ''));
+                const columns = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(c => c.replace(/"/g, '')) || [];
                 if (columns.length < 7) return null; // Must have at least the core columns
                 const correctAnswerLetter = columns[5]?.trim().toLowerCase();
                 const correctIndex = ['a', 'b', 'c', 'd'].indexOf(correctAnswerLetter);
@@ -264,7 +263,7 @@
 
         function initTopicScreen() {
             dom.quizMainTitle.textContent = currentQuizConfig.name;
-            const paperProgress = AuthService.getPaperProgress();
+            const paperProgress = getPaperProgress();
             dom.paperCardGrid.innerHTML = Object.keys(QUIZ_DATA).map(paperKey => {
                 const completedCount = paperProgress[paperKey] || 0;
                 const totalCount = QUIZ_DATA[paperKey].length;
@@ -300,7 +299,7 @@
 
         function finishQuiz() {
             clearInterval(quizInterval);
-            AuthService.savePaperProgress(currentPaperKey, Object.keys(userAnswers).length);
+            savePaperProgress(currentPaperKey, Object.keys(userAnswers).length);
 
             showScreen('results-screen');
             let correctCount = 0, incorrectCount = 0;
@@ -312,7 +311,7 @@
 
             const unattemptedCount = allQuestions.length - (correctCount + incorrectCount);
             const scorePercent = allQuestions.length > 0 ? (correctCount / allQuestions.length * 100) : 0;
-            const peerStanding = AuthService.getPeerStanding(scorePercent);
+            const peerStanding = getPeerStanding(scorePercent);
             const timeTaken = quizMode === 'exam' ? totalTime - timeRemaining : timeRemaining;
             const avgTime = Object.keys(userAnswers).length > 0 ? (timeTaken / Object.keys(userAnswers).length).toFixed(1) : 0;
 
@@ -354,14 +353,14 @@
                 const q = allQuestions[index];
                 if (!q) return;
                 const isAnswered = userAnswers[index] !== undefined;
-                const bookmarks = AuthService.getAllBookmarks();
+                const bookmarks = getAllBookmarks();
                 const isBookmarked = bookmarks[currentPaperKey]?.includes(q.id);
                 
                 let questionHTML = `
                     <div class="question-title-bar">
                         <span class="question-number">Question ${isReviewing ? (currentReviewIndex + 1) + ' of ' + reviewFilter.length : (index + 1) + ' of ' + allQuestions.length}</span>
                         <div class="question-controls">
-                            <button class="icon-btn ${isBookmarked ? 'active' : ''}" onclick="toggleBookmark('${q.id}')" title="Bookmark"><i data-feather="bookmark"></i></button>
+                            <button class="icon-btn ${isBookmarked ? 'active' : ''}" onclick="toggleBookmarkWrapper('${q.id}')" title="Bookmark"><i data-feather="bookmark"></i></button>
                             ${(isReviewing || (quizMode === 'practice' && isAnswered)) ? `<button class="icon-btn" onclick="reportQuestion('${q.id}')" title="Report"><i data-feather="flag"></i></button>` : ''}
                         </div>
                     </div>
@@ -441,7 +440,7 @@
 
         function updateSidePanel() {
             if (!currentPaperKey) return;
-            const bookmarks = AuthService.getAllBookmarks()[currentPaperKey] || [];
+            const bookmarks = getAllBookmarks()[currentPaperKey] || [];
             const gridHtml = allQuestions.map((q, i) => {
                 let btnClass = 'page-box';
                 if (i === currentQuestionIndex) btnClass += ' active';
@@ -479,8 +478,8 @@
             feather.replace();
         }
         
-        function toggleBookmark(questionId) {
-            AuthService.toggleBookmark(currentPaperKey, questionId);
+        function toggleBookmarkWrapper(questionId) {
+            toggleBookmark(currentPaperKey, questionId);
             showQuestion(currentQuestionIndex);
         }
 
@@ -536,6 +535,21 @@
                     document.getElementById(`side-panel-${e.currentTarget.dataset.tab}`).classList.add('active');
                 });
             });
+        }
+        
+        function showModal(title, message, onConfirm = null) {
+            dom.modalTitle.textContent = title;
+            dom.modalMessage.textContent = message;
+            dom.modalOverlay.classList.add('active');
+            dom.modalCancelBtn.onclick = () => dom.modalOverlay.classList.remove('active');
+            if (onConfirm) {
+                dom.modalConfirmBtn.style.display = 'inline-block';
+                dom.modalCancelBtn.textContent = 'Cancel';
+                dom.modalConfirmBtn.onclick = () => { onConfirm(); dom.modalOverlay.classList.remove('active'); };
+            } else {
+                dom.modalConfirmBtn.style.display = 'none';
+                dom.modalCancelBtn.textContent = 'OK';
+            }
         }
     </script>
 </body>
