@@ -1,53 +1,203 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Bookmarks - RadScribe AI</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    .glass-card {
-      background-color: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(10px);
-      border-radius: 1.5rem;
-      padding: 2rem;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 6px 6px rgba(0,0,0,0.03);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookmarks - RadMentor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        :root {
+            --bg-color: #f4f7f9;
+            --container-bg-color: #ffffff;
+            --text-color: #334155;
+            --text-color-light: #64748b;
+            --header-text-color: #0f172a;
+            --primary-color: #0ea5e9;
+            --border-color: #e2e8f0;
+            --topic-bg-color: #ede9fe; /* Violet */
+            --topic-text-color: #5b21b6;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--header-text-color);
+            margin: 0;
+        }
+
+        .back-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        .back-button:hover {
+            background-color: #0284c7; /* Darker Blue */
+        }
+
+        #bookmarks-container {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .bookmark-card {
+            background-color: var(--container-bg-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .bookmark-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .bookmark-topic {
+            display: inline-block;
+            background-color: var(--topic-bg-color);
+            color: var(--topic-text-color);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            margin-bottom: 1rem;
+        }
+
+        .bookmark-question {
+            font-size: 1.1rem;
+            font-weight: 500;
+            line-height: 1.6;
+            margin: 0 0 1rem 0;
+        }
+        
+        .loading-message {
+            text-align: center;
+            font-size: 1.2rem;
+            color: var(--text-color-light);
+            padding: 4rem;
+        }
+    </style>
 </head>
 <body>
-  <div id="my-bookmarks-content" class="w-full h-full overflow-y-auto pb-4">
-    <div class="glass-card col-span-full">
-      <h2 class="text-2xl font-bold text-gray-800 mb-6">My Bookmarks</h2>
-      <ul id="bookmarksList" class="space-y-4">
-        <!-- Bookmarked MCQs will be loaded here -->
-        <li class="bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center justify-between hover:bg-gray-100 transition-colors cursor-pointer">
-          <p class="text-base text-gray-700 font-medium">MCQ: Identify the lesion in this T1W brain MRI</p>
-          <div class="flex items-center gap-2">
-            <button class="text-blue-600 hover:text-blue-800 text-sm font-semibold">View</button>
-            <button class="text-red-500 hover:text-red-700 text-xl">&times;</button>
-          </div>
-        </li>
-        <li class="bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center justify-between hover:bg-gray-100 transition-colors cursor-pointer">
-          <p class="text-base text-gray-700 font-medium">Case: Acute Appendicitis - USG Findings</p>
-          <div class="flex items-center gap-2">
-            <button class="text-blue-600 hover:text-blue-800 text-sm font-semibold">View</button>
-            <button class="text-red-500 hover:text-red-700 text-xl">&times;</button>
-          </div>
-        </li>
-        <li class="bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center justify-between hover:bg-gray-100 transition-colors cursor-pointer">
-          <p class="text-base text-gray-700 font-medium">Topic: Physics of X-ray Production</p>
-          <div class="flex items-center gap-2">
-            <button class="text-blue-600 hover:text-blue-800 text-sm font-semibold">View</button>
-            <button class="text-red-500 hover:text-red-700 text-xl">&times;</button>
-          </div>
-        </li>
-      </ul>
-      <button class="mt-6 w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 rounded-lg text-sm transition-colors">
-        Load More Bookmarks
-      </button>
+
+    <div class="main-container">
+        <div class="header">
+            <h1>My Bookmarks</h1>
+            <a href="dashboard.html" class="back-button">Back to Dashboard</a>
+        </div>
+        
+        <div id="bookmarks-container">
+            <p class="loading-message">Loading your bookmarks...</p>
+        </div>
     </div>
-  </div>
+
+    <script type="module">
+        // Import Firebase services
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+        // Your Firebase configuration object
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
+            authDomain: "radiology-mcqs.firebaseapp.com",
+            projectId: "radiology-mcqs",
+            storageBucket: "radiology-mcqs.appspot.com",
+            messagingSenderId: "862300415358",
+            appId: "1:862300415358:web:097d5e413f388e30587f2f"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const bookmarksContainer = document.getElementById('bookmarks-container');
+
+        // Listen for authentication state changes
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                // If user is logged in, fetch their bookmarks
+                loadUserBookmarks(user.uid);
+            } else {
+                // If user is not logged in, show a message
+                bookmarksContainer.innerHTML = '<p class="loading-message">Please log in to view your bookmarks.</p>';
+            }
+        });
+
+        async function loadUserBookmarks(userId) {
+            try {
+                // 1. Create a reference to the user's central bookmarks collection
+                const bookmarksRef = collection(db, "users", userId, "bookmarks");
+                
+                // 2. Create a query to get all bookmarks, ordered by newest first
+                const q = query(bookmarksRef, orderBy("timestamp", "desc"));
+                
+                // 3. Execute the query
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    bookmarksContainer.innerHTML = '<p class="loading-message">You haven\'t bookmarked any questions yet!</p>';
+                    return;
+                }
+
+                // Clear the "Loading..." message
+                bookmarksContainer.innerHTML = '';
+                
+                // 4. Loop through each bookmark document and create HTML for it
+                querySnapshot.forEach((doc) => {
+                    const bookmark = doc.data();
+                    
+                    const bookmarkCard = document.createElement('div');
+                    bookmarkCard.className = 'bookmark-card';
+                    
+                    bookmarkCard.innerHTML = `
+                        <span class="bookmark-topic">${bookmark.topic || 'General'}</span>
+                        <p class="bookmark-question">${bookmark.questionText}</p>
+                    `;
+                    // Note: The "Go to Question" link is omitted for simplicity,
+                    // as it requires more complex routing. This design focuses on reviewing the question text directly.
+                    
+                    bookmarksContainer.appendChild(bookmarkCard);
+                });
+
+            } catch (error) {
+                console.error("Error fetching bookmarks:", error);
+                bookmarksContainer.innerHTML = '<p class="loading-message" style="color: red;">Could not load bookmarks. Please try again later.</p>';
+            }
+        }
+    </script>
 </body>
 </html>
