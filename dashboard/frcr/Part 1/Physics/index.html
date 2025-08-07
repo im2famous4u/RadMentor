@@ -128,7 +128,7 @@
         import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai/+esm";
 
         // --- CONFIGURATION ---
-        const GOOGLE_AI_API_KEY = 'YOUR_API_KEY_HERE';
+        const GOOGLE_AI_API_KEY = 'AIzaSyDi7D6W2xjtReXVFkpSSXG_xTJBqRGswxs';
         const GOOGLE_SHEET_ID = '1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8';
         const PHYSICS_TOPICS = [
              { name: "Basic Physics", gid: "2009849222" }, { name: "Radiation Hazards & Protection", gid: "2009849222" }, { name: "Image Quality & X-ray", gid: "1706416231" },
@@ -377,8 +377,13 @@
                     <div class="stat-card"><h3>Score Summary</h3><p style="font-size: 3rem; font-weight: 700; color: var(--primary-color);" id="final-score-percent"></p><p><strong>Correct:</strong> <span id="correct-count"></span></p><p><strong>Incorrect:</strong> <span id="incorrect-count"></span></p><p><strong>Unattempted:</strong> <span id="unattempted-count"></span></p></div>
                     <div class="stat-card"><h3>Performance Chart</h3><canvas id="performanceChart" style="max-height: 200px;"></canvas></div>
                     <div class="stat-card"><h3>Peer Comparison</h3><div id="peer-comparison-content"><p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p><p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p></div></div>
-                    <div class="stat-card"><h3>🤖 AI Insights</h3><div id="ai-insights-content"><p>Generating feedback...</p></div></div>
-                </div>
+                    <div class="stat-card">
+                       <h3 style="display: flex; justify-content: space-between; align-items: center;">
+                       <span>🤖 RadMentor Insights</span>
+                       <span style="background-color: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 99px; text-transform: uppercase;">Exclusive</span>
+                </h3>
+                    <div id="ai-insights-content"><p>Generating feedback...</p></div>
+         </div>
                 <div style="text-align: center; margin-top: 2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;">
                     <button class="selection-button" id="review-all-btn">Review All</button>
                     <button class="selection-button" id="review-incorrect-btn" style="background-color: var(--incorrect-text);">Review Incorrect</button>
@@ -437,7 +442,7 @@
         
         async function getAIInsights(incorrectQs) {
             const insightsDiv = document.getElementById('ai-insights-content');
-            if (GOOGLE_AI_API_KEY === 'YOUR_API_KEY_HERE') {
+            if (GOOGLE_AI_API_KEY === 'AIzaSyDi7D6W2xjtReXVFkpSSXG_xTJBqRGswxs') {
                 insightsDiv.innerHTML = '<p>Please add a Google AI API key to enable this feature.</p>'; return;
             }
             if(incorrectQs.length === 0) {
