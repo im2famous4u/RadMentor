@@ -138,7 +138,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+        // UPDATED: Added signInAnonymously to imports
+        import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
         import { getFirestore, doc, runTransaction, collection, getDocs, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
         import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai/+esm";
 
@@ -189,6 +190,18 @@
             soundToggleBtn: document.getElementById('sound-toggle-btn'), correctSound: document.getElementById('correct-sound'), wrongSound: document.getElementById('wrong-sound'),
             modeToggle: document.getElementById('mode-toggle-checkbox')
         };
+
+        // --- AUTHENTICATION ---
+        // This function signs the user in anonymously, which then triggers the onAuthStateChanged listener.
+        const signInUser = async () => {
+            try {
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Anonymous sign-in failed:", error);
+                const authCheckScreen = document.getElementById('authCheckScreen');
+                authCheckScreen.innerHTML = '<div class="selection-container"><p>Authentication failed. Please try again later.</p></div>';
+            }
+        };
         
         // --- AUTH & NAVIGATION ---
         function showScreen(screenId) { dom.screens.forEach(s => s.classList.toggle('active', s.id === screenId)); feather.replace(); }
@@ -197,12 +210,18 @@
             const authCheckScreen = document.getElementById('authCheckScreen');
             currentUser = user;
             if (user) {
+                // Once a user (even anonymous) is available, hide the loading screen and show the app.
                 authCheckScreen.style.display = 'none';
                 handleDirectLink(user);
             } else {
+                 // This part will now only show if anonymous sign-in fails and the user is explicitly signed out.
                  authCheckScreen.innerHTML = '<div class="selection-container"><p>You must be logged in to continue.</p></div>';
             }
         });
+
+        // --- INITIALIZE APP ---
+        signInUser(); // Start the sign-in process as soon as the app loads.
+
 
         function handleDirectLink(user) {
             const urlParams = new URLSearchParams(window.location.search);
@@ -620,4 +639,4 @@
         }
     </script>
 </body>
-</html>
+</ht
