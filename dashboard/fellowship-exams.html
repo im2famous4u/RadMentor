@@ -78,8 +78,8 @@
             <div class="selection-container">
                  <h1 id="mode-selection-title">Select Mode</h1>
                  <div class="paper-button-grid">
-                     <button class="paper-button" data-mode="practice">✍️ Practice Mode</button>
-                     <button class="paper-button" data-mode="exam">🏆 Exam Mode</button>
+                      <button class="paper-button" data-mode="practice">✍️ Practice Mode</button>
+                      <button class="paper-button" data-mode="exam">🏆 Exam Mode</button>
                  </div>
                  <p style="color: var(--text-color-light); margin-top: 2rem;">Practice mode gives instant feedback. Exam mode simulates a real test.</p>
             </div>
@@ -199,7 +199,8 @@
         });
 
         document.getElementById('mode-screen').addEventListener('click', (e) => {
-            if(e.target.matches('.selection-button')) {
+            // This is the corrected line
+            if(e.target.matches('.paper-button')) {
                 quizMode = e.target.dataset.mode;
                 checkResumeAndStart();
             }
@@ -433,24 +434,24 @@
             const scorePercent = allQuestions.length > 0 ? (correctCount / allQuestions.length * 100) : 0;
 
             dom.resultsScreen.innerHTML = `
-             <div class="results-container">
-                <h2 class="text-center" style="font-size: 2.2rem; font-weight: 700; color: var(--header-text-color);">Test Results</h2>
-                <div class="results-grid" style="margin-top: 2rem;">
-                    <div class="stat-card"><h3>Score Summary</h3><p style="font-size: 3rem; font-weight: 700; color: var(--primary-color);" id="final-score-percent"></p><p><strong>Correct:</strong> <span id="correct-count"></span></p><p><strong>Incorrect:</strong> <span id="incorrect-count"></span></p><p><strong>Unattempted:</strong> <span id="unattempted-count"></span></p></div>
-                    <div class="stat-card"><h3>Performance Chart</h3><canvas id="performanceChart" style="max-height: 200px;"></canvas></div>
-                    <div class="stat-card"><h3>Peer Comparison</h3><div id="peer-comparison-content"><p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p><p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p></div></div>
-                    <div class="stat-card">
-                        <h3 style="display: flex; justify-content: space-between; align-items: center;"><span>🤖 RadMentor Insights</span><span style="background-color: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 99px; text-transform: uppercase;">Exclusive</span></h3>
-                        <div id="ai-insights-content"><p>Generating feedback...</p></div>
-                   </div>
-                </div>
-                <div style="text-align: center; margin-top: 2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;">
-                    <button class="selection-button" id="review-all-btn">Review All</button>
-                    <button class="selection-button" id="review-incorrect-btn" style="background-color: var(--incorrect-text);">Review Incorrect</button>
-                    <button class="selection-button" id="review-flagged-btn" style="background-color: var(--flagged-color);">Review Flagged</button>
-                    <button class="selection-button" id="back-to-topics-btn" style="background-color: var(--text-color-light);">Back to Topics</button>
-                </div>
-            </div>`;
+              <div class="results-container">
+                  <h2 class="text-center" style="font-size: 2.2rem; font-weight: 700; color: var(--header-text-color);">Test Results</h2>
+                  <div class="results-grid" style="margin-top: 2rem;">
+                      <div class="stat-card"><h3>Score Summary</h3><p style="font-size: 3rem; font-weight: 700; color: var(--primary-color);" id="final-score-percent"></p><p><strong>Correct:</strong> <span id="correct-count"></span></p><p><strong>Incorrect:</strong> <span id="incorrect-count"></span></p><p><strong>Unattempted:</strong> <span id="unattempted-count"></span></p></div>
+                      <div class="stat-card"><h3>Performance Chart</h3><canvas id="performanceChart" style="max-height: 200px;"></canvas></div>
+                      <div class="stat-card"><h3>Peer Comparison</h3><div id="peer-comparison-content"><p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p><p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p></div></div>
+                      <div class="stat-card">
+                          <h3 style="display: flex; justify-content: space-between; align-items: center;"><span>🤖 RadMentor Insights</span><span style="background-color: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 99px; text-transform: uppercase;">Exclusive</span></h3>
+                          <div id="ai-insights-content"><p>Generating feedback...</p></div>
+                     </div>
+                  </div>
+                  <div style="text-align: center; margin-top: 2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;">
+                      <button class="selection-button" id="review-all-btn">Review All</button>
+                      <button class="selection-button" id="review-incorrect-btn" style="background-color: var(--incorrect-text);">Review Incorrect</button>
+                      <button class="selection-button" id="review-flagged-btn" style="background-color: var(--flagged-color);">Review Flagged</button>
+                      <button class="selection-button" id="back-to-topics-btn" style="background-color: var(--text-color-light);">Back to Topics</button>
+                  </div>
+              </div>`;
             
             document.getElementById('final-score-percent').textContent = `${scorePercent.toFixed(1)}%`;
             document.getElementById('correct-count').textContent = correctCount;
