@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fellowship Exams Pro - RadMentor</title>
+    <title>FRCR 2a Exams Pro - RadMentor</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -96,8 +96,8 @@
     <div class="main-container">
         <div id="topic-screen" class="screen">
             <div class="selection-container">
-                 <h1 style="color: var(--header-text-color); font-size: 2.2rem; font-weight: 800;">Gear Up for Success</h1>
-                 <p style="color: var(--text-color-light); font-size: 1.1rem; max-width: 600px; margin: 1rem auto 0;">Excel in the top fellowship exams from around the world with our curated question papers.</p>
+                 <h1 style="color: var(--header-text-color); font-size: 2.2rem; font-weight: 800;">FRCR 2a Exam Prep</h1>
+                 <p style="color: var(--text-color-light); font-size: 1.1rem; max-width: 600px; margin: 1rem auto 0;">Excel in your FRCR 2a exams with our curated question papers.</p>
                 <div id="paper-card-grid" class="paper-button-grid"></div>
             </div>
         </div>
@@ -147,27 +147,23 @@
         
         // --- DATA SETUP ---
         const ALL_QUIZ_DATA = {
-             paper1: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "0" }, 
-             paper2: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1141721868" },
-             paper3: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1815658253" }, 
-             paper4: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1386284317" },
-             paper5: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "40352700" }, 
-             paper6: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "54400073" },
-             paper7: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1767827630" }, 
-             paper8: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "280434470" },
-             // NEW: Added two FRCR 2a papers with 5 options each.
              frcr2a_1: { sheetId: "180QNzG6fDKQveAK0P3oUPbqw9k0mK6KqLMichjzyQ8w", gid: "0" },
-             frcr2a_2: { sheetId: "180QNzG6fDKQveAK0P3oUPbqw9k0mK6KqLMichjzyQ8w", gid: "1813285249" }
+             frcr2a_2: { sheetId: "180QNzG6fDKQveAK0P3oUPbqw9k0mK6KqLMichjzyQ8w", gid: "1813285249" },
+             frcr2a_3: { sheetId: "180QNzG6fDKQveAK0P3oUPbqw9k0mK6KqLMichjzyQ8w", gid: "962180397" },
+             frcr2a_4: { sheetId: "180QNzG6fDKQveAK0P3oUPbqw9k0mK6KqLMichjzyQ8w", gid: "1399193608" },
+             frcr2a_5: { sheetId: "180QNzG6fDKQveAK0P3oUPbqw9k0mK6KqLMichjzyQ8w", gid: "2074537975" },
+             frcr2a_6: { sheetId: "180QNzG6fDKQveAK0P3oUPbqw9k0mK6KqLMichjzyQ8w", gid: "423465629" },
+             frcr2a_7: { sheetId: "180QNzG6fDKQveAK0P3oUPbqw9k0mK6KqLMichjzyQ8w", gid: "863789521" }
         };
         
         const PAPER_METADATA = [
-             { id: 'paper1', name: 'Paper 1'}, { id: 'paper2', name: 'Paper 2'},
-             { id: 'paper3', name: 'Paper 3'}, { id: 'paper4', name: 'Paper 4'},
-             { id: 'paper5', name: 'Paper 5'}, { id: 'paper6', name: 'Paper 6'},
-             { id: 'paper7', name: 'Paper 7'}, { id: 'paper8', name: 'Paper 8'},
-             // NEW: Added FRCR 2a papers to the selection list
              { id: 'frcr2a_1', name: 'FRCR 2a - Paper 1'},
-             { id: 'frcr2a_2', name: 'FRCR 2a - Paper 2'}
+             { id: 'frcr2a_2', name: 'FRCR 2a - Paper 2'},
+             { id: 'frcr2a_3', name: 'FRCR 2a - Paper 3'},
+             { id: 'frcr2a_4', name: 'FRCR 2a - Paper 4'},
+             { id: 'frcr2a_5', name: 'FRCR 2a - Paper 5'},
+             { id: 'frcr2a_6', name: 'FRCR 2a - Paper 6'},
+             { id: 'frcr2a_7', name: 'FRCR 2a - Paper 7'}
         ];
         
         const firebaseConfig = {
@@ -246,17 +242,17 @@
         
         function setQuizMode(newMode) {
             quizMode = newMode;
-            localStorage.removeItem(`radmentor_quiz_fellowship_${currentUser.uid}_${currentPaper.id}_${quizMode}`);
+            localStorage.removeItem(`radmentor_quiz_frcr_${currentUser.uid}_${currentPaper.id}_${quizMode}`);
             startQuiz(null);
         }
         
         function checkResumeAndStart() {
-            const savedState = localStorage.getItem(`radmentor_quiz_fellowship_${currentUser.uid}_${currentPaper.id}_${quizMode}`);
+            const savedState = localStorage.getItem(`radmentor_quiz_frcr_${currentUser.uid}_${currentPaper.id}_${quizMode}`);
             if (savedState) {
                 if (window.confirm(`You have an unfinished ${quizMode} session. Resume?`)) {
                     startQuiz(JSON.parse(savedState));
                 } else {
-                    localStorage.removeItem(`radmentor_quiz_fellowship_${currentUser.uid}_${currentPaper.id}_${quizMode}`);
+                    localStorage.removeItem(`radmentor_quiz_frcr_${currentUser.uid}_${currentPaper.id}_${quizMode}`);
                     startQuiz(null);
                 }
             } else {
@@ -313,30 +309,14 @@
 
         function parseCSVToQuestions(csvText) {
             const lines = csvText.trim().split('\n').slice(1);
-            // Check if the current paper is a 5-option FRCR exam
-            const isFiveOption = currentPaper.id.startsWith('frcr2a');
 
             return lines.map((line, index) => {
                 // This regex handles CSV fields that might be quoted (e.g., containing commas).
                 const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''));
                 
-                let question, options, correctAns, explanation;
-                
-                if (isFiveOption) {
-                    // Format for 5 options: Question, A, B, C, D, E, CorrectAns, Explanation
-                    const [q, a, b, c, d, e, ca, exp] = parts;
-                    question = q;
-                    options = [a, b, c, d, e].filter(Boolean); // Filter out any empty options
-                    correctAns = ca;
-                    explanation = exp;
-                } else {
-                    // Format for 4 options: Question, A, B, C, D, CorrectAns, Explanation
-                    const [q, a, b, c, d, ca, exp] = parts;
-                    question = q;
-                    options = [a, b, c, d].filter(Boolean);
-                    correctAns = ca;
-                    explanation = exp;
-                }
+                // Format for 5 options: Question, A, B, C, D, E, CorrectAns, Explanation
+                const [question, a, b, c, d, e, correctAns, explanation] = parts;
+                const options = [a, b, c, d, e].filter(Boolean); // Filter out any empty options
 
                 // Map answer letter (a, b, c, etc.) to a zero-based index.
                 const letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4};
@@ -480,7 +460,7 @@
                 userBookmarks.delete(questionId);
                 button.classList.remove('bookmarked');
             } else {
-                await setDoc(bookmarkRef, { questionText, topic: `Fellowship ${currentPaper.name}`, timestamp: serverTimestamp(), linkToQuestion: `${window.location.pathname}?paperId=${currentPaper.id}&questionId=${questionId}` });
+                await setDoc(bookmarkRef, { questionText, topic: `${currentPaper.name}`, timestamp: serverTimestamp(), linkToQuestion: `${window.location.pathname}?paperId=${currentPaper.id}&questionId=${questionId}` });
                 userBookmarks.add(questionId);
                 button.classList.add('bookmarked');
             }
@@ -538,7 +518,7 @@
             if(window.performanceChart instanceof Chart) window.performanceChart.destroy();
             window.performanceChart = new Chart(document.getElementById('performanceChart'), { type: 'doughnut', data: { labels: ['Correct', 'Incorrect', 'Unattempted'], datasets: [{ data: [correctCount, incorrectCount, unattemptedCount], backgroundColor: ['#22c55e', '#ef4444', '#f59e0b'] }]}});
             
-            localStorage.removeItem(`radmentor_quiz_fellowship_${currentUser.uid}_${currentPaper.id}_${quizMode}`);
+            localStorage.removeItem(`radmentor_quiz_frcr_${currentUser.uid}_${currentPaper.id}_${quizMode}`);
             
             if (quizMode === 'exam') {
                 const attemptData = { score: correctCount, total: allQuestions.length };
@@ -605,7 +585,7 @@
         function saveState() {
              if (!currentUser || !currentPaper || isReviewing) return;
              const state = { answers: userAnswers, index: currentQuestionIndex, elapsedSeconds: elapsedSeconds, flags: Array.from(flaggedQuestions) };
-             localStorage.setItem(`radmentor_quiz_fellowship_${currentUser.uid}_${currentPaper.id}_${quizMode}`, JSON.stringify(state));
+             localStorage.setItem(`radmentor_quiz_frcr_${currentUser.uid}_${currentPaper.id}_${quizMode}`, JSON.stringify(state));
         }
         
         function startTimer() {
@@ -641,4 +621,3 @@
     </script>
 </body>
 </html>
-
