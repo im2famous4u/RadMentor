@@ -4,52 +4,81 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>FRCR Physics Pro - RadMentor</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg-color: #f0f2f5; --container-bg-color: #ffffff; --text-color: #212121; --text-color-light: #4a5568;
-            --header-text-color: #1e3a5f; --button-bg-color: #1e88e5; --button-hover-bg-color: #1565c0;
-            --selection-button-bg: #2c7a7b; --selection-button-hover-bg: #319795; --border-color: #e2e8f0;
-            --explanation-bg: #f7fafc; --subset-item-correct-bg: #c6f6d5; --subset-item-correct-border: #68d391;
-            --subset-item-incorrect-bg: #fee2e2; --subset-item-incorrect-border: #fc8181;
-            --bookmark-color: #a0aec0; --bookmarked-color: #f59e0b; --flag-color: #a0aec0; --flagged-color: #ef4444;
-            --progress-bar-bg: #dbeafe; --progress-bar-fill: #3b82f6;
+            --bg-color: #f4f7f9;
+            --container-bg-color: #ffffff;
+            --text-color: #334155;
+            --text-color-light: #64748b;
+            --header-text-color: #0f172a;
+            --primary-color: #0ea5e9; /* Sky Blue */
+            --primary-hover-color: #0284c7;
+            --selection-button-bg: #14b8a6; /* Teal */
+            --selection-button-hover-bg: #0d9488;
+            --border-color: #e2e8f0;
+            --explanation-bg: #f8fafc;
+            --correct-bg: #dcfce7;
+            --correct-border: #4ade80;
+            --correct-text: #166534;
+            --incorrect-bg: #fee2e2;
+            --incorrect-border: #f87171;
+            --incorrect-text: #b91c1c;
+            --bookmark-color: #94a3b8;
+            --bookmarked-color: #f59e0b; /* Amber */
+            --flag-color: #94a3b8;
+            --flagged-color: #ef4444; /* Red */
         }
-        body { font-family: 'Rubik', sans-serif; margin: 0; padding: 15px; background-color: var(--bg-color); color: var(--text-color); }
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 15px; background-color: var(--bg-color); color: var(--text-color); }
         .main-container { width: 100%; max-width: 900px; margin: 0 auto; }
         .screen { display: none; width: 100%; }
         .screen.active { display: block; animation: fadeIn 0.5s; }
         @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
         .breadcrumb { font-size: 0.9rem; color: var(--text-color-light); margin-bottom: 1rem; }
-        .breadcrumb a { color: var(--button-bg-color); text-decoration: none; }
+        .breadcrumb a { color: var(--primary-color); text-decoration: none; }
         .breadcrumb a:hover { text-decoration: underline; }
-        .selection-container { background-color: var(--container-bg-color); border-radius: 12px; padding: 30px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.07); }
-        .selection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 2rem; }
-        .selection-button { background-color: var(--selection-button-bg); color: white; border: none; padding: 25px; border-radius: 8px; cursor: pointer; font-size: 1.3rem; font-weight: 600; transition: background-color 0.3s, transform 0.2s; text-align: center; }
-        .selection-button:hover { background-color: var(--selection-button-hover-bg); transform: translateY(-5px); }
-        .quiz-container, .results-container { background-color: var(--container-bg-color); border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.07); padding: 20px; }
-        .quiz-header { padding-bottom: 15px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; }
-        .quiz-header-top, .question-title-bar { display: flex; justify-content: space-between; align-items: center; }
-        .question-controls { display: flex; gap: 15px; }
-        .icon-btn { background: none; border: none; cursor: pointer; padding: 0; }
+        .selection-container { background-color: var(--container-bg-color); border-radius: 1rem; padding: 2rem; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .selection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 2rem; }
+        .selection-button { background-color: var(--selection-button-bg); color: white; border: none; padding: 1.5rem; border-radius: 0.75rem; cursor: pointer; font-size: 1.1rem; font-weight: 600; transition: all 0.2s ease-in-out; }
+        .selection-button:hover { background-color: var(--selection-button-hover-bg); transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .quiz-container, .results-container { background-color: var(--container-bg-color); border-radius: 1rem; box-shadow: 0 6px 20px rgba(0,0,0,0.05); overflow: hidden; }
+        .quiz-header { padding: 1.25rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .quiz-header h1 { font-size: 1.5rem; margin: 0; color: var(--header-text-color); }
+        .timer { font-size: 1.25rem; font-weight: 600; color: var(--primary-color); background-color: #f0f9ff; padding: 0.5rem 1rem; border-radius: 0.5rem; }
+        .question-area { padding: 1.5rem; }
+        .question-title-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .question-number { font-size: 1rem; font-weight: 500; color: var(--text-color-light); }
+        .question-controls { display: flex; gap: 1rem; }
+        .icon-btn { background: none; border: none; cursor: pointer; padding: 0; color: var(--text-color-light); transition: color 0.2s; }
+        .icon-btn:hover { color: var(--header-text-color); }
         .icon-btn svg { width: 22px; height: 22px; }
-        .bookmark-btn { color: var(--bookmark-color); }
         .bookmark-btn.bookmarked { color: var(--bookmarked-color); }
-        .flag-btn { color: var(--flag-color); }
         .flag-btn.flagged { color: var(--flagged-color); }
-        .subset-item { padding: 15px; margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 8px; transition: all 0.3s ease; }
-        .subset-item.correct { background-color: var(--subset-item-correct-bg); border-color: var(--subset-item-correct-border); transform: scale(1.02); }
-        .subset-item.incorrect { background-color: var(--subset-item-incorrect-bg); border-color: var(--subset-item-incorrect-border); transform: scale(1.02); }
-        .question-nav-container { display: flex; flex-wrap: wrap; gap: 8px; padding: 15px; margin-top: 20px; border-top: 1px solid var(--border-color); }
-        .page-box { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 600; background-color: #f8fafc; color: #555; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.3s ease; border-radius: 6px; position: relative; }
-        .page-box.active { background-color: var(--button-bg-color); border-color: var(--button-bg-color); color: white; }
-        .page-box.answered-correct { background-color: var(--subset-item-correct-bg); border-color: var(--subset-item-correct-border); color: #14532d; }
-        .page-box.answered-incorrect { background-color: var(--subset-item-incorrect-bg); border-color: var(--subset-item-incorrect-border); color: #7f1d1d; }
-        .page-box.flagged::after { content: '🚩'; position: absolute; top: -8px; right: -5px; font-size: 12px; }
-        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .stat-card { background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .main-question-text { font-size: 1.25rem; font-weight: 600; line-height: 1.5; margin-bottom: 1.5rem; }
+        .subset-item { padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border-color); border-radius: 0.75rem; transition: all 0.3s ease; }
+        .subset-item.correct { background-color: var(--correct-bg); border-color: var(--correct-border); }
+        .subset-item.incorrect { background-color: var(--incorrect-bg); border-color: var(--incorrect-border); }
+        .subset-q-container { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+        .subset-q-text { flex-grow: 1; margin: 0; font-size: 1rem; line-height: 1.6; }
+        .subset-options { display: flex; gap: 0.75rem; }
+        .subset-options label { padding: 0.5rem 1rem; border: 1px solid var(--border-color); border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; font-weight: 500; }
+        .subset-options input[type="radio"] { display: none; }
+        .subset-options input[type="radio"]:checked + label { border-color: var(--primary-color); background-color: #f0f9ff; color: var(--primary-hover-color); font-weight: 600; }
+        .subset-options input[type="radio"]:disabled + label { cursor: not-allowed; background-color: #f1f5f9; opacity: 0.7; }
+        .quiz-pagination-header { background-color: #f8fafc; padding: 1rem; border-bottom: 1px solid var(--border-color); overflow-x: auto; white-space: nowrap; scrollbar-width: thin; scrollbar-color: var(--primary-color) var(--border-color); }
+        .quiz-pagination-header::-webkit-scrollbar { height: 8px; }
+        .quiz-pagination-header::-webkit-scrollbar-thumb { background-color: var(--primary-color); border-radius: 4px; }
+        .page-box { display: inline-flex; width: 40px; height: 40px; align-items: center; justify-content: center; font-weight: 600; background-color: #fff; border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s ease; border-radius: 0.5rem; position: relative; margin-right: 0.5rem; }
+        .page-box.active { border-color: var(--primary-color); background-color: var(--primary-color); color: white; transform: scale(1.1); }
+        .page-box.answered-correct { background-color: var(--correct-bg); border-color: var(--correct-border); color: var(--correct-text); }
+        .page-box.answered-incorrect { background-color: var(--incorrect-bg); border-color: var(--incorrect-border); color: var(--incorrect-text); }
+        .page-box.flagged::after { content: ''; position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; background-color: var(--flagged-color); border-radius: 50%; }
+        .results-container { padding: 2rem; }
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .stat-card { background-color: #f8fafc; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--border-color); }
+        .stat-card h3 { font-size: 1.1rem; font-weight: 600; color: var(--header-text-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1rem; }
     </style>
 </head>
 <body>
@@ -62,66 +91,63 @@
         </div>
         
         <div id="auth-check-screen" class="screen active">
-             <div class="selection-container"><h1 style="color: var(--header-text-color); font-size: 2rem;">Verifying User...</h1></div>
+             <div class="selection-container"><h1>Verifying User...</h1></div>
         </div>
 
         <div id="topic-screen" class="screen">
             <div class="selection-container">
-                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                     <h1>Physics Topics</h1>
-                     <button class="back-button" onclick="window.location.href='../../'">Back to FRCR</button>
-                 </div>
+                 <h1>Physics Topics</h1>
                 <div id="physics-topics-grid" class="selection-grid"></div>
             </div>
         </div>
 
         <div id="quiz-screen" class="screen">
             <div class="quiz-container">
-                <div id="loading-container"><p>Loading questions...</p></div>
+                <div id="loading-container" style="text-align:center; padding: 4rem;">Loading...</div>
                 <div id="quiz-content" style="display:none;">
                     <div class="quiz-header">
-                        <div class="quiz-header-top">
-                            <h1 id="quiz-title">Physics Questions</h1>
-                            <div class="timer" id="timer">00:00</div>
-                        </div>
+                        <h1 id="quiz-title">Physics Questions</h1>
+                        <div class="timer" id="timer">00:00</div>
                     </div>
-                    <div id="questions-display"></div>
-                    <div id="question-nav-container"></div>
+                    <div id="quiz-pagination-header" class="quiz-pagination-header"></div>
+                    <div class="question-area">
+                        <div id="questions-display"></div>
+                    </div>
                 </div>
             </div>
         </div>
         
         <div id="results-screen" class="screen">
             <div class="results-container">
-                <h2 class="text-center" style="font-size: 2.2rem; color: var(--header-text-color);">Test Results</h2>
+                <h2 class="text-center" style="font-size: 2.2rem; font-weight: 700; color: var(--header-text-color);">Test Results</h2>
                 <div class="results-grid" style="margin-top: 2rem;">
                     <div class="stat-card">
-                        <h3 style="color: var(--header-text-color);">Score Summary</h3>
-                        <p style="font-size: 3rem; font-weight: 700; color: var(--button-bg-color);" id="final-score-percent"></p>
+                        <h3>Score Summary</h3>
+                        <p style="font-size: 3rem; font-weight: 700; color: var(--primary-color);" id="final-score-percent"></p>
                         <p><strong>Correct:</strong> <span id="correct-count"></span></p>
                         <p><strong>Incorrect:</strong> <span id="incorrect-count"></span></p>
                         <p><strong>Unattempted:</strong> <span id="unattempted-count"></span></p>
                     </div>
                     <div class="stat-card">
-                        <h3 style="color: var(--header-text-color);">Performance Chart</h3>
-                        <canvas id="performanceChart"></canvas>
+                        <h3>Performance Chart</h3>
+                        <canvas id="performanceChart" style="max-height: 200px;"></canvas>
                     </div>
                     <div class="stat-card">
-                         <h3 style="color: var(--header-text-color);">Peer Comparison</h3>
+                         <h3>Peer Comparison</h3>
                          <div id="peer-comparison-content">
                             <p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p>
                             <p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p>
                          </div>
                     </div>
                     <div class="stat-card">
-                         <h3 style="color: var(--header-text-color);">🤖 AI Insights</h3>
+                         <h3>🤖 AI Insights</h3>
                          <div id="ai-insights-content"><p>Generating feedback...</p></div>
                     </div>
                 </div>
-                <div style="text-align: center; margin-top: 2rem;">
+                <div style="text-align: center; margin-top: 2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;">
                     <button class="selection-button" id="review-all-btn">Review All</button>
-                    <button class="selection-button" id="review-incorrect-btn" style="background-color: #ef4444;">Review Incorrect</button>
-                    <button class="selection-button" id="review-flagged-btn" style="background-color: #f59e0b;">Review Flagged</button>
+                    <button class="selection-button" id="review-incorrect-btn" style="background-color: var(--incorrect-text);">Review Incorrect</button>
+                    <button class="selection-button" id="review-flagged-btn" style="background-color: var(--flagged-color);">Review Flagged</button>
                     <button class="selection-button" id="back-to-topics-btn" style="background-color: var(--text-color-light);">Back to Topics</button>
                 </div>
             </div>
@@ -134,44 +160,44 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-        import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, deleteDoc, serverTimestamp, runTransaction, query, where, limit } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+        import { getFirestore, doc, runTransaction } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
         import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai/+esm";
 
-        const GOOGLE_AI_API_KEY = 'AIzaSyDi7D6W2xjtReXVFkpSSXG_xTJBqRGswxs';
-        
-        const firebaseConfig = {
-            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw", authDomain: "radiology-mcqs.firebaseapp.com", projectId: "radiology-mcqs",
-            storageBucket: "radiology-mcqs.appspot.com", messagingSenderId: "862300415358", appId: "1:862300415358:web:097d5e413f388e30587f2f"
-        };
+        // --- CONFIGURATION ---
+        const GOOGLE_AI_API_KEY = 'YOUR_API_KEY_HERE'; // <-- IMPORTANT: Add your key here
         const GOOGLE_SHEET_ID = '1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8';
         const PHYSICS_TOPICS = [
              { name: "Basic Physics", gid: "2009849222" }, { name: "Radiation Hazards & Protection", gid: "2009849222" }, { name: "Image Quality & X-ray", gid: "1706416231" },
              { name: "Film Screen Radiography", gid: "1257614317" }, { name: "Digital Radiography", gid: "917881905" }, { name: "Fluoroscopy", gid: "1461599884" },
              { name: "Computed Tomography", gid: "986205874" }, { name: "Nuclear Medicine", gid: "2016453957" }, { name: "Ultrasound", gid: "638565218" }, { name: "Magnetic Resonance Imaging", gid: "2026917708" },
         ];
-
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw", authDomain: "radiology-mcqs.firebaseapp.com", projectId: "radiology-mcqs",
+            storageBucket: "radiology-mcqs.appspot.com", messagingSenderId: "862300415358", appId: "1:862300415358:web:097d5e413f388e30587f2f"
+        };
+        
+        // --- APP STATE & INITIALIZATION ---
         let allQuestions = [], currentQuestionIndex = 0, currentUser = null;
-        let userBookmarks = new Set(), flaggedQuestions = new Set(), reviewFilter = [];
-        let currentTopic = null, quizMode = 'practice', quizInterval = null, startTime = null, elapsedSeconds = 0;
+        let flaggedQuestions = new Set(), reviewFilter = [];
+        let currentTopic = null, quizInterval = null, elapsedSeconds = 0;
         let userAnswers = {};
         let isReviewing = false;
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-
         const dom = {
              screens: document.querySelectorAll('.screen'), physicsTopicsGrid: document.getElementById('physics-topics-grid'), quizTitle: document.getElementById('quiz-title'),
              loadingContainer: document.getElementById('loading-container'), questionsDisplay: document.getElementById('questions-display'), quizContent: document.getElementById('quiz-content'),
-             questionNavContainer: document.getElementById('question-nav-container'), timerEl: document.getElementById('timer'), resultsScreen: document.getElementById('results-screen'),
+             paginationHeader: document.getElementById('quiz-pagination-header'), timerEl: document.getElementById('timer'), resultsScreen: document.getElementById('results-screen'),
              correctSound: document.getElementById('correct-sound'), wrongSound: document.getElementById('wrong-sound')
         };
         
+        // --- AUTH & NAVIGATION ---
         function showScreen(screenId) { dom.screens.forEach(s => s.classList.toggle('active', s.id === screenId)); feather.replace(); }
         
         onAuthStateChanged(auth, (user) => {
+            currentUser = user;
             if (user) {
-                currentUser = user;
                 showScreen('topic-screen');
                 dom.physicsTopicsGrid.innerHTML = PHYSICS_TOPICS.map(topic => `<button class="selection-button" data-gid="${topic.gid}" data-name="${topic.name}">${topic.name}</button>`).join('');
             } else {
@@ -180,14 +206,14 @@
             }
         });
 
-        document.getElementById('physics-topics-grid').addEventListener('click', (e) => {
-            if (e.target.classList.contains('selection-button')) {
+        dom.physicsTopicsGrid.addEventListener('click', (e) => {
+            if (e.target.matches('.selection-button')) {
                 const { gid, name } = e.target.dataset;
                 currentTopic = { gid, name };
                 checkResumeAndStart();
             }
         });
-
+        
         function checkResumeAndStart() {
             const savedState = localStorage.getItem(`radmentor_quiz_${currentUser.uid}_${currentTopic.gid}`);
             if (savedState) {
@@ -201,16 +227,16 @@
 
         async function startQuiz(resumeState) {
             isReviewing = false; reviewFilter = [];
-            userAnswers = resumeState ? resumeState.answers : {};
-            currentQuestionIndex = resumeState ? resumeState.index : 0;
-            elapsedSeconds = resumeState ? resumeState.elapsedSeconds : 0;
-            flaggedQuestions = resumeState ? new Set(resumeState.flags) : new Set();
+            userAnswers = resumeState?.answers || {};
+            currentQuestionIndex = resumeState?.index || 0;
+            elapsedSeconds = resumeState?.elapsedSeconds || 0;
+            flaggedQuestions = new Set(resumeState?.flags || []);
             
             showScreen('quiz-screen');
             dom.loadingContainer.style.display = 'block';
             dom.quizContent.style.display = 'none';
 
-            await Promise.all([fetchUserBookmarks(), fetchQuizData()]);
+            await fetchQuizData();
 
             dom.loadingContainer.style.display = 'none';
             dom.quizContent.style.display = 'block';
@@ -220,6 +246,7 @@
             startTimer();
         }
 
+        // --- DATA HANDLING ---
         async function fetchQuizData() {
             const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/export?format=csv&gid=${currentTopic.gid}`;
             try {
@@ -230,62 +257,64 @@
         }
 
         function parseCSVToQuestions(text) {
-             const rows = text.split(/\r\n|\n/).slice(1);
-             return rows.map((row, i) => {
-                 const cols = row.split(',').map(s => s.trim().replace(/^"|"$/g, ''));
-                 if (cols.length < 3 || !cols[0]) return null;
-                 const question = { id: `${currentTopic.gid}-${i}`, question: cols[0], subsets: [] };
-                 for (let j = 1; j < cols.length; j += 3) {
-                     if (cols[j]) question.subsets.push({ text: cols[j], correctAnswer: cols[j + 1], explanation: cols[j + 2] || "N/A" });
-                 }
-                 return question.subsets.length > 0 ? question : null;
-             }).filter(Boolean);
+            const rows = text.split(/\r\n|\n/).slice(1);
+            return rows.map((row, i) => {
+                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.trim().replace(/^"|"$/g, ''));
+                if (cols.length < 16 || !cols[0]) return null;
+                const question = { id: `${currentTopic.gid}-${i}`, question: cols[0], subsets: [] };
+                for (let k = 0; k < 5; k++) {
+                    const subQuestionText = cols[1 + k];
+                    const answer = cols[6 + (k * 2)];
+                    const explanation = cols[7 + (k * 2)];
+                    if (subQuestionText && answer) {
+                        question.subsets.push({ text: subQuestionText, correctAnswer: answer, explanation: explanation || "N/A" });
+                    }
+                }
+                return question.subsets.length > 0 ? question : null;
+            }).filter(Boolean);
         }
 
+        // --- QUIZ UI & INTERACTION ---
         function showQuestion(index) {
-            if (reviewFilter.length > 0) index = reviewFilter.includes(index) ? index : reviewFilter[0];
+            if (reviewFilter.length > 0 && !reviewFilter.includes(index)) {
+                 index = reviewFilter.find(i => i >= index) || reviewFilter[0];
+            }
             currentQuestionIndex = index;
             const q = allQuestions[index];
             if (!q) return;
 
-            const isBookmarked = userBookmarks.has(q.id);
             const isFlagged = flaggedQuestions.has(q.id);
 
             dom.questionsDisplay.innerHTML = `
-                <div class="question-block">
-                    <div class="question-title-bar">
-                        <span class="question-number">Question ${index + 1}</span>
-                        <div class="question-controls">
-                            <button class="icon-btn flag-btn ${isFlagged ? 'flagged' : ''}" onclick="window.toggleFlag('${q.id}')"><i data-feather="flag"></i></button>
-                            <button class="icon-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" onclick="window.toggleBookmark('${q.id}', '${q.question.replace(/'/g, "\\'")}')"><i data-feather="bookmark"></i></button>
+                <div class="question-title-bar">
+                    <span class="question-number">Question ${index + 1} of ${allQuestions.length}</span>
+                    <div class="question-controls">
+                        <button class="icon-btn flag-btn ${isFlagged ? 'flagged' : ''}" onclick="window.toggleFlag('${q.id}')"><i data-feather="flag"></i></button>
+                    </div>
+                </div>
+                <p class="main-question-text">${q.question}</p>
+                <div id="subsets-container">${q.subsets.map((subset, i) => {
+                    const savedAnswer = userAnswers[index]?.[i];
+                    const isAnswered = savedAnswer !== undefined;
+                    const isCorrect = isAnswered && savedAnswer.toLowerCase() === subset.correctAnswer.toLowerCase();
+                    const itemClass = (isReviewing || isAnswered) ? (isCorrect ? 'correct' : 'incorrect') : '';
+                    return `<div class="subset-item ${itemClass}">
+                        <div class="subset-q-container">
+                            <p class="subset-q-text">${subset.text}</p>
+                            <div class="subset-options">${['True', 'False'].map(opt => `
+                                <input type="radio" id="q${index}s${i}${opt}" name="q${index}s${i}" value="${opt}" 
+                                    ${savedAnswer === opt ? 'checked' : ''} ${isAnswered || isReviewing ? 'disabled' : ''}>
+                                <label for="q${index}s${i}${opt}">${opt}</label>
+                            `).join('')}</div>
                         </div>
-                    </div>
-                    <p class="main-question-text">${q.question}</p>
-                    <div id="subsets-container">
-                        ${q.subsets.map((subset, i) => {
-                            const savedAnswer = userAnswers[index] ? userAnswers[index][i] : null;
-                            const isAnswered = savedAnswer !== null;
-                            const isCorrect = isAnswered && savedAnswer.toLowerCase() === subset.correctAnswer.toLowerCase();
-                            const itemClass = (isReviewing || isAnswered) ? (isCorrect ? 'correct' : 'incorrect') : '';
-                            return `<div class="subset-item ${itemClass}">
-                                <div class="subset-q-container">
-                                    <p class="subset-q-text">${subset.text}</p>
-                                    <div class="subset-options">${['True', 'False'].map(opt => `
-                                        <input type="radio" id="q${index}s${i}${opt[0]}" name="q${index}s${i}" value="${opt}" 
-                                            ${savedAnswer === opt ? 'checked' : ''} ${isAnswered || isReviewing ? 'disabled' : ''}>
-                                        <label for="q${index}s${i}${opt[0]}">${opt}</label>
-                                    `).join('')}</div>
-                                </div>
-                            </div>`;
-                        }).join('')}
-                    </div>
-                </div>`;
+                    </div>`;
+                }).join('')}</div>`;
             updateQuestionNav();
             feather.replace();
         }
         
         dom.questionsDisplay.addEventListener('change', (e) => {
-            if (e.target.type === 'radio' && !isReviewing) {
+            if (e.target.matches('input[type="radio"]') && !isReviewing) {
                  const qIndex = currentQuestionIndex;
                  const sIndex = parseInt(e.target.name.match(/s(\d+)/)[1]);
                  if (!userAnswers[qIndex]) userAnswers[qIndex] = {};
@@ -293,28 +322,27 @@
 
                  const allAnswered = Object.keys(userAnswers[qIndex]).length === allQuestions[qIndex].subsets.length;
                  if (allAnswered) {
-                     const isCorrect = allQuestions[qIndex].subsets.every((subset, i) => userAnswers[qIndex][i] && userAnswers[qIndex][i].toLowerCase() === subset.correctAnswer.toLowerCase());
-                     isCorrect ? dom.correctSound.play() : dom.wrongSound.play();
-                     showQuestion(qIndex); // Re-render to show colors
+                     const isCorrect = allQuestions[qIndex].subsets.every((subset, i) => userAnswers[qIndex][i]?.toLowerCase() === subset.correctAnswer.toLowerCase());
+                     (isCorrect ? dom.correctSound : dom.wrongSound).play();
+                     showQuestion(qIndex);
                      setTimeout(() => {
                         if (currentQuestionIndex < allQuestions.length - 1) showQuestion(currentQuestionIndex + 1);
                         else finishQuiz();
-                     }, 1000);
+                     }, 1200);
                  }
                  saveState();
             }
         });
 
         function createQuestionNav() {
-            const navIds = reviewFilter.length > 0 ? reviewFilter.map(id => allQuestions.findIndex(q => q.id === id)) : allQuestions.map((_, i) => i);
-            dom.questionNavContainer.innerHTML = navIds.map(i => `<div class="page-box" data-index="${i}">${i + 1}</div>`).join('');
-            dom.questionNavContainer.querySelectorAll('.page-box').forEach(box => box.addEventListener('click', () => showQuestion(parseInt(box.dataset.index))));
+            dom.paginationHeader.innerHTML = allQuestions.map((_, i) => `<div class="page-box" data-index="${i}">${i + 1}</div>`).join('');
+            dom.paginationHeader.querySelectorAll('.page-box').forEach(box => box.addEventListener('click', () => showQuestion(parseInt(box.dataset.index))));
         }
 
         function updateQuestionNav() {
-            dom.questionNavContainer.querySelectorAll('.page-box').forEach(box => {
+            dom.paginationHeader.querySelectorAll('.page-box').forEach(box => {
                 const index = parseInt(box.dataset.index);
-                box.classList.remove('active', 'answered-correct', 'answered-incorrect', 'flagged');
+                box.className = 'page-box'; // Reset classes
                 if (index === currentQuestionIndex) box.classList.add('active');
                 if (userAnswers[index]) {
                     const isCorrect = allQuestions[index].subsets.every((s, i) => userAnswers[index][i]?.toLowerCase() === s.correctAnswer.toLowerCase());
@@ -324,6 +352,9 @@
             });
         }
         
+        window.toggleFlag = (id) => { flaggedQuestions.has(id) ? flaggedQuestions.delete(id) : flaggedQuestions.add(id); updateQuestionNav(); saveState(); };
+
+        // --- RESULTS & ANALYSIS ---
         async function finishQuiz() {
             clearInterval(quizInterval);
             showScreen('results-screen');
@@ -347,11 +378,13 @@
             document.getElementById('correct-count').textContent = correctCount;
             document.getElementById('incorrect-count').textContent = incorrectCount;
             document.getElementById('unattempted-count').textContent = unattemptedCount;
-            new Chart(document.getElementById('performanceChart'), { type: 'doughnut', data: { labels: ['Correct', 'Incorrect', 'Unattempted'], datasets: [{ data: [correctCount, incorrectCount, unattemptedCount], backgroundColor: ['#28a745', '#dc3545', '#ffc107'] }]}});
+            
+            if(window.performanceChart instanceof Chart) window.performanceChart.destroy();
+            window.performanceChart = new Chart(document.getElementById('performanceChart'), { type: 'doughnut', data: { labels: ['Correct', 'Incorrect', 'Unattempted'], datasets: [{ data: [correctCount, incorrectCount, unattemptedCount], backgroundColor: ['#22c55e', '#ef4444', '#f59e0b'] }]}});
             
             localStorage.removeItem(`radmentor_quiz_${currentUser.uid}_${currentTopic.gid}`);
             
-            const attemptData = { score: correctCount, total: allQuestions.length, time: elapsedSeconds, timestamp: serverTimestamp() };
+            const attemptData = { score: correctCount, total: allQuestions.length };
             const { average, percentile } = await saveTestResultAndGetStats(attemptData);
             document.getElementById('average-score').textContent = `${average.toFixed(1)}%`;
             document.getElementById('percentile-rank').textContent = percentile.toFixed(1);
@@ -361,67 +394,90 @@
 
         async function saveTestResultAndGetStats(attempt) {
             const aggregatesRef = doc(db, "quizAggregates", currentTopic.gid);
-            let finalAverage = 0, finalPercentile = 0;
+            let finalStats = { average: 0, percentile: 0 };
             try {
                 await runTransaction(db, async (transaction) => {
                     const aggDoc = await transaction.get(aggregatesRef);
                     const scorePercent = (attempt.score / attempt.total) * 100;
-
                     if (!aggDoc.exists()) {
                         transaction.set(aggregatesRef, { totalAttempts: 1, averageScore: scorePercent, scores: [scorePercent] });
-                        finalAverage = scorePercent;
-                        finalPercentile = 100;
+                        finalStats = { average: scorePercent, percentile: 100 };
                     } else {
                         const data = aggDoc.data();
+                        const scores = data.scores || [];
+                        finalStats.percentile = scores.length > 0 ? (scores.filter(s => s < scorePercent).length / scores.length) * 100 : 100;
                         const newTotalAttempts = data.totalAttempts + 1;
                         const newAverageScore = ((data.averageScore * data.totalAttempts) + scorePercent) / newTotalAttempts;
-                        const scores = data.scores || [];
-                        const numScoresLower = scores.filter(s => s < scorePercent).length;
-                        finalPercentile = (numScoresLower / scores.length) * 100;
                         scores.push(scorePercent);
-                        
                         transaction.update(aggregatesRef, { totalAttempts: newTotalAttempts, averageScore: newAverageScore, scores });
-                        finalAverage = newAverageScore;
+                        finalStats.average = newAverageScore;
                     }
                 });
             } catch (e) { console.error("Transaction failed: ", e); }
-            return { average: finalAverage, percentile: finalPercentile };
+            return finalStats;
         }
         
         async function getAIInsights(incorrectQs) {
             const insightsDiv = document.getElementById('ai-insights-content');
-            if (GOOGLE_AI_API_KEY === 'AIzaSyDi7D6W2xjtReXVFkpSSXG_xTJBqRGswxs') {
+            if (GOOGLE_AI_API_KEY === 'YOUR_API_KEY_HERE') {
                 insightsDiv.innerHTML = '<p>Please add a Google AI API key to enable this feature.</p>'; return;
             }
             if(incorrectQs.length === 0) {
-                 insightsDiv.innerHTML = '<p>Excellent work! No incorrect answers to analyze.</p>'; return;
+                 insightsDiv.innerHTML = '<p>Flawless victory! No incorrect answers to analyze.</p>'; return;
             }
-            const genAI = new GoogleGenerativeAI(GOOGLE_AI_API_KEY);
-            const model = genAI.getGenerativeModel({ model: "gemini-pro"});
-            const prompt = `Based on these quiz questions a user got wrong in a radiology physics test, identify 2-3 core concepts they struggle with. Provide concise, actionable advice. Questions:\n${incorrectQs.map(q => `- ${q.question}`).join('\n')}`;
-
             try {
+                const genAI = new GoogleGenerativeAI(GOOGLE_AI_API_KEY);
+                const model = genAI.getGenerativeModel({ model: "gemini-pro"});
+                const prompt = `A user answered these radiology physics questions incorrectly. Identify 2-3 core concepts they are struggling with and give concise, actionable study advice. Questions:\n${incorrectQs.map(q => `- ${q.question}`).join('\n')}`;
                 const result = await model.generateContent(prompt);
-                insightsDiv.innerHTML = result.response.text().replace(/\n/g, '<br>');
+                insightsDiv.innerHTML = result.response.text().replace(/\n/g, '<br>').replace(/\*/g, '');
             } catch (error) {
-                insightsDiv.innerHTML = '<p>Could not retrieve AI insights at this time.</p>';
+                insightsDiv.innerHTML = '<p>Could not retrieve AI insights.</p>';
                 console.error("AI Error:", error);
             }
         }
-
-        window.toggleBookmark = async (id, text) => { /* ... same as before ... */ };
-        window.toggleFlag = (id) => { flaggedQuestions.has(id) ? flaggedQuestions.delete(id) : flaggedQuestions.add(id); updateQuestionNav(); };
+        
+        // --- UTILITY, STATE, & REVIEW ---
         function saveState() {
              if (!currentUser || !currentTopic || isReviewing) return;
              const state = { answers: userAnswers, index: currentQuestionIndex, elapsedSeconds: elapsedSeconds, flags: Array.from(flaggedQuestions) };
              localStorage.setItem(`radmentor_quiz_${currentUser.uid}_${currentTopic.gid}`, JSON.stringify(state));
         }
         
-        // --- Remaining utility functions and event listeners from previous version ---
-        function startTimer() { /* ... */ }
-        async function fetchUserBookmarks() { /* ... */ }
+        function startTimer() {
+            clearInterval(quizInterval);
+            let startTime = Date.now() - (elapsedSeconds * 1000);
+            quizInterval = setInterval(() => {
+                elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+                dom.timerEl.textContent = `${String(Math.floor(elapsedSeconds/60)).padStart(2,'0')}:${String(elapsedSeconds%60).padStart(2,'0')}`;
+            }, 1000);
+        }
+
+        function setupReview(filterType) {
+            isReviewing = true;
+            if (filterType === 'all') {
+                reviewFilter = allQuestions.map((_, i) => i);
+            } else if (filterType === 'incorrect') {
+                reviewFilter = allQuestions.map((q, i) => i).filter(i => userAnswers[i] && !allQuestions[i].subsets.every((s, idx) => userAnswers[i][idx]?.toLowerCase() === s.correctAnswer.toLowerCase()));
+            } else if (filterType === 'flagged') {
+                reviewFilter = allQuestions.map((q, i) => i).filter(i => flaggedQuestions.has(q.id));
+            }
+            
+            if (reviewFilter.length === 0) {
+                alert(`No ${filterType} questions to review.`);
+                isReviewing = false;
+                return;
+            }
+            showScreen('quiz-screen');
+            createQuestionNav(); // Re-create nav for the filter
+            showQuestion(reviewFilter[0]);
+        }
+        
         document.getElementById('back-to-topics-btn').addEventListener('click', () => showScreen('topic-screen'));
-        // Add listeners for review buttons to set reviewFilter and call startQuiz/showQuestion
+        document.getElementById('review-all-btn').addEventListener('click', () => setupReview('all'));
+        document.getElementById('review-incorrect-btn').addEventListener('click', () => setupReview('incorrect'));
+        document.getElementById('review-flagged-btn').addEventListener('click', () => setupReview('flagged'));
+
     </script>
 </body>
 </html>
