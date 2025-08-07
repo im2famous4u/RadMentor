@@ -4,248 +4,507 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RadMentor Quiz</title>
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React Libraries -->
-    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-    <!-- Babel to transpile JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #f4f7f9; --container-bg-color: #ffffff; --text-color: #334155; --text-color-light: #64748b;
+            --header-text-color: #0f172a; --primary-color: #3b82f6; --primary-hover-color: #2563eb;
+            --border-color: #e2e8f0; --explanation-bg: #f8fafc; --correct-bg: #dcfce7; --correct-border: #4ade80;
+            --correct-text: #166534; --incorrect-bg: #fee2e2; --incorrect-border: #f87171; --incorrect-text: #b91c1c;
+            --main-font: 'Inter', sans-serif;
+        }
+        body { font-family: var(--main-font); margin: 0; padding: 24px; background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; position: relative; overflow-x: hidden; }
+        .main-container { width: 100%; max-width: 900px; margin: 0 auto; transition: transform 0.4s ease-in-out; }
+        .main-container.side-panel-active { transform: translateX(-150px); }
+        .screen { display: none; width: 100%; }
+        .screen.active { display: block; animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: translateY(0) } }
+        .quiz-container { background-color: var(--container-bg-color); border-radius: 1.5rem; box-shadow: 0 10px 20px rgba(0,0,0,0.05); overflow: hidden; }
+        .quiz-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+        .quiz-header h1 { font-size: 1.25rem; margin: 0; font-weight: 700; color: var(--header-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .header-controls { display: flex; align-items: center; gap: 1rem; }
+        .timer { font-size: 1.1rem; font-weight: 600; color: var(--primary-color); background-color: #eff6ff; padding: 0.5rem 1rem; border-radius: 0.5rem; }
+        .finish-btn-header { background-color: var(--primary-color); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+        .finish-btn-header:hover { background-color: var(--primary-hover-color); }
+        .progress-bar-container { width: 100%; height: 6px; background-color: var(--border-color); }
+        .progress-bar { width: 0%; height: 100%; background-color: var(--primary-color); transition: width 0.3s ease; }
+        #exam-timer-bar { transition: width 1s linear; }
+        .question-area { padding: 2rem; animation: questionFadeIn 0.4s ease-out; }
+        @keyframes questionFadeIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        .question-title-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .question-number { font-size: 1rem; font-weight: 500; color: var(--text-color-light); }
+        .question-controls { display: flex; gap: 0.5rem; }
+        .icon-btn { background: none; border: none; color: var(--text-color-light); cursor: pointer; padding: 0.25rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .icon-btn:hover { color: var(--primary-color); background-color: #eff6ff; }
+        .icon-btn.active { color: #f59e0b; }
+        .main-question-text { font-size: 1.35rem; font-weight: 600; line-height: 1.6; margin-bottom: 1rem; color: var(--header-text-color); }
+        .question-image { max-width: 100%; border-radius: 0.75rem; margin-bottom: 2rem; }
+        .option-btn { display: flex; align-items: center; width: 100%; text-align: left; padding: 1rem 1.25rem; margin-bottom: 0.75rem; border: 2px solid var(--border-color); border-radius: 0.75rem; background-color: #fff; cursor: pointer; transition: all 0.2s; font-size: 1rem; }
+        .option-btn:hover { border-color: var(--primary-color); background-color: #eff6ff; transform: translateX(5px); }
+        .option-btn.selected { border-color: var(--primary-color); background-color: #eff6ff; font-weight: 600; }
+        .option-btn.correct { border-color: var(--correct-border); background-color: var(--correct-bg); color: var(--correct-text); font-weight: 600; }
+        .option-btn.incorrect { border-color: var(--incorrect-border); background-color: var(--incorrect-bg); color: var(--incorrect-text); font-weight: 600; }
+        .option-btn:disabled { cursor: not-allowed; opacity: 0.9; }
+        .explanation-box { margin-top: 2rem; padding: 1.5rem; background-color: var(--explanation-bg); border-radius: 0.75rem; border-left: 4px solid var(--primary-color); }
+        .explanation-box h4 { margin-top: 0; font-size: 1.1rem; font-weight: 700; }
+        .explanation-image { max-width: 100%; border-radius: 0.75rem; margin-top: 1rem; }
+        .nav-buttons-container { display: flex; justify-content: space-between; margin-top: 2rem; gap: 1rem; }
+        .nav-button { background-color: var(--primary-color); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2); }
+        .nav-button:hover:not(:disabled) { background-color: var(--primary-hover-color); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(59, 130, 246, 0.3); }
+        .nav-button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
+        .nav-button i { margin: 0 0.25rem; }
+        .side-panel-toggle { position: fixed; top: 50%; right: 0; transform: translateY(-50%); background-color: var(--primary-color); color: white; border: none; width: 40px; height: 60px; border-radius: 8px 0 0 8px; cursor: pointer; z-index: 999; display: flex; align-items: center; justify-content: center; box-shadow: -5px 0 15px rgba(0,0,0,0.1); }
+        .side-panel { position: fixed; top: 0; right: 0; width: 300px; height: 100%; background-color: white; box-shadow: -10px 0 30px rgba(0,0,0,0.1); transform: translateX(100%); transition: transform 0.4s ease-in-out; z-index: 998; display: flex; flex-direction: column; }
+        .side-panel.active { transform: translateX(0); }
+        .side-panel-tabs { display: flex; border-bottom: 1px solid var(--border-color); }
+        .side-panel-tab { flex: 1; padding: 1rem; text-align: center; font-weight: 600; cursor: pointer; color: var(--text-color-light); border-bottom: 2px solid transparent; }
+        .side-panel-tab.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+        .side-panel-content { flex-grow: 1; overflow-y: auto; padding: 1rem; }
+        .side-panel-section { display: none; }
+        .side-panel-section.active { display: block; }
+        .side-panel-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+        .side-panel .page-box { margin: 0; width: 100%; height: 45px; }
+        .page-box.bookmarked { box-shadow: 0 0 0 2px #f59e0b; }
+        .bookmark-list-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; margin-bottom: 0.5rem; }
+        .bookmark-list-item:hover { background-color: var(--bg-color); }
+        .results-container { padding: 2.5rem; text-align: center; }
+        .results-container h2 { font-size: 2.5rem; font-weight: 800; color: var(--header-text-color); margin-bottom: 2.5rem; }
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; text-align: left; }
+        .stat-card { background-color: #f8fafc; padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border-color); }
+        .stat-card h3 { font-size: 1.1rem; font-weight: 600; color: var(--header-text-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-top: 0; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        #final-score-percent { font-size: 3.5rem; font-weight: 800; color: var(--primary-color); }
+        .stat-card p { margin: 0.5rem 0; color: var(--text-color); }
+        .results-buttons { margin-top: 2.5rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+        .results-buttons .btn { padding: 0.75rem 1.5rem; font-weight: 600; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
+        .results-buttons .review-all-btn { background-color: var(--primary-color); color: white; }
+        .results-buttons .review-all-btn:hover { background-color: var(--primary-hover-color); }
+        .results-buttons .review-incorrect-btn { background-color: var(--incorrect-bg); color: var(--incorrect-text); border-color: var(--incorrect-border); }
+        .results-buttons .review-incorrect-btn:hover { background-color: var(--incorrect-text); color: white; }
+        .results-buttons .back-to-topics-btn { background-color: var(--container-bg-color); color: var(--text-color); border-color: var(--border-color); }
+        .results-buttons .back-to-topics-btn:hover { background-color: var(--bg-color); border-color: var(--text-color-light); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; animation: fadeIn 0.3s; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background-color: var(--container-bg-color); padding: 2rem; border-radius: 1rem; width: 90%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; animation: fadeIn 0.3s ease-out; }
+        .modal-buttons { display: flex; justify-content: center; gap: 1rem; margin-top: 1.5rem; }
+        .modal-buttons button { padding: 0.75rem 1.5rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; border-radius: 0.5rem; }
+        .modal-buttons .confirm-btn { background-color: var(--incorrect-border); color: white; }
+        .modal-buttons .confirm-btn:hover { background-color: var(--incorrect-text); }
+        .modal-buttons .cancel-btn { background-color: var(--border-color); color: var(--text-color); }
+        .modal-buttons .cancel-btn:hover { background-color: var(--text-color-light); color: white; }
+        #app-loader { display: flex; justify-content: center; align-items: center; height: 80vh; flex-direction: column; gap: 1rem; }
+        .loader { width: 48px; height: 48px; border: 5px solid var(--primary-color); border-bottom-color: transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
 </head>
-<body class="bg-gray-100">
-    <div id="root"></div>
-
-    <!-- Firebase SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-        window.FirebaseApp = { initializeApp };
-    </script>
-    <script type="module">
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-        window.FirebaseAuth = { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged };
-    </script>
-    <script type="module">
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
-        window.FirebaseFirestore = { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove };
-    </script>
-
-    <!-- Your React Component -->
-    <script type="text/babel">
-        const { useState, useEffect } = React;
-        const { initializeApp } = window.FirebaseApp;
-        const { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } = window.FirebaseAuth;
-        const { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove } = window.FirebaseFirestore;
-
-        // Global variables provided by the Canvas environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        // Mock Quiz Questions
-        const quizQuestions = [
-            { id: 'Q001', text: 'Which imaging modality uses X-rays to create detailed images of bones and soft tissues?', options: ['MRI', 'Ultrasound', 'CT Scan', 'Nuclear Medicine'], correctAnswer: 'CT Scan' },
-            { id: 'Q002', text: 'What does MRI stand for?', options: ['Magnetic Resonance Imaging', 'Medical Radiation Instrument', 'Molecular Radiography Index', 'Magnetism Resonance Indicator'], correctAnswer: 'Magnetic Resonance Imaging' },
-            { id: 'Q003', text: 'Which imaging technique is best for visualizing a fetus during pregnancy?', options: ['CT Scan', 'X-ray', 'Ultrasound', 'PET Scan'], correctAnswer: 'Ultrasound' },
-            { id: 'Q004', text: 'What type of radiation is used in a PET scan?', options: ['Alpha particles', 'Beta particles', 'Gamma rays', 'Positrons'], correctAnswer: 'Positrons' },
-        ];
-
-        function App() {
-            const [db, setDb] = useState(null);
-            const [auth, setAuth] = useState(null);
-            const [userId, setUserId] = useState(null);
-            const [loading, setLoading] = useState(true);
-            const [userProgress, setUserProgress] = useState({ completedQuestions: [], bookmarkedQuestions: [] });
-            const [message, setMessage] = useState('');
-            const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-            const [selectedOption, setSelectedOption] = useState(null);
-            const [answerFeedback, setAnswerFeedback] = useState(null);
-
-            useEffect(() => {
-                const initFirebase = async () => {
-                    try {
-                        const app = initializeApp(firebaseConfig);
-                        const firestoreDb = getFirestore(app);
-                        const firebaseAuth = getAuth(app);
-                        setDb(firestoreDb);
-                        setAuth(firebaseAuth);
-
-                        onAuthStateChanged(firebaseAuth, async (user) => {
-                            if (user) {
-                                setUserId(user.uid);
-                                await loadUserProgress(firestoreDb, user.uid);
-                            } else {
-                                if (initialAuthToken) {
-                                    await signInWithCustomToken(firebaseAuth, initialAuthToken);
-                                } else {
-                                    await signInAnonymously(firebaseAuth);
-                                }
-                            }
-                            setLoading(false);
-                        });
-                    } catch (error) {
-                        console.error("Error initializing Firebase:", error);
-                        setMessage(`Error initializing Firebase: ${error.message}`);
-                        setLoading(false);
-                    }
-                };
-                initFirebase();
-            }, []);
-
-            const loadUserProgress = async (firestoreDb, currentUserId) => {
-                if (!firestoreDb || !currentUserId) return;
-                try {
-                    const userDocRef = doc(firestoreDb, `artifacts/${appId}/users/${currentUserId}/quizProgress`, 'myProgress');
-                    const docSnap = await getDoc(userDocRef);
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        setUserProgress({
-                            completedQuestions: data.completedQuestions || [],
-                            bookmarkedQuestions: data.bookmarkedQuestions || []
-                        });
-                        setMessage('User progress loaded successfully!');
-                    } else {
-                        await setDoc(userDocRef, { completedQuestions: [], bookmarkedQuestions: [] });
-                        setMessage('New user progress document created.');
-                    }
-                } catch (error) {
-                    console.error("Error loading user progress:", error);
-                    setMessage(`Error loading user progress: ${error.message}`);
-                }
-            };
-
-            const saveCompletedQuestion = async (questionId) => {
-                if (!db || !userId) return;
-                try {
-                    const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/quizProgress`, 'myProgress');
-                    await updateDoc(userDocRef, { completedQuestions: arrayUnion(questionId) });
-                    setUserProgress(prev => ({ ...prev, completedQuestions: [...new Set([...prev.completedQuestions, questionId])] }));
-                } catch (error) {
-                    console.error("Error saving completed question:", error);
-                    setMessage(`Error saving completed question: ${error.message}`);
-                }
-            };
-
-            const toggleBookmarkQuestion = async (questionId) => {
-                if (!db || !userId) return;
-                try {
-                    const userDocRef = doc(db, `artifacts/${appId}/users/${userId}/quizProgress`, 'myProgress');
-                    const isBookmarked = userProgress.bookmarkedQuestions.includes(questionId);
-                    if (isBookmarked) {
-                        await updateDoc(userDocRef, { bookmarkedQuestions: arrayRemove(questionId) });
-                        setUserProgress(prev => ({ ...prev, bookmarkedQuestions: prev.bookmarkedQuestions.filter(id => id !== questionId) }));
-                        setMessage(`Question ${questionId} unbookmarked.`);
-                    } else {
-                        await updateDoc(userDocRef, { bookmarkedQuestions: arrayUnion(questionId) });
-                        setUserProgress(prev => ({ ...prev, bookmarkedQuestions: [...new Set([...prev.bookmarkedQuestions, questionId])] }));
-                        setMessage(`Question ${questionId} bookmarked!`);
-                    }
-                } catch (error) {
-                    console.error("Error toggling bookmark:", error);
-                    setMessage(`Error toggling bookmark: ${error.message}`);
-                }
-            };
-
-            const handleOptionSelect = (option) => {
-                setSelectedOption(option);
-                setAnswerFeedback(null);
-            };
-
-            const handleSubmitAnswer = () => {
-                const currentQuestion = quizQuestions[currentQuestionIndex];
-                if (selectedOption === currentQuestion.correctAnswer) {
-                    setAnswerFeedback('correct');
-                    saveCompletedQuestion(currentQuestion.id);
-                    setMessage(`Correct! Question ${currentQuestion.id} completed.`);
-                } else {
-                    setAnswerFeedback('incorrect');
-                    setMessage(`Incorrect. Try again or move to the next question.`);
-                }
-            };
-
-            const handleNextQuestion = () => {
-                if (currentQuestionIndex < quizQuestions.length - 1) {
-                    setCurrentQuestionIndex(prevIndex => prevIndex + 1);
-                    setSelectedOption(null);
-                    setAnswerFeedback(null);
-                    setMessage('');
-                } else {
-                    setMessage('You have completed all questions!');
-                }
-            };
-
-            const handlePreviousQuestion = () => {
-                if (currentQuestionIndex > 0) {
-                    setCurrentQuestionIndex(prevIndex => prevIndex - 1);
-                    setSelectedOption(null);
-                    setAnswerFeedback(null);
-                    setMessage('');
-                } else {
-                    setMessage('You are at the first question.');
-                }
-            };
-
-            const currentQuestion = quizQuestions[currentQuestionIndex];
-            const isCurrentQuestionBookmarked = userProgress.bookmarkedQuestions.includes(currentQuestion.id);
-
-            if (loading) {
-                return <div className="flex items-center justify-center h-screen bg-gray-100"><div className="text-xl font-semibold text-gray-700">Loading Firebase and authenticating...</div></div>;
-            }
-
-            return (
-                <div className="min-h-screen bg-gray-100 text-gray-800 font-sans p-4 sm:p-6 lg:p-8">
-                    <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-6 sm:p-8">
-                        <h1 className="text-3xl sm:text-4xl font-extrabold text-center mb-2 text-gray-900">Radiology Quiz</h1>
-                        <p className="text-center text-gray-500 mb-6">Your unique user ID: <span className="font-mono bg-gray-200 px-2 py-1 rounded">{userId || 'N/A'}</span></p>
-
-                        {message && <div className={`p-4 mb-6 rounded-lg text-center text-white ${answerFeedback === 'correct' ? 'bg-green-500' : answerFeedback === 'incorrect' ? 'bg-red-500' : 'bg-blue-500'}`}>{message}</div>}
-
-                        <div className="border-t border-gray-200 pt-6">
-                            <h2 className="text-xl font-bold text-gray-800 mb-4">Question {currentQuestionIndex + 1} of {quizQuestions.length}</h2>
-                            <p className="text-lg text-gray-700 mb-6 min-h-[60px]">{currentQuestion.text}</p>
-                            <div className="space-y-3">
-                                {currentQuestion.options.map((option, index) => (
-                                    <button key={index} onClick={() => handleOptionSelect(option)} disabled={answerFeedback !== null} className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 ease-in-out ${selectedOption === option ? 'bg-blue-100 border-blue-500' : 'bg-white hover:bg-gray-50 border-gray-300'} ${answerFeedback !== null ? 'cursor-not-allowed' : 'cursor-pointer'} ${answerFeedback === 'correct' && option === currentQuestion.correctAnswer ? '!bg-green-100 !border-green-500' : ''} ${answerFeedback === 'incorrect' && option === selectedOption ? '!bg-red-100 !border-red-500' : ''}`}>
-                                        {option}
-                                    </button>
-                                ))}
+<body>
+    <div id="main-container" class="main-container">
+        <div id="app-loader">
+            <div class="loader"></div>
+            <p>Loading Quiz Questions...</p>
+        </div>
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-container">
+                <div id="quiz-content" style="display:none;">
+                    <div class="quiz-header">
+                        <h1 id="quiz-title"></h1>
+                        <div class="header-controls">
+                            <div class="timer" id="timer">00:00</div>
+                             <div class="mode-selector-container">
+                                <button id="practice-mode-btn" class="mode-selector-button" data-mode="practice">Practice</button>
+                                <button id="exam-mode-btn" class="mode-selector-button" data-mode="exam">Exam</button>
                             </div>
-
-                            <div className="mt-6 flex flex-col sm:flex-row sm:justify-between gap-4">
-                                <button onClick={handleSubmitAnswer} disabled={!selectedOption || answerFeedback !== null} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 disabled:transform-none">Submit Answer</button>
-                                <button onClick={() => toggleBookmarkQuestion(currentQuestion.id)} className={`w-full sm:w-auto font-bold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105 ${isCurrentQuestionBookmarked ? 'bg-yellow-500 hover:bg-yellow-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}>{isCurrentQuestionBookmarked ? 'Bookmarked!' : 'Toggle Bookmark'}</button>
-                            </div>
-
-                            <div className="mt-6 flex justify-between">
-                                <button onClick={handlePreviousQuestion} disabled={currentQuestionIndex === 0} className="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out">Previous</button>
-                                <button onClick={handleNextQuestion} disabled={currentQuestionIndex === quizQuestions.length - 1} className="bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 text-white font-bold py-2 px-6 rounded-lg shadow-md transition duration-300 ease-in-out">Next</button>
-                            </div>
+                            <button class="finish-btn-header" id="finish-quiz-btn">Finish</button>
                         </div>
-
-                        <div className="mt-8 pt-6 border-t border-gray-200">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <h3 className="text-xl font-bold mb-3 text-gray-800">Completed Questions</h3>
-                                    <div className="bg-gray-50 p-4 rounded-lg max-h-48 overflow-y-auto">
-                                        {userProgress.completedQuestions.length > 0 ? <ul className="list-disc list-inside space-y-1 text-gray-600">{userProgress.completedQuestions.map(qId => <li key={qId}>{qId}</li>)}</ul> : <p className="text-gray-500">No questions completed yet.</p>}
-                                    </div>
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-bold mb-3 text-gray-800">Bookmarked Questions</h3>
-                                    <div className="bg-gray-50 p-4 rounded-lg max-h-48 overflow-y-auto">
-                                        {userProgress.bookmarkedQuestions.length > 0 ? <ul className="list-disc list-inside space-y-1 text-gray-600">{userProgress.bookmarkedQuestions.map(qId => <li key={qId}>{qId}</li>)}</ul> : <p className="text-gray-500">No questions bookmarked yet.</p>}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <footer className="mt-8 text-center text-sm text-gray-500">
-                            <p>This app automatically handles authentication. Your progress is saved using the User ID shown above.</p>
-                        </footer>
                     </div>
+                    <div id="practice-progress-container" class="progress-bar-container"><div id="practice-progress-bar" class="progress-bar"></div></div>
+                    <div id="exam-timer-container" class="progress-bar-container" style="display: none;"><div id="exam-timer-bar" class="progress-bar"></div></div>
+                    <div class="question-area" id="question-area"></div>
                 </div>
-            );
+            </div>
+        </div>
+        <div id="results-screen" class="screen"></div>
+    </div>
+    <button id="side-panel-toggle" class="side-panel-toggle" style="display: none;"><i data-feather="menu"></i></button>
+    <div id="side-panel" class="side-panel">
+        <div class="side-panel-tabs">
+            <div class="side-panel-tab active" data-tab="questions">Questions</div>
+            <div class="side-panel-tab" data-tab="bookmarks">Bookmarks</div>
+        </div>
+        <div class="side-panel-content">
+            <div id="side-panel-questions" class="side-panel-section active"><div id="side-panel-grid" class="side-panel-grid"></div></div>
+            <div id="side-panel-bookmarks" class="side-panel-section"><div id="bookmark-list"></div></div>
+        </div>
+    </div>
+    <div id="custom-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modal-title" style="font-size: 1.5rem; font-weight: 700; margin-top:0;"></h3>
+            <p id="modal-message" style="margin-top: 1rem; color: var(--text-color-light);"></p>
+            <div class="modal-buttons"><button id="modal-cancel-btn" class="cancel-btn">OK</button><button id="modal-confirm-btn" class="confirm-btn" style="display: none;">Confirm</button></div>
+        </div>
+    </div>
+
+    <script src="/dashboard/quizzes/config.js"></script>
+    <script src="/dashboard/quizzes/auth.js"></script>
+    <script>
+        // --- GLOBAL STATE ---
+        let allQuestions = [], currentQuestionIndex = 0, currentPaperKey = null, quizMode = 'practice';
+        let quizInterval = null, timeRemaining = 0, totalTime = 0, userAnswers = {};
+        let isReviewing = false, reviewFilter = [], currentReviewIndex = 0;
+        let dom, currentQuizConfig;
+        const TIME_PER_QUESTION = 30;
+
+        // --- CORE APP LOGIC ---
+        document.addEventListener('DOMContentLoaded', () => {
+            dom = {
+                mainContainer: document.getElementById('main-container'),
+                appLoader: document.getElementById('app-loader'),
+                screens: document.querySelectorAll('.screen'),
+                quizContent: document.getElementById('quiz-content'),
+                quizTitle: document.getElementById('quiz-title'),
+                questionArea: document.getElementById('question-area'),
+                timerEl: document.getElementById('timer'),
+                resultsScreen: document.getElementById('results-screen'),
+                finishQuizBtn: document.getElementById('finish-quiz-btn'),
+                modalOverlay: document.getElementById('custom-modal'),
+                modalTitle: document.getElementById('modal-title'),
+                modalMessage: document.getElementById('modal-message'),
+                modalConfirmBtn: document.getElementById('modal-confirm-btn'),
+                modalCancelBtn: document.getElementById('modal-cancel-btn'),
+                practiceProgressContainer: document.getElementById('practice-progress-container'),
+                practiceProgressBar: document.getElementById('practice-progress-bar'),
+                examTimerContainer: document.getElementById('exam-timer-container'),
+                examTimerBar: document.getElementById('exam-timer-bar'),
+                sidePanelToggle: document.getElementById('side-panel-toggle'),
+                sidePanel: document.getElementById('side-panel'),
+                sidePanelGrid: document.getElementById('side-panel-grid'),
+                bookmarkList: document.getElementById('bookmark-list'),
+                practiceModeBtn: document.getElementById('practice-mode-btn'),
+                examModeBtn: document.getElementById('exam-mode-btn'),
+            };
+            setupEventListeners();
+            loadQuizData();
+        });
+        
+        async function loadQuizData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const quizKey = urlParams.get('quiz');
+            const paperKey = urlParams.get('paper');
+
+            if (!quizKey || !paperKey || !QUIZ_CONFIG[quizKey] || !QUIZ_CONFIG[quizKey].papers[paperKey]) {
+                dom.appLoader.innerHTML = "<p>Error: Quiz or paper not found. Please check the URL or config.js</p>";
+                return;
+            }
+            currentQuizConfig = QUIZ_CONFIG[quizKey];
+            currentPaperKey = paperKey;
+            
+            const gid = currentQuizConfig.papers[paperKey];
+            const url = `https://docs.google.com/spreadsheets/d/${currentQuizConfig.sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
+            
+            try {
+                const response = await fetch(url);
+                const text = await response.text();
+                allQuestions = parseCSV(text, paperKey);
+                dom.appLoader.style.display = 'none';
+                startQuiz();
+            } catch (err) {
+                console.error(`Failed to load paper: ${paperKey}`, err);
+                dom.appLoader.innerHTML = `<p>Error loading questions. Please check the Google Sheet link and permissions.</p>`;
+            }
         }
 
-        ReactDOM.render(<App />, document.getElementById('root'));
+        function parseCSV(text, paperName) {
+            const rows = text.split('\n').slice(1);
+            return rows.map((row, index) => {
+                const columns = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(c => c.replace(/"/g, '')) || [];
+                if (columns.length < 7) return null;
+                const correctAnswerLetter = columns[5]?.trim().toLowerCase();
+                const correctIndex = ['a', 'b', 'c', 'd'].indexOf(correctAnswerLetter);
+                return {
+                    id: `${paperName.replace(/\s/g, '-')}-${index}`,
+                    text: columns[0] || "No question text",
+                    options: [columns[1], columns[2], columns[3], columns[4]],
+                    correctIndex: correctIndex,
+                    explanation: columns[6] || "No explanation provided.",
+                    questionImage: columns[7] || null,
+                    explanationImage: columns[8] || null,
+                };
+            }).filter(q => q && q.correctIndex !== -1);
+        }
+
+        function startQuiz() {
+            isReviewing = false; userAnswers = {}; currentQuestionIndex = 0;
+            showScreen('quiz-screen');
+            dom.quizContent.style.display = 'block';
+            dom.finishQuizBtn.style.display = 'block';
+            updateModeUI();
+            showQuestion(0);
+            startTimer();
+        }
+
+        function finishQuiz() {
+            clearInterval(quizInterval);
+            savePaperProgress(currentPaperKey, Object.keys(userAnswers).length);
+            showScreen('results-screen');
+            let correctCount = 0, incorrectCount = 0;
+            allQuestions.forEach((q, i) => {
+                if (userAnswers[i] !== undefined) {
+                    if (userAnswers[i] === q.correctIndex) correctCount++; else incorrectCount++;
+                }
+            });
+            const unattemptedCount = allQuestions.length - (correctCount + incorrectCount);
+            const scorePercent = allQuestions.length > 0 ? (correctCount / allQuestions.length * 100) : 0;
+            const peerStanding = getPeerStanding(scorePercent);
+            const timeTaken = quizMode === 'exam' ? totalTime - timeRemaining : timeRemaining;
+            const avgTime = Object.keys(userAnswers).length > 0 ? (timeTaken / Object.keys(userAnswers).length).toFixed(1) : 0;
+            dom.resultsScreen.innerHTML = `
+                <div class="results-container">
+                    <h2>Test Results</h2>
+                    <div class="results-grid">
+                        <div class="stat-card"><h3><i data-feather="check-circle"></i>Score Summary</h3><p><span id="final-score-percent">${scorePercent.toFixed(1)}%</span></p><p><strong>Correct:</strong> ${correctCount}</p><p><strong>Incorrect:</strong> ${incorrectCount}</p><p><strong>Unattempted:</strong> ${unattemptedCount}</p></div>
+                        <div class="stat-card"><h3><i data-feather="pie-chart"></i>Performance Chart</h3><canvas id="performanceChart" style="max-height: 160px;"></canvas></div>
+                        <div class="stat-card"><h3><i data-feather="users"></i>Peer Standing</h3><p>You performed better than <strong>${peerStanding}%</strong> of your peers.</p></div>
+                        <div class="stat-card"><h3><i data-feather="zap"></i>RadMentor AI Insights</h3><p>Your average time per question was <strong>${avgTime} seconds</strong>. Focus on reviewing the incorrect answers to improve.</p></div>
+                    </div>
+                    <div class="results-buttons"><button class="btn review-all-btn" id="review-all-btn">Review All</button><button class="btn review-incorrect-btn" id="review-incorrect-btn">Review Incorrect</button><button class="btn back-to-topics-btn" onclick="window.history.back()">Back to Papers</button></div>
+                </div>`;
+            new Chart(document.getElementById('performanceChart'), { type: 'doughnut', data: { labels: ['Correct', 'Incorrect', 'Unattempted'], datasets: [{ data: [correctCount, incorrectCount, unattemptedCount], backgroundColor: ['#22c55e', '#ef4444', '#f59e0b'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false } });
+            feather.replace();
+            document.getElementById('review-all-btn').addEventListener('click', () => setupReview('all'));
+            document.getElementById('review-incorrect-btn').addEventListener('click', () => setupReview('incorrect'));
+        }
+        
+        // Other functions (setupReview, showQuestion, etc.) remain the same
+        function showQuestion(index) {
+            dom.questionArea.innerHTML = ''; // Clear for animation
+            setTimeout(() => {
+                currentQuestionIndex = index;
+                const q = allQuestions[index];
+                if (!q) return;
+                const isAnswered = userAnswers[index] !== undefined;
+                const bookmarks = getAllBookmarks();
+                const isBookmarked = bookmarks[currentPaperKey]?.includes(q.id);
+                
+                let questionHTML = `
+                    <div class="question-title-bar">
+                        <span class="question-number">Question ${isReviewing ? (currentReviewIndex + 1) + ' of ' + reviewFilter.length : (index + 1) + ' of ' + allQuestions.length}</span>
+                        <div class="question-controls">
+                            <button class="icon-btn ${isBookmarked ? 'active' : ''}" onclick="toggleBookmarkWrapper('${q.id}')" title="Bookmark"><i data-feather="bookmark"></i></button>
+                            ${(isReviewing || (quizMode === 'practice' && isAnswered)) ? `<button class="icon-btn" onclick="reportQuestion('${q.id}')" title="Report"><i data-feather="flag"></i></button>` : ''}
+                        </div>
+                    </div>
+                    <p class="main-question-text">${q.text}</p>
+                    ${q.questionImage ? `<img src="${q.questionImage}" class="question-image" alt="Question visual aid">` : ''}
+                    <div>${q.options.map((option, i) => {
+                        const shouldDisable = isReviewing || (quizMode === 'practice' && isAnswered);
+                        let btnClass = 'option-btn';
+                        if (quizMode === 'exam' && i === userAnswers[index] && !isReviewing) { btnClass += ' selected'; }
+                        if (shouldDisable) {
+                            if (i === q.correctIndex) btnClass += ' correct';
+                            else if (i === userAnswers[index]) btnClass += ' incorrect';
+                        }
+                        return `<button class="${btnClass}" data-index="${i}" ${shouldDisable ? 'disabled' : ''}>${String.fromCharCode(65 + i)}. ${option}</button>`;
+                    }).join('')}</div>`;
+                
+                if ((quizMode === 'practice' && isAnswered) || isReviewing) {
+                    questionHTML += `<div class="explanation-box"><h4>Explanation</h4><p>${q.explanation}</p>${q.explanationImage ? `<img src="${q.explanationImage}" class="explanation-image" alt="Explanation visual aid">` : ''}</div>`;
+                }
+                questionHTML += `<div class="nav-buttons-container"><button id="prev-btn" class="nav-button"><i data-feather="chevron-left"></i> Prev</button><button id="next-btn" class="nav-button">Next <i data-feather="chevron-right"></i></button></div>`;
+                dom.questionArea.innerHTML = questionHTML;
+                
+                if (!isReviewing && !(quizMode === 'practice' && isAnswered)) {
+                    dom.questionArea.querySelectorAll('.option-btn').forEach(btn => btn.addEventListener('click', handleOptionClick));
+                }
+                dom.questionArea.querySelector('#prev-btn').addEventListener('click', handlePrevClick);
+                dom.questionArea.querySelector('#next-btn').addEventListener('click', handleNextClick);
+                
+                updateQuizNav();
+                updateSidePanel();
+                feather.replace();
+            }, 50);
+        }
+        
+        function reportQuestion(questionId) { showModal("Report Submitted", "Thank you for your feedback. The question has been flagged for review."); }
+
+        function handleOptionClick(e) {
+            const selectedIndex = parseInt(e.target.dataset.index);
+            userAnswers[currentQuestionIndex] = selectedIndex;
+            
+            if (quizMode === 'practice') {
+                showQuestion(currentQuestionIndex);
+                const answeredCount = Object.keys(userAnswers).length;
+                if(answeredCount === allQuestions.length){
+                    setTimeout(finishQuiz, 1200);
+                }
+            } else {
+                updateQuizNav();
+                updateSidePanel();
+            }
+        }
+
+        function updateQuizNav() {
+            if (quizMode === 'practice' && !isReviewing) {
+                const answeredCount = Object.keys(userAnswers).length;
+                const progress = (answeredCount / allQuestions.length) * 100;
+                dom.practiceProgressBar.style.width = `${progress}%`;
+            }
+            if (dom.questionArea.querySelector('#prev-btn')) {
+                const prevBtn = dom.questionArea.querySelector('#prev-btn');
+                const nextBtn = dom.questionArea.querySelector('#next-btn');
+                if (isReviewing) {
+                    prevBtn.disabled = currentReviewIndex === 0;
+                    nextBtn.disabled = currentReviewIndex === reviewFilter.length - 1;
+                } else {
+                    prevBtn.disabled = currentQuestionIndex === 0;
+                    nextBtn.disabled = currentQuestionIndex === allQuestions.length - 1;
+                }
+            }
+        }
+
+        function toggleSidePanel() {
+            dom.sidePanel.classList.toggle('active');
+            dom.mainContainer.classList.toggle('side-panel-active');
+        }
+
+        function updateSidePanel() {
+            if (!currentPaperKey) return;
+            const bookmarks = getAllBookmarks()[currentPaperKey] || [];
+            const gridHtml = allQuestions.map((q, i) => {
+                let btnClass = 'page-box';
+                if (i === currentQuestionIndex) btnClass += ' active';
+                if (userAnswers[i] !== undefined) {
+                    btnClass += userAnswers[i] === q.correctIndex ? ' answered-correct' : ' answered-incorrect';
+                }
+                if (bookmarks.includes(q.id)) btnClass += ' bookmarked';
+                return `<div class="${btnClass}" data-index="${i}">${i + 1}</div>`;
+            }).join('');
+            dom.sidePanelGrid.innerHTML = gridHtml;
+            dom.sidePanelGrid.querySelectorAll('.page-box').forEach(box => {
+                box.addEventListener('click', e => {
+                    const index = parseInt(e.currentTarget.dataset.index);
+                    if (isReviewing) { currentReviewIndex = reviewFilter.indexOf(index); }
+                    showQuestion(index);
+                });
+            });
+
+            if (bookmarks.length > 0) {
+                dom.bookmarkList.innerHTML = bookmarks.map(qId => {
+                    const question = allQuestions.find(q => q.id === qId);
+                    const questionIndex = allQuestions.findIndex(q => q.id === qId);
+                    return `<div class="bookmark-list-item" data-index="${questionIndex}"><span>Q ${questionIndex + 1}: ${question.text.substring(0, 20)}...</span><i data-feather="chevron-right"></i></div>`;
+                }).join('');
+                dom.bookmarkList.querySelectorAll('.bookmark-list-item').forEach(item => {
+                    item.addEventListener('click', e => {
+                        const index = parseInt(e.currentTarget.dataset.index);
+                        if (isReviewing) { currentReviewIndex = reviewFilter.indexOf(index); }
+                        showQuestion(index);
+                    });
+                });
+            } else {
+                dom.bookmarkList.innerHTML = `<p style="text-align: center; color: var(--text-color-light); padding: 1rem;">No bookmarks yet.</p>`;
+            }
+            feather.replace();
+        }
+        
+        function toggleBookmarkWrapper(questionId) {
+            toggleBookmark(currentPaperKey, questionId);
+            showQuestion(currentQuestionIndex);
+        }
+
+        function startTimer() {
+            clearInterval(quizInterval);
+            quizInterval = setInterval(() => {
+                if (quizMode === 'exam') {
+                    if (timeRemaining > 0) timeRemaining--;
+                    dom.timerEl.textContent = formatTime(timeRemaining);
+                    const timeProgress = (timeRemaining / totalTime) * 100;
+                    dom.examTimerBar.style.width = `${timeProgress}%`;
+                    if (timeRemaining <= 0) {
+                        clearInterval(quizInterval);
+                        showModal("Time's Up!", "You have run out of time.", finishQuiz);
+                    }
+                } else {
+                    timeRemaining++;
+                    dom.timerEl.textContent = formatTime(timeRemaining);
+                }
+            }, 1000);
+        }
+        
+        function handlePrevClick() {
+            if (isReviewing) {
+                if (currentReviewIndex > 0) { currentReviewIndex--; showQuestion(reviewFilter[currentReviewIndex]); }
+            } else if (currentQuestionIndex > 0) { showQuestion(currentQuestionIndex - 1); }
+        }
+        function handleNextClick() {
+            if (isReviewing) {
+                if (currentReviewIndex < reviewFilter.length - 1) { currentReviewIndex++; showQuestion(reviewFilter[currentReviewIndex]); }
+            } else if (currentQuestionIndex < allQuestions.length - 1) { showQuestion(currentQuestionIndex + 1); }
+        }
+
+        function setupEventListeners() {
+            dom.practiceModeBtn.addEventListener('click', () => setQuizMode('practice'));
+            dom.examModeBtn.addEventListener('click', () => setQuizMode('exam'));
+            dom.finishQuizBtn.addEventListener('click', () => {
+                const unattemptedCount = allQuestions.length - Object.keys(userAnswers).length;
+                if (quizMode === 'exam' && unattemptedCount > 0 && timeRemaining > 0) {
+                    showModal('Finish Exam?', `You have ${unattemptedCount} unattempted questions. Are you sure you want to finish?`, finishQuiz);
+                } else { finishQuiz(); }
+            });
+            dom.sidePanelToggle.addEventListener('click', toggleSidePanel);
+            document.querySelectorAll('.side-panel-tab').forEach(tab => {
+                tab.addEventListener('click', e => {
+                    document.querySelectorAll('.side-panel-tab, .side-panel-section').forEach(el => el.classList.remove('active'));
+                    e.currentTarget.classList.add('active');
+                    document.getElementById(`side-panel-${e.currentTarget.dataset.tab}`).classList.add('active');
+                });
+            });
+        }
+        
+        function setQuizMode(mode) {
+            quizMode = mode;
+            updateModeUI();
+            // Reset timer and progress for mode switch
+            clearInterval(quizInterval);
+            if (quizMode === 'exam') {
+                totalTime = allQuestions.length * TIME_PER_QUESTION;
+                timeRemaining = totalTime;
+            } else {
+                timeRemaining = Object.keys(userAnswers).reduce((acc, key) => acc + (userAnswers[key].time || 0), 0);
+            }
+            startTimer();
+            showQuestion(currentQuestionIndex); // Re-render question for the new mode
+        }
+
+        function updateModeUI() {
+            dom.quizTitle.textContent = `${currentPaperKey} (${quizMode} mode)`;
+            if (quizMode === 'practice') {
+                dom.practiceModeBtn.classList.add('active');
+                dom.examModeBtn.classList.remove('active');
+                dom.practiceProgressContainer.style.display = 'block';
+                dom.examTimerContainer.style.display = 'none';
+            } else {
+                dom.examModeBtn.classList.add('active');
+                dom.practiceModeBtn.classList.remove('active');
+                dom.practiceProgressContainer.style.display = 'none';
+                dom.examTimerContainer.style.display = 'block';
+            }
+        }
+        
+        function showModal(title, message, onConfirm = null) {
+            dom.modalTitle.textContent = title;
+            dom.modalMessage.textContent = message;
+            dom.modalOverlay.classList.add('active');
+            dom.modalCancelBtn.onclick = () => dom.modalOverlay.classList.remove('active');
+            if (onConfirm) {
+                dom.modalConfirmBtn.style.display = 'inline-block';
+                dom.modalCancelBtn.textContent = 'Cancel';
+                dom.modalConfirmBtn.onclick = () => { onConfirm(); dom.modalOverlay.classList.remove('active'); };
+            } else {
+                dom.modalConfirmBtn.style.display = 'none';
+                dom.modalCancelBtn.textContent = 'OK';
+            }
+        }
     </script>
 </body>
 </html>
