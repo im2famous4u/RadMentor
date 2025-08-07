@@ -29,9 +29,12 @@
         .selection-button { background-color: var(--selection-button-bg); color: white; border: none; padding: 1.5rem; border-radius: 0.75rem; cursor: pointer; font-size: 1.1rem; font-weight: 600; transition: all 0.2s ease-in-out; }
         .selection-button:hover { background-color: var(--selection-button-hover-bg); transform: translateY(-3px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .quiz-container, .results-container { background-color: var(--container-bg-color); border-radius: 1rem; box-shadow: 0 6px 20px rgba(0,0,0,0.05); overflow: hidden; }
-        .quiz-header { padding: 1.25rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
-        .quiz-header h1 { font-size: 1.5rem; margin: 0; color: var(--header-text-color); }
-        .timer { font-size: 1.25rem; font-weight: 600; color: var(--primary-color); background-color: #f0f9ff; padding: 0.5rem 1rem; border-radius: 0.5rem; }
+        .quiz-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+        .quiz-header h1 { font-size: 1.25rem; margin: 0; color: var(--header-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .header-controls { display: flex; align-items: center; gap: 1rem; }
+        .timer { font-size: 1.1rem; font-weight: 600; color: var(--primary-color); background-color: #f0f9ff; padding: 0.5rem 1rem; border-radius: 0.5rem; }
+        .finish-btn-header { background-color: var(--primary-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+        .finish-btn-header:hover { background-color: var(--primary-hover-color); }
         .question-area { padding: 1.5rem; }
         .question-title-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
         .question-number { font-size: 1rem; font-weight: 500; color: var(--text-color-light); }
@@ -58,7 +61,6 @@
         .page-box.answered-correct { background-color: var(--correct-bg); border-color: var(--correct-border); color: var(--correct-text); }
         .page-box.answered-incorrect { background-color: var(--incorrect-bg); border-color: var(--incorrect-border); color: var(--incorrect-text); }
         .page-box.flagged::after { content: ''; position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; background-color: var(--flagged-color); border-radius: 50%; }
-        .quiz-footer { padding: 1.5rem; border-top: 1px solid var(--border-color); text-align: right; }
         .explanation-box { margin-top: 1.5rem; padding: 1.5rem; background-color: var(--explanation-bg); border-radius: 0.75rem; border-left: 4px solid var(--primary-color); }
         .results-container { padding: 2rem; }
         .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
@@ -101,14 +103,14 @@
                 <div id="quiz-content" style="display:none;">
                     <div class="quiz-header">
                         <h1 id="quiz-title">Physics Questions</h1>
-                        <div class="timer" id="timer">00:00</div>
+                        <div class="header-controls">
+                            <div class="timer" id="timer">00:00</div>
+                            <button class="finish-btn-header" id="finish-quiz-btn">Finish</button>
+                        </div>
                     </div>
                     <div id="quiz-pagination-header" class="quiz-pagination-header"></div>
                     <div class="question-area">
                         <div id="questions-display"></div>
-                    </div>
-                    <div class="quiz-footer">
-                        <button class="selection-button" id="finish-quiz-btn">Finish Exam</button>
                     </div>
                 </div>
             </div>
@@ -124,11 +126,11 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-        import { getFirestore, doc, runTransaction } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+        import { getFirestore, doc, runTransaction, collection, getDocs, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
         import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai/+esm";
 
         // --- CONFIGURATION ---
-        const GOOGLE_AI_API_KEY = 'AIzaSyDi7D6W2xjtReXVFkpSSXG_xTJBqRGswxs';
+        const GOOGLE_AI_API_KEY = 'YOUR_API_KEY_HERE';
         const GOOGLE_SHEET_ID = '1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8';
         const PHYSICS_TOPICS = [
              { name: "Basic Physics", gid: "2009849222" }, { name: "Radiation Hazards & Protection", gid: "2009849222" }, { name: "Image Quality & X-ray", gid: "1706416231" },
@@ -142,7 +144,7 @@
         
         // --- APP STATE & INITIALIZATION ---
         let allQuestions = [], currentQuestionIndex = 0, currentUser = null;
-        let flaggedQuestions = new Set(), reviewFilter = [];
+        let userBookmarks = new Set(), flaggedQuestions = new Set(), reviewFilter = [];
         let currentTopic = null, quizMode = 'practice', quizInterval = null, elapsedSeconds = 0;
         let userAnswers = {};
         let isReviewing = false;
@@ -209,11 +211,12 @@
             dom.loadingContainer.style.display = 'block';
             dom.quizContent.style.display = 'none';
 
-            await fetchQuizData();
+            await Promise.all([fetchQuizData(), fetchUserBookmarks()]);
 
             dom.loadingContainer.style.display = 'none';
             dom.quizContent.style.display = 'block';
-            dom.quizTitle.textContent = `${currentTopic.name} (${quizMode} mode)`;
+            dom.quizTitle.textContent = `${currentTopic.name}`;
+            dom.finishQuizBtn.textContent = quizMode === 'exam' ? 'Finish Exam' : 'Finish Practice';
             dom.finishQuizBtn.style.display = 'block';
             createQuestionNav();
             showQuestion(currentQuestionIndex);
@@ -248,6 +251,13 @@
             }).filter(Boolean);
         }
 
+        async function fetchUserBookmarks() {
+            if (!currentUser) return;
+            const bookmarksRef = collection(db, "users", currentUser.uid, "bookmarks");
+            const snapshot = await getDocs(bookmarksRef);
+            userBookmarks = new Set(snapshot.docs.map(doc => doc.id));
+        }
+
         // --- QUIZ UI & INTERACTION ---
         function showQuestion(index) {
             if (reviewFilter.length > 0 && !reviewFilter.includes(index)) {
@@ -257,6 +267,7 @@
             const q = allQuestions[index];
             if (!q) return;
 
+            const isBookmarked = userBookmarks.has(q.id);
             const isFlagged = flaggedQuestions.has(q.id);
             const isAnswered = userAnswers[index] !== undefined;
 
@@ -265,6 +276,7 @@
                     <span class="question-number">Question ${index + 1} of ${allQuestions.length}</span>
                     <div class="question-controls">
                         <button class="icon-btn flag-btn ${isFlagged ? 'flagged' : ''}" onclick="window.toggleFlag('${q.id}')" ${isReviewing ? 'disabled' : ''}><i data-feather="flag"></i></button>
+                        <button class="icon-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" onclick="window.toggleBookmark('${q.id}', '${q.question.replace(/'/g, "\\'")}')" ${isReviewing ? 'disabled' : ''}><i data-feather="bookmark"></i></button>
                     </div>
                 </div>
                 <p class="main-question-text">${q.question}</p>
@@ -307,7 +319,7 @@
                      if (allAnswered) {
                          const isCorrect = allQuestions[qIndex].subsets.every((subset, i) => userAnswers[qIndex][i]?.toLowerCase() === subset.correctAnswer.toLowerCase());
                          (isCorrect ? dom.correctSound : dom.wrongSound).play();
-                         showQuestion(qIndex); // Re-render to show colors and explanation
+                         showQuestion(qIndex);
                      }
                  }
                  saveState();
@@ -329,17 +341,38 @@
                         const isCorrect = allQuestions[index].subsets.every((s, i) => userAnswers[index][i]?.toLowerCase() === s.correctAnswer.toLowerCase());
                         box.classList.add(isCorrect ? 'answered-correct' : 'answered-incorrect');
                      } else {
-                         box.classList.add('active'); // In exam mode, just show as active/answered
+                         box.classList.add('active');
                      }
                 }
                 if (flaggedQuestions.has(allQuestions[index].id)) box.classList.add('flagged');
             });
-            // Auto-scroll the active nav item into view
             const activeBox = dom.paginationHeader.querySelector('.page-box.active');
             if(activeBox) activeBox.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
         
         window.toggleFlag = (id) => { flaggedQuestions.has(id) ? flaggedQuestions.delete(id) : flaggedQuestions.add(id); updateQuestionNav(); saveState(); };
+
+        window.toggleBookmark = async (questionId, questionText) => {
+            if (!currentUser || isReviewing) return;
+            const bookmarkRef = doc(db, "users", currentUser.uid, "bookmarks", questionId);
+            const button = event.currentTarget;
+
+            if (userBookmarks.has(questionId)) {
+                await deleteDoc(bookmarkRef);
+                userBookmarks.delete(questionId);
+                button.classList.remove('bookmarked');
+            } else {
+                await setDoc(bookmarkRef, {
+                    questionText: questionText,
+                    topic: currentTopic.name,
+                    timestamp: serverTimestamp(),
+                    linkToQuestion: `${window.location.pathname}?topicGid=${currentTopic.gid}&questionId=${questionId}`
+                });
+                userBookmarks.add(questionId);
+                button.classList.add('bookmarked');
+            }
+            feather.replace();
+        };
         
         dom.finishQuizBtn.addEventListener('click', () => {
              if (quizMode === 'exam') {
@@ -378,12 +411,13 @@
                     <div class="stat-card"><h3>Performance Chart</h3><canvas id="performanceChart" style="max-height: 200px;"></canvas></div>
                     <div class="stat-card"><h3>Peer Comparison</h3><div id="peer-comparison-content"><p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p><p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p></div></div>
                     <div class="stat-card">
-                       <h3 style="display: flex; justify-content: space-between; align-items: center;">
-                       <span>🤖 RadMentor Insights</span>
-                       <span style="background-color: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 99px; text-transform: uppercase;">Exclusive</span>
-                </h3>
-                    <div id="ai-insights-content"><p>Generating feedback...</p></div>
-         </div>
+                        <h3 style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>🤖 RadMentor Insights</span>
+                            <span style="background-color: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 99px; text-transform: uppercase;">Exclusive</span>
+                        </h3>
+                        <div id="ai-insights-content"><p>Generating feedback...</p></div>
+                   </div>
+                </div>
                 <div style="text-align: center; margin-top: 2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;">
                     <button class="selection-button" id="review-all-btn">Review All</button>
                     <button class="selection-button" id="review-incorrect-btn" style="background-color: var(--incorrect-text);">Review Incorrect</button>
@@ -442,7 +476,7 @@
         
         async function getAIInsights(incorrectQs) {
             const insightsDiv = document.getElementById('ai-insights-content');
-            if (GOOGLE_AI_API_KEY === 'AIzaSyDi7D6W2xjtReXVFkpSSXG_xTJBqRGswxs') {
+            if (GOOGLE_AI_API_KEY === 'YOUR_API_KEY_HERE') {
                 insightsDiv.innerHTML = '<p>Please add a Google AI API key to enable this feature.</p>'; return;
             }
             if(incorrectQs.length === 0) {
