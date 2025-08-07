@@ -11,7 +11,7 @@
         :root {
             --bg-color: #f4f7f9; --container-bg-color: #ffffff; --text-color: #334155; --text-color-light: #64748b;
             --header-text-color: #0f172a; --primary-color: #3b82f6; --primary-hover-color: #2563eb; /* Blue Theme */
-            --selection-button-bg: #8b5cf6; --selection-button-hover-bg: #7c3aed; /* Violet for modes */
+            --selection-button-bg: #8b5cf6; --selection-button-hover-bg: #7c3aed;
             --border-color: #e2e8f0; --explanation-bg: #f8fafc; --correct-bg: #dcfce7; --correct-border: #4ade80;
             --correct-text: #166534; --incorrect-bg: #fee2e2; --incorrect-border: #f87171; --incorrect-text: #b91c1c;
             --bookmark-color: #94a3b8; --bookmarked-color: #f59e0b; --flag-color: #94a3b8; --flagged-color: #ef4444;
@@ -41,9 +41,10 @@
         .icon-btn svg { width: 22px; height: 22px; }
         .bookmark-btn.bookmarked { color: var(--bookmarked-color); }
         .flag-btn.flagged { color: var(--flagged-color); }
-        .main-question-text { font-size: 1.25rem; font-weight: 600; line-height: 1.5; margin-bottom: 1.5rem; }
+        .main-question-text { font-size: 1.2rem; font-weight: 600; line-height: 1.6; margin-bottom: 1.5rem; }
         .option-btn { display: block; width: 100%; text-align: left; padding: 1rem; margin-bottom: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.75rem; background-color: #f8fafc; cursor: pointer; transition: all 0.2s; }
         .option-btn:hover { border-color: var(--primary-color); background-color: #eff6ff; }
+        .option-btn.selected { border-color: var(--primary-color); background-color: #eff6ff; font-weight: 600; }
         .option-btn.correct { background-color: var(--correct-bg); border-color: var(--correct-border); color: var(--correct-text); font-weight: 600; }
         .option-btn.incorrect { background-color: var(--incorrect-bg); border-color: var(--incorrect-border); color: var(--incorrect-text); font-weight: 600; }
         .quiz-pagination-header { background-color: #f8fafc; padding: 1rem; border-bottom: 1px solid var(--border-color); overflow-x: auto; white-space: nowrap; scrollbar-width: thin; scrollbar-color: var(--primary-color) var(--border-color); }
@@ -76,9 +77,9 @@
         <div id="mode-screen" class="screen">
             <div class="selection-container">
                  <h1 id="mode-selection-title">Select Mode</h1>
-                 <div class="selection-grid">
-                     <button class="selection-button" data-mode="practice">✍️ Practice Mode</button>
-                     <button class="selection-button" data-mode="exam">🏆 Exam Mode</button>
+                 <div class="paper-button-grid">
+                     <button class="paper-button" data-mode="practice">✍️ Practice Mode</button>
+                     <button class="paper-button" data-mode="exam">🏆 Exam Mode</button>
                  </div>
                  <p style="color: var(--text-color-light); margin-top: 2rem;">Practice mode gives instant feedback. Exam mode simulates a real test.</p>
             </div>
@@ -91,6 +92,7 @@
                     <div class="quiz-header">
                         <h1 id="quiz-title"></h1>
                         <div class="header-controls">
+                            <button id="sound-toggle-btn" class="icon-btn"><i data-feather="volume-2"></i></button>
                             <div class="timer" id="timer">00:00</div>
                             <button class="finish-btn-header" id="finish-quiz-btn">Finish</button>
                         </div>
@@ -110,13 +112,9 @@
     <audio id="wrong-sound" src="https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/sounds/wrong.mp3" preload="auto"></audio>
 
     <script type="module">
-        // --- CORRECTED: Import shared Firebase services ---
-        // This path assumes your 'js' folder is at the root of your project,
-        // and this HTML file is inside a folder like 'dashboard/'. Adjust if needed.
-        import { auth, db } from '../../js/firebase.js';
-        
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-        import { doc, runTransaction, collection, getDocs, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+        import { getFirestore, doc, runTransaction, collection, getDocs, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
         import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai/+esm";
 
         // --- CONFIGURATION ---
@@ -133,6 +131,10 @@
              { id: 'paper5', name: 'Paper 5'}, { id: 'paper6', name: 'Paper 6'},
              { id: 'paper7', name: 'Paper 7'}, { id: 'paper8', name: 'Paper 8'},
         ];
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw", authDomain: "radiology-mcqs.firebaseapp.com", projectId: "radiology-mcqs",
+            storageBucket: "radiology-mcqs.appspot.com", messagingSenderId: "862300415358", appId: "1:862300415358:web:097d5e413f388e30587f2f"
+        };
         
         // --- APP STATE & INITIALIZATION ---
         let allQuestions = [], currentQuestionIndex = 0, currentUser = null;
@@ -140,12 +142,16 @@
         let currentPaper = null, quizMode = 'practice', quizInterval = null, elapsedSeconds = 0;
         let userAnswers = {};
         let isReviewing = false;
+        let isSoundOn = true;
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
         const dom = {
              screens: document.querySelectorAll('.screen'), paperCardGrid: document.getElementById('paper-card-grid'), quizTitle: document.getElementById('quiz-title'),
              loadingContainer: document.getElementById('loading-container'), questionsDisplay: document.getElementById('questions-display'), quizContent: document.getElementById('quiz-content'),
              paginationHeader: document.getElementById('quiz-pagination-header'), timerEl: document.getElementById('timer'), resultsScreen: document.getElementById('results-screen'),
              modeSelectionTitle: document.getElementById('mode-selection-title'), finishQuizBtn: document.getElementById('finish-quiz-btn'),
-             correctSound: document.getElementById('correct-sound'), wrongSound: document.getElementById('wrong-sound')
+             soundToggleBtn: document.getElementById('sound-toggle-btn'), correctSound: document.getElementById('correct-sound'), wrongSound: document.getElementById('wrong-sound')
         };
         
         // --- AUTH & NAVIGATION ---
@@ -153,11 +159,22 @@
         
         onAuthStateChanged(auth, (user) => {
             const authCheckScreen = document.getElementById('authCheckScreen');
+            currentUser = user;
+            if (user) {
+                authCheckScreen.style.display = 'none';
+                handleDirectLink(user);
+            } else {
+                 authCheckScreen.innerHTML = '<div class="selection-container"><h1>Redirecting...</h1><p>You must be logged in.</p></div>';
+                 setTimeout(() => { 
+                     if (window.self === window.top) { window.location.href = '../index.html'; }
+                 }, 2000);
+            }
+        });
+
+        function handleDirectLink(user) {
             const urlParams = new URLSearchParams(window.location.search);
             const directQuestionId = urlParams.get('questionId');
-
             if(user && directQuestionId) {
-                currentUser = user;
                 const paperId = urlParams.get('paperId');
                 const paper = PAPER_METADATA.find(p => p.id === paperId);
                 if(paper) {
@@ -167,21 +184,10 @@
                     return; 
                 }
             }
-
-            currentUser = user;
-            if (user) {
-                authCheckScreen.style.display = 'none';
-                showScreen('topic-screen');
-                dom.paperCardGrid.innerHTML = PAPER_METADATA.map(paper => `<button class="paper-button" data-id="${paper.id}" data-name="${paper.name}">${paper.name}</button>`).join('');
-            } else {
-                 authCheckScreen.innerHTML = '<div class="selection-container"><h1>Redirecting...</h1><p>You must be logged in.</p></div>';
-                 setTimeout(() => { 
-                     if (window.self === window.top) {
-                         window.location.href = '../../index.html';
-                     }
-                 }, 2000);
-            }
-        });
+            // If no direct link, show the topic screen
+            showScreen('topic-screen');
+            dom.paperCardGrid.innerHTML = PAPER_METADATA.map(paper => `<button class="paper-button" data-id="${paper.id}" data-name="${paper.name}">${paper.name}</button>`).join('');
+        }
 
         dom.paperCardGrid.addEventListener('click', (e) => {
             if (e.target.matches('.paper-button')) {
@@ -220,7 +226,8 @@
             showScreen('quiz-screen');
             dom.loadingContainer.style.display = 'block';
             dom.quizContent.style.display = 'none';
-
+            
+            initializeSound();
             await Promise.all([fetchQuizData(), fetchUserBookmarks()]);
 
             dom.loadingContainer.style.display = 'none';
@@ -236,7 +243,6 @@
             } else {
                 showQuestion(currentQuestionIndex);
             }
-            
             startTimer();
         }
 
@@ -298,10 +304,12 @@
                 <div>${q.options.map((option, i) => {
                     const shouldDisable = isReviewing || (quizMode === 'practice' && isAnswered);
                     let btnClass = 'option-btn';
-                    if (shouldDisable) {
-                        if (i === q.correctIndex) btnClass += ' correct';
-                        else if (i === userAnswers[index]) btnClass += ' incorrect';
+                    if (quizMode === 'exam' && i === userAnswers[index]) {
+                        btnClass += ' selected';
                     }
+                    if (shouldDisable && i === q.correctIndex) btnClass += ' correct';
+                    else if (shouldDisable && i === userAnswers[index]) btnClass += ' incorrect';
+                    
                     return `<button class="${btnClass}" data-index="${i}" ${shouldDisable ? 'disabled' : ''}>${option}</button>`;
                 }).join('')}</div>`;
             
@@ -324,10 +332,10 @@
             const isCorrect = selectedIndex === q.correctIndex;
 
             if (quizMode === 'practice') {
-                (isCorrect ? dom.correctSound : dom.wrongSound).play();
+                if(isSoundOn) (isCorrect ? dom.correctSound : dom.wrongSound).play();
                 showQuestion(currentQuestionIndex);
             } else { // Exam Mode
-                updateQuestionNav();
+                showQuestion(currentQuestionIndex);
             }
             saveState();
         }
@@ -346,8 +354,11 @@
                      if (quizMode === 'practice' || isReviewing) {
                         const isCorrect = userAnswers[index] === allQuestions[index].correctIndex;
                         box.classList.add(isCorrect ? 'answered-correct' : 'answered-incorrect');
-                     } else {
-                         box.classList.add('active');
+                     } else { // Exam Mode - just show it as answered
+                         box.classList.add('answered-correct'); // Use a neutral "answered" color
+                         box.style.backgroundColor = 'var(--primary-color)';
+                         box.style.borderColor = 'var(--primary-color)';
+                         box.style.color = 'white';
                      }
                 }
                 if (flaggedQuestions.has(allQuestions[index].id)) box.classList.add('flagged');
@@ -356,6 +367,27 @@
             if(activeBox) activeBox.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         }
         
+        // --- SOUND CONTROLS ---
+        function initializeSound() {
+            const savedSoundPref = localStorage.getItem('radmentor_sound_pref');
+            isSoundOn = savedSoundPref !== 'off';
+            updateSoundIcon();
+        }
+
+        window.toggleSound = () => {
+            isSoundOn = !isSoundOn;
+            localStorage.setItem('radmentor_sound_pref', isSoundOn ? 'on' : 'off');
+            updateSoundIcon();
+        };
+
+        function updateSoundIcon() {
+            const iconName = isSoundOn ? 'volume-2' : 'volume-x';
+            dom.soundToggleBtn.innerHTML = `<i data-feather="${iconName}"></i>`;
+            feather.replace();
+        }
+        dom.soundToggleBtn.addEventListener('click', window.toggleSound);
+
+        // --- BOOKMARK & FLAG ---
         window.toggleFlag = (id) => { flaggedQuestions.has(id) ? flaggedQuestions.delete(id) : flaggedQuestions.add(id); updateQuestionNav(); saveState(); };
         window.toggleBookmark = async (questionId, questionText) => {
             if (!currentUser) return;
