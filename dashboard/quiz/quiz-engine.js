@@ -58,8 +58,9 @@ export function initQuizApp(config) {
     const grid = dom.paperCardGrid || document.getElementById('physics-topics-grid');
     if (grid) {
         grid.addEventListener('click', (e) => {
-            if (e.target.matches('.selection-button, .paper-button')) {
-                const { id, name, type } = e.target.dataset;
+            const button = e.target.closest('.selection-button, .paper-button');
+            if (button) {
+                const { id, name, type } = button.dataset;
                 currentPaper = { id, name, type };
                 quizMode = 'practice';
                 checkResumeAndStart();
@@ -210,19 +211,32 @@ function parseCSVToQuestions(csvText, quizType) {
             }).filter(Boolean);
 
         case 'frcr-2a':
+            return lines.map((line, index) => {
+                const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''));
+                const [question, a, b, c, d, e, correctAns, explanation, tag, subtag] = parts;
+                const options = [a, b, c, d, e].filter(Boolean);
+                const letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4};
+                const correctIndex = letterMap[(correctAns || '').trim().toLowerCase()];
+                const tags = [tag, subtag].filter(Boolean);
+
+                if (question && correctIndex !== undefined && options.length > 0) {
+                    return { id: `${currentPaper.id}-${index}`, text: question, options, correctIndex, explanation: explanation || "N/A", tags, type: 'frcr-2a' };
+                }
+                return null;
+            }).filter(Boolean);
+            
         case 'mcq':
         default:
             return lines.map((line, index) => {
                 const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''));
-                const numOptions = (quizType === 'frcr-2a') ? 5 : 4;
-                const options = parts.slice(1, 1 + numOptions).filter(Boolean);
-                const correctAns = parts[1 + numOptions];
-                const explanation = parts[2 + numOptions];
-                const letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4};
+                const [question, a, b, c, d, correctAns, explanation, image, explanationImage, tag, subtag] = parts;
+                const options = [a, b, c, d].filter(Boolean);
+                const letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3};
                 const correctIndex = letterMap[(correctAns || '').trim().toLowerCase()];
+                const tags = [tag, subtag].filter(Boolean);
 
-                if (parts[0] && correctIndex !== undefined && options.length > 0) {
-                    return { id: `${currentPaper.id}-${index}`, text: parts[0], options, correctIndex, explanation: explanation || "N/A", type: quizType };
+                if (question && correctIndex !== undefined && options.length > 0) {
+                    return { id: `${currentPaper.id}-${index}`, text: question, options, correctIndex, explanation: explanation || "N/A", image, explanationImage, tags, type: 'mcq' };
                 }
                 return null;
             }).filter(Boolean);
@@ -242,7 +256,10 @@ function showQuestion(index) {
     }
     currentQuestionIndex = index;
     const q = allQuestions[index];
-    if (!q) return;
+    if (!q) {
+        dom.questionsDisplay.innerHTML = `<p>Error: Could not load question ${index + 1}. Please check the data source.</p>`;
+        return;
+    }
 
     let questionHTML = '';
     switch (q.type) {
@@ -273,7 +290,13 @@ function renderMCQQuestion(q, index) {
                 <button class="icon-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" ${isReviewing ? 'disabled' : ''}><i data-feather="bookmark"></i></button>
             </div>
         </div>
+        
+        ${q.tags && q.tags.length > 0 ? `<div class="question-tags">${q.tags.map(tag => `<span>#${tag}</span>`).join('')}</div>` : ''}
+        
+        ${q.image ? `<img src="${q.image}" alt="Question image" class="question-image" onerror="this.style.display='none'">` : ''}
+        
         <p class="main-question-text">${q.text}</p>
+        
         <div>${q.options.map((option, i) => {
             const shouldDisable = isReviewing || (quizMode === 'practice' && isAnswered);
             let btnClass = 'option-btn';
@@ -287,7 +310,11 @@ function renderMCQQuestion(q, index) {
         }).join('')}</div>`;
     
     if ((quizMode === 'practice' && isAnswered) || isReviewing) {
-        html += `<div class="explanation-box"><h4>Explanation</h4><p>${q.explanation}</p></div>`;
+        html += `<div class="explanation-box">
+            <h4>Explanation</h4>
+            ${q.explanationImage ? `<img src="${q.explanationImage}" alt="Explanation image" class="explanation-image" onerror="this.style.display='none'">` : ''}
+            <p>${q.explanation}</p>
+        </div>`;
     }
     return html;
 }
