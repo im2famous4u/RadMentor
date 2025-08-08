@@ -1,123 +1,260 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Performance & AI - RadScribe AI</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    .glass-card {
-      background-color: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(10px);
-      border-radius: 1.5rem;
-      padding: 2rem;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 6px 6px rgba(0,0,0,0.03);
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance & AI Insights - RadMentor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: transparent; }
+        .glass-card {
+          background-color: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(12px);
+          border-radius: 1.5rem;
+          padding: 2rem;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.07);
+        }
+        .loader { width: 48px; height: 48px; border: 5px solid #eef2ff; border-bottom-color: #6366f1; border-radius: 50%; display: inline-block; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .metric-card { background-color: #fff; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; }
+        .metric-value { font-size: 2.25rem; font-weight: 800; color: #4f46e5; }
+        .metric-label { font-size: 0.875rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
+    </style>
 </head>
-<body>
-  <div id="performance-ai-content" class="w-full h-full overflow-y-auto pb-4">
-    <div class="glass-card col-span-full">
-      <h2 class="text-2xl font-bold text-gray-800 mb-6">Performance Overview & AI Insights</h2>
-      <div class="space-y-6">
-        <div>
-          <h3 class="text-xl font-bold text-gray-800 mb-4">Your Overall Progress</h3>
-          <div class="space-y-4">
-            <div>
-              <p class="text-sm font-medium text-gray-700 mb-1">Overall Completion</p>
-              <div class="w-full bg-blue-100 rounded-full h-2.5">
-                <div class="bg-blue-500 h-2.5 rounded-full" style="width: 75%;"></div>
-              </div>
-              <p class="text-right text-xs text-gray-500 mt-1">75% Complete</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-700 mb-1">QBank Accuracy</p>
-              <div class="w-full bg-blue-100 rounded-full h-2.5">
-                <div class="bg-green-500 h-2.5 rounded-full" style="width: 82%;"></div>
-              </div>
-              <p class="text-right text-xs text-gray-500 mt-1">82% Correct</p>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <h3 class="text-xl font-bold text-gray-800 mt-8 mb-4">Weak Topics Curated by AI</h3>
-          <button id="generateWeakTopics" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-            Generate Weak Topics Insights
-          </button>
-          <div id="weakTopicsOutput" class="mt-4 text-sm text-gray-700 space-y-2">
-            <p class="text-gray-500 italic">Click the button above to get personalized insights.</p>
-          </div>
-        </div>
-      </div>
+<body class="p-4">
+    <div id="main-loader" class="text-center py-20">
+        <div class="loader"></div>
+        <p class="mt-4 text-lg font-semibold text-gray-700">Analyzing Your Performance Data...</p>
     </div>
-  </div>
+    
+    <div id="performance-content" class="hidden w-full h-full space-y-8">
+        <div class="glass-card">
+            <h2 class="text-3xl font-bold text-gray-800">Performance Overview & AI Insights</h2>
+            <p class="text-gray-600 mt-1">A detailed breakdown of your progress and personalized recommendations.</p>
+        </div>
+        
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="metric-card"><div id="accuracy-metric" class="metric-value">0%</div><div class="metric-label">Avg. Accuracy</div></div>
+            <div class="metric-card"><div id="mock-score-metric" class="metric-value">0%</div><div class="metric-label">Avg. Mock Score</div></div>
+            <div class="metric-card"><div id="papers-attempted-metric" class="metric-value">0</div><div class="metric-label">Papers Attempted</div></div>
+            <div class="metric-card"><div id="questions-answered-metric" class="metric-value">0</div><div class="metric-label">Questions Answered</div></div>
+        </div>
 
-  <script>
-    // Page-specific JavaScript for performance-ai
-    document.addEventListener('DOMContentLoaded', () => {
-      const generateWeakTopicsBtn = document.getElementById('generateWeakTopics');
-      const weakTopicsOutput = document.getElementById('weakTopicsOutput');
+        <div class="glass-card">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Performance Over Time (Mock Exams)</h3>
+            <canvas id="performanceChart"></canvas>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="glass-card bg-green-50">
+                <h3 class="text-xl font-bold text-green-800 mb-4">✅ Your Strengths</h3>
+                <ul id="strengths-list" class="space-y-2 list-disc list-inside text-green-700">
+                    </ul>
+            </div>
+            <div class="glass-card bg-red-50">
+                <h3 class="text-xl font-bold text-red-800 mb-4">❌ Areas for Improvement</h3>
+                <ul id="weaknesses-list" class="space-y-2 list-disc list-inside text-red-700">
+                   </ul>
+            </div>
+        </div>
 
-      if (generateWeakTopicsBtn && weakTopicsOutput) {
-        generateWeakTopicsBtn.addEventListener('click', async () => {
-          weakTopicsOutput.innerHTML = '<p class="text-gray-500 italic">Generating insights...</p>';
-          generateWeakTopicsBtn.disabled = true;
+        <div class="glass-card">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">🧠 AI-Powered Recommendations</h3>
+            <button id="generateInsightsButton" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-3 rounded-lg shadow-md transition-all">
+                Generate Personalized Study Plan
+            </button>
+            <div id="ai-insights-output" class="mt-4 p-4 bg-purple-50 rounded-lg text-gray-700 space-y-2 border border-purple-200 hidden">
+                </div>
+        </div>
+    </div>
 
-          const prompt = `Based on a medical student's performance in radiology exams (assume average scores in all areas, but slightly lower in "Pediatric Radiology" and "Musculoskeletal MRI"), generate a summary of 3-5 weak topics they should focus on. For each topic, provide a brief reason why it's weak and suggest a specific area of practice (e.g., "Review congenital heart anomalies in CXR"). Format as a numbered list.`;
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+        import { getFirestore, collection, query, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-          try {
-            let chatHistory = [];
-            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-            const payload = { contents: chatHistory };
-            const apiKey = ""; // Canvas will provide this at runtime
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+        // Firebase Config (same as my-profile.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
+            authDomain: "radiology-mcqs.firebaseapp.com",
+            projectId: "radiology-mcqs",
+            storageBucket: "radiology-mcqs.appspot.com",
+            messagingSenderId: "862300415358",
+            appId: "1:862300415358:web:097d5e413f388e30587f2f"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-            const maxRetries = 3;
-            let retryCount = 0;
-            let response;
-            while (retryCount < maxRetries) {
-                try {
-                    response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (response.ok) break;
-                } catch (error) {
-                    console.error('Fetch error:', error);
-                }
-                retryCount++;
-                await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
-            }
+        // DOM Elements
+        const mainLoader = document.getElementById('main-loader');
+        const performanceContent = document.getElementById('performance-content');
+        let userQuizAttempts = []; // Store attempts globally for this page
+        let weakTopicsSummary = "No specific weak areas identified yet. Attempt more quizzes for analysis.";
 
-            if (!response || !response.ok) {
-                throw new Error(`API call failed with status: ${response ? response.status : 'N/A'}`);
-            }
-
-            const result = await response.json();
-            if (result.candidates && result.candidates.length > 0 &&
-                result.candidates[0].content && result.candidates[0].content.parts &&
-                result.candidates[0].content.parts.length > 0) {
-              const aiText = result.candidates[0].content.parts[0].text;
-              weakTopicsOutput.innerHTML = `<p>${aiText.replace(/\n/g, '<br>')}</p>`;
+        // --- Main Logic ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                fetchAndAnalyzePerformance(user.uid);
             } else {
-              weakTopicsOutput.innerHTML = '<p class="text-red-500">Failed to generate insights. Please try again.</p>';
+                window.top.location.href = '../index.html';
             }
-          } catch (error) {
-            console.error('Error generating weak topics:', error);
-            weakTopicsOutput.innerHTML = `<p class="text-red-500">Error: ${error.message}. Could not generate insights.</p>`;
-          } finally {
-            generateWeakTopicsBtn.disabled = false;
-          }
-          // Call parent's showMessage if available
-          if (window.parent && window.parent.showMessage) {
-            window.parent.showMessage('AI insights generated!', 'success');
-          }
         });
-      }
-    });
-  </script>
+
+        async function fetchAndAnalyzePerformance(userId) {
+            try {
+                const attemptsRef = collection(db, "users", userId, "quizAttempts");
+                const q = query(attemptsRef, orderBy("timestamp", "asc")); // Order by date
+                const snapshot = await getDocs(q);
+                userQuizAttempts = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+
+                if (userQuizAttempts.length === 0) {
+                    mainLoader.innerHTML = '<p class="text-gray-600">No performance data found. Attempt some quizzes to see your analysis!</p>';
+                    return;
+                }
+                
+                // Calculate and display all metrics
+                calculateAndDisplayMetrics();
+                renderPerformanceChart();
+                identifyStrengthsAndWeaknesses();
+
+            } catch (error) {
+                console.error("Error fetching performance data:", error);
+                mainLoader.innerHTML = `<p class="text-red-500">Could not load performance data. Error: ${error.message}</p>`;
+            } finally {
+                mainLoader.classList.add('hidden');
+                performanceContent.classList.remove('hidden');
+            }
+        }
+
+        function calculateAndDisplayMetrics() {
+            const totalQuestions = userQuizAttempts.reduce((sum, a) => sum + a.totalQuestions, 0);
+            const totalCorrect = userQuizAttempts.reduce((sum, a) => sum + a.score, 0);
+            const overallAccuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
+            
+            const examAttempts = userQuizAttempts.filter(a => a.mode === 'exam');
+            const avgMockScore = examAttempts.length > 0 
+                ? examAttempts.reduce((sum, a) => sum + a.percentage, 0) / examAttempts.length
+                : 0;
+
+            const uniquePapers = new Set(userQuizAttempts.map(a => a.paperId));
+
+            document.getElementById('accuracy-metric').textContent = `${overallAccuracy.toFixed(0)}%`;
+            document.getElementById('mock-score-metric').textContent = `${avgMockScore.toFixed(0)}%`;
+            document.getElementById('papers-attempted-metric').textContent = uniquePapers.size;
+            document.getElementById('questions-answered-metric').textContent = totalQuestions;
+        }
+        
+        function renderPerformanceChart() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            const examAttempts = userQuizAttempts.filter(a => a.mode === 'exam');
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: examAttempts.map((a, index) => `Mock ${index + 1}`),
+                    datasets: [{
+                        label: 'Mock Exam Score (%)',
+                        data: examAttempts.map(a => a.percentage),
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { scales: { y: { beginAtZero: true, max: 100 } } }
+            });
+        }
+
+        function identifyStrengthsAndWeaknesses() {
+            const topicPerformance = {};
+            userQuizAttempts.forEach(attempt => {
+                const topic = attempt.paperId || 'General';
+                if (!topicPerformance[topic]) {
+                    topicPerformance[topic] = { total: 0, correct: 0, count: 0 };
+                }
+                topicPerformance[topic].total += attempt.totalQuestions;
+                topicPerformance[topic].correct += attempt.score;
+                topicPerformance[topic].count += 1;
+            });
+
+            const topicAverages = Object.entries(topicPerformance).map(([topic, data]) => ({
+                topic: topic.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                accuracy: data.total > 0 ? (data.correct / data.total) * 100 : 0
+            })).sort((a, b) => b.accuracy - a.accuracy);
+
+            const strengths = topicAverages.filter(t => t.accuracy >= 75).slice(0, 5);
+            const weaknesses = topicAverages.filter(t => t.accuracy < 60).slice(0, 5);
+
+            const strengthsList = document.getElementById('strengths-list');
+            strengthsList.innerHTML = strengths.length ? '' : '<li>No distinct strengths identified yet.</li>';
+            strengths.forEach(s => {
+                strengthsList.innerHTML += `<li><strong>${s.topic}:</strong> ${s.accuracy.toFixed(0)}% accuracy</li>`;
+            });
+
+            const weaknessesList = document.getElementById('weaknesses-list');
+            weaknessesList.innerHTML = weaknesses.length ? '' : '<li>No specific weaknesses found. Keep it up!</li>';
+            weaknesses.forEach(w => {
+                weaknessesList.innerHTML += `<li><strong>${w.topic}:</strong> ${w.accuracy.toFixed(0)}% accuracy</li>`;
+            });
+
+            // Prepare summary for AI
+            if(weaknesses.length > 0) {
+                 weakTopicsSummary = "The user is showing weakness in the following topics: " + weaknesses.map(w => `${w.topic} (${w.accuracy.toFixed(0)}% accuracy)`).join(', ') + ".";
+            }
+        }
+
+        // --- AI Insights Logic ---
+        const generateInsightsButton = document.getElementById('generateInsightsButton');
+        const aiOutput = document.getElementById('ai-insights-output');
+
+        generateInsightsButton.addEventListener('click', async () => {
+            aiOutput.classList.remove('hidden');
+            aiOutput.innerHTML = '<div class="loader mx-auto"></div><p class="text-center mt-2">AI is crafting your personalized plan...</p>';
+            generateInsightsButton.disabled = true;
+
+            const prompt = `
+                A radiology student needs a personalized study plan. Their performance data shows the following:
+                ${weakTopicsSummary}
+                
+                Please provide a concise, actionable study plan with 3 specific recommendations. For each recommendation:
+                1.  Name the topic clearly.
+                2.  Explain briefly why it's important to focus on it.
+                3.  Suggest a concrete action item (e.g., "Review 10 case studies of...", "Focus on differentiating X from Y in CT scans.").
+                
+                Format the entire output in HTML using paragraphs (<p>), bold tags (<strong>), and an ordered list (<ol> and <li>).
+            `;
+            
+            try {
+                // NOTE: This uses the Gemini API endpoint. Ensure you have enabled the AI Platform API in your Google Cloud project.
+                // It is highly recommended to handle the API key securely on a server-side function instead of the client.
+                const apiKey = "YOUR_GEMINI_API_KEY"; // IMPORTANT: Replace with your actual Gemini API key.
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+
+                if (!response.ok) throw new Error(`API call failed: ${response.statusText}`);
+                
+                const result = await response.json();
+                const aiText = result.candidates[0].content.parts[0].text;
+                aiOutput.innerHTML = aiText;
+
+            } catch (error) {
+                console.error('Error generating AI insights:', error);
+                aiOutput.innerHTML = `<p class="text-red-500"><strong>Error:</strong> Could not generate insights. Please ensure your API key is correct and the AI Platform API is enabled. (${error.message})</p>`;
+            } finally {
+                generateInsightsButton.disabled = false;
+            }
+        });
+
+    </script>
 </body>
 </html>
