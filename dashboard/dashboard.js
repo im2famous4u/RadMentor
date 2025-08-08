@@ -2,6 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebas
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import { getFirestore, collection, getDocs, query } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
+// --- CONFIGURATION ---
 const firebaseConfig = {
     apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
     authDomain: "radiology-mcqs.firebaseapp.com",
@@ -45,7 +46,8 @@ async function initQuestionOfTheDay() {
         if (!csvText || csvText.length < 10) throw new Error("Fetched CSV data is empty or invalid. Is the sheet published to the web?");
 
         const allQuestions = parseCSV(csvText);
-        const nonImageQuestions = allQuestions.filter(q => q && (!q.Image || q.Image.trim() === ''));
+        // UPDATED to look for 'Image for Quest'
+        const nonImageQuestions = allQuestions.filter(q => q && (!q['Image for Quest'] || q['Image for Quest'].trim() === ''));
         
         if (nonImageQuestions.length === 0) throw new Error("No non-image questions were found in the sheet.");
 
@@ -69,11 +71,12 @@ function displayQotD(q) {
         document.getElementById('qotd-loader').innerHTML = `<p class="text-red-500">Error: Received invalid question data.</p>`;
         return;
     }
+    // UPDATED to look for your specific headers like 'Option a'
     document.getElementById('qotd-question-text').textContent = q.Question || "N/A";
-    document.getElementById('qotd-option-a').textContent = `A) ${q['Option A'] || '...'}`;
-    document.getElementById('qotd-option-b').textContent = `B) ${q['Option B'] || '...'}`;
-    document.getElementById('qotd-option-c').textContent = `C) ${q['Option C'] || '...'}`;
-    document.getElementById('qotd-option-d').textContent = `D) ${q['Option D'] || '...'}`;
+    document.getElementById('qotd-option-a').textContent = `A) ${q['Option a'] || '...'}`;
+    document.getElementById('qotd-option-b').textContent = `B) ${q['Option b'] || '...'}`;
+    document.getElementById('qotd-option-c').textContent = `C) ${q['Option c'] || '...'}`;
+    document.getElementById('qotd-option-d').textContent = `D) ${q['Option d'] || '...'}`;
 
     document.getElementById('qotd-answer-text').textContent = `Correct Answer: ${q['Correct Answer'] || 'N/A'}`;
     document.getElementById('qotd-explanation-text').innerHTML = `<strong>Explanation:</strong> ${q.Explanation || 'No explanation provided.'}`;
@@ -107,6 +110,7 @@ function parseCSV(text) {
     return result;
 }
 
+// Performance Snapshot module remains unchanged
 function initPerformanceSnapshot() {
     const statsLoader = document.getElementById('stats-loader');
     
@@ -119,7 +123,6 @@ function initPerformanceSnapshot() {
     });
 
     async function fetchAndCalculateStats(userId) {
-        // This function remains the same as your version
         const attemptsRef = collection(db, "users", userId, "quizAttempts");
         const q = query(attemptsRef);
         const snapshot = await getDocs(q);
