@@ -1,3 +1,30 @@
+/* Add these new styles to your existing style.css file */
+
+.question-image, .explanation-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.question-tags {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.question-tags span {
+    background-color: #eef2ff;
+    color: var(--primary-color);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* Ensure existing styles are present */
 :root {
     --bg-color: #f8fafc; --container-bg-color: #ffffff; --text-color: #475569; --text-color-light: #6b7280;
     --header-text-color: #111827; --primary-color: #0ea5e9; --primary-hover-color: #0284c7;
