@@ -1,658 +1,324 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RadMentor Universal Quiz Platform</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-    <script src="https://unpkg.com/feather-icons"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        /* ---- Modern UI & Variables ---- */
-        :root {
-            --bg-color: #f8fafc; --container-bg-color: #ffffff; --text-color: #334155; --text-color-light: #64748b;
-            --header-text-color: #0f172a; --primary-color: #4f46e5; --primary-hover-color: #4338ca;
-            --border-color: #e2e8f0; --explanation-bg: #f1f5f9; --correct-bg: #f0fdf4; --correct-border: #86efac;
-            --correct-text: #166534; --incorrect-bg: #fef2f2; --incorrect-border: #fca5a5; --incorrect-text: #991b1b;
-            --bookmark-color: #f59e0b; --flag-color: #ef4444; --answered-color: #22c55e;
-            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-        }
-        [data-theme="dark"] {
-            --bg-color: #0f172a; --container-bg-color: #1e2937; --text-color: #cbd5e1; --text-color-light: #94a3b8;
-            --header-text-color: #f8fafc; --border-color: #334155; --explanation-bg: #1e293b;
-            --correct-bg: #14532d; --correct-text: #bbf7d0; --incorrect-bg: #7f1d1d; --incorrect-text: #fecaca;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RadScribe AI - Report Generator</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts - Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* Custom styles for better aesthetics and overrides */
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    /* Custom scrollbar for sidebar */
+    .sidebar-scroll {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+    }
+    .sidebar-scroll::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, Opera*/
+    }
+    .gradient-bg {
+      background: linear-gradient(to right, #6366f1, #8b5cf6); /* Purple to Indigo gradient */
+    }
+    .glass-card {
+      background-color: rgba(255, 255, 255, 0.7); /* Slightly transparent white */
+      backdrop-filter: blur(10px); /* Glass effect blur */
+      border-radius: 1.5rem; /* rounded-3xl */
+      padding: 2rem; /* p-8 */
+      transition: all 0.3s ease-in-out; /* Smooth transition for hover effects */
+    }
+    .glass-card:hover {
+      background-color: rgba(255, 255, 255, 0.9); /* More opaque on hover */
+      transform: translateY(-5px); /* Lift effect */
+      box-shadow: 0 15px 30px rgba(0,0,0,0.1); /* Enhanced shadow */
+    }
+    .card-shadow {
+      box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 6px 6px rgba(0,0,0,0.03);
+    }
+    /* Active tab style for sidebar links */
+    .sidebar-link.active {
+      background-color: #e0e7ff; /* blue-100 */
+      color: #3b82f6; /* blue-500 */
+      font-weight: 600; /* semi-bold */
+      box-shadow: 0 2px 5px rgba(59, 130, 246, 0.2);
+    }
+    .sidebar-link.active svg {
+      color: #3b82f6; /* blue-500 */
+    }
+    /* Message Box styles */
+    .message-box {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #4CAF50; /* Green */
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      display: none; /* Hidden by default */
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+    .message-box.show {
+      display: block;
+      opacity: 1;
+    }
 
-        /* ---- Base & Layout ---- */
-        body { font-family: 'Inter', sans-serif; margin: 0; padding: 1.5rem; background-color: var(--bg-color); color: var(--text-color); transition: background-color 0.3s, color 0.3s; -webkit-font-smoothing: antialiased; }
-        .main-container { max-width: 900px; margin: 0 auto; }
-        .screen { display: none; }
-        .screen.active { display: block; animation: fadeIn 0.5s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        .center-flex { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; }
-        .loader { width: 48px; height: 48px; border: 5px solid var(--border-color); border-bottom-color: var(--primary-color); border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    /* User profile icon and dropdown styles */
+    .user-profile-icon {
+        width: 40px;
+        height: 40px;
+        background-color: #6366f1; /* Indigo */
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        cursor: pointer;
+        user-select: none;
+        transition: transform 0.2s ease-in-out;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .user-profile-icon:hover {
+        transform: scale(1.05);
+    }
 
-        /* ---- Topic Selection Screen ---- */
-        .topic-header { text-align: center; margin-bottom: 2.5rem; }
-        .topic-header h1 { font-size: 2.5rem; color: var(--header-text-color); margin-bottom: 0.5rem; }
-        .topic-header p { font-size: 1.1rem; color: var(--text-color-light); }
-        .paper-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
-        .paper-card { background: var(--container-bg-color); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 0.75rem; cursor: pointer; font-weight: 600; font-size: 1.1rem; text-align: center; transition: all 0.2s ease-out; box-shadow: var(--shadow); }
-        .paper-card:hover { transform: translateY(-5px); border-color: var(--primary-color); color: var(--primary-color); }
-        .variant-title { font-size: 1.5rem; color: var(--header-text-color); margin-top: 2rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--primary-color); }
+    .user-dropdown {
+        position: absolute;
+        top: 55px; /* Adjust based on icon size and desired spacing */
+        right: 0;
+        background-color: white;
+        border-radius: 0.75rem; /* rounded-xl */
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        z-index: 50;
+        min-width: 180px;
+        padding: 0.5rem 0;
+        display: none;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+    }
+    .user-dropdown.show {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .user-dropdown a {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1.25rem;
+        font-size: 0.9rem;
+        color: #4a5568; /* gray-700 */
+        transition: background-color 0.2s, color 0.2s;
+    }
+    .user-dropdown a:hover {
+        background-color: #f0f4f8; /* Light blue-gray */
+        color: #3b82f6; /* blue-500 */
+    }
+    .user-dropdown a:last-child {
+        border-top: 1px solid #e2e8f0; /* gray-200 */
+        margin-top: 0.5rem;
+        padding-top: 0.75rem;
+    }
 
-        /* ---- Quiz Container ---- */
-        .quiz-container { background: var(--container-bg-color); border-radius: 1rem; box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border-color); }
-        .quiz-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 1rem; }
-        .quiz-title { font-size: 1.25rem; font-weight: 600; color: var(--header-text-color); }
-        .header-controls { display: flex; align-items: center; gap: 0.5rem; }
-        .timer { font-size: 1.1rem; font-weight: 600; background-color: var(--explanation-bg); padding: 0.5rem 1rem; border-radius: 0.5rem; }
-        .icon-btn { background: none; border: none; cursor: pointer; color: var(--text-color-light); padding: 0.5rem; }
-        .icon-btn:hover { color: var(--primary-color); }
-        .mode-toggle { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
-        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--primary-color); }
-        input:checked + .slider:before { transform: translateX(20px); }
-        .finish-btn { background-color: var(--primary-color); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
-        .finish-btn:hover { background-color: var(--primary-hover-color); }
+    /* Goals dropdown styles */
+    .goals-dropdown-button {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        color: #4a5568;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .goals-dropdown-button:hover {
+        background-color: #f0f4f8;
+        color: #3b82f6;
+    }
+    .goals-dropdown {
+        position: absolute;
+        top: 55px; /* Adjust based on button size and desired spacing */
+        left: 0;
+        background-color: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        z-index: 50;
+        min-width: 200px;
+        padding: 0.5rem 0;
+        display: none;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+    }
+    .goals-dropdown.show {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .goals-dropdown a {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1.25rem;
+        font-size: 0.9rem;
+        color: #4a5568;
+        transition: background-color 0.2s, color 0.2s;
+    }
+    .goals-dropdown a:hover {
+        background-color: #e0e7ff; /* blue-100 */
+        color: #3b82f6; /* blue-500 */
+    }
 
-        /* ---- Question Navigation ---- */
-        .question-nav-container { padding: 1rem; border-bottom: 1px solid var(--border-color); overflow-x: auto; white-space: nowrap; }
-        .nav-box { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; margin-right: 0.5rem; border: 1px solid var(--border-color); border-radius: 0.5rem; cursor: pointer; font-weight: 500; transition: all 0.2s; position: relative; }
-        .nav-box.current { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
-        .nav-box.answered { background-color: var(--correct-bg); color: var(--correct-text); border-color: var(--correct-border); }
-        .nav-box .status-dot { position: absolute; top: 3px; right: 3px; width: 8px; height: 8px; border-radius: 50%; }
-        .nav-box .status-dot.bookmarked { background-color: var(--bookmark-color); }
-        .nav-box .status-dot.flagged { background-color: var(--flag-color); }
-
-        /* ---- Question Area ---- */
-        .question-area { padding: 2rem; }
-        .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .question-counter { font-size: 1rem; font-weight: 600; color: var(--text-color-light); }
-        .question-actions .icon-btn.bookmarked i { color: var(--bookmark-color); fill: var(--bookmark-color); }
-        .question-actions .icon-btn.flagged i { color: var(--flag-color); fill: var(--flag-color); }
-        .question-text { font-size: 1.2rem; line-height: 1.6; margin-bottom: 2rem; color: var(--header-text-color); }
-        .options-container { display: flex; flex-direction: column; gap: 1rem; }
-        .option-btn { display: flex; align-items: center; gap: 1rem; width: 100%; padding: 1rem; border: 1px solid var(--border-color); border-radius: 0.75rem; background: var(--container-bg-color); text-align: left; cursor: pointer; transition: all 0.2s; }
-        .option-btn:not(.answered):hover { border-color: var(--primary-color); background: #f0f2fe; }
-        .option-prefix { display: flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--border-color); font-weight: 600; }
-        .option-btn.correct { background: var(--correct-bg); border-color: var(--correct-border); color: var(--correct-text); }
-        .option-btn.correct .option-prefix { border-color: var(--correct-border); background-color: var(--correct-text); color: white; }
-        .option-btn.incorrect { background: var(--incorrect-bg); border-color: var(--incorrect-border); color: var(--incorrect-text); }
-        .option-btn.incorrect .option-prefix { border-color: var(--incorrect-border); background-color: var(--incorrect-text); color: white; }
-        .option-btn.disabled { cursor: not-allowed; opacity: 0.8; }
-        .explanation-box { margin-top: 2rem; padding: 1.5rem; background: var(--explanation-bg); border-left: 4px solid var(--primary-color); border-radius: 0 0.5rem 0.5rem 0; }
-        .explanation-box h3 { margin-top: 0; color: var(--header-text-color); }
-        .ai-insight-btn { margin-top: 1rem; background: none; border: 1px solid var(--primary-color); color: var(--primary-color); padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; }
-        .ai-insight-btn:hover { background: var(--primary-color); color: white; }
-
-        /* ---- Results Screen ---- */
-        .results-container { text-align: center; padding: 2rem; background: var(--container-bg-color); border-radius: 1rem; box-shadow: var(--shadow); }
-        .results-container h2 { font-size: 2rem; color: var(--header-text-color); }
-        .score-display { font-size: 3.5rem; font-weight: 700; color: var(--primary-color); margin: 1rem 0; }
-        .results-summary { display: flex; justify-content: center; gap: 2rem; margin: 2rem 0; }
-        .summary-item { font-size: 1.1rem; }
-        .summary-item span { display: block; font-weight: 600; color: var(--header-text-color); }
-        .chart-container { max-width: 400px; margin: 2rem auto; }
-    </style>
+    /* iframe styling */
+    #contentFrame {
+        width: 100%;
+        height: 100%;
+        border: none;
+        overflow-y: auto; /* Allow scrolling within the iframe */
+    }
+  </style>
 </head>
-<body>
+<body class="flex min-h-screen bg-gray-50 text-gray-800">
 
-    <div id="authCheckScreen" class="screen active center-flex">
-        <div class="loader"></div>
-        <p style="margin-top: 1rem; color: var(--text-color-light);">Initializing Session...</p>
+  <!-- Message Box -->
+  <div id="messageBox" class="message-box"></div>
+
+  <!-- Sidebar -->
+  <aside class="w-72 bg-white border-r border-gray-200 p-6 flex flex-col shadow-xl rounded-r-2xl overflow-y-auto sidebar-scroll">
+    <div class="mb-10 flex items-center gap-3 transform transition-transform duration-200 hover:scale-105">
+      <img src="https://placehold.co/40x40/6366f1/ffffff?text=RM" alt="RadMentor Logo" class="h-10 w-10 rounded-full shadow-md" onerror="this.onerror=null;this.src='https://placehold.co/40x40/6366f1/ffffff?text=RM';">
+      <span class="text-2xl font-extrabold text-gray-900">RadMentor</span>
     </div>
 
-    <div class="main-container">
-        <div id="topic-screen" class="screen">
-            <div class="topic-header">
-                <h1 id="topic-title"></h1>
-                <p id="topic-desc">Select a paper to begin your preparation.</p>
-            </div>
-            <div id="paper-grid-container"></div>
-        </div>
+    <div class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3">Exam Preparation</div>
+    <nav class="flex flex-col gap-2 mb-8">
+      <!-- Dashboard Link -->
+      <a href="dashboard.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="dashboard">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        Dashboard
+      </a>
+      <!-- FRCR Link -->
+      <a href="frcr/index.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="frcr">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        </svg>
+        FRCR
+      </a>
+      <!-- MD / DNB Link -->
+      <a href="MD_DNB/DNB/index.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="md-dnb">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.747 0-3.332.477-4.5 1.253" />
+      </svg>
+        MD / DNB
+      </a>
+      <!-- Anatomy Link -->
+      <a href="anatomy.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="anatomy">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0h.01M9 19h10a2 2 0 002-2v-6a2 2 0 00-2-2H9m11 0V7a2 2 0 00-2-2h-2M4 6h.01M6 6h.01" />
+        </svg>
+        Anatomy
+      </a>
+      <!-- MICR Link -->
+      <a href="micr.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="micr">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3m0 0l3 3m-3-3v8m0-9a9 9 0 110 18 9 9 0 010-18z" />
+        </svg>
+        MICR
+      </a>
+      <!-- Superspeciality Link -->
+      <a href="superspeciality.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="superspeciality">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v-2m-2 2h2m5-12l2-2m2 2l-2-2m-3 12l2 2m2-2l-2 2m-3-7h.01M19 12h.01" />
+        </svg>
+        Superspeciality
+      </a>
+      <!-- Fellowship Exams Link -->
+<a href="template.html?quiz=fellowship" 
+   class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out" 
+   data-section="fellowship-exams">
+  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V3m0 9v3m0 0h.01M12 12h.01M12 12l-2.58 2.58M12 12l2.58 2.58M12 12l-2.58-2.58M12 12l2.58-2.58M12 12l-2.58 2.58M12 12l2.58 2.58" />
+  </svg>
+  Fellowship Exams
+</a>
+      <!-- RadScribe AI Link -->
+      <a href="radscribe-ai.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="radscribe-ai">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v-4.477c0-1.155.26-2.29.75-3.376M9 17.25c-1.35 0-2.61-.527-3.556-1.474M9 17.25h.008m5.042-11.5c1.253 0 2.447.394 3.41 1.115m-3.41-1.115C13.626 4.31 12.09 3.75 10.5 3.75c-1.59 0-3.126.56-4.37 1.639m4.37-1.639h.008M15 17.25v-4.477c0-1.155-.26-2.29-.75-3.376M15 17.25c1.35 0 2.61-.527 3.556-1.474M15 17.25h.008m-5.042-11.5c-1.253 0-2.447-.394-3.41-1.115m3.41 1.115C10.374 4.31 11.91 3.75 13.5 3.75c1.59 0 3.126.56 4.37 1.639m-4.37-1.639h.008" />
+        </svg>
+        RadScribe AI
+        <span class="ml-auto bg-yellow-200 text-yellow-800 text-xs font-semibold px-2 py-0.5 rounded-full">Exclusive!</span>
+      </a>
+    </nav>
 
-        <div id="quiz-screen" class="screen">
-            <div class="quiz-container">
-                <div id="loading-container" class="center-flex" style="padding: 5rem;">
-                    <div class="loader"></div>
-                    <p style="margin-top: 1rem; color: var(--text-color-light);">Loading Questions...</p>
-                </div>
-                <div id="quiz-content" style="display:none;">
-                    <div class="quiz-header">
-                        <div id="quiz-title" class="quiz-title"></div>
-                        <div class="header-controls">
-                            <div class="mode-toggle">
-                                <span>Practice</span>
-                                <label class="switch"><input type="checkbox" id="mode-toggle-checkbox"><span class="slider"></span></label>
-                                <span>Exam</span>
-                            </div>
-                            <button id="theme-toggle-btn" class="icon-btn" title="Toggle Theme"><i data-feather="moon"></i></button>
-                            <button id="sound-toggle-btn" class="icon-btn" title="Toggle Sound"><i data-feather="volume-2"></i></button>
-                            <div class="timer" id="timer">00:00</div>
-                            <button id="finish-quiz-btn" class="finish-btn">Finish</button>
-                        </div>
-                    </div>
-                    <div id="question-nav-container" class="question-nav-container"></div>
-                    <div class="question-area" id="question-display-area"></div>
-                </div>
-            </div>
-        </div>
+    <div class="text-xs text-gray-500 uppercase font-bold tracking-wider mb-3">My Account</div>
+    <nav class="flex flex-col gap-2">
+      <a href="my-profile.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="my-profile">
+        <span class="mr-3 text-gray-600">🙋‍♂️</span> My Profile
+      </a>
+      <a href="my-bookmarks.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="my-bookmarks">
+        <span class="mr-3 text-gray-600">📌</span> My Bookmarks
+      </a>
+      <a href="performance-ai.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="performance-ai">
+        <span class="mr-3 text-gray-600">📈</span> Performance
+      </a>
+      <a href="ask-a-doubt.html" class="sidebar-link flex items-center px-4 py-2.5 rounded-xl hover:bg-blue-50 text-sm font-medium text-gray-700 hover:text-blue-700 transition-all duration-200 ease-in-out" data-section="ask-a-doubt">
+        <span class="mr-3 text-gray-600">❓</span> Ask a Doubt
+      </a>
+    </nav>
+  </aside>
 
-        <div id="results-screen" class="screen">
-            <div class="results-container" id="results-content"></div>
+  <!-- Main Content -->
+  <main class="flex-1 p-8 flex flex-col">
+    <div class="flex items-center justify-between mb-8 relative">
+      <!-- Goals Dropdown -->
+      <div class="relative">
+        <button id="goalsDropdownButton" class="goals-dropdown-button">
+          <span id="currentGoalText">Current Goal: Dashboard</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div id="goalsDropdown" class="goals-dropdown">
+            <a href="frcr/index.html" data-section="frcr">FRCR</a>
+            <a href="micr.html" data-section="micr">MICR</a>
+            <a href="md-dnb.html" data-section="md-dnb">MD / DNB</a>
+            <a href="superspeciality.html" data-section="superspeciality">Superspeciality</a>
         </div>
+      </div>
+
+      <!-- User Profile Icon and Dropdown -->
+      <div class="relative">
+        <div id="userProfileIcon" class="user-profile-icon">
+          <span id="userInitials">NY</span>
+        </div>
+        <div id="userDropdown" class="user-dropdown">
+            <a href="my-profile.html" data-section="my-profile">Profile</a>
+            <a href="dashboard.html" data-section="dashboard">Prepare</a>
+            <a href="my-profile.html" data-section="my-profile">Settings</a>
+            <a href="/index.html" id="logoutLink">Log out</a>
+        </div>
+      </div>
     </div>
 
-    <audio id="correct-sound" src="https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/sounds/correct.mp3" preload="auto"></audio>
-    <audio id="wrong-sound" src="https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/sounds/wrong.mp3" preload="auto"></audio>
+    <!-- The iframe will load content pages here -->
+    <iframe id="contentFrame" src="dashboard.html"></iframe>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, collection, getDocs, setDoc, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai/+esm";
+  </main>
 
-    /* --- CONFIGURATION --- */
-    const GOOGLE_AI_API_KEY = "AIzaSyDi7D6W2xjtReXVFkpSSXG_xTJBqRGswxs";
-    const QUIZ_CONFIG = {
-        physics: { name: "FRCR Part 1 Physics", examTime: 60, sheetId: "1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8", papers: { "Basic Physics": "2009849222", "Radiation Hazards & Protection": "2009849222", "Image Quality & X-ray": "1706416231", "Film Screen Radiography": "1257614317", "Digital Radiography": "917881905", "Fluoroscopy": "1461599884", "Computed Tomography": "986205874", "Nuclear Medicine": "2016453957", "Ultrasound": "638565218", "Magnetic Resonance Imaging": "2026917708" } },
-        fellowship: { name: "Fellowship Exams", examTime: 90, sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", papers: { "Paper 1": "0", "Paper 2": "1141721868", "Paper 3": "1815658253", "Paper 4": "1386284317", "Paper 5": "40352700", "Paper 6": "54400073", "Paper 7": "1767827630", "Paper 8": "280434470" } },
-        frcr2a: { name: "FRCR Part 2A", examTime: 120, sheetId: "180QNzG6fDKQveAK0P3oUPbqw9k0mK6KqLMichjzyQ8w", papers: { "Paper 1": "0", "Paper 2": "1813285249", "Paper 3": "962180397", "Paper 4": "1399193608", "Paper 5": "2074537975", "Paper 6": "423465629", "Paper 7": "863789521" } },
-        superspeciality: {
-            name: "Superspeciality Exams",
-            variants: {
-                "INI-SS": { name: "INI-SS Exam", examTime: 90, sheetId: "1Zd-UhR966r8FE5pJ3yqqPInQBrAzLSG4pTc_wytr4I0", papers: { "Paper 1": "0", "Paper 2": "123269442", "Paper 3": "1278979358", "Paper 4": "470498245", "Paper 5": "94227388", "Paper 6": "855680808", "Paper 7": "1771985316", "Paper 8": "153180989", "Paper 9": "1725673059" } },
-                "NEET-SS": { name: "NEET SS Exam", examTime: 180, sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", papers: { "Paper 1": "0", "Paper 2": "385825325", "Paper 3": "1302055466", "Paper 4": "472403230", "Paper 5": "1502909003" } }
-            }
-        }
-    };
-    const firebaseConfig = { apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw", authDomain: "radiology-mcqs.firebaseapp.com", projectId: "radiology-mcqs", storageBucket: "radiology-mcqs.appspot.com", messagingSenderId: "862300415358", appId: "1:862300415358:web:097d5e413f388e30587f2f" };
+  <!-- Shared JavaScript -->
+  <script src="shared-scripts.js"></script>
 
-    /* --- INITIALIZATION --- */
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const genAI = GOOGLE_AI_API_KEY.includes("YOUR_API") ? null : new GoogleGenerativeAI(GOOGLE_AI_API_KEY);
-
-    /* --- DOM ELEMENTS --- */
-    const dom = {
-        authScreen: document.getElementById('authCheckScreen'),
-        topicScreen: document.getElementById('topic-screen'),
-        quizScreen: document.getElementById('quiz-screen'),
-        resultsScreen: document.getElementById('results-screen'),
-        topicTitle: document.getElementById('topic-title'),
-        paperGridContainer: document.getElementById('paper-grid-container'),
-        loadingContainer: document.getElementById('loading-container'),
-        quizContent: document.getElementById('quiz-content'),
-        quizTitle: document.getElementById('quiz-title'),
-        questionNav: document.getElementById('question-nav-container'),
-        questionDisplay: document.getElementById('question-display-area'),
-        timer: document.getElementById('timer'),
-        modeToggle: document.getElementById('mode-toggle-checkbox'),
-        resultsContent: document.getElementById('results-content'),
-    };
-
-    /* --- STATE MANAGEMENT --- */
-    let currentUser = null, currentQuizKey = '', currentConfig = null, currentPaper = null;
-    let allQuestions = [], userAnswers = {}, currentQuestionIndex = 0, quizMode = 'practice';
-    let timerInterval = null, timeElapsed = 0, timeLimit = 0;
-    let isSoundOn = true, userBookmarks = new Set(), flaggedQuestions = new Set();
-
-    /* --- CORE LOGIC --- */
-
-    const showScreen = (screenId) => {
-        document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === screenId));
-        feather.replace();
-    };
-
-    onAuthStateChanged(auth, async user => {
-        if (!user) {
-            dom.authScreen.innerHTML = `<p>You must be logged in to access the quizzes. Please <a href="/login.html">login here</a>.</p>`;
-            return;
-        }
-        currentUser = user;
-        const params = new URLSearchParams(window.location.search);
-        currentQuizKey = params.get('quiz');
-        if (!QUIZ_CONFIG[currentQuizKey]) {
-            dom.authScreen.innerHTML = `<p>Error: Invalid quiz type specified in URL.</p>`;
-            return;
-        }
-
-        currentConfig = QUIZ_CONFIG[currentQuizKey];
-        await fetchUserBookmarks();
-
-        const directGid = params.get('gid');
-        const directQuestionId = params.get('questionId');
-
-        if (directGid && directQuestionId) {
-            jumpToBookmarkedQuestion(directGid, directQuestionId);
-        } else {
-            renderTopicScreen();
-        }
-    });
-
-    const renderTopicScreen = () => {
-        dom.topicTitle.textContent = currentConfig.name;
-        let html = '';
-        if (currentConfig.papers) {
-            html += '<div class="paper-grid">';
-            for (const [name, gid] of Object.entries(currentConfig.papers)) {
-                html += `<button class="paper-card" data-gid="${gid}" data-name="${name}">${name}</button>`;
-            }
-            html += '</div>';
-        } else if (currentConfig.variants) {
-            for (const [variantName, variantData] of Object.entries(currentConfig.variants)) {
-                html += `<h2 class="variant-title">${variantName}</h2><div class="paper-grid">`;
-                for (const [name, gid] of Object.entries(variantData.papers)) {
-                    html += `<button class="paper-card" data-variant="${variantName}" data-gid="${gid}" data-name="${name}">${name}</button>`;
-                }
-                html += '</div>';
-            }
-        }
-        dom.paperGridContainer.innerHTML = html;
-        showScreen('topic-screen');
-    };
-
-    dom.paperGridContainer.addEventListener('click', e => {
-        if (e.target.matches('.paper-card')) {
-            const { gid, name, variant } = e.target.dataset;
-            if (variant) {
-                currentConfig = QUIZ_CONFIG[currentQuizKey].variants[variant];
-            }
-            currentPaper = { gid, name };
-            startQuiz();
-        }
-    });
-
-    const startQuiz = async () => {
-        showScreen('quiz-screen');
-        dom.quizContent.style.display = 'none';
-        dom.loadingContainer.style.display = 'flex';
-
-        try {
-            const url = `https://docs.google.com/spreadsheets/d/${currentConfig.sheetId}/gviz/tq?tqx=out:csv&gid=${currentPaper.gid}`;
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Network response was not ok.');
-            const csvText = await response.text();
-            
-            allQuestions = parseCSV(csvText);
-            resetQuizState();
-
-            dom.quizTitle.textContent = `${currentConfig.name} - ${currentPaper.name}`;
-            dom.loadingContainer.style.display = 'none';
-            dom.quizContent.style.display = 'block';
-
-            renderQuestion();
-            renderQuestionNav();
-            setupQuizMode();
-
-        } catch (error) {
-            console.error("Failed to fetch or parse quiz data:", error);
-            dom.loadingContainer.innerHTML = `<p>Error loading quiz. Please try again later.</p>`;
-        }
-    };
-    
-    const jumpToBookmarkedQuestion = async (gid, questionId) => {
-        let targetConfig, targetPaper;
-        if (currentConfig.papers) {
-            const paperName = Object.keys(currentConfig.papers).find(key => currentConfig.papers[key] === gid);
-            if(paperName) {
-                targetConfig = currentConfig;
-                targetPaper = { name: paperName, gid };
-            }
-        } else if (currentConfig.variants) {
-            for (const variantData of Object.values(currentConfig.variants)) {
-                const paperName = Object.keys(variantData.papers).find(key => variantData.papers[key] === gid);
-                if (paperName) {
-                    targetConfig = variantData;
-                    targetPaper = { name: paperName, gid };
-                    break;
-                }
-            }
-        }
-        
-        if (targetConfig && targetPaper) {
-            currentConfig = targetConfig;
-            currentPaper = targetPaper;
-            await startQuiz();
-            const index = allQuestions.findIndex(q => q.id === questionId);
-            if (index !== -1) {
-                currentQuestionIndex = index;
-                renderQuestion();
-                renderQuestionNav();
-            }
-        } else {
-             renderTopicScreen(); // Fallback
-        }
-    };
-
-    const parseCSV = (csv) => {
-        const lines = csv.trim().split('\n').slice(1);
-        return lines.map((line, i) => {
-            const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.replace(/^"|"$/g, '').trim());
-            // FRCR Physics (True/False format) has 5 sub-questions
-            if (currentQuizKey === 'physics' && parts.length > 8) {
-                 return {
-                    id: `${currentPaper.gid}-${i}`,
-                    text: parts[0],
-                    options: ['True', 'False'],
-                    subQuestions: [parts[1], parts[2], parts[3], parts[4], parts[5]],
-                    correctAnswers: (parts[6] || "").split('').map(a => a.toLowerCase() === 't'),
-                    explanation: parts[7] || "No explanation provided.",
-                    isTrueFalse: true
-                };
-            }
-            // Standard MCQ format
-            else {
-                const options = parts.slice(1, (currentQuizKey === 'frcr2a' ? 6 : 5)).filter(o => o);
-                const correctLetter = (parts[currentQuizKey === 'frcr2a' ? 6 : 5] || 'A').trim().toLowerCase();
-                const explanation = parts[currentQuizKey === 'frcr2a' ? 7 : 6] || "No explanation provided.";
-                const correctIndex = 'abcde'.indexOf(correctLetter);
-                return { id: `${currentPaper.gid}-${i}`, text: parts[0], options, correctIndex, explanation, isTrueFalse: false };
-            }
-        });
-    };
-    
-    const renderQuestion = () => {
-        if (currentQuestionIndex < 0 || currentQuestionIndex >= allQuestions.length) return;
-        const q = allQuestions[currentQuestionIndex];
-        const isAnswered = userAnswers.hasOwnProperty(q.id);
-        
-        let html = `
-            <div class="question-header">
-                <span class="question-counter">Question ${currentQuestionIndex + 1} of ${allQuestions.length}</span>
-                <div class="question-actions">
-                    <button class="icon-btn ${flaggedQuestions.has(q.id) ? 'flagged' : ''}" onclick="window.toggleFlag('${q.id}')" title="Flag for Review"><i data-feather="flag"></i></button>
-                    <button class="icon-btn ${userBookmarks.has(q.id) ? 'bookmarked' : ''}" onclick="window.toggleBookmark('${q.id}', '${q.text.replace(/'/g, "\\'")}')" title="Bookmark Question"><i data-feather="bookmark"></i></button>
-                </div>
-            </div>
-            <p class="question-text">${q.text}</p>
-            <div class="options-container">`;
-
-        // Handle True/False questions differently
-        if (q.isTrueFalse) {
-            q.subQuestions.forEach((subQ, subIndex) => {
-                const subId = `${q.id}-${subIndex}`;
-                const answeredValue = userAnswers[subId]; // e.g., true or false
-                const isSubQAnswered = answeredValue !== undefined;
-                const correctAnswer = q.correctAnswers[subIndex];
-
-                html += `<div class="sub-question" style="margin-bottom: 1rem; padding: 1rem; border-left: 3px solid #ccc; border-radius: 4px;">
-                    <p>${subQ}</p>
-                    <div>`;
-                q.options.forEach((opt, optIndex) => {
-                    const value = (opt === 'True'); // true for 'True', false for 'False'
-                    let btnClass = 'option-btn-small'; // Define a smaller button style if needed
-                    if (isSubQAnswered && (quizMode === 'practice' || dom.resultsScreen.classList.contains('active'))) {
-                        if (value === correctAnswer) btnClass += ' correct';
-                        else if (value === answeredValue) btnClass += ' incorrect';
-                    }
-                    html += `<button class="${btnClass}" data-question-id="${q.id}" data-sub-index="${subIndex}" data-value="${value}" ${isSubQAnswered ? 'disabled' : ''}>${opt}</button>`;
-                });
-                html += `</div></div>`;
-            });
-        }
-        // Handle standard MCQs
-        else {
-            q.options.forEach((option, index) => {
-                let btnClass = 'option-btn';
-                if (isAnswered && (quizMode === 'practice' || dom.resultsScreen.classList.contains('active'))) {
-                    if (index === q.correctIndex) btnClass += ' correct';
-                    else if (index === userAnswers[q.id]) btnClass += ' incorrect';
-                }
-                html += `
-                    <button class="${btnClass} ${isAnswered ? 'disabled' : ''}" data-index="${index}" ${isAnswered ? 'disabled' : ''}>
-                        <span class="option-prefix">${'ABCDE'[index]}</span>
-                        <span>${option}</span>
-                    </button>`;
-            });
-        }
-
-        html += '</div>';
-
-        if (isAnswered && (quizMode === 'practice' || dom.resultsScreen.classList.contains('active'))) {
-            html += `
-                <div class="explanation-box" id="explanation-${q.id}">
-                    <h3>Explanation</h3>
-                    <p>${q.explanation}</p>
-                    ${genAI && quizMode === 'practice' ? `<button class="ai-insight-btn" onclick="window.getAIExplanation('${q.id}')">Get AI Insights</button>` : ''}
-                </div>`;
-        }
-        dom.questionDisplay.innerHTML = html;
-        dom.questionDisplay.querySelectorAll('.option-btn').forEach(btn => btn.addEventListener('click', handleOptionClick));
-        feather.replace();
-    };
-
-
-    const renderQuestionNav = () => {
-        let html = '';
-        allQuestions.forEach((q, index) => {
-            let classes = 'nav-box';
-            if (index === currentQuestionIndex) classes += ' current';
-            if (userAnswers.hasOwnProperty(q.id)) classes += ' answered';
-
-            let dots = '';
-            if(userBookmarks.has(q.id)) dots += '<span class="status-dot bookmarked"></span>';
-            if(flaggedQuestions.has(q.id)) dots += '<span class="status-dot flagged"></span>';
-            
-            html += `<div class="${classes}" data-index="${index}">${index + 1}${dots}</div>`;
-        });
-        dom.questionNav.innerHTML = html;
-        dom.questionNav.querySelectorAll('.nav-box').forEach(box => {
-            box.addEventListener('click', () => {
-                currentQuestionIndex = parseInt(box.dataset.index);
-                renderQuestion();
-                renderQuestionNav();
-            });
-        });
-    };
-
-    const handleOptionClick = (e) => {
-        const button = e.currentTarget;
-        const q = allQuestions[currentQuestionIndex];
-        if (userAnswers.hasOwnProperty(q.id)) return; // Already answered
-
-        const selectedIndex = parseInt(button.dataset.index);
-        userAnswers[q.id] = selectedIndex;
-
-        playSound(selectedIndex === q.correctIndex);
-
-        if (quizMode === 'practice') {
-            renderQuestion();
-            renderQuestionNav();
-            // Automatically move to the next question after a short delay
-            setTimeout(() => {
-                if(currentQuestionIndex < allQuestions.length - 1) {
-                    currentQuestionIndex++;
-                    renderQuestion();
-                    renderQuestionNav();
-                }
-            }, 1500);
-        } else { // Exam mode
-            button.parentElement.querySelectorAll('.option-btn').forEach(b => b.classList.add('disabled'));
-            button.classList.add('answered'); // Visual feedback for selection
-            renderQuestionNav(); // Update nav to show it's answered
-        }
-    };
-    
-    const finishQuiz = () => {
-        clearInterval(timerInterval);
-        let correctCount = 0;
-        let answeredCount = 0;
-        let incorrectCount = 0;
-    
-        allQuestions.forEach(q => {
-            if (userAnswers.hasOwnProperty(q.id)) {
-                answeredCount++;
-                if (userAnswers[q.id] === q.correctIndex) {
-                    correctCount++;
-                }
-            }
-        });
-        incorrectCount = answeredCount - correctCount;
-        const totalQuestions = allQuestions.length;
-        const score = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
-    
-        let html = `
-            <h2>Quiz Finished!</h2>
-            <div class="score-display">${score.toFixed(1)}%</div>
-            <p>You correctly answered ${correctCount} out of ${totalQuestions} questions.</p>
-            <div class="results-summary">
-                <div class="summary-item">Time Taken <span>${formatTime(timeElapsed)}</span></div>
-                <div class="summary-item">Correct <span>${correctCount}</span></div>
-                <div class="summary-item">Incorrect <span>${incorrectCount}</span></div>
-                <div class="summary-item">Unanswered <span>${totalQuestions - answeredCount}</span></div>
-            </div>
-            <div class="chart-container"><canvas id="resultsChart"></canvas></div>
-            <button class="finish-btn" onclick="location.reload()">Back to Topics</button>
-        `;
-        dom.resultsContent.innerHTML = html;
-        showScreen('results-screen');
-    
-        const ctx = document.getElementById('resultsChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Correct', 'Incorrect', 'Unanswered'],
-                datasets: [{
-                    data: [correctCount, incorrectCount, totalQuestions - answeredCount],
-                    backgroundColor: ['#4ade80', '#f87171', '#94a3b8'],
-                    borderColor: 'var(--container-bg-color)',
-                    borderWidth: 4
-                }]
-            },
-            options: { responsive: true, cutout: '70%', plugins: { legend: { display: false } } }
-        });
-    
-        if (score >= 80 && quizMode === 'exam') {
-            launchConfetti();
-        }
-    };
-
-    /* --- HELPERS & UTILITIES --- */
-    
-    // Timer
-    const startTimer = () => {
-        clearInterval(timerInterval);
-        const startTime = Date.now() - timeElapsed * 1000;
-        if (quizMode === 'exam') {
-            timeLimit = (currentConfig.examTime || 60) * 60;
-            const endTime = Date.now() + timeLimit * 1000;
-            timerInterval = setInterval(() => {
-                const remaining = Math.round((endTime - Date.now()) / 1000);
-                if (remaining <= 0) {
-                    dom.timer.textContent = "00:00";
-                    finishQuiz();
-                } else {
-                    timeElapsed = timeLimit - remaining;
-                    dom.timer.textContent = formatTime(remaining);
-                }
-            }, 1000);
-        } else { // Practice mode
-            timerInterval = setInterval(() => {
-                timeElapsed = Math.floor((Date.now() - startTime) / 1000);
-                dom.timer.textContent = formatTime(timeElapsed);
-            }, 1000);
-        }
-    };
-
-    // Mode Toggle
-    const setupQuizMode = () => {
-        quizMode = dom.modeToggle.checked ? 'exam' : 'practice';
-        timeElapsed = 0;
-        dom.modeToggle.disabled = true; // Lock mode after starting
-        startTimer();
-    };
-
-    // Bookmarking
-    const fetchUserBookmarks = async () => {
-        if (!currentUser) return;
-        const bookmarksRef = collection(db, "users", currentUser.uid, "bookmarks");
-        const snapshot = await getDocs(bookmarksRef);
-        userBookmarks = new Set(snapshot.docs.map(doc => doc.id));
-    };
-
-    window.toggleBookmark = async (questionId, questionText) => {
-        if (!currentUser) return;
-        const bookmarkRef = doc(db, "users", currentUser.uid, "bookmarks", questionId);
-        const urlParamKey = new URLSearchParams(window.location.search).get('quiz');
-        
-        if (userBookmarks.has(questionId)) {
-            await deleteDoc(bookmarkRef);
-            userBookmarks.delete(questionId);
-        } else {
-            await setDoc(bookmarkRef, {
-                questionText: questionText.substring(0, 200), // Firestore limit
-                topic: `${currentConfig.name} - ${currentPaper.name}`,
-                timestamp: serverTimestamp(),
-                link: `${window.location.pathname}?quiz=${urlParamKey}&gid=${currentPaper.gid}&questionId=${questionId}`
-            });
-            userBookmarks.add(questionId);
-        }
-        renderQuestion();
-        renderQuestionNav();
-    };
-    
-    // Other Helpers
-    const formatTime = (seconds) => `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
-    const resetQuizState = () => { userAnswers = {}; currentQuestionIndex = 0; flaggedQuestions.clear(); };
-    const playSound = (isCorrect) => { if(isSoundOn) document.getElementById(isCorrect ? 'correct-sound' : 'wrong-sound').play(); };
-    const launchConfetti = () => { import('https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/+esm').then(m => m.default({ particleCount: 150, spread: 90, origin: { y: 0.6 } })); };
-    window.toggleFlag = (id) => { flaggedQuestions.has(id) ? flaggedQuestions.delete(id) : flaggedQuestions.add(id); renderQuestion(); renderQuestionNav(); };
-    
-    window.getAIExplanation = async (questionId) => {
-        if (!genAI) { alert("AI features are not configured."); return; }
-        const q = allQuestions.find(q => q.id === questionId);
-        const explanationBox = document.getElementById(`explanation-${q.id}`);
-        explanationBox.innerHTML = `<div class="loader" style="width:24px; height:24px; margin: 0 auto;"></div>`;
-        
-        try {
-            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-            const prompt = `You are an expert radiology tutor. Explain the following multiple-choice question in a clear, concise way for a medical professional. Focus on why the correct answer is correct and why the others are incorrect. Question: "${q.text}" Options: ${q.options.join(", ")}. The correct answer is "${q.options[q.correctIndex]}".`;
-            const result = await model.generateContent(prompt);
-            const text = await result.response.text();
-            explanationBox.innerHTML = `<h3>AI Insight (from Gemini)</h3><p>${text.replace(/\n/g, '<br>')}</p><h3>Original Explanation</h3><p>${q.explanation}</p>`;
-        } catch(error) {
-            console.error("AI Explanation Error:", error);
-            explanationBox.innerHTML = `<p>Sorry, could not generate AI insight at this time.</p><h3>Original Explanation</h3><p>${q.explanation}</p>`;
-        }
-    };
-
-    /* --- EVENT LISTENERS --- */
-    document.getElementById('theme-toggle-btn').addEventListener('click', () => {
-        const newTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-        document.documentElement.dataset.theme = newTheme;
-        document.querySelector('#theme-toggle-btn i').dataset.feather = newTheme === 'dark' ? 'sun' : 'moon';
-        feather.replace();
-    });
-    document.getElementById('sound-toggle-btn').addEventListener('click', () => {
-        isSoundOn = !isSoundOn;
-        document.querySelector('#sound-toggle-btn i').dataset.feather = isSoundOn ? 'volume-2' : 'volume-x';
-        feather.replace();
-    });
-    document.getElementById('finish-quiz-btn').addEventListener('click', () => {
-        if (confirm('Are you sure you want to finish the quiz?')) {
-            finishQuiz();
-        }
-    });
-    window.addEventListener('keydown', (e) => {
-        if (!dom.quizScreen.classList.contains('active') || allQuestions.length === 0) return;
-        if (e.key === 'ArrowRight' && currentQuestionIndex < allQuestions.length - 1) {
-            currentQuestionIndex++;
-            renderQuestion();
-            renderQuestionNav();
-        } else if (e.key === 'ArrowLeft' && currentQuestionIndex > 0) {
-            currentQuestionIndex--;
-            renderQuestion();
-            renderQuestionNav();
-        }
-    });
-
-</script>
 </body>
 </html>
