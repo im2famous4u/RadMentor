@@ -42,11 +42,27 @@
   </div>
 
   <script type="module">
+    // --- THIS IS THE FIX: Added initializeApp to connect this page to Firebase ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-    const auth = getAuth();
-    const db = getFirestore();
+    // Your Firebase project configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
+      authDomain: "radiology-mcqs.firebaseapp.com",
+      projectId: "radiology-mcqs",
+      storageBucket: "radiology-mcqs.appspot.com",
+      messagingSenderId: "862300415358",
+      appId: "1:862300415358:web:097d5e413f388e30587f2f",
+      measurementId: "G-0V1SD1H95V"
+    };
+
+    // Initialize Firebase within this page
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    // --- END OF FIX ---
 
     const loadingIndicator = document.getElementById('loading-indicator');
     const profileContainer = document.getElementById('profile-container');
@@ -78,9 +94,7 @@
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          console.log("Profile data found:", docSnap.data());
           const data = docSnap.data();
-          // This loop now safely populates the form
           for (const key in inputs) {
             if (inputs.hasOwnProperty(key) && data[key]) {
               inputs[key].value = data[key];
@@ -92,7 +106,6 @@
       } catch (error) {
         console.error("Error loading user profile:", error);
       } finally {
-        // Hide loader and show the form regardless of outcome
         loadingIndicator.classList.add('hidden');
         profileContainer.classList.remove('hidden');
       }
