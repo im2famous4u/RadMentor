@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- This will correctly resolve to /dashboard/style.css -->
+    <!-- This will correctly resolve to /dashboard/quiz/style.css -->
     <link rel="stylesheet" href="quiz/style.css">
 </head>
 <body>
@@ -81,6 +81,7 @@
         const superspecialityConfig = {
           "ini-ss": {
             name: "INI-SS Exam",
+            type: "mcq", // Set quiz type for this group
             sheetId: "1Zd-UhR966r8FE5pJ3yqqPInQBrAzLSG4pTc_wytr4I0",
             papers: {
               "Paper 1": "0", "Paper 2": "123269442", "Paper 3": "1278979358",
@@ -90,6 +91,7 @@
           },
           "neet-ss": {
             name: "NEET SS Exam",
+            type: "mcq", // Set quiz type for this group
             sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk",
             papers: {
               "Paper 1": "0", "Paper 2": "385825325", "Paper 3": "1302055466",
@@ -106,16 +108,18 @@
             const exam = superspecialityConfig[examId];
             for (const paperName in exam.papers) {
                 const gid = exam.papers[paperName];
-                const uniqueId = `${examId}-${paperName.replace(' ', '-').toLowerCase()}`;
+                const uniqueId = `${examId}-${paperName.replace(/\s+/g, '-').toLowerCase()}`;
                 
                 paperMetadata.push({
                     id: uniqueId,
-                    name: `${exam.name} - ${paperName}`
+                    name: `${exam.name} - ${paperName}`,
+                    type: exam.type 
                 });
 
                 allQuizData[uniqueId] = {
                     sheetId: exam.sheetId,
-                    gid: gid
+                    gid: gid,
+                    type: exam.type
                 };
             }
         }
