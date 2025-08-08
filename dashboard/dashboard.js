@@ -25,45 +25,69 @@ document.addEventListener('DOMContentLoaded', () => {
     initQuestionOfTheDay();
 });
 
+// --- NEW, MORE ROBUST QUESTION OF THE DAY MODULE ---
 async function initQuestionOfTheDay() {
     const todayStr = new Date().toISOString().split('T')[0];
     const qotdLoader = document.getElementById('qotd-loader');
     
+    // 1. Try to load from cache
     try {
         const cachedData = JSON.parse(localStorage.getItem('radmentor_qotd'));
         if (cachedData && cachedData.date === todayStr) {
             displayQotD(cachedData.question);
             return;
         }
-    } catch (e) { /* Cache is invalid, proceed to fetch */ }
+    } catch (e) { /* Invalid cache, proceed to fetch */ }
 
+    // 2. Fetch new question using JSON
     try {
-        const url = `https://docs.google.com/spreadsheets/d/${QOTD_CONFIG.sheetId}/gviz/tq?tqx=out:csv&gid=${QOTD_CONFIG.gid}`;
+        // Updated URL to request JSON output
+        const url = `https://docs.google.com/spreadsheets/d/${QOTD_CONFIG.sheetId}/gviz/tq?tqx=out:json&gid=${QOTD_CONFIG.gid}`;
         const response = await fetch(url);
-        if (!response.ok) throw new Error(`Google Sheets fetch failed with status: ${response.status}`);
+        if (!response.ok) throw new Error(`Google Sheets API failed with status: ${response.status}`);
         
-        const csvText = await response.text();
-        if (!csvText || csvText.length < 10) throw new Error("Fetched CSV data is empty or invalid. Is the sheet published to the web?");
+        let jsonText = await response.text();
+        
+        // The response is JSONP, we need to extract the pure JSON part
+        const jsonMatch = jsonText.match(/google\.visualization\.Query\.setResponse\((.*)\)/s);
+        if (!jsonMatch || !jsonMatch[1]) throw new Error("Could not parse JSONP response from Google Sheets.");
+        
+        const jsonData = JSON.parse(jsonMatch[1]);
+        const allQuestions = parseGoogleSheetJSON(jsonData);
 
-        const allQuestions = parseCSV(csvText);
-        // UPDATED to look for 'Image for Quest'
+        // Filter out questions that have images (using your sheet's header 'Image for Quest')
         const nonImageQuestions = allQuestions.filter(q => q && (!q['Image for Quest'] || q['Image for Quest'].trim() === ''));
-        
+
         if (nonImageQuestions.length === 0) throw new Error("No non-image questions were found in the sheet.");
 
+        // Deterministic selection based on the day of the year
         const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
         const questionIndex = dayOfYear % nonImageQuestions.length;
         const todaysQuestion = nonImageQuestions[questionIndex];
 
-        if (!todaysQuestion || !todaysQuestion.Question) throw new Error("Selected question is malformed. Check column headers.");
+        if (!todaysQuestion || !todaysQuestion.Question) throw new Error("Selected question is malformed. Check sheet headers.");
 
         localStorage.setItem('radmentor_qotd', JSON.stringify({ date: todayStr, question: todaysQuestion }));
         displayQotD(todaysQuestion);
 
     } catch (error) {
         console.error("QotD Error:", error);
-        qotdLoader.innerHTML = `<p class="text-red-500 p-4 text-center">${error.message}</p>`;
+        qotdLoader.innerHTML = `<p class="text-red-500 p-4 text-center"><strong>Error:</strong> ${error.message}</p>`;
     }
+}
+
+// New helper function to parse the JSON response from Google Sheets
+function parseGoogleSheetJSON(data) {
+    const cols = data.table.cols.map(col => col.label || col.id);
+    const rows = data.table.rows;
+    return rows.map(row => {
+        const obj = {};
+        cols.forEach((colName, index) => {
+            const cell = row.c[index];
+            obj[colName] = cell ? cell.v : ""; // 'v' holds the value
+        });
+        return obj;
+    });
 }
 
 function displayQotD(q) {
@@ -71,15 +95,15 @@ function displayQotD(q) {
         document.getElementById('qotd-loader').innerHTML = `<p class="text-red-500">Error: Received invalid question data.</p>`;
         return;
     }
-    // UPDATED to look for your specific headers like 'Option a'
-    document.getElementById('qotd-question-text').textContent = q.Question || "N/A";
-    document.getElementById('qotd-option-a').textContent = `A) ${q['Option a'] || '...'}`;
-    document.getElementById('qotd-option-b').textContent = `B) ${q['Option b'] || '...'}`;
-    document.getElementById('qotd-option-c').textContent = `C) ${q['Option c'] || '...'}`;
-    document.getElementById('qotd-option-d').textContent = `D) ${q['Option d'] || '...'}`;
+    // This code now correctly uses the headers from YOUR sheet (e.g., 'Option a')
+    document.getElementById('qotd-question-text').textContent = q.Question;
+    document.getElementById('qotd-option-a').textContent = `A) ${q['Option a']}`;
+    document.getElementById('qotd-option-b').textContent = `B) ${q['Option b']}`;
+    document.getElementById('qotd-option-c').textContent = `C) ${q['Option c']}`;
+    document.getElementById('qotd-option-d').textContent = `D) ${q['Option d']}`;
 
-    document.getElementById('qotd-answer-text').textContent = `Correct Answer: ${q['Correct Answer'] || 'N/A'}`;
-    document.getElementById('qotd-explanation-text').innerHTML = `<strong>Explanation:</strong> ${q.Explanation || 'No explanation provided.'}`;
+    document.getElementById('qotd-answer-text').textContent = `Correct Answer: ${q['Correct Answer']}`;
+    document.getElementById('qotd-explanation-text').innerHTML = `<strong>Explanation:</strong> ${q.Explanation}`;
 
     document.getElementById('qotd-loader').classList.add('hidden');
     const qotdContent = document.getElementById('qotd-content');
@@ -94,23 +118,8 @@ function displayQotD(q) {
     };
 }
 
-function parseCSV(text) {
-    const lines = text.trim().split(/\r?\n/);
-    if (lines.length < 2) return [];
-    const header = lines[0].slice(1, -1).split('","').map(h => h.trim());
-    const result = [];
-    for (let i = 1; i < lines.length; i++) {
-        const obj = {};
-        const currentline = lines[i].slice(1, -1).split('","');
-        header.forEach((h, j) => {
-            obj[h] = currentline[j] || "";
-        });
-        result.push(obj);
-    }
-    return result;
-}
 
-// Performance Snapshot module remains unchanged
+// --- PERFORMANCE SNAPSHOT MODULE (Unchanged) ---
 function initPerformanceSnapshot() {
     const statsLoader = document.getElementById('stats-loader');
     
