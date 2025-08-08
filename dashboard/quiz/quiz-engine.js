@@ -55,8 +55,9 @@ export function initQuizApp(config) {
         }
     });
 
-    if (dom.paperCardGrid) {
-        dom.paperCardGrid.addEventListener('click', (e) => {
+    const grid = dom.paperCardGrid || document.getElementById('physics-topics-grid');
+    if (grid) {
+        grid.addEventListener('click', (e) => {
             if (e.target.matches('.selection-button, .paper-button')) {
                 const { id, name, type } = e.target.dataset;
                 currentPaper = { id, name, type };
@@ -94,19 +95,17 @@ function showScreen(screenId) {
     if (activeScreen) {
         activeScreen.classList.add('active');
     } else if (screenId === 'topic-screen') {
-        // Fallback for different topic screen IDs
         const topicScreen = document.querySelector('#topic-screen');
         if (topicScreen) topicScreen.classList.add('active');
     }
     feather.replace();
 }
 
-
 function handleDirectLink(user) {
     const urlParams = new URLSearchParams(window.location.search);
     const directQuestionId = urlParams.get('questionId');
     if(user && directQuestionId) {
-        const paperId = urlParams.get('paperId') || urlParams.get('topicGid'); // Support both param names
+        const paperId = urlParams.get('paperId') || urlParams.get('topicGid');
         const paper = QUIZ_CONFIG.PAPER_METADATA.find(p => p.id === paperId);
         if(paper) {
             currentPaper = paper;
@@ -116,8 +115,9 @@ function handleDirectLink(user) {
         }
     }
     showScreen('topic-screen');
-    if (dom.paperCardGrid) {
-        dom.paperCardGrid.innerHTML = QUIZ_CONFIG.PAPER_METADATA.map(paper => 
+    const grid = dom.paperCardGrid || document.getElementById('physics-topics-grid');
+    if (grid) {
+        grid.innerHTML = QUIZ_CONFIG.PAPER_METADATA.map(paper => 
             `<button class="paper-button" data-id="${paper.id}" data-name="${paper.name}" data-type="${paper.type}">${paper.name}</button>`
         ).join('');
     }
@@ -425,9 +425,24 @@ function updateQuestionNav() {
     if(activeBox) activeBox.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 }
 
-function initializeSound() { /* ... */ }
-function toggleSound() { /* ... */ }
-function updateSoundIcon() { /* ... */ }
+function initializeSound() {
+    const savedSoundPref = localStorage.getItem('radmentor_sound_pref');
+    isSoundOn = savedSoundPref !== 'off';
+    updateSoundIcon();
+}
+
+function toggleSound() {
+    isSoundOn = !isSoundOn;
+    localStorage.setItem('radmentor_sound_pref', isSoundOn ? 'on' : 'off');
+    updateSoundIcon();
+}
+
+function updateSoundIcon() {
+    if (!dom.soundToggleBtn) return;
+    const iconName = isSoundOn ? 'volume-2' : 'volume-x';
+    dom.soundToggleBtn.innerHTML = `<i data-feather="${iconName}"></i>`;
+    feather.replace();
+}
 
 function toggleFlag(id) {
     const button = dom.questionsDisplay.querySelector('.flag-btn');
@@ -478,9 +493,135 @@ async function finishExam() {
             }
         }
     });
+
+    const unattemptedCount = allQuestions.length - (correctCount + incorrectCount);
+    const scorePercent = allQuestions.length > 0 ? (correctCount / allQuestions.length * 100) : 0;
+
+    dom.resultsScreen.innerHTML = `
+      <div class="results-container">
+          <h2 style="font-size: 2.2rem; font-weight: 700; color: var(--header-text-color);">Test Results</h2>
+          <div class="results-grid" style="margin-top: 2rem;">
+              <div class="stat-card"><h3>Score Summary</h3><p style="font-size: 3rem; font-weight: 700; color: var(--primary-color);" id="final-score-percent"></p><p><strong>Correct:</strong> <span id="correct-count"></span></p><p><strong>Incorrect:</strong> <span id="incorrect-count"></span></p><p><strong>Unattempted:</strong> <span id="unattempted-count"></span></p></div>
+              <div class="stat-card"><h3>Performance Chart</h3><canvas id="performanceChart" style="max-height: 200px;"></canvas></div>
+              <div class="stat-card"><h3>Peer Comparison</h3><div id="peer-comparison-content"><p>Calculating...</p></div></div>
+              <div class="stat-card">
+                  <h3 style="display: flex; justify-content: space-between; align-items: center;"><span>🤖 RadMentor Insights</span><span style="background-color: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 99px;">Exclusive</span></h3>
+                  <div id="ai-insights-content"><p>Generating feedback...</p></div>
+             </div>
+          </div>
+          <div class="results-actions">
+              <button class="results-btn primary" id="review-all-btn">Review All</button>
+              <button class="results-btn danger" id="review-incorrect-btn">Review Incorrect</button>
+              <button class="results-btn warning" id="review-flagged-btn">Review Flagged</button>
+              <button class="results-btn secondary" id="back-to-topics-btn">Back to Topics</button>
+          </div>
+      </div>`;
     
-    // ... (rest of finishExam logic is the same)
+    document.getElementById('final-score-percent').textContent = `${scorePercent.toFixed(1)}%`;
+    document.getElementById('correct-count').textContent = correctCount;
+    document.getElementById('incorrect-count').textContent = incorrectCount;
+    document.getElementById('unattempted-count').textContent = unattemptedCount;
+    
+    if(window.performanceChart instanceof Chart) window.performanceChart.destroy();
+    window.performanceChart = new Chart(document.getElementById('performanceChart'), { type: 'doughnut', data: { labels: ['Correct', 'Incorrect', 'Unattempted'], datasets: [{ data: [correctCount, incorrectCount, unattemptedCount], backgroundColor: ['#22c55e', '#ef4444', '#f59e0b'] }]}});
+    
+    localStorage.removeItem(`radmentor_quiz_${currentUser.uid}_${currentPaper.id}_${quizMode}`);
+    
+    if (quizMode === 'exam') {
+        const { average, percentile } = await saveTestResultAndGetStats({ score: correctCount, total: allQuestions.length });
+        document.getElementById('peer-comparison-content').innerHTML = `<p><strong>Average Score:</strong> ${average.toFixed(1)}%</p><p><strong>Your Rank:</strong> You scored higher than ${percentile.toFixed(1)}% of users.</p>`;
+        getAIInsights(incorrectQuestions);
+    } else {
+         document.getElementById('peer-comparison-content').innerHTML = '<p>Peer comparison is only available in Exam Mode.</p>';
+         document.getElementById('ai-insights-content').innerHTML = '<p>AI Insights are only available for Exam Mode results.</p>';
+    }
+
+    document.getElementById('back-to-topics-btn').addEventListener('click', () => { showScreen('topic-screen'); handleDirectLink(currentUser); });
+    document.getElementById('review-all-btn').addEventListener('click', () => setupReview('all'));
+    document.getElementById('review-incorrect-btn').addEventListener('click', () => setupReview('incorrect'));
+    document.getElementById('review-flagged-btn').addEventListener('click', () => setupReview('flagged'));
 }
 
-// ... (The rest of the functions: saveTestResultAndGetStats, getAIInsights, saveState, startTimer, setupReview)
-// ... are the same as the previous correct version.
+async function saveTestResultAndGetStats(attempt) {
+    const aggregatesRef = doc(db, "quizAggregates", currentPaper.id);
+    let finalStats = { average: 0, percentile: 0 };
+    try {
+        await runTransaction(db, async (transaction) => {
+            const aggDoc = await transaction.get(aggregatesRef);
+            const scorePercent = (attempt.score / allQuestions.length) * 100;
+            if (!aggDoc.exists()) {
+                transaction.set(aggregatesRef, { totalAttempts: 1, averageScore: scorePercent, scores: [scorePercent] });
+                finalStats = { average: scorePercent, percentile: 100 };
+            } else {
+                const data = aggDoc.data();
+                const scores = data.scores || [];
+                finalStats.percentile = scores.length > 0 ? (scores.filter(s => s < scorePercent).length / scores.length) * 100 : 100;
+                const newTotalAttempts = data.totalAttempts + 1;
+                const newAverageScore = ((data.averageScore * data.totalAttempts) + scorePercent) / newTotalAttempts;
+                scores.push(scorePercent);
+                transaction.update(aggregatesRef, { totalAttempts: newTotalAttempts, averageScore: newAverageScore, scores });
+                finalStats.average = newAverageScore;
+            }
+        });
+    } catch (e) { console.error("Transaction failed: ", e); }
+    return finalStats;
+}
+
+async function getAIInsights(incorrectQs) {
+    const insightsDiv = document.getElementById('ai-insights-content');
+    if (QUIZ_CONFIG.GOOGLE_AI_API_KEY === 'YOUR_API_KEY_HERE') {
+        insightsDiv.innerHTML = '<p>Please add a Google AI API key to enable this feature.</p>'; return;
+    }
+    if(incorrectQs.length === 0) {
+         insightsDiv.innerHTML = '<p>Flawless victory! No incorrect answers to analyze.</p>'; return;
+    }
+    try {
+        const genAI = new GoogleGenerativeAI(QUIZ_CONFIG.GOOGLE_AI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-pro"});
+        const prompt = `A user answered these radiology physics questions incorrectly. Identify 2-3 core concepts they are struggling with and give concise, actionable study advice. Questions:\n${incorrectQs.map(q => `- ${q.question || q.text}`).join('\n')}`;
+        const result = await model.generateContent(prompt);
+        insightsDiv.innerHTML = result.response.text().replace(/\n/g, '<br>').replace(/\*/g, '');
+    } catch (error) {
+        insightsDiv.innerHTML = '<p>Could not retrieve AI insights.</p>';
+        console.error("AI Error:", error);
+    }
+}
+
+function saveState() {
+     if (!currentUser || !currentPaper || isReviewing) return;
+     const state = { answers: userAnswers, index: currentQuestionIndex, elapsedSeconds: elapsedSeconds, flags: Array.from(flaggedQuestions) };
+     localStorage.setItem(`radmentor_quiz_${currentUser.uid}_${currentPaper.id}_${quizMode}`, JSON.stringify(state));
+}
+
+function startTimer() {
+    clearInterval(quizInterval);
+    let startTime = Date.now() - (elapsedSeconds * 1000);
+    quizInterval = setInterval(() => {
+        elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+        dom.timerEl.textContent = `${String(Math.floor(elapsedSeconds/60)).padStart(2,'0')}:${String(elapsedSeconds%60).padStart(2,'0')}`;
+    }, 1000);
+}
+
+function setupReview(filterType) {
+    isReviewing = true;
+    if (filterType === 'all') {
+        reviewFilter = allQuestions.map((_, i) => i).filter(i => userAnswers[i] !== undefined);
+    } else if (filterType === 'incorrect') {
+        reviewFilter = allQuestions.map((q, i) => i).filter(i => {
+            if (userAnswers[i] === undefined) return false;
+            return q.type === 'frcr-physics' ? !allSubQuestionsCorrect(i) : userAnswers[i] !== q.correctIndex;
+        });
+    } else if (filterType === 'flagged') {
+        reviewFilter = allQuestions.map((q, i) => i).filter(i => flaggedQuestions.has(q.id));
+    }
+    
+    if (reviewFilter.length === 0) {
+        alert(`No ${filterType} questions to review.`);
+        isReviewing = false;
+        return;
+    }
+    dom.finishQuizBtn.style.display = 'none';
+    showScreen('quiz-screen');
+    createQuestionNav();
+    showQuestion(reviewFilter[0]);
+}
