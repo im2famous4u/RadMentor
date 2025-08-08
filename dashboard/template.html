@@ -134,18 +134,38 @@ const db = getFirestore(app);
 let currentUser=null, currentConfig=null, currentPaper=null;
 let allQuestions=[], userAnswers={}, currentIndex=0, quizMode='practice', timerInt=null, elapsed=0;
 let isSoundOn=true, userBookmarks=new Set(), flaggedQuestions=new Set();
+let directQuestionId=null, directGid=null;
 
 /* Show screen */
 function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id===id)); feather.replace(); }
 
-/* Auth */
+/* Auth & URL param handling */
 onAuthStateChanged(auth, async user=>{
  currentUser=user;
+ const params=new URLSearchParams(window.location.search);
+ const quizKey=params.get('quiz');
+ directGid=params.get('gid');
+ directQuestionId=params.get('questionId');
+ currentConfig=QUIZ_CONFIG[quizKey];
+ if(!currentConfig){ alert("Invalid quiz param"); return; }
+ 
  if(!user){ document.getElementById('authCheckScreen').innerHTML="<p>Login required</p>"; return; }
  document.getElementById('authCheckScreen').style.display="none";
- let qp=new URLSearchParams(window.location.search).get('quiz');
- currentConfig=QUIZ_CONFIG[qp];
- if(!currentConfig){ alert("Invalid quiz param"); return; }
+
+ // Direct question jump
+ if(directQuestionId && directGid){
+   // Find if it's a normal config or variant
+   if(currentConfig.papers){
+     const foundName=Object.keys(currentConfig.papers).find(k=>currentConfig.papers[k]===directGid);
+     if(foundName){ currentPaper={ name:foundName, gid:directGid }; startQuiz(true); return; }
+   } else if(currentConfig.variants){
+     for(let [variant,vdata] of Object.entries(currentConfig.variants)){
+       const foundName=Object.keys(vdata.papers).find(k=>vdata.papers[k]===directGid);
+       if(foundName){ currentConfig={...vdata}; currentPaper={ name:foundName, gid:directGid }; startQuiz(true); return; }
+     }
+   }
+ }
+
  showPapers();
 });
 
@@ -163,21 +183,25 @@ document.getElementById('paper-card-grid').addEventListener('click',e=>{
  if(e.target.classList.contains('paper-button')){
    currentPaper={ name:e.target.textContent, gid:e.target.dataset.gid };
    if(e.target.dataset.variant){ currentConfig={...currentConfig.variants[e.target.dataset.variant]}; }
-   startQuiz();
+   startQuiz(false);
  }
 });
 
 /* Fetch & start */
-async function startQuiz(){
+async function startQuiz(isDirect=false){
  showScreen('quiz-screen');
  document.getElementById('loading-container').style.display='block';
  let url=`https://docs.google.com/spreadsheets/d/${currentConfig.sheetId}/gviz/tq?tqx=out:csv&gid=${currentPaper.gid}`;
  let csv=await (await fetch(url)).text();
  allQuestions=parseCSV(csv);
  await fetchUserBookmarks();
- renderQuestion();
  document.getElementById('loading-container').style.display='none';
  document.getElementById('quiz-content').style.display='block';
+ if(isDirect && directQuestionId){
+   let idx=allQuestions.findIndex(q=>q.id===directQuestionId);
+   currentIndex=idx>=0?idx:0;
+ }
+ renderQuestion();
  startTimer();
 }
 
@@ -270,6 +294,8 @@ function launchConfetti(){ import('https://cdn.jsdelivr.net/npm/canvas-confetti@
 
 /* AI Insights */
 async function getAIExplanation(q){ if(!GOOGLE_AI_API_KEY) return "AI not configured."; const genAI=new GoogleGenerativeAI(GOOGLE_AI_API_KEY); const model=genAI.getGenerativeModel({model:"gemini-1.5-flash"}); const r=await model.generateContent(`Explain this radiology MCQ and why the correct answer is right:\n${q.text}\nOptions:${q.options.join(",")}\nCorrect:${q.options[q.correctIndex]}`); return r.response.text(); }
+
+</script>
 
 </script>
 </body>
