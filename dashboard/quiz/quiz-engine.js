@@ -510,4 +510,3 @@ function setupReview(filterType) {
     createQuestionNav();
     showQuestion(reviewFilter[0]);
 }
-
