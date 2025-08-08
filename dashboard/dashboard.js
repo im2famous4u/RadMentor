@@ -25,12 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
     initQuestionOfTheDay();
 });
 
-// --- NEW, MORE ROBUST QUESTION OF THE DAY MODULE ---
+// --- FINAL, ROBUST QUESTION OF THE DAY MODULE ---
 async function initQuestionOfTheDay() {
     const todayStr = new Date().toISOString().split('T')[0];
     const qotdLoader = document.getElementById('qotd-loader');
     
-    // 1. Try to load from cache
     try {
         const cachedData = JSON.parse(localStorage.getItem('radmentor_qotd'));
         if (cachedData && cachedData.date === todayStr) {
@@ -39,33 +38,33 @@ async function initQuestionOfTheDay() {
         }
     } catch (e) { /* Invalid cache, proceed to fetch */ }
 
-    // 2. Fetch new question using JSON
     try {
-        // Updated URL to request JSON output
         const url = `https://docs.google.com/spreadsheets/d/${QOTD_CONFIG.sheetId}/gviz/tq?tqx=out:json&gid=${QOTD_CONFIG.gid}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error(`Google Sheets API failed with status: ${response.status}`);
         
-        let jsonText = await response.text();
-        
-        // The response is JSONP, we need to extract the pure JSON part
+        const jsonText = await response.text();
         const jsonMatch = jsonText.match(/google\.visualization\.Query\.setResponse\((.*)\)/s);
         if (!jsonMatch || !jsonMatch[1]) throw new Error("Could not parse JSONP response from Google Sheets.");
         
         const jsonData = JSON.parse(jsonMatch[1]);
+        
+        // **THIS IS THE NEW, SMARTER ERROR CHECK**
+        if (jsonData.status === 'error') {
+            throw new Error(`Google Sheets Error: ${jsonData.errors[0].detailed_message}`);
+        }
+        
         const allQuestions = parseGoogleSheetJSON(jsonData);
-
-        // Filter out questions that have images (using your sheet's header 'Image for Quest')
-        const nonImageQuestions = allQuestions.filter(q => q && (!q['Image for Quest'] || q['Image for Quest'].trim() === ''));
+        // Now using the 'Image' header you corrected
+        const nonImageQuestions = allQuestions.filter(q => q && (!q.Image || q.Image.trim() === ''));
 
         if (nonImageQuestions.length === 0) throw new Error("No non-image questions were found in the sheet.");
 
-        // Deterministic selection based on the day of the year
         const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
         const questionIndex = dayOfYear % nonImageQuestions.length;
         const todaysQuestion = nonImageQuestions[questionIndex];
 
-        if (!todaysQuestion || !todaysQuestion.Question) throw new Error("Selected question is malformed. Check sheet headers.");
+        if (!todaysQuestion || !todaysQuestion.Question) throw new Error("Selected question is malformed. This can happen if the first row is empty.");
 
         localStorage.setItem('radmentor_qotd', JSON.stringify({ date: todayStr, question: todaysQuestion }));
         displayQotD(todaysQuestion);
@@ -76,15 +75,15 @@ async function initQuestionOfTheDay() {
     }
 }
 
-// New helper function to parse the JSON response from Google Sheets
 function parseGoogleSheetJSON(data) {
+    if (!data.table || !data.table.cols || !data.table.rows) return [];
     const cols = data.table.cols.map(col => col.label || col.id);
     const rows = data.table.rows;
     return rows.map(row => {
         const obj = {};
         cols.forEach((colName, index) => {
             const cell = row.c[index];
-            obj[colName] = cell ? cell.v : ""; // 'v' holds the value
+            obj[colName] = cell ? cell.v : "";
         });
         return obj;
     });
@@ -95,12 +94,11 @@ function displayQotD(q) {
         document.getElementById('qotd-loader').innerHTML = `<p class="text-red-500">Error: Received invalid question data.</p>`;
         return;
     }
-    // This code now correctly uses the headers from YOUR sheet (e.g., 'Option a')
     document.getElementById('qotd-question-text').textContent = q.Question;
-    document.getElementById('qotd-option-a').textContent = `A) ${q['Option a']}`;
-    document.getElementById('qotd-option-b').textContent = `B) ${q['Option b']}`;
-    document.getElementById('qotd-option-c').textContent = `C) ${q['Option c']}`;
-    document.getElementById('qotd-option-d').textContent = `D) ${q['Option d']}`;
+    document.getElementById('qotd-option-a').textContent = `A) ${q['Option A']}`;
+    document.getElementById('qotd-option-b').textContent = `B) ${q['Option B']}`;
+    document.getElementById('qotd-option-c').textContent = `C) ${q['Option C']}`;
+    document.getElementById('qotd-option-d').textContent = `D) ${q['Option D']}`;
 
     document.getElementById('qotd-answer-text').textContent = `Correct Answer: ${q['Correct Answer']}`;
     document.getElementById('qotd-explanation-text').innerHTML = `<strong>Explanation:</strong> ${q.Explanation}`;
