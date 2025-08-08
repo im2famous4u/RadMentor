@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fellowship Exams - RadMentor</title>
-    <!-- Sets the base path for all relative URLs to /dashboard/ -->
+    <!-- CORRECTED: Base path is set to the root of the dashboard -->
     <base href="/dashboard/">
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- This will correctly resolve to /dashboard/quiz/style.css -->
+    
+    <!-- CORRECTED: Path is now relative to the base href -->
     <link rel="stylesheet" href="quiz/style.css">
 </head>
 <body>
@@ -69,15 +70,14 @@
     <!-- Audio elements -->
     <audio id="correct-sound" src="https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/sounds/correct.mp3" preload="auto"></audio>
     <audio id="wrong-sound" src="https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/sounds/wrong.mp3" preload="auto"></audio>
-
-    <!-- This will correctly resolve to /dashboard/quiz/quiz-engine.js -->
+    
+    <!-- CORRECTED: Path is now relative to the base href -->
     <script type="module" src="quiz/quiz-engine.js"></script>
-
-    <!-- Initialize the engine with THIS quiz's specific data -->
     <script type="module">
+        // CORRECTED: Path is now relative to the base href
         import { initQuizApp } from './quiz/quiz-engine.js';
-
-        // 1. DEFINE THE DATA FOR THIS SPECIFIC QUIZ
+        
+        // 1. DEFINE THE DATA FOR THE FELLOWSHIP QUIZ
         const fellowshipQuizData = {
             paper1: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "0" },
             paper2: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1141721868" },
@@ -90,10 +90,14 @@
         };
 
         const fellowshipPaperMetadata = [
-            { id: 'paper1', name: 'Paper 1', type: 'mcq'}, { id: 'paper2', name: 'Paper 2', type: 'mcq'},
-            { id: 'paper3', name: 'Paper 3', type: 'mcq'}, { id: 'paper4', name: 'Paper 4', type: 'mcq'},
-            { id: 'paper5', name: 'Paper 5', type: 'mcq'}, { id: 'paper6', name: 'Paper 6', type: 'mcq'},
-            { id: 'paper7', name: 'Paper 7', type: 'mcq'}, { id: 'paper8', name: 'Paper 8', type: 'mcq'},
+            { id: 'paper1', name: 'Paper 1', type: 'mcq'},
+            { id: 'paper2', name: 'Paper 2', type: 'mcq'},
+            { id: 'paper3', name: 'Paper 3', type: 'mcq'},
+            { id: 'paper4', name: 'Paper 4', type: 'mcq'},
+            { id: 'paper5', name: 'Paper 5', type: 'mcq'},
+            { id: 'paper6', name: 'Paper 6', type: 'mcq'},
+            { id: 'paper7', name: 'Paper 7', type: 'mcq'},
+            { id: 'paper8', name: 'Paper 8', type: 'mcq'},
         ];
         
         const firebaseConfig = {
@@ -106,7 +110,7 @@
             ALL_QUIZ_DATA: fellowshipQuizData,
             PAPER_METADATA: fellowshipPaperMetadata,
             FIREBASE_CONFIG: firebaseConfig,
-            GOOGLE_AI_API_KEY: 'YOUR_API_KEY_HERE' // Or load it securely
+            GOOGLE_AI_API_KEY: 'YOUR_API_KEY_HERE'
         };
 
         // 3. START THE APP
