@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fellowship Exams Pro - RadMentor</title>
+    <base href="/dashboard/quiz/">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="authCheckScreen" class="screen active">
+        <div class="selection-container">
+            <div class="loader"></div>
+            <p style="margin-top: 1rem; font-weight: 500; color: var(--text-color-light);">Initializing Session...</p>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div id="topic-screen" class="screen">
+            <div class="selection-container">
+                 <h1 style="color: var(--header-text-color); font-size: 2.2rem; font-weight: 800;">Gear Up for Success</h1>
+                 <p style="color: var(--text-color-light); font-size: 1.1rem; max-width: 600px; margin: 1rem auto 0;">Excel in the top fellowship exams from around the world with our curated question papers.</p>
+                 <div id="paper-card-grid" class="paper-button-grid"></div>
+            </div>
+        </div>
+
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-container">
+                <div id="loading-container" style="text-align:center; padding: 4rem;"><div class="loader"></div></div>
+                <div id="quiz-content" style="display:none;">
+                    <div class="quiz-header">
+                        <h1 id="quiz-title"></h1>
+                        <div class="header-controls">
+                            <div class="mode-toggle">
+                                <span style="color: var(--text-color-light);">Practice</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="mode-toggle-checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                                <span>Exam</span>
+                            </div>
+                            <button id="sound-toggle-btn" class="icon-btn"><i data-feather="volume-2"></i></button>
+                            <div class="timer" id="timer">00:00</div>
+                            <button class="finish-btn-header" id="finish-quiz-btn">Finish</button>
+                        </div>
+                    </div>
+                    <div id="quiz-pagination-header" class="quiz-pagination-header"></div>
+                    <div class="question-area">
+                        <div id="questions-display"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="results-screen" class="screen"></div>
+    </div>
+    
+    <audio id="correct-sound" src="https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/sounds/correct.mp3" preload="auto"></audio>
+    <audio id="wrong-sound" src="https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/sounds/wrong.mp3" preload="auto"></audio>
+
+    <script type="module" src="quiz-engine.js"></script>
+
+    <script type="module">
+        import { initQuizApp } from './quiz-engine.js';
+
+        // 1. DEFINE THE DATA FOR THIS SPECIFIC QUIZ
+        const fellowshipQuizData = {
+            paper1: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "0" },
+            paper2: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1141721868" },
+            paper3: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1815658253" },
+            paper4: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1386284317" },
+            paper5: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "40352700" },
+            paper6: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "54400073" },
+            paper7: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1767827630" },
+            paper8: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "280434470" }
+        };
+
+        const fellowshipPaperMetadata = [
+            { id: 'paper1', name: 'Paper 1'}, { id: 'paper2', name: 'Paper 2'},
+            { id: 'paper3', name: 'Paper 3'}, { id: 'paper4', name: 'Paper 4'},
+            { id: 'paper5', name: 'Paper 5'}, { id: 'paper6', name: 'Paper 6'},
+            { id: 'paper7', name: 'Paper 7'}, { id: 'paper8', name: 'Paper 8'},
+        ];
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw", authDomain: "radiology-mcqs.firebaseapp.com", projectId: "radiology-mcqs",
+            storageBucket: "radiology-mcqs.appspot.com", messagingSenderId: "862300415358", appId: "1:862300415358:web:097d5e413f388e30587f2f"
+        };
+
+        // 2. CREATE THE CONFIGURATION OBJECT
+        const config = {
+            ALL_QUIZ_DATA: fellowshipQuizData,
+            PAPER_METADATA: fellowshipPaperMetadata,
+            FIREBASE_CONFIG: firebaseConfig,
+            GOOGLE_AI_API_KEY: 'YOUR_API_KEY_HERE' // Or load it securely
+        };
+
+        // 3. START THE APP
+        initQuizApp(config);
+    </script>
+</body>
+</html>
