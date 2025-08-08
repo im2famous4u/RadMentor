@@ -127,7 +127,9 @@
 
         /* Header Styling */
         header {
-            background-color: color-mix(in srgb, var(--surface-color) 80%, transparent);
+            background-color: color-mix(in srgb, var(--surface-color) 70%, transparent);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px); /* For Safari browser support */
         }
     </style>
 </head>
