@@ -37,9 +37,12 @@ const dom = {
     modeToggle: document.getElementById('mode-toggle-checkbox')
 };
 
+// ==================================================================================
+// --- INITIALIZATION & CORE APP LOGIC ---
+// ==================================================================================
+
 export function initQuizApp(config) {
     QUIZ_CONFIG = { ...QUIZ_CONFIG, ...config };
-
     const app = initializeApp(QUIZ_CONFIG.FIREBASE_CONFIG);
     auth = getAuth(app);
     db = getFirestore(app);
@@ -158,8 +161,12 @@ async function startQuiz(resumeState, directQuestionId = null) {
     if(dom.soundToggleBtn) initializeSound();
     await Promise.all([fetchQuizData(), fetchUserBookmarks()]);
 
-    dom.modeToggle.checked = quizMode === 'exam';
+    if (allQuestions.length === 0) {
+        dom.loadingContainer.innerHTML = `<p style="color: var(--incorrect-text);">Could not load questions. Please check the Google Sheet configuration and column layout.</p>`;
+        return;
+    }
 
+    dom.modeToggle.checked = quizMode === 'exam';
     dom.loadingContainer.style.display = 'none';
     dom.quizContent.style.display = 'block';
     dom.quizTitle.textContent = `${currentPaper.name}`;
@@ -176,10 +183,15 @@ async function startQuiz(resumeState, directQuestionId = null) {
     startTimer();
 }
 
+// ==================================================================================
+// --- DATA FETCHING & PARSING ---
+// ==================================================================================
+
 async function fetchQuizData() {
     const paperData = QUIZ_CONFIG.ALL_QUIZ_DATA[currentPaper.id];
     if (!paperData) {
         console.error("No quiz data found for paper ID:", currentPaper.id);
+        allQuestions = [];
         return;
     }
     const url = `https://docs.google.com/spreadsheets/d/${paperData.sheetId}/gviz/tq?tqx=out:csv&gid=${paperData.gid}`;
@@ -187,68 +199,80 @@ async function fetchQuizData() {
         const response = await fetch(url);
         const csvText = await response.text();
         allQuestions = parseCSVToQuestions(csvText, currentPaper.type);
-    } catch (error) { console.error("Fetch Error:", error); }
+    } catch (error) { 
+        console.error("Fetch Error:", error);
+        allQuestions = [];
+    }
 }
 
 function parseCSVToQuestions(csvText, quizType) {
     const lines = csvText.trim().split('\n').slice(1);
     
+    // Each quiz type has its own dedicated parsing function for clarity
     switch (quizType) {
         case 'frcr-physics':
-            return lines.map((line, index) => {
-                const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''));
-                if (parts.length < 16 || !parts[0]) return null;
-                const question = { id: `${currentPaper.id}-${index}`, type: 'frcr-physics', question: parts[0], subsets: [] };
-                for (let k = 0; k < 5; k++) {
-                    const subQuestionText = parts[1 + k];
-                    const answer = (parts[6 + (k * 2)] || '').toLowerCase().trim();
-                    const explanation = parts[7 + (k * 2)];
-                    if (subQuestionText && answer) {
-                        question.subsets.push({ text: subQuestionText, correctAnswer: answer, explanation: explanation || "N/A" });
-                    }
-                }
-                return question.subsets.length > 0 ? question : null;
-            }).filter(Boolean);
-
+            return parseFRCRPhysics(lines);
         case 'frcr-2a':
-            return lines.map((line, index) => {
-                const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''));
-                const [question, a, b, c, d, e, correctAns, explanation, tag, subtag] = parts;
-                const options = [a, b, c, d, e].filter(Boolean);
-                const letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4};
-                const correctIndex = letterMap[(correctAns || '').trim().toLowerCase()];
-                const tags = [tag, subtag].filter(Boolean);
-
-                if (question && correctIndex !== undefined && options.length > 0) {
-                    return { id: `${currentPaper.id}-${index}`, text: question, options, correctIndex, explanation: explanation || "N/A", tags, type: 'frcr-2a' };
-                }
-                return null;
-            }).filter(Boolean);
-            
+            return parseFRCR2A(lines);
         case 'mcq':
         default:
-            return lines.map((line, index) => {
-                const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''));
-                const [question, a, b, c, d, correctAns, explanation, image, explanationImage, tag, subtag] = parts;
-                const options = [a, b, c, d].filter(Boolean);
-                const letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3};
-                const correctIndex = letterMap[(correctAns || '').trim().toLowerCase()];
-                const tags = [tag, subtag].filter(Boolean);
-
-                if (question && correctIndex !== undefined && options.length > 0) {
-                    return { id: `${currentPaper.id}-${index}`, text: question, options, correctIndex, explanation: explanation || "N/A", image, explanationImage, tags, type: 'mcq' };
-                }
-                return null;
-            }).filter(Boolean);
+            return parseStandardMCQ(lines);
     }
 }
 
-async function fetchUserBookmarks() {
-    if (!currentUser) return;
-    const bookmarksRef = collection(db, "users", currentUser.uid, "bookmarks");
-    const snapshot = await getDocs(bookmarksRef);
-    userBookmarks = new Set(snapshot.docs.map(doc => doc.id));
+function parseStandardMCQ(lines) {
+    return lines.map((line, index) => {
+        const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''));
+        const [question, a, b, c, d, correctAns, explanation, image, explanationImage, tag, subtag] = parts;
+        const options = [a, b, c, d].filter(Boolean);
+        const letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3};
+        const correctIndex = letterMap[(correctAns || '').trim().toLowerCase()];
+        const tags = [tag, subtag].filter(Boolean);
+
+        if (question && correctIndex !== undefined && options.length > 0) {
+            return { id: `${currentPaper.id}-${index}`, text: question, options, correctIndex, explanation: explanation || "N/A", image, explanationImage, tags, type: 'mcq' };
+        }
+        return null;
+    }).filter(Boolean);
 }
+
+function parseFRCR2A(lines) {
+    return lines.map((line, index) => {
+        const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''));
+        const [question, a, b, c, d, e, correctAns, explanation, tag, subtag] = parts;
+        const options = [a, b, c, d, e].filter(Boolean);
+        const letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4};
+        const correctIndex = letterMap[(correctAns || '').trim().toLowerCase()];
+        const tags = [tag, subtag].filter(Boolean);
+
+        if (question && correctIndex !== undefined && options.length > 0) {
+            return { id: `${currentPaper.id}-${index}`, text: question, options, correctIndex, explanation: explanation || "N/A", tags, type: 'frcr-2a' };
+        }
+        return null;
+    }).filter(Boolean);
+}
+
+function parseFRCRPhysics(lines) {
+    return lines.map((line, index) => {
+        const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''));
+        if (parts.length < 16 || !parts[0]) return null;
+        const question = { id: `${currentPaper.id}-${index}`, type: 'frcr-physics', question: parts[0], subsets: [] };
+        for (let k = 0; k < 5; k++) {
+            const subQuestionText = parts[1 + k];
+            const answer = (parts[6 + (k * 2)] || '').toLowerCase().trim();
+            const explanation = parts[7 + (k * 2)];
+            if (subQuestionText && answer) {
+                question.subsets.push({ text: subQuestionText, correctAnswer: answer, explanation: explanation || "N/A" });
+            }
+        }
+        return question.subsets.length > 0 ? question : null;
+    }).filter(Boolean);
+}
+
+
+// ==================================================================================
+// --- UI RENDERING & INTERACTION ---
+// ==================================================================================
 
 function showQuestion(index) {
     if (reviewFilter.length > 0 && !reviewFilter.includes(index)) {
@@ -256,10 +280,7 @@ function showQuestion(index) {
     }
     currentQuestionIndex = index;
     const q = allQuestions[index];
-    if (!q) {
-        dom.questionsDisplay.innerHTML = `<p>Error: Could not load question ${index + 1}. Please check the data source.</p>`;
-        return;
-    }
+    if (!q) return;
 
     let questionHTML = '';
     switch (q.type) {
@@ -292,20 +313,15 @@ function renderMCQQuestion(q, index) {
         </div>
         
         ${q.tags && q.tags.length > 0 ? `<div class="question-tags">${q.tags.map(tag => `<span>#${tag}</span>`).join('')}</div>` : ''}
-        
         ${q.image ? `<img src="${q.image}" alt="Question image" class="question-image" onerror="this.style.display='none'">` : ''}
-        
         <p class="main-question-text">${q.text}</p>
         
         <div>${q.options.map((option, i) => {
             const shouldDisable = isReviewing || (quizMode === 'practice' && isAnswered);
             let btnClass = 'option-btn';
-            if (quizMode === 'exam' && i === userAnswers[index]) {
-                btnClass += ' selected';
-            }
+            if (quizMode === 'exam' && i === userAnswers[index]) btnClass += ' selected';
             if (shouldDisable && i === q.correctIndex) btnClass += ' correct';
             else if (shouldDisable && i === userAnswers[index]) btnClass += ' incorrect';
-            
             return `<button class="${btnClass}" data-index="${i}" ${shouldDisable ? 'disabled' : ''}>${option}</button>`;
         }).join('')}</div>`;
     
@@ -381,7 +397,6 @@ function attachQuestionListeners(q, index) {
 
 function handleFRCRPhysicsAnswer(event, qIndex) {
     if (!userAnswers[qIndex]) userAnswers[qIndex] = {};
-    
     const sIndex = parseInt(event.target.name.match(/s(\d+)/)[1]);
     userAnswers[qIndex][sIndex] = event.target.value;
 
@@ -412,6 +427,10 @@ function handleOptionClick(e) {
     saveState();
     updateQuestionNav();
 }
+
+// ==================================================================================
+// --- SCORING, STATE & UTILITIES ---
+// ==================================================================================
 
 function createQuestionNav() {
     dom.paginationHeader.innerHTML = allQuestions.map((_, i) => `<div class="page-box" data-index="${i}">${i + 1}</div>`).join('');
