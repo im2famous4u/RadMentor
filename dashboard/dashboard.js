@@ -12,7 +12,6 @@ const firebaseConfig = {
     appId: "1:862300415358:web:097d5e413f388e30587f2f"
 };
 
-// Simplified configuration for a single question source
 const QOTD_CONFIG = {
     sheetId: "1yjtawm3cPzacUcXFqrqZTn7x14YrJo25wN4ikuJsDeQ",
     gid: "0"
@@ -30,11 +29,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// --- QUESTION OF THE DAY MODULE (WITH DEBUGGING) ---
+// --- QUESTION OF THE DAY MODULE ---
 async function initQuestionOfTheDay() {
     const todayStr = new Date().toISOString().split('T')[0];
     const qotdLoader = document.getElementById('qotd-loader');
 
+    // Corrected 'try' keyword
     try {
         const cachedData = JSON.parse(localStorage.getItem('radmentor_qotd'));
         if (cachedData && cachedData.date === todayStr) {
@@ -43,6 +43,7 @@ async function initQuestionOfTheDay() {
         }
     } catch (e) { /* Invalid cache, proceed to fetch */ }
 
+    // Corrected 'try' keyword
     try {
         const url = `https://docs.google.com/spreadsheets/d/${QOTD_CONFIG.sheetId}/gviz/tq?tqx=out:json&gid=${QOTD_CONFIG.gid}`;
         const response = await fetch(url);
@@ -58,25 +59,10 @@ async function initQuestionOfTheDay() {
         }
         
         const allQuestions = parseGoogleSheetJSON(jsonData);
-
-        // --- DEBUGGING LOGS ---
-        console.log("--- QotD DEBUGGING INFO ---");
-        if (jsonData.table && jsonData.table.cols) {
-            const headers = jsonData.table.cols.map(col => col.label || 'NO_LABEL');
-            console.log("Detected Headers from Sheet:", headers);
-        }
-        if (allQuestions.length > 0) {
-            console.log("First Parsed Row (as an object):", allQuestions[0]);
-        } else {
-            console.log("No data rows were found or parsed from the sheet.");
-        }
-        console.log("---------------------------");
-        // --- END DEBUGGING ---
-
         const validQuestions = allQuestions.filter(q => q && q.Question && q.Question.trim() !== '');
 
         if (validQuestions.length === 0) {
-            throw new Error("No questions with text could be found in the sheet.");
+            throw new Error("The sheet was loaded, but no questions with text were found.");
         }
 
         const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
