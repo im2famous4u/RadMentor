@@ -127,7 +127,7 @@
 
         /* Header Styling */
         header {
-            background-color: color-mix(in srgb, var(--surface-color) 70%, transparent);
+            background-color: color-mix(in srgb, var(--surface-color) 0%, transparent);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px); /* For Safari browser support */
         }
@@ -141,19 +141,17 @@
         <p class="text-lg text-theme-secondary">Loading RadMentor...</p>
     </div>
 
-    <header class="backdrop-blur-lg fixed top-0 left-0 right-0 z-40 shadow-sm">
+    <header class="backdrop-blur-lg fixed top-0 left-0 right-0 z-40">
         <div class="container mx-auto px-6 py-3 flex justify-between items-center">
             <div class="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary-blue);" class="mr-3">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
-                <span class="text-2xl font-bold text-theme-primary">RadMentor</span>
-            </div>
+                    <img src="logo.png" alt="RadMentor Logo" class="w-10 h-10 mr-3">
+                    <span class="text-2xl font-bold text-theme-primary">RadMentor</span>
+                </div>
             <nav id="main-nav" class="hidden md:flex items-center space-x-8">
-                <a href="#courses" class="text-theme-secondary hover:text-theme-primary">Courses</a>
-                <a href="#pricing" class="text-theme-secondary hover:text-theme-primary">Pricing</a>
-                <a href="#features" class="text-theme-secondary hover:text-theme-primary">Features</a>
-                <a href="#about" class="text-theme-secondary hover:text-theme-primary">About Us</a>
+                    <a href="#courses" class="text-theme-primary hover:text-blue-500 font-bold">Courses</a>
+                    <a href="#pricing" class="text-theme-primary hover:text-blue-500 font-bold">Pricing</a>
+                    <a href="#features" class="text-theme-primary hover:text-blue-500 font-bold">Features</a>
+                    <a href="#about" class="text-theme-primary hover:text-blue-500 font-bold">About Us</a>
             </nav>
             <div class="flex items-center">
                 <div id="header-logged-out" class="flex items-center">
