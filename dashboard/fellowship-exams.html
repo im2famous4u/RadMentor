@@ -4,15 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fellowship Exams - RadMentor</title>
-    <!-- CORRECTED: Base path is set to the root of the dashboard -->
-    <base href="/dashboard/">
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- CORRECTED: Path is now relative to the base href -->
-    <link rel="stylesheet" href="quiz/style.css">
+    <!-- CORRECTED: Using a root-relative path to ensure the file is always found -->
+    <link rel="stylesheet" href="/dashboard/quiz/style.css">
 </head>
 <body>
     <!-- Auth Screen: Shown while checking login status -->
@@ -71,11 +69,11 @@
     <audio id="correct-sound" src="https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/sounds/correct.mp3" preload="auto"></audio>
     <audio id="wrong-sound" src="https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/sounds/wrong.mp3" preload="auto"></audio>
     
-    <!-- CORRECTED: Path is now relative to the base href -->
-    <script type="module" src="quiz/quiz-engine.js"></script>
+    <!-- CORRECTED: Using a root-relative path for the script -->
+    <script type="module" src="/dashboard/quiz/quiz-engine.js"></script>
     <script type="module">
-        // CORRECTED: Path is now relative to the base href
-        import { initQuizApp } from './quiz/quiz-engine.js';
+        // CORRECTED: Using a root-relative path for the import
+        import { initQuizApp } from '/dashboard/quiz/quiz-engine.js';
         
         // 1. DEFINE THE DATA FOR THE FELLOWSHIP QUIZ
         const fellowshipQuizData = {
