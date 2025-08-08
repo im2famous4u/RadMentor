@@ -20,14 +20,49 @@ let isReviewing = false;
 let isSoundOn = true;
 let db, auth;
 
+// DOM elements cached for easy access
 const dom = {
     screens: document.querySelectorAll('.screen'), paperCardGrid: document.getElementById('paper-card-grid'), quizTitle: document.getElementById('quiz-title'),
     loadingContainer: document.getElementById('loading-container'), questionsDisplay: document.getElementById('questions-display'), quizContent: document.getElementById('quiz-content'),
     paginationHeader: document.getElementById('quiz-pagination-header'), timerEl: document.getElementById('timer'), resultsScreen: document.getElementById('results-screen'),
     finishQuizBtn: document.getElementById('finish-quiz-btn'),
     soundToggleBtn: document.getElementById('sound-toggle-btn'), correctSound: document.getElementById('correct-sound'), wrongSound: document.getElementById('wrong-sound'),
-    modeToggle: document.getElementById('mode-toggle-checkbox')
+    modeToggle: document.getElementById('mode-toggle-checkbox'),
+    modalBackdrop: document.getElementById('custom-modal-backdrop'),
+    modalMessage: document.getElementById('modal-message'),
+    modalButtons: document.getElementById('modal-buttons')
 };
+
+// --- Custom Modal Functions to replace alert() and confirm() ---
+function showCustomModal(message, buttons) {
+    dom.modalMessage.textContent = message;
+    dom.modalButtons.innerHTML = '';
+    buttons.forEach(btn => {
+        const button = document.createElement('button');
+        button.textContent = btn.text;
+        button.className = 'results-btn ' + (btn.isPrimary ? 'primary' : 'secondary');
+        button.onclick = () => {
+            dom.modalBackdrop.style.display = 'none';
+            btn.onClick();
+        };
+        dom.modalButtons.appendChild(button);
+    });
+    dom.modalBackdrop.style.display = 'flex';
+}
+
+function showCustomConfirm(message, onConfirm, onCancel) {
+    showCustomModal(message, [
+        { text: 'Yes', isPrimary: true, onClick: onConfirm },
+        { text: 'No', isPrimary: false, onClick: onCancel }
+    ]);
+}
+
+function showCustomAlert(message, onOk) {
+    showCustomModal(message, [
+        { text: 'OK', isPrimary: true, onClick: onOk }
+    ]);
+}
+
 
 /**
  * The main entry point for initializing the quiz application.
@@ -64,28 +99,25 @@ export function initQuizApp(config) {
 
     dom.modeToggle.addEventListener('change', () => {
         const newMode = dom.modeToggle.checked ? 'exam' : 'practice';
-        if (confirm(`Switching to ${newMode} mode will restart your progress for this paper. Continue?`)) {
-            setQuizMode(newMode);
-        } else {
-            dom.modeToggle.checked = !dom.modeToggle.checked;
-        }
+        showCustomConfirm(`Switching to ${newMode} mode will restart your progress for this paper. Continue?`,
+            () => setQuizMode(newMode),
+            () => dom.modeToggle.checked = !dom.modeToggle.checked
+        );
     });
 
     dom.soundToggleBtn.addEventListener('click', toggleSound);
     
     dom.finishQuizBtn.addEventListener('click', () => {
-       if (quizMode === 'exam') {
-           if(confirm('Are you sure you want to finish the exam?')) finishExam();
-       } else {
-           if(confirm('Are you sure you want to finish this practice session?')) finishExam();
-       }
+        if (quizMode === 'exam') {
+            showCustomConfirm('Are you sure you want to finish the exam?', () => finishExam(), () => {});
+        } else {
+            showCustomConfirm('Are you sure you want to finish this practice session?', () => finishExam(), () => {});
+        }
     });
 }
 
-// ... All other functions from the previous response are copied here ...
-// For brevity, I am not re-pasting all 20+ functions, but you would
-// have the full, unchanged quiz-engine.js file from the previous step here.
-// No changes are required within this file for it to work in a subdirectory.
+// --- All other functions are refactored below ---
+
 function showScreen(screenId) {
     dom.screens.forEach(s => s.classList.toggle('active', s.id === screenId));
     feather.replace();
@@ -101,7 +133,7 @@ function handleDirectLink(user) {
             currentPaper = paper;
             quizMode = 'practice';
             startQuiz(null, directQuestionId);
-            return; 
+            return;
         }
     }
     showScreen('topic-screen');
@@ -117,12 +149,13 @@ function setQuizMode(newMode) {
 function checkResumeAndStart() {
     const savedState = localStorage.getItem(`radmentor_quiz_fellowship_${currentUser.uid}_${currentPaper.id}_${quizMode}`);
     if (savedState) {
-        if (confirm(`You have an unfinished ${quizMode} session. Resume?`)) {
-            startQuiz(JSON.parse(savedState));
-        } else {
-            localStorage.removeItem(`radmentor_quiz_fellowship_${currentUser.uid}_${currentPaper.id}_${quizMode}`);
-            startQuiz(null);
-        }
+        showCustomConfirm(`You have an unfinished ${quizMode} session. Resume?`,
+            () => startQuiz(JSON.parse(savedState)),
+            () => {
+                localStorage.removeItem(`radmentor_quiz_fellowship_${currentUser.uid}_${currentPaper.id}_${quizMode}`);
+                startQuiz(null);
+            }
+        );
     } else {
         startQuiz(null);
     }
@@ -231,7 +264,7 @@ function showQuestion(index) {
 
     dom.questionsDisplay.innerHTML = questionHTML;
 
-    // Attach event listeners programmatically instead of using onclick in HTML
+    // Attach event listeners programmatically
     const flagBtn = dom.questionsDisplay.querySelector('.flag-btn');
     if (flagBtn) flagBtn.addEventListener('click', () => toggleFlag(q.id));
 
@@ -271,15 +304,15 @@ function updateQuestionNav() {
         box.className = 'page-box';
         if (index === currentQuestionIndex) box.classList.add('active');
         if (userAnswers[index] !== undefined) {
-             if (quizMode === 'practice' || isReviewing) {
-                 const isCorrect = userAnswers[index] === allQuestions[index].correctIndex;
-                 box.classList.add(isCorrect ? 'answered-correct' : 'answered-incorrect');
-             } else {
-                 box.classList.add('answered-correct');
-                 box.style.backgroundColor = 'var(--primary-color)';
-                 box.style.borderColor = 'var(--primary-color)';
-                 box.style.color = 'white';
-             }
+            if (quizMode === 'practice' || isReviewing) {
+                const isCorrect = userAnswers[index] === allQuestions[index].correctIndex;
+                box.classList.add(isCorrect ? 'answered-correct' : 'answered-incorrect');
+            } else {
+                box.classList.add('answered-correct');
+                box.style.backgroundColor = 'var(--primary-color)';
+                box.style.borderColor = 'var(--primary-color)';
+                box.style.color = 'white';
+            }
         }
         if (flaggedQuestions.has(allQuestions[index].id)) box.classList.add('flagged');
     });
@@ -347,24 +380,24 @@ async function finishExam() {
     const scorePercent = allQuestions.length > 0 ? (correctCount / allQuestions.length * 100) : 0;
 
     dom.resultsScreen.innerHTML = `
-      <div class="results-container">
-          <h2 style="font-size: 2.2rem; font-weight: 700; color: var(--header-text-color);">Test Results</h2>
-          <div class="results-grid" style="margin-top: 2rem;">
-              <div class="stat-card"><h3>Score Summary</h3><p style="font-size: 3rem; font-weight: 700; color: var(--primary-color);" id="final-score-percent"></p><p><strong>Correct:</strong> <span id="correct-count"></span></p><p><strong>Incorrect:</strong> <span id="incorrect-count"></span></p><p><strong>Unattempted:</strong> <span id="unattempted-count"></span></p></div>
-              <div class="stat-card"><h3>Performance Chart</h3><canvas id="performanceChart" style="max-height: 200px;"></canvas></div>
-              <div class="stat-card"><h3>Peer Comparison</h3><div id="peer-comparison-content"><p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p><p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p></div></div>
-              <div class="stat-card">
-                  <h3 style="display: flex; justify-content: space-between; align-items: center;"><span>🤖 RadMentor Insights</span><span style="background-color: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 99px; text-transform: uppercase;">Exclusive</span></h3>
-                  <div id="ai-insights-content"><p>Generating feedback...</p></div>
-             </div>
-          </div>
-          <div class="results-actions">
-              <button class="results-btn primary" id="review-all-btn">Review All</button>
-              <button class="results-btn danger" id="review-incorrect-btn">Review Incorrect</button>
-              <button class="results-btn warning" id="review-flagged-btn">Review Flagged</button>
-              <button class="results-btn secondary" id="back-to-topics-btn">Back to Papers</button>
-          </div>
-      </div>`;
+        <div class="results-container">
+            <h2 style="font-size: 2.2rem; font-weight: 700; color: var(--header-text-color);">Test Results</h2>
+            <div class="results-grid" style="margin-top: 2rem;">
+                <div class="stat-card"><h3>Score Summary</h3><p style="font-size: 3rem; font-weight: 700; color: var(--primary-color);" id="final-score-percent"></p><p><strong>Correct:</strong> <span id="correct-count"></span></p><p><strong>Incorrect:</strong> <span id="incorrect-count"></span></p><p><strong>Unattempted:</strong> <span id="unattempted-count"></span></p></div>
+                <div class="stat-card"><h3>Performance Chart</h3><canvas id="performanceChart" style="max-height: 200px;"></canvas></div>
+                <div class="stat-card"><h3>Peer Comparison</h3><div id="peer-comparison-content"><p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p><p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p></div></div>
+                <div class="stat-card">
+                    <h3 style="display: flex; justify-content: space-between; align-items: center;"><span>🤖 RadMentor Insights</span><span style="background-color: #ef4444; color: white; font-size: 0.65rem; font-weight: 700; padding: 3px 8px; border-radius: 99px; text-transform: uppercase;">Exclusive</span></h3>
+                    <div id="ai-insights-content"><p>Generating feedback...</p></div>
+                </div>
+            </div>
+            <div class="results-actions">
+                <button class="results-btn primary" id="review-all-btn">Review All</button>
+                <button class="results-btn danger" id="review-incorrect-btn">Review Incorrect</button>
+                <button class="results-btn warning" id="review-flagged-btn">Review Flagged</button>
+                <button class="results-btn secondary" id="back-to-topics-btn">Back to Papers</button>
+            </div>
+        </div>`;
     
     document.getElementById('final-score-percent').textContent = `${scorePercent.toFixed(1)}%`;
     document.getElementById('correct-count').textContent = correctCount;
@@ -439,9 +472,9 @@ async function getAIInsights(incorrectQs) {
 }
 
 function saveState() {
-     if (!currentUser || !currentPaper || isReviewing) return;
-     const state = { answers: userAnswers, index: currentQuestionIndex, elapsedSeconds: elapsedSeconds, flags: Array.from(flaggedQuestions) };
-     localStorage.setItem(`radmentor_quiz_fellowship_${currentUser.uid}_${currentPaper.id}_${quizMode}`, JSON.stringify(state));
+    if (!currentUser || !currentPaper || isReviewing) return;
+    const state = { answers: userAnswers, index: currentQuestionIndex, elapsedSeconds: elapsedSeconds, flags: Array.from(flaggedQuestions) };
+    localStorage.setItem(`radmentor_quiz_fellowship_${currentUser.uid}_${currentPaper.id}_${quizMode}`, JSON.stringify(state));
 }
 
 function startTimer() {
@@ -455,8 +488,9 @@ function startTimer() {
 
 function setupReview(filterType) {
     isReviewing = true;
+    // Corrected logic: 'all' filter now includes all questions, regardless of being answered or not.
     if (filterType === 'all') {
-        reviewFilter = allQuestions.map((_, i) => i).filter(i => userAnswers[i] !== undefined);
+        reviewFilter = allQuestions.map((_, i) => i);
     } else if (filterType === 'incorrect') {
         reviewFilter = allQuestions.map((q, i) => i).filter(i => userAnswers[i] !== undefined && userAnswers[i] !== q.correctIndex);
     } else if (filterType === 'flagged') {
@@ -464,8 +498,11 @@ function setupReview(filterType) {
     }
     
     if (reviewFilter.length === 0) {
-        alert(`No ${filterType} questions to review.`);
-        isReviewing = false;
+        showCustomAlert(`No ${filterType} questions to review.`, () => {
+            isReviewing = false;
+            // Go back to the results screen
+            finishExam();
+        });
         return;
     }
     dom.finishQuizBtn.style.display = 'none';
@@ -473,3 +510,4 @@ function setupReview(filterType) {
     createQuestionNav();
     showQuestion(reviewFilter[0]);
 }
+
