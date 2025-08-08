@@ -1,91 +1,276 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Profile - RadScribe AI</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    .glass-card {
-      background-color: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(10px);
-      border-radius: 1.5rem;
-      padding: 2rem;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.05), 0 6px 6px rgba(0,0,0,0.03);
-    }
-    .gradient-bg {
-      background: linear-gradient(to right, #6366f1, #8b5cf6); /* Purple to Indigo gradient */
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RadMentor Universal Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/feather-icons"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* ---- Variables ---- */
+:root {
+ --bg-color:#f8fafc; --container-bg-color:#ffffff; --text-color:#475569; --text-color-light:#6b7280;
+ --header-text-color:#111827; --primary-color:#4f46e5; --primary-hover-color:#4338ca;
+ --border-color:#e5e7eb; --explanation-bg:#f9fafb; --correct-bg:#f0fdf4; --correct-border:#86efac;
+ --correct-text:#15803d; --incorrect-bg:#fef2f2; --incorrect-border:#fca5a5; --incorrect-text:#b91c1c;
+ --bookmark-color:#9ca3af; --bookmarked-color:#f59e0b; --flag-color:#9ca3af; --flagged-color:#ef4444;
+}
+[data-theme="dark"] {
+ --bg-color:#111827; --container-bg-color:#1f2937; --text-color:#d1d5db; --text-color-light:#9ca3af;
+ --header-text-color:#f9fafb; --border-color:#374151; --explanation-bg:#1e293b;
+}
+body { font-family:'Inter',sans-serif; margin:0; padding:1.5rem; background-color:var(--bg-color); color:var(--text-color); transition:all 0.3s;}
+.main-container { max-width:900px; margin:0 auto;}
+.screen { display:none;} .screen.active { display:block; animation:fadeIn 0.4s;}
+@keyframes fadeIn { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+.loader { width:40px;height:40px;border:4px solid var(--primary-color);border-bottom-color:transparent;border-radius:50%;animation:rotation 1s linear infinite;}
+@keyframes rotation {to{transform:rotate(360deg);}}
+
+/* Buttons & UI */
+.paper-button-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:1.5rem; margin-top:2rem;}
+.paper-button { background:#f9fafb; border:1px solid var(--border-color); padding:2rem; border-radius:0.75rem; cursor:pointer; font-weight:700; font-size:1.25rem; transition:all 0.2s;}
+.paper-button:hover { background:var(--primary-color); color:#fff; transform:translateY(-3px);}
+.quiz-container { background:var(--container-bg-color); border-radius:1.25rem; box-shadow:0 6px 20px rgba(0,0,0,0.05);}
+.quiz-header { display:flex; justify-content:space-between; align-items:center; padding:1rem 1.25rem; border-bottom:1px solid var(--border-color);}
+.mode-toggle, .icon-btn, .timer { margin-left:0.5rem;}
+.question-area { padding:1.5rem;}
+.option-btn { display:block; width:100%; padding:1rem; border:1px solid var(--border-color); border-radius:0.75rem; background:#f9fafb; margin-bottom:0.75rem; text-align:left; cursor:pointer;}
+.option-btn:hover { border-color:var(--primary-color); background:#eef2ff;}
+.option-btn.correct { background:var(--correct-bg); border-color:var(--correct-border); color:var(--correct-text);}
+.option-btn.incorrect { background:var(--incorrect-bg); border-color:var(--incorrect-border); color:var(--incorrect-text);}
+.explanation-box { margin-top:1.5rem; padding:1.5rem; background:var(--explanation-bg); border-left:4px solid var(--primary-color);}
+.quiz-pagination-header { background:#f9fafb; padding:1rem; border-bottom:1px solid var(--border-color); overflow-x:auto; white-space:nowrap;}
+.page-box { display:inline-flex; width:40px; height:40px; align-items:center; justify-content:center; margin-right:0.5rem; border:1px solid var(--border-color); border-radius:0.5rem; cursor:pointer;}
+.page-box.active { background:var(--primary-color); color:#fff;}
+.page-box.bookmarked { border-color:var(--bookmarked-color);}
+.page-box.flagged { border-color:var(--flagged-color);}
+</style>
 </head>
 <body>
-  <div id="profile-settings-content" class="w-full h-full overflow-y-auto pb-4">
-    <div class="glass-card col-span-full">
-      <h2 class="text-2xl font-bold text-gray-800 mb-6">My Profile Settings</h2>
-      <form id="profileForm" class="space-y-6">
-        <div>
-          <label for="userName" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
-          <input type="text" id="userName" value="RadMentor User" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors text-base">
-        </div>
-        <div>
-          <label for="userEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <input type="email" id="userEmail" value="user@radmentor.com" class="w-full p-3 border border-gray-300 bg-gray-100 rounded-lg cursor-not-allowed text-base" readonly>
-        </div>
-        <div>
-          <label for="userSpecialty" class="block text-sm font-medium text-gray-700 mb-1">Specialty</label>
-          <input type="text" id="userSpecialty" value="Radiology" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors text-base">
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Theme</label>
-          <div class="flex items-center space-x-4">
-            <label class="inline-flex items-center">
-              <input type="radio" class="form-radio text-blue-600" name="theme" value="light" checked>
-              <span class="ml-2 text-base text-gray-700">Light</span>
-            </label>
-            <label class="inline-flex items-center">
-              <input type="radio" class="form-radio text-blue-600" name="theme" value="dark">
-              <span class="ml-2 text-base text-gray-700">Dark</span>
-            </label>
+
+<div id="authCheckScreen" class="screen active">
+ <div class="selection-container">
+   <div class="loader"></div>
+   <p style="margin-top:1rem;">Initializing Session...</p>
+ </div>
+</div>
+
+<div class="main-container">
+ <div id="topic-screen" class="screen">
+  <h1 id="topic-title"></h1>
+  <p id="topic-desc"></p>
+  <div id="paper-card-grid" class="paper-button-grid"></div>
+ </div>
+
+ <div id="quiz-screen" class="screen">
+  <div class="quiz-container">
+    <div id="loading-container" style="text-align:center; padding:4rem;"><div class="loader"></div></div>
+    <div id="quiz-content" style="display:none;">
+      <div class="quiz-header">
+        <h1 id="quiz-title"></h1>
+        <div class="header-controls">
+          <div class="mode-toggle">
+            <span>Practice</span>
+            <label class="switch"><input type="checkbox" id="mode-toggle-checkbox"><span class="slider"></span></label>
+            <span>Exam</span>
           </div>
+          <button id="theme-toggle-btn" class="icon-btn"><i data-feather="moon"></i></button>
+          <button id="sound-toggle-btn" class="icon-btn"><i data-feather="volume-2"></i></button>
+          <div class="timer" id="timer">00:00</div>
+          <button id="finish-quiz-btn">Finish</button>
         </div>
-        <button type="submit" class="w-full gradient-bg text-white text-base font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
-          Save Changes
-        </button>
-      </form>
+      </div>
+      <div id="quiz-pagination-header" class="quiz-pagination-header"></div>
+      <div class="question-area" id="questions-display"></div>
     </div>
   </div>
-  <script>
-    // This script needs to interact with the parent frame's currentUserName
-    document.addEventListener('DOMContentLoaded', () => {
-        const profileForm = document.getElementById('profileForm');
-        const userNameInput = document.getElementById('userName');
+ </div>
 
-        // Initial load of username from parent (if available)
-        if (window.parent && window.parent.currentUserName) {
-            userNameInput.value = window.parent.currentUserName;
-        }
+ <div id="results-screen" class="screen"></div>
+</div>
 
-        if (profileForm) {
-            profileForm.addEventListener('submit', (event) => {
-                event.preventDefault();
-                const newUserName = userNameInput.value;
-                const userSpecialty = document.getElementById('userSpecialty').value;
+<audio id="correct-sound" src="https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/sounds/correct.mp3" preload="auto"></audio>
+<audio id="wrong-sound" src="https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/sounds/wrong.mp3" preload="auto"></audio>
 
-                // Update parent frame's username
-                if (window.parent) {
-                    window.parent.currentUserName = newUserName;
-                    if (window.parent.updateInitials) {
-                        window.parent.updateInitials(); // Call parent's function to update initials
-                    }
-                    if (window.parent.showMessage) {
-                        window.parent.showMessage('Profile settings saved successfully!', 'success');
-                    }
-                }
-                console.log('Profile saved:', { userName: newUserName, userSpecialty });
-            });
-        }
-    });
-  </script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, setDoc, deleteDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai/+esm";
+
+/* CONFIG */
+const GOOGLE_AI_API_KEY = "YOUR_API_KEY_HERE"; // Add your key here
+const QUIZ_CONFIG = {
+ physics: { name:"FRCR Part 1 Physics", sheetId:"1zW9hT5Yy8vK2thzSzjqf8DdIM_b_fLjmO0jLk5J0ti8", papers: {
+  "Basic Physics":"2009849222","Radiation Hazards & Protection":"2009849222","Image Quality & X-ray":"1706416231",
+  "Film Screen Radiography":"1257614317","Digital Radiography":"917881905","Fluoroscopy":"1461599884",
+  "Computed Tomography":"986205874","Nuclear Medicine":"2016453957","Ultrasound":"638565218","Magnetic Resonance Imaging":"2026917708"
+ }},
+ fellowship: { name:"Fellowship Exams", sheetId:"13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", papers:{
+  "Paper 1":"0","Paper 2":"1141721868","Paper 3":"1815658253","Paper 4":"1386284317","Paper 5":"40352700",
+  "Paper 6":"54400073","Paper 7":"1767827630","Paper 8":"280434470"
+ }},
+ frcr2a: { name:"FRCR Part 2A", sheetId:"180QNzG6fDKQveAK0P3oUPbqw9k0mK6KqLMichjzyQ8w", papers:{
+  "Paper 1":"0","Paper 2":"1813285249","Paper 3":"962180397","Paper 4":"1399193608","Paper 5":"2074537975",
+  "Paper 6":"423465629","Paper 7":"863789521"
+ }},
+ superspeciality: { name:"Superspeciality Exams", variants:{
+  "INI-SS":{ sheetId:"1Zd-UhR966r8FE5pJ3yqqPInQBrAzLSG4pTc_wytr4I0", papers:{
+   "Paper 1":"0","Paper 2":"123269442","Paper 3":"1278979358","Paper 4":"470498245","Paper 5":"94227388",
+   "Paper 6":"855680808","Paper 7":"1771985316","Paper 8":"153180989","Paper 9":"1725673059"
+  }},
+  "NEET-SS":{ sheetId:"16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", papers:{
+   "Paper 1":"0","Paper 2":"385825325","Paper 3":"1302055466","Paper 4":"472403230","Paper 5":"1502909003"
+  }}
+ }}
+};
+const firebaseConfig = { apiKey:"AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw", authDomain:"radiology-mcqs.firebaseapp.com", projectId:"radiology-mcqs", storageBucket:"radiology-mcqs.appspot.com", messagingSenderId:"862300415358", appId:"1:862300415358:web:097d5e413f388e30587f2f" };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* State */
+let currentUser=null, currentConfig=null, currentPaper=null;
+let allQuestions=[], userAnswers={}, currentIndex=0, quizMode='practice', timerInt=null, elapsed=0;
+let isSoundOn=true, userBookmarks=new Set(), flaggedQuestions=new Set();
+
+/* Show screen */
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id===id)); feather.replace(); }
+
+/* Auth */
+onAuthStateChanged(auth, async user=>{
+ currentUser=user;
+ if(!user){ document.getElementById('authCheckScreen').innerHTML="<p>Login required</p>"; return; }
+ document.getElementById('authCheckScreen').style.display="none";
+ let qp=new URLSearchParams(window.location.search).get('quiz');
+ currentConfig=QUIZ_CONFIG[qp];
+ if(!currentConfig){ alert("Invalid quiz param"); return; }
+ showPapers();
+});
+
+/* Paper selection */
+function showPapers(){
+ document.getElementById('topic-title').textContent=currentConfig.name;
+ let html="";
+ if(currentConfig.papers){ for(let [name,gid] of Object.entries(currentConfig.papers)){ html+=`<button class="paper-button" data-gid="${gid}">${name}</button>`; } }
+ else if(currentConfig.variants){ for(let [variant,vdata] of Object.entries(currentConfig.variants)){ html+=`<h3>${variant}</h3>`; for(let [name,gid] of Object.entries(vdata.papers)){ html+=`<button class="paper-button" data-variant="${variant}" data-gid="${gid}">${name}</button>`; }} }
+ document.getElementById('paper-card-grid').innerHTML=html;
+ showScreen('topic-screen');
+}
+
+document.getElementById('paper-card-grid').addEventListener('click',e=>{
+ if(e.target.classList.contains('paper-button')){
+   currentPaper={ name:e.target.textContent, gid:e.target.dataset.gid };
+   if(e.target.dataset.variant){ currentConfig={...currentConfig.variants[e.target.dataset.variant]}; }
+   startQuiz();
+ }
+});
+
+/* Fetch & start */
+async function startQuiz(){
+ showScreen('quiz-screen');
+ document.getElementById('loading-container').style.display='block';
+ let url=`https://docs.google.com/spreadsheets/d/${currentConfig.sheetId}/gviz/tq?tqx=out:csv&gid=${currentPaper.gid}`;
+ let csv=await (await fetch(url)).text();
+ allQuestions=parseCSV(csv);
+ await fetchUserBookmarks();
+ renderQuestion();
+ document.getElementById('loading-container').style.display='none';
+ document.getElementById('quiz-content').style.display='block';
+ startTimer();
+}
+
+/* CSV parser */
+function parseCSV(csv){
+ let lines=csv.trim().split('\n').slice(1);
+ return lines.map((line,i)=>{
+   let parts=line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p=>p.replace(/^"|"$/g,'').trim());
+   let question=parts[0], options=parts.slice(1,6).filter(o=>o), correct=parts[6]||parts[5], exp=parts[7]||"";
+   let letterMap={a:0,b:1,c:2,d:3,e:4};
+   let ci=letterMap[(correct||"").toLowerCase()];
+   return {id:`${currentPaper.gid}-${i}`, text:question, options, correctIndex:ci, explanation:exp};
+ });
+}
+
+/* Render */
+function renderQuestion(){
+ let q=allQuestions[currentIndex];
+ let html=`<div class="question-title-bar">
+   <span>Q${currentIndex+1} of ${allQuestions.length}</span>
+   <div>
+     <button class="icon-btn ${flaggedQuestions.has(q.id)?'flagged':''}" onclick="toggleFlag('${q.id}')"><i data-feather="flag"></i></button>
+     <button class="icon-btn ${userBookmarks.has(q.id)?'bookmarked':''}" onclick="toggleBookmark('${q.id}','${q.text.replace(/'/g,"\\'")}')"><i data-feather="bookmark"></i></button>
+   </div>
+ </div>
+ <p>${q.text}</p>`;
+ q.options.forEach((opt,i)=>{
+   let cls="option-btn";
+   if(userAnswers[currentIndex]!==undefined){
+     if(i===q.correctIndex) cls+=" correct";
+     else if(i===userAnswers[currentIndex]) cls+=" incorrect";
+   }
+   html+=`<button class="${cls}" data-i="${i}">${opt}</button>`;
+ });
+ if(userAnswers[currentIndex]!==undefined){ html+=`<div class="explanation-box">${q.explanation}</div>`; }
+ document.getElementById('questions-display').innerHTML=html;
+ document.querySelectorAll('.option-btn').forEach(btn=>btn.addEventListener('click',optClick));
+ feather.replace();
+}
+
+/* Option click */
+function optClick(e){
+ let sel=parseInt(e.target.dataset.i);
+ userAnswers[currentIndex]=sel;
+ if(isSoundOn){ (sel===allQuestions[currentIndex].correctIndex?document.getElementById('correct-sound'):document.getElementById('wrong-sound')).play(); }
+ renderQuestion();
+}
+
+/* Bookmark */
+async function fetchUserBookmarks(){
+ if(!currentUser) return;
+ const bookmarksRef=collection(db,"users",currentUser.uid,"bookmarks");
+ const snap=await getDocs(bookmarksRef);
+ userBookmarks=new Set(snap.docs.map(doc=>doc.id));
+}
+window.toggleBookmark=async (id,text)=>{
+ if(!currentUser) return;
+ const bookmarkRef=doc(db,"users",currentUser.uid,"bookmarks",id);
+ if(userBookmarks.has(id)){
+   await deleteDoc(bookmarkRef);
+   userBookmarks.delete(id);
+ } else {
+   await setDoc(bookmarkRef,{questionText:text,topic:currentPaper.name,timestamp:serverTimestamp(),linkToQuestion:`${window.location.pathname}?quiz=${new URLSearchParams(window.location.search).get('quiz')}&gid=${currentPaper.gid}&questionId=${id}`});
+   userBookmarks.add(id);
+ }
+ renderQuestion();
+};
+
+/* Flag */
+window.toggleFlag=(id)=>{ flaggedQuestions.has(id)?flaggedQuestions.delete(id):flaggedQuestions.add(id); renderQuestion(); };
+
+/* Timer */
+function startTimer(){ clearInterval(timerInt); let start=Date.now()-elapsed*1000; timerInt=setInterval(()=>{ elapsed=Math.floor((Date.now()-start)/1000); document.getElementById('timer').textContent=`${String(Math.floor(elapsed/60)).padStart(2,'0')}:${String(elapsed%60).padStart(2,'0')}`;},1000);}
+
+/* Finish */
+document.getElementById('finish-quiz-btn').addEventListener('click',finishQuiz);
+async function finishQuiz(){
+ clearInterval(timerInt);
+ let correct=0; let wrongQs=[];
+ allQuestions.forEach((q,i)=>{ if(userAnswers[i]===q.correctIndex) correct++; else wrongQs.push(q); });
+ let percent=(correct/allQuestions.length)*100;
+ let html=`<h2>Results</h2><p>Score: ${percent.toFixed(1)}%</p>`;
+ document.getElementById('results-screen').innerHTML=html;
+ showScreen('results-screen');
+ if(percent>=80 && quizMode==='exam'){ launchConfetti(); }
+}
+
+/* Confetti */
+function launchConfetti(){ import('https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/+esm').then(mod=>{ mod.default(); }); }
+
+/* AI Insights */
+async function getAIExplanation(q){ if(!GOOGLE_AI_API_KEY) return "AI not configured."; const genAI=new GoogleGenerativeAI(GOOGLE_AI_API_KEY); const model=genAI.getGenerativeModel({model:"gemini-1.5-flash"}); const r=await model.generateContent(`Explain this radiology MCQ and why the correct answer is right:\n${q.text}\nOptions:${q.options.join(",")}\nCorrect:${q.options[q.correctIndex]}`); return r.response.text(); }
+
+</script>
 </body>
 </html>
