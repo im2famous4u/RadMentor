@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- NEW, SIMPLIFIED QUESTION OF THE DAY MODULE ---
+// --- NEW DEBUGGING QUESTION OF THE DAY MODULE ---
 async function initQuestionOfTheDay() {
     const todayStr = new Date().toISOString().split('T')[0];
     const qotdLoader = document.getElementById('qotd-loader');
@@ -41,6 +42,58 @@ async function initQuestionOfTheDay() {
         }
     } catch (e) { /* Invalid cache, proceed to fetch */ }
 
+    try {
+        // 2. Fetch from the single Google Sheet URL
+        const url = `https://docs.google.com/spreadsheets/d/${QOTD_CONFIG.sheetId}/gviz/tq?tqx=out:json&gid=${QOTD_CONFIG.gid}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Google Sheets API failed with status: ${response.status}`);
+        
+        const jsonText = await response.text();
+        const jsonMatch = jsonText.match(/google\.visualization\.Query\.setResponse\((.*)\)/s);
+        if (!jsonMatch || !jsonMatch[1]) throw new Error("Could not parse JSONP response from Google Sheets.");
+        
+        const jsonData = JSON.parse(jsonMatch[1]);
+        if (jsonData.status === 'error') {
+            throw new Error(`Google Sheets Error: ${jsonData.errors[0].detailed_message}`);
+        }
+        
+        const allQuestions = parseGoogleSheetJSON(jsonData);
+
+        // --- DEBUGGING LOGS ---
+        console.log("--- QotD DEBUGGING INFO ---");
+        if (jsonData.table && jsonData.table.cols) {
+            const headers = jsonData.table.cols.map(col => col.label || 'NO_LABEL');
+            console.log("Detected Headers from Sheet:", headers);
+        }
+        if (allQuestions.length > 0) {
+            console.log("First Parsed Row (as an object):", allQuestions[0]);
+        } else {
+            console.log("No data rows were found or parsed from the sheet.");
+        }
+        console.log("---------------------------");
+        // --- END DEBUGGING ---
+
+        // 3. Filter out any rows that don't have question text
+        const validQuestions = allQuestions.filter(q => q && q.Question && q.Question.trim() !== '');
+
+        if (validQuestions.length === 0) {
+            throw new Error("No questions with text could be found in the sheet.");
+        }
+
+        // 4. Deterministically select one question for the day
+        const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+        const questionIndex = dayOfYear % validQuestions.length;
+        const todaysQuestion = validQuestions[questionIndex];
+
+        // 5. Cache the question for today and display it
+        localStorage.setItem('radmentor_qotd', JSON.stringify({ date: todayStr, question: todaysQuestion }));
+        displayQotD(todaysQuestion);
+
+    } catch (error) {
+        console.error("QotD Error:", error);
+        qotdLoader.innerHTML = `<p class="text-red-500 p-4 text-center"><strong>Error:</strong> ${error.message}</p>`;
+    }
+}
     try {
         // 2. Fetch from the single Google Sheet URL
         const url = `https://docs.google.com/spreadsheets/d/${QOTD_CONFIG.sheetId}/gviz/tq?tqx=out:json&gid=${QOTD_CONFIG.gid}`;
