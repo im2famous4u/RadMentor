@@ -29,52 +29,38 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// --- QUESTION OF THE DAY MODULE ---
+// --- NEW, ULTRA-SIMPLE QUESTION OF THE DAY MODULE ---
 async function initQuestionOfTheDay() {
-    const todayStr = new Date().toISOString().split('T')[0];
     const qotdLoader = document.getElementById('qotd-loader');
-
-    // Corrected 'try' keyword
     try {
-        const cachedData = JSON.parse(localStorage.getItem('radmentor_qotd'));
-        if (cachedData && cachedData.date === todayStr) {
-            displayQotD(cachedData.question);
-            return;
-        }
-    } catch (e) { /* Invalid cache, proceed to fetch */ }
-
-    // Corrected 'try' keyword
-    try {
-        const url = `https://docs.google.com/spreadsheets/d/${QOTD_CONFIG.sheetId}/gviz/tq?tqx=out:json&gid=${QOTD_CONFIG.gid}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`Google Sheets API failed with status: ${response.status}`);
+        // The "&headers=1" parameter is the key fix.
+        // It forces Google Sheets to use your first row as headers.
+        const url = `https://docs.google.com/spreadsheets/d/${QOTD_CONFIG.sheetId}/gviz/tq?tqx=out:json&gid=${QOTD_CONFIG.gid}&headers=1`;
         
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Google Sheets API request failed.`);
+
         const jsonText = await response.text();
         const jsonMatch = jsonText.match(/google\.visualization\.Query\.setResponse\((.*)\)/s);
-        if (!jsonMatch || !jsonMatch[1]) throw new Error("Could not parse JSONP response from Google Sheets.");
+        if (!jsonMatch || !jsonMatch[1]) throw new Error("Could not parse the response from Google Sheets.");
         
         const jsonData = JSON.parse(jsonMatch[1]);
-        if (jsonData.status === 'error') {
-            throw new Error(`Google Sheets Error: ${jsonData.errors[0].detailed_message}`);
-        }
+        if (jsonData.status === 'error') throw new Error(jsonData.errors[0].detailed_message);
         
         const allQuestions = parseGoogleSheetJSON(jsonData);
         const validQuestions = allQuestions.filter(q => q && q.Question && q.Question.trim() !== '');
 
         if (validQuestions.length === 0) {
-            throw new Error("The sheet was loaded, but no questions with text were found.");
+            throw new Error("Your sheet was loaded, but no valid questions were found.");
         }
 
-        const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-        const questionIndex = dayOfYear % validQuestions.length;
-        const todaysQuestion = validQuestions[questionIndex];
-
-        localStorage.setItem('radmentor_qotd', JSON.stringify({ date: todayStr, question: todaysQuestion }));
-        displayQotD(todaysQuestion);
+        // To keep it simple, we will always display the very first question.
+        const firstQuestion = validQuestions[0]; 
+        displayQotD(firstQuestion);
 
     } catch (error) {
         console.error("QotD Error:", error);
-        if (qotdLoader) qotdLoader.innerHTML = `<p class="text-red-500 p-4 text-center"><strong>Error:</strong> ${error.message}</p>`;
+        if (qotdLoader) qotdLoader.innerHTML = `<p class="text-red-500 p-4"><strong>Error:</strong> ${error.message}</p>`;
     }
 }
 
@@ -93,8 +79,7 @@ function parseGoogleSheetJSON(data) {
 
 function displayQotD(q) {
     if (!q || !q.Question) {
-        const qotdLoader = document.getElementById('qotd-loader');
-        if (qotdLoader) qotdLoader.innerHTML = `<p class="text-red-500">Error: Received invalid question data.</p>`;
+        document.getElementById('qotd-loader').innerHTML = `<p class="text-red-500">Error: Question data is invalid.</p>`;
         return;
     }
 
