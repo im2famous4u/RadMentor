@@ -18,22 +18,23 @@ const QOTD_CONFIG = {
     gid: "0"
 };
 
+// --- FIREBASE INITIALIZATION ---
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// --- STARTUP SCRIPT ---
 document.addEventListener('DOMContentLoaded', () => {
-    initPerformanceSnapshot();
     initQuestionOfTheDay();
+    initPerformanceSnapshot();
 });
 
-// --- NEW, SIMPLIFIED QUESTION OF THE DAY MODULE ---
-// --- NEW DEBUGGING QUESTION OF THE DAY MODULE ---
+
+// --- QUESTION OF THE DAY MODULE (WITH DEBUGGING) ---
 async function initQuestionOfTheDay() {
     const todayStr = new Date().toISOString().split('T')[0];
     const qotdLoader = document.getElementById('qotd-loader');
 
-    // 1. Check local storage cache first
     try {
         const cachedData = JSON.parse(localStorage.getItem('radmentor_qotd'));
         if (cachedData && cachedData.date === todayStr) {
@@ -43,7 +44,6 @@ async function initQuestionOfTheDay() {
     } catch (e) { /* Invalid cache, proceed to fetch */ }
 
     try {
-        // 2. Fetch from the single Google Sheet URL
         const url = `https://docs.google.com/spreadsheets/d/${QOTD_CONFIG.sheetId}/gviz/tq?tqx=out:json&gid=${QOTD_CONFIG.gid}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error(`Google Sheets API failed with status: ${response.status}`);
@@ -73,63 +73,22 @@ async function initQuestionOfTheDay() {
         console.log("---------------------------");
         // --- END DEBUGGING ---
 
-        // 3. Filter out any rows that don't have question text
         const validQuestions = allQuestions.filter(q => q && q.Question && q.Question.trim() !== '');
 
         if (validQuestions.length === 0) {
             throw new Error("No questions with text could be found in the sheet.");
         }
 
-        // 4. Deterministically select one question for the day
         const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
         const questionIndex = dayOfYear % validQuestions.length;
         const todaysQuestion = validQuestions[questionIndex];
 
-        // 5. Cache the question for today and display it
         localStorage.setItem('radmentor_qotd', JSON.stringify({ date: todayStr, question: todaysQuestion }));
         displayQotD(todaysQuestion);
 
     } catch (error) {
         console.error("QotD Error:", error);
-        qotdLoader.innerHTML = `<p class="text-red-500 p-4 text-center"><strong>Error:</strong> ${error.message}</p>`;
-    }
-}
-    try {
-        // 2. Fetch from the single Google Sheet URL
-        const url = `https://docs.google.com/spreadsheets/d/${QOTD_CONFIG.sheetId}/gviz/tq?tqx=out:json&gid=${QOTD_CONFIG.gid}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`Google Sheets API failed with status: ${response.status}`);
-        
-        const jsonText = await response.text();
-        const jsonMatch = jsonText.match(/google\.visualization\.Query\.setResponse\((.*)\)/s);
-        if (!jsonMatch || !jsonMatch[1]) throw new Error("Could not parse JSONP response from Google Sheets.");
-        
-        const jsonData = JSON.parse(jsonMatch[1]);
-        if (jsonData.status === 'error') {
-            throw new Error(`Google Sheets Error: ${jsonData.errors[0].detailed_message}`);
-        }
-        
-        const allQuestions = parseGoogleSheetJSON(jsonData);
-
-        // 3. Filter out any rows that don't have question text
-        const validQuestions = allQuestions.filter(q => q && q.Question && q.Question.trim() !== '');
-
-        if (validQuestions.length === 0) {
-            throw new Error("No questions with text could be found in the sheet.");
-        }
-
-        // 4. Deterministically select one question for the day
-        const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-        const questionIndex = dayOfYear % validQuestions.length;
-        const todaysQuestion = validQuestions[questionIndex];
-
-        // 5. Cache the question for today and display it
-        localStorage.setItem('radmentor_qotd', JSON.stringify({ date: todayStr, question: todaysQuestion }));
-        displayQotD(todaysQuestion);
-
-    } catch (error) {
-        console.error("QotD Error:", error);
-        qotdLoader.innerHTML = `<p class="text-red-500 p-4 text-center"><strong>Error:</strong> ${error.message}</p>`;
+        if (qotdLoader) qotdLoader.innerHTML = `<p class="text-red-500 p-4 text-center"><strong>Error:</strong> ${error.message}</p>`;
     }
 }
 
@@ -148,7 +107,8 @@ function parseGoogleSheetJSON(data) {
 
 function displayQotD(q) {
     if (!q || !q.Question) {
-        document.getElementById('qotd-loader').innerHTML = `<p class="text-red-500">Error: Received invalid question data.</p>`;
+        const qotdLoader = document.getElementById('qotd-loader');
+        if (qotdLoader) qotdLoader.innerHTML = `<p class="text-red-500">Error: Received invalid question data.</p>`;
         return;
     }
 
@@ -175,7 +135,8 @@ function displayQotD(q) {
     }
 }
 
-// --- PERFORMANCE SNAPSHOT MODULE (No changes needed here) ---
+
+// --- PERFORMANCE SNAPSHOT MODULE ---
 function initPerformanceSnapshot() {
     const statsLoader = document.getElementById('stats-loader');
     
@@ -200,14 +161,14 @@ function initPerformanceSnapshot() {
             }
 
             const TOTAL_AVAILABLE_PAPERS = 14; 
-            const uniquePapersAttempted = new Set(allAttempts.map(a => a.paperId));
+            const uniquePapersAttempted = new Set(allAttempts.map(a => a.paper.paperId));
             const completion = (uniquePapersAttempted.size / TOTAL_AVAILABLE_PAPERS) * 100;
             const totalCorrect = allAttempts.reduce((sum, a) => sum + (a.score || 0), 0);
             const totalQuestions = allAttempts.reduce((sum, a) => sum + (a.totalQuestions || 0), 0);
             const accuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
             const examAttempts = allAttempts.filter(a => a.mode === 'exam');
             const mockScore = examAttempts.length > 0 ? examAttempts.reduce((sum, a) => sum + (a.percentage || 0), 0) / examAttempts.length : 0;
-            const masteredPapers = new Set(allAttempts.filter(a => a.percentage > 60).map(a => a.paperId));
+            const masteredPapers = new Set(allAttempts.filter(a => a.percentage > 60).map(a => a.paper.paperId));
             const mastery = uniquePapersAttempted.size > 0 ? (masteredPapers.size / uniquePapersAttempted.size) * 100 : 0;
             
             updateDashboardUI({ completion, accuracy, mockScore, mastery });
