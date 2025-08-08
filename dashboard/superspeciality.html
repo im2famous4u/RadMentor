@@ -3,664 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RadMentor Quiz - Superspeciality</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Superspeciality Exams - RadMentor</title>
+    <!-- Sets the base path for all relative URLs to /dashboard/ -->
+    <base href="/dashboard/">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --bg-color: #f8fafc; --card-bg: #ffffff; --text-color: #475569; --heading-color: #1e293b;
-            --primary-color: #4f46e5; --primary-hover: #4338ca; --border-color: #e2e8f0; --shadow-color: rgba(71, 85, 105, 0.1);
-            --correct-bg: #f0fdf4; --correct-border: #4ade80; --correct-text: #166534;
-            --incorrect-bg: #fef2f2; --incorrect-border: #f87171; --incorrect-text: #b91c1c;
-            --bookmark-active: #f59e0b; --main-font: 'Inter', sans-serif;
-        }
-        *, *::before, *::after { box-sizing: border-box; }
-        body { font-family: var(--main-font); margin: 0; padding: 2rem 1rem; background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; overflow-x: hidden; }
-        .main-container { width: 100%; max-width: 900px; transition: transform 0.4s ease-in-out; }
-        .main-container.side-panel-active { transform: translateX(-150px); }
-        .screen { display: none; animation: fadeIn 0.5s ease-out; }
-        .screen.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Card & Layout */
-        .card { background-color: var(--card-bg); border-radius: 1.25rem; padding: 2rem; box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -2px var(--shadow-color); border: 1px solid var(--border-color); }
-        .card-header { margin-bottom: 2rem; }
-        .card-header h1 { font-size: 2rem; font-weight: 800; color: var(--heading-color); margin: 0 0 0.25rem 0; }
-        .card-header p { font-size: 1.1rem; color: var(--text-color); margin: 0; }
-        .back-link { background: none; border: none; color: var(--primary-color); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; padding: 0; font-size: 1rem; }
-        
-        /* Quiz Selection Grid */
-        .selection-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; }
-        .selection-item { display: flex; align-items: center; gap: 1rem; padding: 1.25rem; background-color: #f9fafb; border: 1px solid var(--border-color); border-radius: 0.75rem; text-decoration: none; color: var(--heading-color); font-weight: 600; font-size: 1rem; transition: all 0.25s ease; cursor: pointer; }
-        .selection-item:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px var(--shadow-color); border-color: var(--primary-color); }
-        .selection-item i { color: var(--primary-color); }
-
-        /* Quiz Header & Controls */
-        .quiz-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 1rem; background-color: #fdfdff; border-radius: 1.25rem 1.25rem 0 0; }
-        .quiz-header h2 { font-size: 1.25rem; margin: 0; font-weight: 700; color: var(--heading-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .quiz-controls { display: flex; align-items: center; gap: 1.5rem; }
-        .timer { font-size: 1rem; font-weight: 600; color: var(--primary-color); background-color: #eef2ff; padding: 0.5rem 1rem; border-radius: 0.5rem; }
-        .finish-btn { background-color: var(--primary-color); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
-        .finish-btn:hover { background-color: var(--primary-hover); }
-
-        /* Mode Toggle Switch */
-        .mode-toggle { display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; font-weight: 500; }
-        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; border-radius: 28px; transition: 0.4s; }
-        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: 0.4s; }
-        input:checked + .slider { background-color: var(--primary-color); }
-        input:checked + .slider:before { transform: translateX(22px); }
-
-        /* Progress Bar */
-        .progress-container { width: 100%; height: 6px; background-color: var(--border-color); }
-        .progress-bar { width: 0%; height: 100%; background-color: var(--primary-color); transition: width 0.3s ease; }
-
-        /* Question Area */
-        .question-area { padding: 2.5rem; animation: questionFadeIn 0.4s ease-out; }
-        @keyframes questionFadeIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-        .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .question-meta { font-size: 1rem; font-weight: 500; color: #64748b; }
-        .question-actions .icon-btn { background: none; border: 1px solid transparent; color: #94a3b8; cursor: pointer; padding: 0.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .question-actions .icon-btn:hover { color: var(--primary-color); background-color: #eef2ff; }
-        .question-actions .icon-btn.active { color: var(--bookmark-active); background-color: #fffbeb; border-color: #fef3c7; }
-        .question-text { font-size: 1.25rem; font-weight: 600; line-height: 1.6; margin-bottom: 1rem; color: var(--heading-color); }
-        .question-image { max-width: 100%; border-radius: 0.75rem; margin: 1.5rem 0; border: 1px solid var(--border-color); }
-        .options-grid { display: flex; flex-direction: column; gap: 0.75rem; }
-        .option-btn { display: flex; align-items: start; width: 100%; text-align: left; padding: 1rem 1.25rem; border: 2px solid var(--border-color); border-radius: 0.75rem; background-color: #fff; cursor: pointer; transition: all 0.2s; font-size: 1rem; line-height: 1.5; }
-        .option-btn:hover:not(:disabled) { border-color: var(--primary-color); background-color: #f5f3ff; }
-        .option-btn.selected { border-color: var(--primary-color); font-weight: 600; }
-        .option-btn.correct { border-color: var(--correct-border); background-color: var(--correct-bg); color: var(--correct-text); font-weight: 600; }
-        .option-btn.incorrect { border-color: var(--incorrect-border); background-color: var(--incorrect-bg); color: var(--incorrect-text); font-weight: 600; }
-        .option-btn:disabled { cursor: not-allowed; }
-        .explanation-box { margin-top: 2rem; padding: 1.5rem; background-color: #f8fafc; border-radius: 0.75rem; border-left: 4px solid var(--primary-color); }
-        .explanation-box h4 { margin-top: 0; font-size: 1.1rem; font-weight: 700; color: var(--heading-color); }
-        .explanation-image { max-width: 100%; border-radius: 0.75rem; margin-top: 1rem; border: 1px solid var(--border-color); }
-        
-        /* Navigation & Results */
-        .navigation-controls { display: flex; justify-content: space-between; margin-top: 2rem; }
-        .nav-btn { background-color: var(--card-bg); color: var(--primary-color); border: 1px solid var(--primary-color); padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
-        .nav-btn.next { background-color: var(--primary-color); color: white; }
-        .nav-btn:hover:not(:disabled) { transform: translateY(-2px); }
-        .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .results-header { text-align: center; margin-bottom: 2rem; }
-        .results-header h2 { font-size: 2.5rem; margin: 0; font-weight: 800; color: var(--heading-color); }
-        .final-score-percent { font-size: 4rem; font-weight: 800; color: var(--primary-color); margin-bottom: 1rem; display: block; text-align: center; }
-        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
-        .stat-card { background-color: #f8fafc; padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border-color); }
-        .stat-card h3 { font-size: 1.1rem; font-weight: 600; color: var(--heading-color); margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; }
-        .stat-card p { margin: 0.25rem 0; }
-        .results-actions { margin-top: 2.5rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
-        .results-actions .btn { padding: 0.75rem 1.5rem; font-weight: 600; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; }
-        .results-actions .primary-btn { background-color: var(--primary-color); color: white; }
-        .results-actions .secondary-btn { background-color: var(--card-bg); color: var(--text-color); border-color: var(--border-color); }
-
-        /* Side Panel & Modal */
-        .side-panel-toggle { position: fixed; top: 50%; right: 0; transform: translateY(-50%); background-color: var(--primary-color); color: white; border: none; width: 40px; height: 60px; border-radius: 8px 0 0 8px; cursor: pointer; z-index: 999; display: flex; align-items: center; justify-content: center; box-shadow: -5px 0 15px rgba(0,0,0,0.1); }
-        .side-panel { position: fixed; top: 0; right: 0; width: 300px; height: 100%; background-color: white; box-shadow: -10px 0 30px rgba(0,0,0,0.1); transform: translateX(100%); transition: transform 0.4s ease-in-out; z-index: 998; display: flex; flex-direction: column; }
-        .side-panel.active { transform: translateX(0); }
-        .side-panel-tabs { display: flex; border-bottom: 1px solid var(--border-color); }
-        .side-panel-tab { flex: 1; padding: 1rem; text-align: center; font-weight: 600; cursor: pointer; color: var(--text-color); border-bottom: 2px solid transparent; transition: all 0.2s; }
-        .side-panel-tab.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
-        .side-panel-content { flex-grow: 1; overflow-y: auto; padding: 1rem; }
-        .side-panel-section { display: none; }
-        .side-panel-section.active { display: block; }
-        .side-panel-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
-        .page-box { width: 100%; height: 45px; border-radius: 0.5rem; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
-        .page-box:hover { background-color: #f5f3ff; border-color: var(--primary-color); }
-        .page-box.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); font-weight: 700; }
-        .page-box.answered-correct { background-color: var(--correct-bg); border-color: var(--correct-border); color: var(--correct-text); }
-        .page-box.answered-incorrect { background-color: var(--incorrect-bg); border-color: var(--incorrect-border); color: var(--incorrect-text); }
-        .page-box.bookmarked { box-shadow: 0 0 0 2px var(--bookmark-active); position: relative; }
-        .bookmark-list-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; margin-bottom: 0.5rem; transition: background-color 0.2s; }
-        .bookmark-list-item:hover { background-color: #f8fafc; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 1000; animation: fadeIn 0.3s; }
-        .modal-overlay.active { display: flex; }
-        .modal-content { background-color: var(--card-bg); padding: 2rem; border-radius: 1rem; width: 90%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; }
-        
-        /* Loader */
-        #app-loader { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 50vh; gap: 1rem; }
-        .loader { width: 48px; height: 48px; border: 5px solid var(--primary-color); border-bottom-color: transparent; border-radius: 50%; animation: rotation 1s linear infinite; }
-        @keyframes rotation { to { transform: rotate(360deg); } }
-    </style>
+    <!-- This will correctly resolve to /dashboard/style.css -->
+    <link rel="stylesheet" href="quiz/style.css">
 </head>
 <body>
-
-    <div id="main-container" class="main-container">
-        <div id="app-loader" class="screen active">
+    <!-- Auth Screen: Shown while checking login status -->
+    <div id="authCheckScreen" class="screen active">
+        <div class="selection-container">
             <div class="loader"></div>
-            <p>Initializing...</p>
+            <p style="margin-top: 1rem; font-weight: 500; color: var(--text-color-light);">Initializing Session...</p>
         </div>
+    </div>
 
-        <div id="home-screen" class="screen">
-            <div class="card">
-                <div class="card-header">
-                    <h1>Superspeciality Exams</h1>
-                    <p>Select an exam category to view available papers.</p>
-                </div>
-                <div id="quiz-list-container" class="selection-grid"></div>
+    <!-- Main Container for the app -->
+    <div class="main-container">
+        <!-- Topic/Paper Selection Screen -->
+        <div id="topic-screen" class="screen">
+            <div class="selection-container">
+                 <h1 style="color: var(--header-text-color); font-size: 2.2rem; font-weight: 800;">Superspeciality Exams</h1>
+                 <p style="color: var(--text-color-light); font-size: 1.1rem; max-width: 600px; margin: 1rem auto 0;">Select an exam paper below to begin your practice session.</p>
+                 <div id="paper-card-grid" class="paper-button-grid"></div>
             </div>
         </div>
 
-        <div id="paper-screen" class="screen">
-            <div class="card">
-                <button id="back-to-home-btn" class="back-link"><i data-feather="arrow-left"></i> Back to Exams</button>
-                <div class="card-header">
-                    <h1 id="paper-screen-title"></h1>
-                    <p>Choose a paper to begin your session.</p>
-                </div>
-                <div id="paper-grid" class="selection-grid"></div>
-            </div>
-        </div>
-        
+        <!-- Quiz Screen -->
         <div id="quiz-screen" class="screen">
-            <div class="card" style="padding: 0;">
+            <div class="quiz-container">
+                <div id="loading-container" style="text-align:center; padding: 4rem;"><div class="loader"></div></div>
                 <div id="quiz-content" style="display:none;">
                     <div class="quiz-header">
-                        <h2 id="quiz-title"></h2>
-                        <div class="quiz-controls">
-                            <div class="timer" id="timer">00:00</div>
+                        <h1 id="quiz-title"></h1>
+                        <div class="header-controls">
                             <div class="mode-toggle">
-                                <span>Practice</span>
+                                <span style="color: var(--text-color-light);">Practice</span>
                                 <label class="switch">
                                     <input type="checkbox" id="mode-toggle-checkbox">
                                     <span class="slider"></span>
                                 </label>
                                 <span>Exam</span>
                             </div>
-                            <button class="finish-btn" id="finish-quiz-btn">Finish</button>
+                            <button id="sound-toggle-btn" class="icon-btn"><i data-feather="volume-2"></i></button>
+                            <div class="timer" id="timer">00:00</div>
+                            <button class="finish-btn-header" id="finish-quiz-btn">Finish</button>
                         </div>
                     </div>
-                    <div class="progress-container"><div id="progress-bar" class="progress-bar"></div></div>
-                    <div id="question-area" class="question-area"></div>
+                    <div id="quiz-pagination-header" class="quiz-pagination-header"></div>
+                    <div class="question-area">
+                        <div id="questions-display"></div>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div id="results-screen" class="screen">
-             <div class="card">
-                <div class="results-header">
-                    <h2>Test Complete!</h2>
-                    <p>Here's a summary of your performance.</p>
-                </div>
-                <div id="results-content"></div>
-             </div>
-        </div>
-    </div>
-
-    <button id="side-panel-toggle" class="side-panel-toggle" style="display: none;"><i data-feather="menu"></i></button>
-    <div id="side-panel" class="side-panel">
-        <div class="side-panel-tabs">
-            <div class="side-panel-tab active" data-tab="questions">Questions</div>
-            <div class="side-panel-tab" data-tab="bookmarks">Bookmarks</div>
-        </div>
-        <div class="side-panel-content">
-            <div id="side-panel-questions" class="side-panel-section active"><div id="side-panel-grid" class="side-panel-grid"></div></div>
-            <div id="side-panel-bookmarks" class="side-panel-section"><div id="bookmark-list"></div></div>
-        </div>
-    </div>
-
-    <div id="custom-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 id="modal-title" style="font-size: 1.5rem; font-weight: 700; margin-top:0;"></h3>
-            <p id="modal-message" style="margin-top: 1rem; color: var(--text-color);"></p>
-            <div class="results-actions" style="margin-top:1.5rem;"><button id="modal-cancel-btn" class="secondary-btn">OK</button><button id="modal-confirm-btn" class="primary-btn" style="display: none; background-color:#ef4444;">Confirm</button></div>
-        </div>
-    </div>
-
-<script>
-    // --- CONFIGURATION ---
-    const QUIZ_CONFIG = {
-      "ini-ss": { name: "INI-SS Exam", sheetId: "1Zd-UhR966r8FE5pJ3yqqPInQBrAzLSG4pTc_wytr4I0", papers: { "Paper 1": "0", "Paper 2": "123269442", "Paper 3": "1278979358", "Paper 4": "470498245", "Paper 5": "94227388", "Paper 6": "855680808", "Paper 7": "1771985316", "Paper 8": "153180989", "Paper 9": "1725673059" } },
-      "neet-ss": { name: "NEET SS Exam", sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", papers: { "Paper 1": "0", "Paper 2": "385825325", "Paper 3": "1302055466", "Paper 4": "472403230", "Paper 5": "1502909003" } }
-    };
-    function getPeerStanding(score) { let p = 60 + (score * 0.35) + ((Math.random() - 0.5) * 10); if (p > 99.9) p = 99.9; if (p < 10.0) p = 10.0; return p.toFixed(1); }
-
-    // --- GLOBAL STATE ---
-    let allQuestions = [], currentQuestionIndex = 0, currentPaperKey = null, currentQuizKey = null;
-    let quizMode = 'practice', quizInterval = null, timeRemaining = 0, totalTime = 0, userAnswers = {};
-    let isReviewing = false, reviewFilter = [], currentReviewIndex = 0;
-    let dom, currentUser, userBookmarks = new Set();
-    const TIME_PER_QUESTION = 90;
-
-    // --- FIREBASE SETUP ---
-    const firebaseConfig = {
-        apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
-        authDomain: "radiology-mcqs.firebaseapp.com",
-        projectId: "radiology-mcqs",
-        storageBucket: "radiology-mcqs.appspot.com",
-        messagingSenderId: "862300415358",
-        appId: "1:862300415358:web:097d5e413f388e30587f2f",
-        measurementId: "G-0V1SD1H95V"
-    };
-    let db; // To be initialized after SDKs load
-
-    function loadScript(src) {
-        return new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = src; script.async = true;
-            script.onload = resolve;
-            script.onerror = () => reject(new Error(`Failed to load: ${src}`));
-            document.head.appendChild(script);
-        });
-    }
-
-    // --- NEW: FUNCTION TO SAVE QUIZ ATTEMPTS ---
-    async function saveQuizAttempt(attemptData) {
-        if (!currentUser || !currentPaperKey || !currentQuizKey) return;
-        try {
-            const attemptsRef = firebase.firestore().collection("users").doc(currentUser.uid).collection("quizAttempts");
-            await attemptsRef.add({
-                paperId: `${currentQuizKey}-${currentPaperKey}`.replace(/\s/g, '-'),
-                paperName: `${QUIZ_CONFIG[currentQuizKey].name} - ${currentPaperKey}`,
-                score: attemptData.score,
-                totalQuestions: attemptData.total,
-                percentage: (attemptData.score / attemptData.total) * 100,
-                mode: quizMode,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            console.log("Quiz attempt saved!");
-        } catch (error) {
-            console.error("Error saving quiz attempt: ", error);
-        }
-    }
-    
-    window.toggleBookmark = async (questionId, questionText) => {
-        if (!currentUser) return;
-        const bookmarkRef = firebase.firestore().doc(`users/${currentUser.uid}/bookmarks/${questionId}`);
-        const button = event.currentTarget;
         
-        if (userBookmarks.has(questionId)) {
-            await bookmarkRef.delete();
-            userBookmarks.delete(questionId);
-            button?.classList.remove('active');
-            showModal("Bookmark Removed", "", null, 1500);
-        } else {
-            await bookmarkRef.set({
-                questionText: questionText,
-                paperKey: currentPaperKey,
-                quizKey: currentQuizKey,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            userBookmarks.add(questionId);
-            button?.classList.add('active');
-            showModal("Bookmark Added!", "", null, 1500);
-        }
-        updateSidePanel();
-    };
+        <!-- Results Screen -->
+        <div id="results-screen" class="screen"></div>
+    </div>
     
-    // --- CORE APP LOGIC ---
-    document.addEventListener('DOMContentLoaded', async () => {
-        dom = {
-            mainContainer: document.getElementById('main-container'),
-            appLoader: document.getElementById('app-loader'),
-            screens: document.querySelectorAll('.screen'),
-            quizListContainer: document.getElementById('quiz-list-container'),
-            paperScreenTitle: document.getElementById('paper-screen-title'),
-            paperGrid: document.getElementById('paper-grid'),
-            quizContent: document.getElementById('quiz-content'),
-            quizTitle: document.getElementById('quiz-title'),
-            questionArea: document.getElementById('question-area'),
-            timerEl: document.getElementById('timer'),
-            resultsScreen: document.getElementById('results-screen'),
-            finishQuizBtn: document.getElementById('finish-quiz-btn'),
-            modalOverlay: document.getElementById('custom-modal'),
-            modalTitle: document.getElementById('modal-title'),
-            modalMessage: document.getElementById('modal-message'),
-            modalConfirmBtn: document.getElementById('modal-confirm-btn'),
-            modalCancelBtn: document.getElementById('modal-cancel-btn'),
-            progressBar: document.getElementById('progress-bar'),
-            sidePanelToggle: document.getElementById('side-panel-toggle'),
-            sidePanel: document.getElementById('side-panel'),
-            sidePanelGrid: document.getElementById('side-panel-grid'),
-            bookmarkList: document.getElementById('bookmark-list'),
-            modeToggle: document.getElementById('mode-toggle-checkbox'),
-            backToHomeBtn: document.getElementById('back-to-home-btn'),
+    <!-- Audio elements -->
+    <audio id="correct-sound" src="https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/sounds/correct.mp3" preload="auto"></audio>
+    <audio id="wrong-sound" src="https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/sounds/wrong.mp3" preload="auto"></audio>
+
+    <!-- This will correctly resolve to /dashboard/quiz/quiz-engine.js -->
+    <script type="module" src="quiz/quiz-engine.js"></script>
+
+    <!-- Initialize the engine with the Superspeciality quiz data -->
+    <script type="module">
+        import { initQuizApp } from './quiz/quiz-engine.js';
+
+        // 1. DEFINE THE DATA FOR THE SUPERSPECIALITY QUIZZES
+        const superspecialityConfig = {
+          "ini-ss": {
+            name: "INI-SS Exam",
+            sheetId: "1Zd-UhR966r8FE5pJ3yqqPInQBrAzLSG4pTc_wytr4I0",
+            papers: {
+              "Paper 1": "0", "Paper 2": "123269442", "Paper 3": "1278979358",
+              "Paper 4": "470498245", "Paper 5": "94227388", "Paper 6": "855680808",
+              "Paper 7": "1771985316", "Paper 8": "153180989", "Paper 9": "1725673059"
+            }
+          },
+          "neet-ss": {
+            name: "NEET SS Exam",
+            sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk",
+            papers: {
+              "Paper 1": "0", "Paper 2": "385825325", "Paper 3": "1302055466",
+              "Paper 4": "472403230", "Paper 5": "1502909003"
+            }
+          }
         };
-        
-        try {
-            await loadScript("https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js");
-            await loadScript("https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js");
-            await loadScript("https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js");
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
 
-            firebase.auth().onAuthStateChanged(user => {
-                currentUser = user;
-                if(user) {
-                    showScreen('home-screen');
-                    initHomeScreen();
-                } else {
-                    dom.appLoader.innerHTML = "<p>Please log in to access quizzes.</p>";
-                }
-            });
-        } catch(e) {
-             dom.appLoader.innerHTML = "<p>Error loading application dependencies.</p>";
-        }
-    });
+        // 2. TRANSFORM THE DATA FOR THE QUIZ ENGINE
+        const paperMetadata = [];
+        const allQuizData = {};
 
-    function setupEventListeners() {
-        dom.modeToggle.addEventListener('change', () => {
-             const newMode = dom.modeToggle.checked ? 'exam' : 'practice';
-             if (confirm(`Switching to ${newMode} mode will restart your progress. Continue?`)) {
-                setQuizMode(newMode);
-             } else {
-                dom.modeToggle.checked = !dom.modeToggle.checked;
-             }
-        });
-        dom.finishQuizBtn.addEventListener('click', () => {
-            const unattempted = allQuestions.length - Object.keys(userAnswers).length;
-            if (quizMode === 'exam' && unattempted > 0) {
-                showModal('Finish Exam?', `You have ${unattempted} unattempted questions. Are you sure?`, finishQuiz);
-            } else { 
-                finishQuiz();
-            }
-        });
-        dom.sidePanelToggle.addEventListener('click', () => {
-             dom.sidePanel.classList.toggle('active');
-             dom.mainContainer.classList.toggle('side-panel-active');
-        });
-        document.querySelectorAll('.side-panel-tab').forEach(tab => {
-            tab.addEventListener('click', e => {
-                document.querySelectorAll('.side-panel-tab, .side-panel-section').forEach(el => el.classList.remove('active'));
-                e.currentTarget.classList.add('active');
-                document.getElementById(`side-panel-${e.currentTarget.dataset.tab}`).classList.add('active');
-            });
-        });
-        dom.backToHomeBtn.addEventListener('click', initHomeScreen);
-    }
-    
-    function showScreen(screenId) {
-        dom.screens.forEach(s => s.classList.remove('active'));
-        document.getElementById(screenId).classList.add('active');
-        dom.sidePanelToggle.style.display = screenId === 'quiz-screen' ? 'flex' : 'none';
-        if (screenId !== 'quiz-screen' && dom.sidePanel.classList.contains('active')) {
-            dom.sidePanel.classList.remove('active');
-            dom.mainContainer.classList.remove('side-panel-active');
-        }
-        feather.replace();
-    }
-    
-    function initHomeScreen() {
-        dom.appLoader.style.display = 'none';
-        let listHTML = '';
-        for (const key in QUIZ_CONFIG) {
-            const quiz = QUIZ_CONFIG[key];
-            listHTML += `<a class="selection-item" data-quiz-key="${key}"><i data-feather="book-open"></i><span>${quiz.name}</span></a>`;
-        }
-        dom.quizListContainer.innerHTML = listHTML;
-        dom.quizListContainer.querySelectorAll('.selection-item').forEach(link => {
-            link.addEventListener('click', (e) => showPaperScreen(e.currentTarget.dataset.quizKey));
-        });
-    }
+        for (const examId in superspecialityConfig) {
+            const exam = superspecialityConfig[examId];
+            for (const paperName in exam.papers) {
+                const gid = exam.papers[paperName];
+                const uniqueId = `${examId}-${paperName.replace(' ', '-').toLowerCase()}`;
+                
+                paperMetadata.push({
+                    id: uniqueId,
+                    name: `${exam.name} - ${paperName}`
+                });
 
-    function showPaperScreen(quizKey) {
-        currentQuizKey = quizKey;
-        const quiz = QUIZ_CONFIG[quizKey];
-        dom.paperScreenTitle.textContent = quiz.name;
-        dom.paperGrid.innerHTML = Object.keys(quiz.papers).map(paperName => 
-            `<a class="selection-item" data-paper-key="${paperName}"><i data-feather="file-text"></i><span>${paperName}</span></a>`
-        ).join('');
-        dom.paperGrid.querySelectorAll('.selection-item').forEach(link => {
-            link.addEventListener('click', e => loadQuizData(quizKey, e.currentTarget.dataset.paperKey));
-        });
-        showScreen('paper-screen');
-    }
-
-    async function loadQuizData(quizKey, paperKey) {
-        showScreen('app-loader');
-        const config = QUIZ_CONFIG[quizKey];
-        const gid = config.papers[paperKey];
-        const url = `https://docs.google.com/spreadsheets/d/${config.sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
-        try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Network error');
-            const text = await response.text();
-            allQuestions = text.split('\n').slice(1).map((row, index) => {
-                const cols = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(c => c.replace(/"/g, '')) || [];
-                if (cols.length < 7) return null;
-                return { id: `${paperKey.replace(/\s/g, '-')}-${index}`, text: cols[0], options: [cols[1], cols[2], cols[3], cols[4]], correctIndex: ['a','b','c','d'].indexOf(cols[5]?.trim().toLowerCase()), explanation: cols[6], questionImage: cols[7] || null, explanationImage: cols[8] || null };
-            }).filter(Boolean);
-
-            if (allQuestions.length === 0) throw new Error('No questions parsed.');
-            currentPaperKey = paperKey;
-            startQuiz();
-        } catch (err) {
-            dom.appLoader.innerHTML = `<p>Error loading questions. Please check the Google Sheet and try again.</p>`;
-        }
-    }
-
-    async function startQuiz() {
-        isReviewing = false; userAnswers = {}; currentQuestionIndex = 0;
-        showScreen('quiz-screen');
-        dom.quizContent.style.display = 'block';
-        dom.finishQuizBtn.style.display = 'block';
-        setupEventListeners();
-        setQuizMode(dom.modeToggle.checked ? 'exam' : 'practice', false); 
-        if(currentUser) {
-            const snapshot = await db.collection(`users/${currentUser.uid}/bookmarks`).get();
-            userBookmarks = new Set(snapshot.docs.map(doc => doc.id));
-        }
-        showQuestion(0);
-    }
-
-    async function finishQuiz() {
-        clearInterval(quizInterval);
-        let correctCount = 0;
-        allQuestions.forEach((q, i) => {
-            if (userAnswers[i] === q.correctIndex) correctCount++;
-        });
-        
-        // --- ADDITION: Save results before showing them ---
-        if (quizMode === 'exam') {
-            await saveQuizAttempt({ score: correctCount, total: allQuestions.length });
-        }
-        
-        const scorePercent = allQuestions.length > 0 ? (correctCount / allQuestions.length * 100) : 0;
-        const incorrectCount = Object.keys(userAnswers).length - correctCount;
-        const unattemptedCount = allQuestions.length - Object.keys(userAnswers).length;
-        const timeTaken = quizMode === 'exam' ? totalTime - timeRemaining : timeRemaining;
-
-        const resultsHTML = `
-            <span class="final-score-percent">${scorePercent.toFixed(1)}%</span>
-            <div class="results-grid">
-                <div class="stat-card"><h3><i data-feather="check-circle"></i>Summary</h3><p><strong>Correct:</strong> ${correctCount}</p><p><strong>Incorrect:</strong> ${incorrectCount}</p><p><strong>Unattempted:</strong> ${unattemptedCount}</p></div>
-                <div class="stat-card"><h3><i data-feather="pie-chart"></i>Performance</h3><canvas id="performanceChart" style="max-height: 120px;"></canvas></div>
-                <div class="stat-card"><h3><i data-feather="users"></i>Peer Rank</h3><p>Top <strong>${getPeerStanding(scorePercent)}%</strong></p></div>
-                <div class="stat-card"><h3><i data-feather="clock"></i>Time</h3><p><strong>Total:</strong> ${formatTime(timeTaken)}</p></div>
-            </div>
-            <div class="results-actions">
-                <button class="btn primary-btn" id="review-all-btn">Review Answers</button>
-                <button class="btn secondary-btn" id="back-to-papers-btn">Back to Papers</button>
-            </div>`;
-        document.getElementById('results-content').innerHTML = resultsHTML;
-        new Chart(document.getElementById('performanceChart'), { type: 'doughnut', data: { labels: ['Correct', 'Incorrect', 'Unattempted'], datasets: [{ data: [correctCount, incorrectCount, unattemptedCount], backgroundColor: ['#22c55e', '#ef4444', '#e2e8f0'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins:{legend:{display:false}} } });
-        document.getElementById('review-all-btn').addEventListener('click', () => setupReview());
-        document.getElementById('back-to-papers-btn').addEventListener('click', () => showPaperScreen(currentQuizKey));
-        showScreen('results-screen');
-    }
-
-    function setupReview() {
-        isReviewing = true; currentReviewIndex = 0;
-        reviewFilter = allQuestions.map((_, i) => i);
-        if (reviewFilter.length === 0) { showModal('No Questions', 'There are no questions to review.'); isReviewing = false; return; }
-        dom.finishQuizBtn.style.display = 'none';
-        showScreen('quiz-screen');
-        showQuestion(reviewFilter[0]);
-    }
-
-    function showQuestion(index) {
-        currentQuestionIndex = index;
-        const q = allQuestions[index];
-        if (!q) return;
-        const isAnswered = userAnswers[index] !== undefined;
-        const isBookmarked = userBookmarks.has(q.id);
-
-        const questionHTML = `
-            <div class="question-header">
-                <span class="question-meta">Question ${isReviewing ? (currentReviewIndex + 1) + ' of ' + reviewFilter.length : (index + 1) + ' of ' + allQuestions.length}</span>
-                <div class="question-actions">
-                    <button class="icon-btn ${isBookmarked ? 'active' : ''}" onclick="window.toggleBookmark('${q.id}', '${q.text.replace(/'/g, "\\'")}')" title="Bookmark"><i data-feather="bookmark"></i></button>
-                </div>
-            </div>
-            <p class="question-text">${q.text}</p>
-            ${q.questionImage ? `<img src="${q.questionImage}" class="question-image">` : ''}
-            <div class="options-grid">${q.options.map((opt, i) => {
-                let btnClass = 'option-btn';
-                const isDisabled = isReviewing || (quizMode === 'practice' && isAnswered);
-                if(isDisabled) {
-                    if (i === q.correctIndex) btnClass += ' correct';
-                    else if (i === userAnswers[index]) btnClass += ' incorrect';
-                } else if(quizMode === 'exam' && i === userAnswers[index]) {
-                    btnClass += ' selected';
-                }
-                return `<button class="${btnClass}" data-index="${i}" ${isDisabled ? 'disabled' : ''}><strong>${String.fromCharCode(65 + i)}.</strong> ${opt}</button>`;
-            }).join('')}</div>
-            ${((quizMode === 'practice' && isAnswered) || isReviewing) ? `<div class="explanation-box"><h4>Explanation</h4><p>${q.explanation}</p>${q.explanationImage ? `<img src="${q.explanationImage}" class="explanation-image">` : ''}</div>` : ''}
-            <div class="navigation-controls">
-                <button id="prev-btn" class="nav-btn"><i data-feather="arrow-left"></i> Prev</button>
-                <button id="next-btn" class="nav-btn next">Next <i data-feather="arrow-right"></i></button>
-            </div>`;
-        
-        dom.questionArea.innerHTML = questionHTML;
-        dom.questionArea.querySelectorAll('.option-btn:not(:disabled)').forEach(btn => btn.addEventListener('click', handleOptionClick));
-        dom.questionArea.querySelector('#prev-btn').addEventListener('click', () => navigateQuestion(-1));
-        dom.questionArea.querySelector('#next-btn').addEventListener('click', () => navigateQuestion(1));
-        
-        updateQuizUI();
-        feather.replace();
-    }
-
-    function handleOptionClick(e) {
-        userAnswers[currentQuestionIndex] = parseInt(e.currentTarget.dataset.index);
-        if (quizMode === 'practice') {
-            showQuestion(currentQuestionIndex);
-            if(Object.keys(userAnswers).length === allQuestions.length) setTimeout(finishQuiz, 1200);
-        }
-        updateQuizUI();
-    }
-
-    function navigateQuestion(direction) {
-        if (isReviewing) {
-            const newIndex = currentReviewIndex + direction;
-            if (newIndex >= 0 && newIndex < reviewFilter.length) {
-                currentReviewIndex = newIndex;
-                showQuestion(reviewFilter[currentReviewIndex]);
-            }
-        } else {
-            const newIndex = currentQuestionIndex + direction;
-            if (newIndex >= 0 && newIndex < allQuestions.length) {
-                showQuestion(newIndex);
+                allQuizData[uniqueId] = {
+                    sheetId: exam.sheetId,
+                    gid: gid
+                };
             }
         }
-    }
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw", authDomain: "radiology-mcqs.firebaseapp.com", projectId: "radiology-mcqs",
+            storageBucket: "radiology-mcqs.appspot.com", messagingSenderId: "862300415358", appId: "1:862300415358:web:097d5e413f388e30587f2f"
+        };
 
-    function updateQuizUI() {
-        const progress = (Object.keys(userAnswers).length / allQuestions.length) * 100;
-        dom.progressBar.style.width = quizMode === 'practice' ? `${progress}%` : `${(timeRemaining / totalTime) * 100}%`;
+        // 3. CREATE THE FINAL CONFIGURATION OBJECT
+        const config = {
+            ALL_QUIZ_DATA: allQuizData,
+            PAPER_METADATA: paperMetadata,
+            FIREBASE_CONFIG: firebaseConfig,
+            GOOGLE_AI_API_KEY: 'YOUR_API_KEY_HERE' // Or load it securely
+        };
 
-        if(dom.questionArea.querySelector('#prev-btn')){
-            const prevBtn = dom.questionArea.querySelector('#prev-btn');
-            const nextBtn = dom.questionArea.querySelector('#next-btn');
-            if (isReviewing) {
-                prevBtn.disabled = currentReviewIndex === 0;
-                nextBtn.disabled = currentReviewIndex === reviewFilter.length - 1;
-            } else {
-                prevBtn.disabled = currentQuestionIndex === 0;
-                nextBtn.disabled = currentQuestionIndex === allQuestions.length - 1;
-            }
-        }
-        updateSidePanel();
-    }
-
-    function updateSidePanel() {
-        if (!currentPaperKey) return;
-        dom.sidePanelGrid.innerHTML = allQuestions.map((q, i) => {
-            let cls = 'page-box';
-            if (i === currentQuestionIndex) cls += ' active';
-            if (userAnswers[i] !== undefined) cls += userAnswers[i] === q.correctIndex ? ' answered-correct' : ' answered-incorrect';
-            if (userBookmarks.has(q.id)) cls += ' bookmarked';
-            return `<div class="${cls}" data-index="${i}">${i + 1}</div>`;
-        }).join('');
-        dom.sidePanelGrid.querySelectorAll('.page-box').forEach(box => {
-            box.addEventListener('click', e => {
-                const index = parseInt(e.currentTarget.dataset.index);
-                if (isReviewing) currentReviewIndex = reviewFilter.indexOf(index);
-                showQuestion(index);
-            });
-        });
-
-        const bookmarkedQuestions = allQuestions.filter(q => userBookmarks.has(q.id));
-        if (bookmarkedQuestions.length > 0) {
-            dom.bookmarkList.innerHTML = bookmarkedQuestions.map(q => {
-                const index = allQuestions.indexOf(q);
-                return `<div class="bookmark-list-item" data-index="${index}"><span>Q ${index + 1}: ${q.text.substring(0,25)}...</span><i data-feather="chevron-right"></i></div>`
-            }).join('');
-             dom.bookmarkList.querySelectorAll('.bookmark-list-item').forEach(item => item.addEventListener('click', e => {
-                const index = parseInt(e.currentTarget.dataset.index);
-                if (isReviewing) currentReviewIndex = reviewFilter.indexOf(index);
-                showQuestion(index);
-            }));
-        } else {
-            dom.bookmarkList.innerHTML = `<p style="text-align: center; padding: 1rem;">No bookmarks for this paper.</p>`;
-        }
-        feather.replace();
-    }
-
-    function startTimer() {
-        clearInterval(quizInterval);
-        quizInterval = setInterval(() => {
-            if (quizMode === 'exam') {
-                if (timeRemaining > 0) timeRemaining--;
-                if (timeRemaining <= 0) {
-                    clearInterval(quizInterval);
-                    showModal("Time's Up!", "You have run out of time.", finishQuiz);
-                }
-            } else {
-                timeRemaining++;
-            }
-            dom.timerEl.textContent = formatTime(timeRemaining);
-            updateQuizUI();
-        }, 1000);
-    }
-    
-    function setQuizMode(mode, restart = true) {
-        if (restart) {
-            userAnswers = {};
-            currentQuestionIndex = 0;
-        }
-        quizMode = mode;
-        dom.quizTitle.textContent = `${currentPaperKey} (${mode} mode)`;
-        if (mode === 'exam') {
-            totalTime = allQuestions.length * TIME_PER_QUESTION; timeRemaining = totalTime;
-        } else {
-            timeRemaining = 0;
-        }
-        startTimer();
-        showQuestion(currentQuestionIndex);
-    }
-
-    function formatTime(s) { return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
-
-    function showModal(title, message, onConfirm = null, timeout = 0) {
-        dom.modalTitle.textContent = title;
-        dom.modalMessage.textContent = message;
-        dom.modalOverlay.classList.add('active');
-        dom.modalCancelBtn.onclick = () => dom.modalOverlay.classList.remove('active');
-        if (onConfirm) {
-            dom.modalConfirmBtn.style.display = 'inline-block';
-            dom.modalCancelBtn.textContent = 'Cancel';
-            dom.modalConfirmBtn.onclick = () => { onConfirm(); dom.modalOverlay.classList.remove('active'); };
-        } else {
-            dom.modalConfirmBtn.style.display = 'none';
-            dom.modalCancelBtn.textContent = 'OK';
-        }
-        if (timeout > 0) {
-            setTimeout(() => dom.modalOverlay.classList.remove('active'), timeout);
-        }
-    }
-</script>
-
+        // 4. START THE APP
+        initQuizApp(config);
+    </script>
 </body>
 </html>
