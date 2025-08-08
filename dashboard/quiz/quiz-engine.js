@@ -55,8 +55,9 @@ export function initQuizApp(config) {
     // Attach initial event listeners
     dom.paperCardGrid.addEventListener('click', (e) => {
         if (e.target.matches('.paper-button')) {
-            const { id, name } = e.target.dataset;
-            currentPaper = { id, name };
+            // Added 'type' to be stored in the currentPaper object
+            const { id, name, type } = e.target.dataset;
+            currentPaper = { id, name, type };
             quizMode = 'practice';
             checkResumeAndStart();
         }
@@ -82,10 +83,6 @@ export function initQuizApp(config) {
     });
 }
 
-// ... All other functions from the previous response are copied here ...
-// For brevity, I am not re-pasting all 20+ functions, but you would
-// have the full, unchanged quiz-engine.js file from the previous step here.
-// No changes are required within this file for it to work in a subdirectory.
 function showScreen(screenId) {
     dom.screens.forEach(s => s.classList.toggle('active', s.id === screenId));
     feather.replace();
@@ -98,6 +95,7 @@ function handleDirectLink(user) {
         const paperId = urlParams.get('paperId');
         const paper = QUIZ_CONFIG.PAPER_METADATA.find(p => p.id === paperId);
         if(paper) {
+            // Ensure type is carried over for direct links
             currentPaper = paper;
             quizMode = 'practice';
             startQuiz(null, directQuestionId);
@@ -105,7 +103,10 @@ function handleDirectLink(user) {
         }
     }
     showScreen('topic-screen');
-    dom.paperCardGrid.innerHTML = QUIZ_CONFIG.PAPER_METADATA.map(paper => `<button class="paper-button" data-id="${paper.id}" data-name="${paper.name}">${paper.name}</button>`).join('');
+    // Added data-type to the button mapping
+    dom.paperCardGrid.innerHTML = QUIZ_CONFIG.PAPER_METADATA.map(paper => 
+        `<button class="paper-button" data-id="${paper.id}" data-name="${paper.name}" data-type="${paper.type}">${paper.name}</button>`
+    ).join('');
 }
 
 function setQuizMode(newMode) {
@@ -166,23 +167,53 @@ async function fetchQuizData() {
     try {
         const response = await fetch(url);
         const csvText = await response.text();
-        allQuestions = parseCSVToQuestions(csvText);
+        // Pass the quiz type to the parser
+        allQuestions = parseCSVToQuestions(csvText, currentPaper.type);
     } catch (error) { console.error("Fetch Error:", error); }
 }
 
-function parseCSVToQuestions(csvText) {
+function parseCSVToQuestions(csvText, quizType) {
     const lines = csvText.trim().split('\n').slice(1);
-    return lines.map((line, index) => {
-        const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''));
-        const [question, a, b, c, d, correctAns, explanation] = parts;
-        const options = [a, b, c, d].filter(Boolean);
-        const letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3};
-        const correctIndex = letterMap[(correctAns || '').trim().toLowerCase()];
-        if (question && correctIndex !== undefined && options.length > 0) {
-            return { id: `${currentPaper.id}-${index}`, text: question, options, correctIndex, explanation: explanation || "N/A" };
-        }
-        return null;
-    }).filter(Boolean);
+    
+    switch (quizType) {
+        case 'frcr-physics':
+            return lines.map((line, index) => {
+                const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''));
+                const questionText = parts[0];
+                if (!questionText) return null;
+                
+                const subQuestions = [];
+                for (let i = 0; i < 5; i++) {
+                    subQuestions.push({
+                        text: parts[1 + i] || '',
+                        correctAnswer: (parts[6 + i * 2] || '').toLowerCase().trim(),
+                        explanation: parts[7 + i * 2] || "N/A"
+                    });
+                }
+                
+                return { id: `${currentPaper.id}-${index}`, text: questionText, type: 'frcr-physics', subQuestions };
+            }).filter(Boolean);
+
+        case 'frcr-2a': // 5-option MCQ
+        case 'mcq': // 4-option MCQ
+        default:
+            return lines.map((line, index) => {
+                const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''));
+                const numOptions = (quizType === 'frcr-2a') ? 5 : 4;
+                const options = parts.slice(1, 1 + numOptions).filter(Boolean);
+                
+                const correctAns = parts[1 + numOptions];
+                const explanation = parts[2 + numOptions];
+
+                const letterMap = {'a': 0, 'b': 1, 'c': 2, 'd': 3, 'e': 4};
+                const correctIndex = letterMap[(correctAns || '').trim().toLowerCase()];
+
+                if (parts[0] && correctIndex !== undefined && options.length > 0) {
+                    return { id: `${currentPaper.id}-${index}`, text: parts[0], options, correctIndex, explanation: explanation || "N/A", type: quizType };
+                }
+                return null;
+            }).filter(Boolean);
+    }
 }
 
 async function fetchUserBookmarks() {
@@ -200,6 +231,26 @@ function showQuestion(index) {
     const q = allQuestions[index];
     if (!q) return;
 
+    let questionHTML = '';
+    // Render based on question type
+    switch (q.type) {
+        case 'frcr-physics':
+            questionHTML = renderFRCRPhysicsQuestion(q, index);
+            break;
+        case 'frcr-2a':
+        case 'mcq':
+        default:
+            questionHTML = renderMCQQuestion(q, index);
+            break;
+    }
+    
+    dom.questionsDisplay.innerHTML = questionHTML;
+    attachQuestionListeners(q, index);
+    updateQuestionNav();
+    feather.replace();
+}
+
+function renderMCQQuestion(q, index) {
     const isBookmarked = userBookmarks.has(q.id);
     const isFlagged = flaggedQuestions.has(q.id);
     const isAnswered = userAnswers[index] !== undefined;
@@ -228,21 +279,95 @@ function showQuestion(index) {
     if ((quizMode === 'practice' && isAnswered) || isReviewing) {
         questionHTML += `<div class="explanation-box"><h4>Explanation</h4><p>${q.explanation}</p></div>`;
     }
+    return questionHTML;
+}
 
-    dom.questionsDisplay.innerHTML = questionHTML;
+function renderFRCRPhysicsQuestion(q, index) {
+    const isBookmarked = userBookmarks.has(q.id);
+    const isFlagged = flaggedQuestions.has(q.id);
+    const isFullyAnswered = userAnswers[index] && Object.keys(userAnswers[index]).length === 5;
+    const showExplanations = isReviewing || (quizMode === 'practice' && isFullyAnswered);
 
-    // Attach event listeners programmatically instead of using onclick in HTML
+    let html = `
+        <div class="question-title-bar">
+            <span class="question-number">Question ${index + 1} of ${allQuestions.length}</span>
+            <div class="question-controls">
+                <button class="icon-btn flag-btn ${isFlagged ? 'flagged' : ''}" ${isReviewing ? 'disabled' : ''}><i data-feather="flag"></i></button>
+                <button class="icon-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" ${isReviewing ? 'disabled' : ''}><i data-feather="bookmark"></i></button>
+            </div>
+        </div>
+        <p class="main-question-text">${q.text}</p>`;
+    
+    html += q.subQuestions.map((sq, sqIndex) => {
+        const userAnswer = userAnswers[index] ? userAnswers[index][sqIndex] : undefined;
+        
+        const getLabelClass = (optionValue) => {
+            if (!showExplanations) return userAnswer === optionValue ? 'selected' : '';
+            if (sq.correctAnswer === optionValue) return 'correct';
+            if (userAnswer === optionValue) return 'incorrect';
+            return '';
+        };
+
+        return `
+            <div class="sub-question-container" style="margin-bottom: 1.5rem; border-left: 3px solid #e5e7eb; padding-left: 1rem;">
+                <p class="sub-question-text" style="font-weight: 500;">${sqIndex + 1}. ${sq.text}</p>
+                <div class="true-false-options" style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                    <label class="tf-label ${getLabelClass('true')}">
+                        <input type="radio" name="q${index}_sq${sqIndex}" value="true" ${userAnswer === 'true' ? 'checked' : ''} ${showExplanations ? 'disabled' : ''}> True
+                    </label>
+                    <label class="tf-label ${getLabelClass('false')}">
+                        <input type="radio" name="q${index}_sq${sqIndex}" value="false" ${userAnswer === 'false' ? 'checked' : ''} ${showExplanations ? 'disabled' : ''}> False
+                    </label>
+                </div>
+                ${showExplanations ? `<div class="explanation-box" style="margin-top: 1rem;">${sq.explanation}</div>` : ''}
+            </div>
+        `;
+    }).join('');
+
+    return html;
+}
+
+
+function attachQuestionListeners(q, index) {
     const flagBtn = dom.questionsDisplay.querySelector('.flag-btn');
     if (flagBtn) flagBtn.addEventListener('click', () => toggleFlag(q.id));
 
     const bookmarkBtn = dom.questionsDisplay.querySelector('.bookmark-btn');
     if (bookmarkBtn) bookmarkBtn.addEventListener('click', () => toggleBookmark(q.id, q.text));
 
-    if (!isReviewing && !(quizMode === 'practice' && isAnswered)) {
-        dom.questionsDisplay.querySelectorAll('.option-btn').forEach(btn => btn.addEventListener('click', handleOptionClick));
+    if (isReviewing) return;
+
+    if (q.type === 'frcr-physics') {
+        dom.questionsDisplay.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', (e) => handleFRCRPhysicsAnswer(e, index));
+        });
+    } else {
+        if (!userAnswers[index]) { // Only attach if not answered
+            dom.questionsDisplay.querySelectorAll('.option-btn').forEach(btn => {
+                btn.addEventListener('click', handleOptionClick);
+            });
+        }
     }
+}
+
+function handleFRCRPhysicsAnswer(event, qIndex) {
+    if (!userAnswers[qIndex]) userAnswers[qIndex] = {};
+    
+    const radioName = event.target.name; // e.g., "q0_sq1"
+    const sqIndex = parseInt(radioName.split('_sq')[1]);
+    userAnswers[qIndex][sqIndex] = event.target.value;
+
+    // In practice mode, check and show explanation once all 5 are answered
+    if (quizMode === 'practice' && Object.keys(userAnswers[qIndex]).length === 5) {
+        const allCorrect = allSubQuestionsCorrect(qIndex);
+        if(isSoundOn) (allCorrect ? dom.correctSound : dom.wrongSound).play();
+        showQuestion(qIndex); // Re-render to show explanations and disable inputs
+    } else {
+        showQuestion(qIndex); // Re-render to show selection
+    }
+    
+    saveState();
     updateQuestionNav();
-    feather.replace();
 }
 
 function handleOptionClick(e) {
@@ -258,6 +383,7 @@ function handleOptionClick(e) {
         showQuestion(currentQuestionIndex);
     }
     saveState();
+    updateQuestionNav();
 }
 
 function createQuestionNav() {
@@ -265,21 +391,41 @@ function createQuestionNav() {
     dom.paginationHeader.querySelectorAll('.page-box').forEach(box => box.addEventListener('click', () => showQuestion(parseInt(box.dataset.index))));
 }
 
+function allSubQuestionsCorrect(qIndex) {
+    const q = allQuestions[qIndex];
+    const answers = userAnswers[qIndex];
+    if (!q.subQuestions || !answers || Object.keys(answers).length < q.subQuestions.length) return false;
+    return q.subQuestions.every((sq, sqIndex) => sq.correctAnswer === answers[sqIndex]);
+}
+
 function updateQuestionNav() {
     dom.paginationHeader.querySelectorAll('.page-box').forEach(box => {
         const index = parseInt(box.dataset.index);
+        const q = allQuestions[index];
         box.className = 'page-box';
         if (index === currentQuestionIndex) box.classList.add('active');
+
         if (userAnswers[index] !== undefined) {
-             if (quizMode === 'practice' || isReviewing) {
-                 const isCorrect = userAnswers[index] === allQuestions[index].correctIndex;
-                 box.classList.add(isCorrect ? 'answered-correct' : 'answered-incorrect');
-             } else {
-                 box.classList.add('answered-correct');
-                 box.style.backgroundColor = 'var(--primary-color)';
-                 box.style.borderColor = 'var(--primary-color)';
-                 box.style.color = 'white';
-             }
+            if (quizMode === 'practice' || isReviewing) {
+                let isCorrect = false;
+                if (q.type === 'frcr-physics') {
+                    isCorrect = allSubQuestionsCorrect(index);
+                } else {
+                    isCorrect = userAnswers[index] === q.correctIndex;
+                }
+                // Only add correctness class if fully answered
+                const isFullyAnswered = (q.type === 'frcr-physics') 
+                    ? (userAnswers[index] && Object.keys(userAnswers[index]).length === 5)
+                    : (userAnswers[index] !== undefined);
+
+                if (isFullyAnswered) {
+                    box.classList.add(isCorrect ? 'answered-correct' : 'answered-incorrect');
+                } else {
+                    box.classList.add('answered-partial'); // A new class for partially answered T/F
+                }
+            } else { // Exam mode
+                 box.classList.add('answered-exam');
+            }
         }
         if (flaggedQuestions.has(allQuestions[index].id)) box.classList.add('flagged');
     });
@@ -306,8 +452,14 @@ function updateSoundIcon() {
 }
 
 function toggleFlag(id) {
-    flaggedQuestions.has(id) ? flaggedQuestions.delete(id) : flaggedQuestions.add(id);
-    document.querySelector(`.flag-btn`).classList.toggle('flagged', flaggedQuestions.has(id));
+    const button = dom.questionsDisplay.querySelector('.flag-btn');
+    if (flaggedQuestions.has(id)) {
+        flaggedQuestions.delete(id);
+        if (button) button.classList.remove('flagged');
+    } else {
+        flaggedQuestions.add(id);
+        if (button) button.classList.add('flagged');
+    }
     updateQuestionNav();
     saveState();
 }
@@ -322,7 +474,7 @@ async function toggleBookmark(questionId, questionText) {
         userBookmarks.delete(questionId);
         button.classList.remove('bookmarked');
     } else {
-        await setDoc(bookmarkRef, { questionText, topic: `Fellowship ${currentPaper.name}`, timestamp: serverTimestamp(), linkToQuestion: `${window.location.pathname}?paperId=${currentPaper.id}&questionId=${questionId}` });
+        await setDoc(bookmarkRef, { questionText, topic: `${currentPaper.name}`, timestamp: serverTimestamp(), linkToQuestion: `${window.location.pathname}?paperId=${currentPaper.id}&questionId=${questionId}` });
         userBookmarks.add(questionId);
         button.classList.add('bookmarked');
     }
@@ -336,7 +488,16 @@ async function finishExam() {
 
     allQuestions.forEach((q, i) => {
         if (userAnswers[i] !== undefined) {
-            if(userAnswers[i] === q.correctIndex) correctCount++; else {
+            let isCorrect = false;
+            if (q.type === 'frcr-physics') {
+                isCorrect = allSubQuestionsCorrect(i);
+            } else {
+                isCorrect = userAnswers[i] === q.correctIndex;
+            }
+            
+            if (isCorrect) {
+                correctCount++;
+            } else {
                 incorrectCount++;
                 incorrectQuestions.push(q);
             }
@@ -458,7 +619,11 @@ function setupReview(filterType) {
     if (filterType === 'all') {
         reviewFilter = allQuestions.map((_, i) => i).filter(i => userAnswers[i] !== undefined);
     } else if (filterType === 'incorrect') {
-        reviewFilter = allQuestions.map((q, i) => i).filter(i => userAnswers[i] !== undefined && userAnswers[i] !== q.correctIndex);
+        reviewFilter = allQuestions.map((q, i) => i).filter(i => {
+            if (userAnswers[i] === undefined) return false;
+            if (q.type === 'frcr-physics') return !allSubQuestionsCorrect(i);
+            return userAnswers[i] !== q.correctIndex;
+        });
     } else if (filterType === 'flagged') {
         reviewFilter = allQuestions.map((q, i) => i).filter(i => flaggedQuestions.has(q.id));
     }
