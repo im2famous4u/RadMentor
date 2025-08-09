@@ -10,20 +10,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/feather-icons"></script>
   <style>
-    :root{
-      --rad-blue-start:#1e40af; --rad-blue-end:#3b82f6;
-      --rad-emerald-start:#065f46; --rad-emerald-end:#10b981;
-    }
+    :root{ --rad-blue-start:#1e40af; --rad-blue-end:#3b82f6; --rad-emerald-start:#065f46; --rad-emerald-end:#10b981; }
     html, body { height: 100%; }
-    body{
-      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      background: radial-gradient(1200px 400px at 10% -10%, rgba(59,130,246,.12), transparent 60%),
-                  radial-gradient(1200px 400px at 90% -10%, rgba(16,185,129,.12), transparent 60%),
-                  linear-gradient(180deg, #f8fafc 0%, #ffffff 60%);
-    }
+    body{ font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background:radial-gradient(1200px 400px at 10% -10%,rgba(59,130,246,.12),transparent 60%),radial-gradient(1200px 400px at 90% -10%,rgba(16,185,129,.12),transparent 60%),linear-gradient(180deg,#f8fafc 0%,#ffffff 60%); }
     .rad-grid:before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(15,23,42,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(15,23,42,0.05) 1px,transparent 1px);background-size:24px 24px,24px 24px;mask-image:radial-gradient(closest-side,rgba(0,0,0,.35),transparent 70%);}    
     .rad-noise:after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.035;background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" stitchTiles="stitch"/></filter><rect width="120" height="120" filter="url(%23n)" opacity="0.3"/></svg>');mix-blend-mode:multiply;}
-    .rad-orb{position:absolute;width:34rem;height:34rem;border-radius:50%;background:conic-gradient(from 180deg,rgba(59,130,246,.25),rgba(16,185,129,.25),rgba(59,130,246,.25));filter:blur(44px);opacity:.35;transform:translateZ(0);animation:float 18s ease-in-out infinite}@keyframes float{0%,100%{transform:translate(-6%,-2%)}50%{transform:translate(6%,4%)}}
+    .rad-orb{position:absolute;width:34rem;height:34rem;border-radius:50%;background:conic-gradient(from 180deg,rgba(59,130,246,.25),rgba(16,185,129,.25),rgba(59,130,246,.25));filter:blur(44px);opacity:.35;transform:translateZ(0);animation:float 18s ease-in-out infinite}@keyframes float{0%,100%{transform:translate(-6%,-2%)}50%{transform:translate(6%,4%)} }
     .rad-card{position:relative;border-radius:1rem;padding:2px;isolation:isolate;transition:transform .35s ease,box-shadow .35s ease;}
     .rad-card:before{content:"";position:absolute;inset:0;border-radius:inherit;padding:2px;background:linear-gradient(120deg,rgba(30,64,175,.9),rgba(59,130,246,.7));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.9;transition:opacity .35s ease;}
     .rad-card.rad-green:before{background:linear-gradient(120deg,rgba(6,95,70,.95),rgba(16,185,129,.75));}
@@ -36,6 +28,10 @@
     .rad-cta:before{content:"";position:absolute;inset:-2px;background:radial-gradient(120px 40px at 0% 50%,rgba(59,130,246,.25),transparent 60%);transform:translateX(-40%);transition:transform .5s ease}
     .rad-cta:hover:before{transform:translateX(30%)}
     .rad-badge{font-size:.65rem;letter-spacing:.02em}
+    /* Syllabus popovers */
+    .topic-tile{position:relative}
+    .topic-tile .popover{visibility:hidden;opacity:0;transform:translateY(4px);transition:.18s ease;}
+    .topic-tile:focus-within .popover, .topic-tile:hover .popover{visibility:visible;opacity:1;transform:translateY(0)}
   </style>
 </head>
 <body class="antialiased text-slate-700 rad-grid rad-noise">
@@ -71,7 +67,7 @@
         </div>
       </a>
 
-      <!-- INI SS (fixed spacing; mirrored structure) -->
+      <!-- INI SS -->
       <a href="ss-fellowship/iniss.html" class="rad-card rad-green group focus:outline-none focus:ring-0">
         <div class="rad-card-inner h-full p-5 md:p-6 lg:p-7 flex">
           <div class="rad-icon shrink-0 mr-4 md:mr-5">
@@ -88,19 +84,104 @@
       </a>
     </section>
 
-    <!-- Trust strip (kept compact) -->
+    <!-- Trust strip -->
     <section class="max-w-6xl mx-auto px-6 pb-10">
       <div class="rounded-2xl border border-slate-200 bg-white/90 backdrop-blur p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4">
         <div class="flex items-center gap-3 text-slate-700">
           <i data-feather="radio" class="w-5 h-5"></i>
           <p class="text-sm md:text-[0.98rem]">Built by radiologists • Exam-style imaging vignettes • Updated pools</p>
         </div>
-        <a href="#syllabus" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 text-white text-sm font-semibold rad-cta">
+        <button id="syllabusBtn" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 text-white text-sm font-semibold rad-cta">
           View Syllabus <i data-feather="arrow-right" class="w-4 h-4"></i>
-        </a>
+        </button>
       </div>
     </section>
   </main>
+
+  <!-- Syllabus Modal -->
+  <div id="syllabusModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <div class="relative max-w-5xl mx-auto mt-16 mb-8 px-6">
+      <div class="rad-card">
+        <div class="rad-card-inner bg-white p-5 md:p-7">
+          <div class="flex items-start justify-between">
+            <h3 class="text-xl md:text-2xl font-extrabold text-slate-900">Exam Syllabus</h3>
+            <button id="syllabusClose" class="p-2 rounded-md hover:bg-slate-100" aria-label="Close syllabus">
+              <i data-feather="x"></i>
+            </button>
+          </div>
+          <p class="text-slate-600 mt-1 text-sm">Hover or tap a system to preview important topics. Click to pin/unpin.</p>
+
+          <div class="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Tile template repeated per system -->
+            <div class="topic-tile group">
+              <button class="w-full text-left px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white focus:bg-white">
+                <div class="flex items-center gap-2"><i data-feather="activity" class="w-4 h-4"></i><span class="font-semibold">Neuroradiology</span></div>
+              </button>
+              <div class="popover absolute left-0 right-0 z-10 mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-lg">
+                <ul class="text-sm text-slate-700 space-y-1 list-disc list-inside">
+                  <li>Posterior fossa masses, medulloblastoma variants</li>
+                  <li>Sellar/suprasellar lesions, pituitary apoplexy</li>
+                  <li>Acute stroke imaging (CT/CTA/CTP, ASPECTS)</li>
+                  <li>Demyelination vs ADEM vs NMOSD</li>
+                  <li>SAH patterns, aneurysm clues</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="topic-tile group">
+              <button class="w-full text-left px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white focus:bg-white"><div class="flex items-center gap-2"><i data-feather="mic" class="w-4 h-4"></i><span class="font-semibold">Head & Neck</span></div></button>
+              <div class="popover absolute left-0 right-0 z-10 mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-lg"><ul class="text-sm text-slate-700 space-y-1 list-disc list-inside"><li>Spaces of neck & infection pathways</li><li>Sinonasal tumors & staging</li><li>Temporal bone trauma & otosclerosis</li><li>Thyroid nodules (TI-RADS) & parathyroid</li><li>Oral cavity/oropharynx SCC patterns</li></ul></div>
+            </div>
+
+            <div class="topic-tile group">
+              <button class="w-full text-left px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white focus:bg-white"><div class="flex items-center gap-2"><i data-feather="wind" class="w-4 h-4"></i><span class="font-semibold">Chest</span></div></button>
+              <div class="popover absolute left-0 right-0 z-10 mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-lg"><ul class="text-sm text-slate-700 space-y-1 list-disc list-inside"><li>ILD patterns & hypersensitivity pneumonitis</li><li>Nodule assessment (Lung-RADS), screening pearls</li><li>Pulmonary embolism & CTPA pitfalls</li><li>Mediastinal masses by compartment</li><li>Post-op lung & lines/tubes</li></ul></div>
+            </div>
+
+            <div class="topic-tile group">
+              <button class="w-full text-left px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white focus:bg-white"><div class="flex items-center gap-2"><i data-feather="box" class="w-4 h-4"></i><span class="font-semibold">Abdomen</span></div></button>
+              <div class="popover absolute left-0 right-0 z-10 mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-lg"><ul class="text-sm text-slate-700 space-y-1 list-disc list-inside"><li>Liver lesions (LI-RADS, HCC variants)</li><li>Pancreatic masses & cystic neoplasms</li><li>IBD complications & CT enterography</li><li>Mesenteric ischemia</li><li>Post-transplant complications</li></ul></div>
+            </div>
+
+            <div class="topic-tile group">
+              <button class="w-full text-left px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white focus:bg-white"><div class="flex items-center gap-2"><i data-feather="droplet" class="w-4 h-4"></i><span class="font-semibold">Genitourinary</span></div></button>
+              <div class="popover absolute left-0 right-0 z-10 mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-lg"><ul class="text-sm text-slate-700 space-y-1 list-disc list-inside"><li>Renal masses (Bosniak v2019)</li><li>Urothelial carcinoma & staging</li><li>Prostate (PI-RADS v2.1)</li><li>Obstruction & urinary diversions</li><li>GU TB spectrum</li></ul></div>
+            </div>
+
+            <div class="topic-tile group">
+              <button class="w-full text-left px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white focus:bg-white"><div class="flex items-center gap-2"><i data-feather="heart" class="w-4 h-4"></i><span class="font-semibold">OBG</span></div></button>
+              <div class="popover absolute left-0 right-0 z-10 mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-lg"><ul class="text-sm text-slate-700 space-y-1 list-disc list-inside"><li>Ectopic pregnancy & emergent OB USG</li><li>Adnexal masses (IOTA/ORADS)</li><li>Placental disorders (accreta spectrum)</li><li>Postpartum complications</li><li>MR pelvis for staging</li></ul></div>
+            </div>
+
+            <div class="topic-tile group">
+              <button class="w-full text-left px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white focus:bg-white"><div class="flex items-center gap-2"><i data-feather="aperture" class="w-4 h-4"></i><span class="font-semibold">Breast Imaging</span></div></button>
+              <div class="popover absolute left-0 right-0 z-10 mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-lg"><ul class="text-sm text-slate-700 space-y-1 list-disc list-inside"><li>BI-RADS structure & descriptors</li><li>US elastography pearls</li><li>MRI background enhancement & non-mass enhancement</li><li>Post-surgery & implants</li><li>Screening recall patterns</li></ul></div>
+            </div>
+
+            <div class="topic-tile group">
+              <button class="w-full text-left px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white focus:bg-white"><div class="flex items-center gap-2"><i data-feather="trending-up" class="w-4 h-4"></i><span class="font-semibold">Recent Advances</span></div></button>
+              <div class="popover absolute left-0 right-0 z-10 mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-lg"><ul class="text-sm text-slate-700 space-y-1 list-disc list-inside"><li>Dual-energy CT & spectral maps</li><li>Compressed sensing & AI recon</li><li>PSMA PET/CT basics</li><li>CT perfusion & MR perfusion</li><li>Radiomics fundamentals</li></ul></div>
+            </div>
+
+            <div class="topic-tile group">
+              <button class="w-full text-left px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white focus:bg-white"><div class="flex items-center gap-2"><i data-feather="smile" class="w-4 h-4"></i><span class="font-semibold">Paediatrics</span></div></button>
+              <div class="popover absolute left-0 right-0 z-10 mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-lg"><ul class="text-sm text-slate-700 space-y-1 list-disc list-inside"><li>Congenital heart and great vessels basics</li><li>NEC vs midgut volvulus</li><li>DDH & skeletal dysplasia survey</li><li>Paediatric brain tumors (ATRT, ependymoma)</li><li>Intussusception and US pearls</li></ul></div>
+            </div>
+
+            <div class="topic-tile group">
+              <button class="w-full text-left px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white focus:bg-white"><div class="flex items-center gap-2"><i data-feather="target" class="w-4 h-4"></i><span class="font-semibold">Interventional Radiology</span></div></button>
+              <div class="popover absolute left-0 right-0 z-10 mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-lg"><ul class="text-sm text-slate-700 space-y-1 list-disc list-inside"><li>Embolization basics (UAE, TACE)</li><li>Portal venous interventions (TIPS fundamentals)</li><li>Biopsy & drainage algorithms</li><li>Vascular access & complications</li><li>Emergency IR (TRAUMA, GI bleed)</li></ul></div>
+            </div>
+          </div>
+
+          <div class="mt-5 flex justify-end">
+            <button id="syllabusDone" class="px-4 py-2 rounded-full bg-slate-900 text-white text-sm font-semibold">Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <footer class="relative border-t border-slate-200/70 bg-white/90 backdrop-blur">
     <div class="max-w-6xl mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -113,6 +194,25 @@
     </div>
   </footer>
 
-  <script>feather.replace();</script>
+  <script>
+    feather.replace();
+    // Modal logic
+    const openBtn = document.getElementById('syllabusBtn');
+    const modal = document.getElementById('syllabusModal');
+    const closeBtn = document.getElementById('syllabusClose');
+    const doneBtn = document.getElementById('syllabusDone');
+
+    function openModal(){ modal.classList.remove('hidden'); document.body.style.overflow='hidden'; }
+    function closeModal(){ modal.classList.add('hidden'); document.body.style.overflow=''; }
+
+    openBtn && openBtn.addEventListener('click', openModal);
+    closeBtn && closeBtn.addEventListener('click', closeModal);
+    doneBtn && doneBtn.addEventListener('click', closeModal);
+
+    // Close on backdrop click
+    modal && modal.addEventListener('click', (e)=>{ if(e.target === modal) closeModal(); });
+    // Close on ESC
+    document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal(); });
+  </script>
 </body>
 </html>
