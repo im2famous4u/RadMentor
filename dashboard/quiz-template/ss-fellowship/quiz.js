@@ -1,4 +1,4 @@
-// quiz.js — unified engine with Year-wise + System-wise support (polished)
+// quiz.js — unified engine with Year-wise + System-wise support (polished UI)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
@@ -9,32 +9,32 @@ import {
 
 import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai/+esm";
 
-/* ---------------------
-   CONFIG (overridden by page)
---------------------- */
+// ---------------------
+// CONFIG (overridden by page)
+// ---------------------
 let QUIZ_CONFIG = {
   GOOGLE_AI_API_KEY: "",
   ALL_QUIZ_DATA: {},      // { paperId: { sheetId, gid } }
   PAPER_METADATA: [],     // [{id,name,examType}]
   FIREBASE_CONFIG: {},
-  title: ""               // optional
+  title: ""               // optional, used for synthetic paper titles
 };
 
-/* durations in seconds */
+// exam durations (seconds)
 const EXAM_DURATIONS = {
   "NEET SS": 3 * 60 * 60,
   "INI SS":  1.5 * 60 * 60,
   "Fellowship exam": 1.5 * 60 * 60
 };
 
-/* aggregates */
+// histogram for aggregates
 const HISTOGRAM_BUCKETS = 10;
 const initHistogram = () => Array.from({ length: HISTOGRAM_BUCKETS }, () => 0);
 const getBucketIndex = (pct) => Math.min(HISTOGRAM_BUCKETS - 1, Math.max(0, Math.floor(pct / (100 / HISTOGRAM_BUCKETS))));
 
-/* ---------------------
-   STATE
---------------------- */
+// ---------------------
+// STATE
+// ---------------------
 let db, auth;
 let currentUser = null;
 
@@ -51,22 +51,22 @@ let quizInterval = null;
 let isSoundOn = true;
 let currentQuestionIndex = 0;
 
-/* cache: paperId -> parsed questions */
-const paperCache = new Map();
+// cache: paperId -> parsed questions
+const paperCache = new Map();   // Map<string, Question[]>
 
-/* dom cache */
+// dom cache
 const dom = {
   screens: document.querySelectorAll('.screen'),
   authCheck: document.getElementById('authCheckScreen'),
 
-  // topic
+  // topic screen
   topicScreen: document.getElementById('topic-screen'),
   paperCardGrid: document.getElementById('paper-card-grid'),
   yearBtn: document.getElementById('yearwise-btn'),
   systemBtn: document.getElementById('systemwise-btn'),
   systemTabs: document.getElementById('system-tabs'),
 
-  // quiz
+  // quiz screen
   quizScreen: document.getElementById('quiz-screen'),
   quizTitle: document.getElementById('quiz-title'),
   loadingContainer: document.getElementById('loading-container'),
@@ -81,7 +81,7 @@ const dom = {
   correctSound: document.getElementById('correct-sound'),
   wrongSound: document.getElementById('wrong-sound'),
 
-  // results
+  // results screen
   resultsScreen: document.getElementById('results-screen'),
 
   // modal
@@ -90,25 +90,21 @@ const dom = {
   modalButtons: document.getElementById('modal-buttons'),
 };
 
-/* ---------------------
-   UTIL
---------------------- */
+// ---------------------
+// UTIL
+// ---------------------
 const byId = (id) => document.getElementById(id);
 const safeFeather = () => { if (window.feather) feather.replace(); };
 const formatTime = (s) => {
   const m = Math.floor(s / 60), r = s % 60;
   return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
 };
-const normalizeTag = (t) => (t || '').replace(/\s+/g, ' ').trim();
-const splitTags = (raw) =>
-  (raw || '')
-    .split(',')
-    .map(normalizeTag)
-    .filter(Boolean);
+const normalize = (t) => (t || '').replace(/\s+/g, ' ').trim();
+const toChip = (txt) => txt ? `<span class="exam-hash">#${txt.replace(/\s+/g,'')}</span>` : "";
 
-/* ---------------------
-   MODAL
---------------------- */
+// ---------------------
+// MODAL
+// ---------------------
 function showCustomModal(message, buttons) {
   if (!dom.modalBackdrop) return alert(message);
   dom.modalMessage.textContent = message;
@@ -126,9 +122,9 @@ const showCustomAlert  = (m, ok=()=>{}) => showCustomModal(m, [{ text:'OK', isPr
 const showCustomConfirm = (m, ok, cancel=()=>{}) =>
   showCustomModal(m, [{ text:'Yes', isPrimary:true, onClick: ok }, { text:'No', isPrimary:false, onClick: cancel }]);
 
-/* ---------------------
-   INIT
---------------------- */
+// ---------------------
+// INIT
+// ---------------------
 export function initQuizApp(config) {
   QUIZ_CONFIG = { ...QUIZ_CONFIG, ...config };
 
@@ -136,7 +132,7 @@ export function initQuizApp(config) {
   db   = initializeFirestore(app, { experimentalForceLongPolling: true });
   auth = getAuth(app);
 
-  // view toggles
+  // UI wiring for view toggles (if present)
   dom.yearBtn?.addEventListener('click', () => setView('year'));
   dom.systemBtn?.addEventListener('click', () => setView('system'));
 
@@ -174,20 +170,14 @@ export function initQuizApp(config) {
   });
 }
 
-/* ---------------------
-   TOPIC VIEW (Year/System)
---------------------- */
+// ---------------------
+// TOPIC VIEW (Year/System)
+// ---------------------
 let currentView = 'year'; // 'year' | 'system'
-let lastSystem = null;
-
 function setView(v) {
   currentView = v;
-
-  // visual state for pills (matches CSS .active / .active-pill)
   dom.yearBtn?.classList.toggle('active', v === 'year');
-  dom.yearBtn?.classList.toggle('active-pill', v === 'year');
   dom.systemBtn?.classList.toggle('active', v === 'system');
-  dom.systemBtn?.classList.toggle('active-pill', v === 'system');
 
   if (v === 'year') {
     dom.systemTabs?.classList.add('hidden');
@@ -212,28 +202,33 @@ async function handleDirectLinkOrShowTopics() {
     }
   }
   showScreen('topic-screen');
-  setView('year'); // default
+  setView('year'); // Default to year-wise view
   safeFeather();
 }
 
-/* ---------- Year-wise cards ---------- */
+// Pretty rad-card tiles (horizontal grid)
 function renderYearWise() {
   if (!dom.paperCardGrid) return;
   dom.paperCardGrid.innerHTML = '';
+  const frag = document.createDocumentFragment();
 
   QUIZ_CONFIG.PAPER_METADATA.forEach(p => {
-    dom.paperCardGrid.insertAdjacentHTML('beforeend', `
-      <a href="#" class="topic-card rad-card tilt group focusable block" data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = `
+      <a href="#" class="rad-card tilt group focusable block topic-card" data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
         <div class="rad-card-inner p-5 flex items-center justify-between">
           <div>
             <p class="text-sm font-semibold text-blue-800">${p.examType}</p>
             <h3 class="text-xl font-bold text-slate-900 mt-1">${p.name}</h3>
           </div>
-          <i data-feather="arrow-right-circle" class="paper-arrow"></i>
+          <i data-feather="arrow-right-circle" class="w-7 h-7 text-slate-400 group-hover:text-blue-600 transition-colors"></i>
         </div>
       </a>
-    `);
+    `.trim();
+    frag.appendChild(wrapper.firstChild);
   });
+
+  dom.paperCardGrid.appendChild(frag);
 
   dom.paperCardGrid.querySelectorAll('.topic-card').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -247,121 +242,80 @@ function renderYearWise() {
   safeFeather();
 }
 
-/* ---------- System-wise view ---------- */
+// --- System-wise (start on tab click) ---
 async function ensureAllPapersCached() {
-  dom.paperCardGrid.innerHTML =
-    `<p class="text-slate-500 text-center col-span-full">Analyzing question banks, please wait...</p>`;
-
-  const tasks = Object.entries(QUIZ_CONFIG.ALL_QUIZ_DATA).map(async ([paperId, { sheetId, gid }]) => {
+  // show a subtle message only once
+  if (dom.paperCardGrid) {
+    dom.paperCardGrid.innerHTML = `<p class="text-slate-500 text-center col-span-full">Analyzing question banks, please wait...</p>`;
+  }
+  const jobs = Object.entries(QUIZ_CONFIG.ALL_QUIZ_DATA).map(async ([paperId, { sheetId, gid }]) => {
     if (paperCache.has(paperId)) return;
     try {
       const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
-      const response = await fetch(url, { cache: 'no-store' });
-      if (!response.ok) return;
-      const csv = await response.text();
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) return;
+      const csv = await r.text();
       paperCache.set(paperId, parseCSVToQuestions(csv, paperId));
-    } catch (err) { console.error(`Fetch/parse failed: ${paperId}`, err); }
+    } catch(e) { console.error('cache fetch fail', paperId, e); }
   });
-  await Promise.all(tasks);
+  await Promise.all(jobs);
 }
 
 function uniqueTagsFromCache() {
   const tagSet = new Set();
-  for (const questions of paperCache.values()) {
-    for (const q of questions) {
-      for (const tag of splitTags(q.tag)) tagSet.add(tag);
+  for (const qs of paperCache.values()) {
+    for (const q of qs) {
+      (q.tag || '').split(',').forEach(t => {
+        const n = normalize(t);
+        if (n) tagSet.add(n);
+      });
     }
   }
-  return Array.from(tagSet).sort((a, b) => a.localeCompare(b));
+  return Array.from(tagSet).sort((a,b) => a.localeCompare(b));
 }
 
 async function renderSystemWise() {
   await ensureAllPapersCached();
-  const allTags = uniqueTagsFromCache();
 
-  if (!allTags.length) {
-    dom.paperCardGrid.innerHTML = `<p class="text-slate-500 text-center col-span-full">No system tags found. Check Column J in your sheets.</p>`;
+  const tags = uniqueTagsFromCache();
+  if (!tags.length) {
+    dom.paperCardGrid.innerHTML = `<p class="text-slate-500 text-center col-span-full">No system tags found. Check the Tag column in your sheets.</p>`;
     return;
   }
 
   // tabs
   if (dom.systemTabs) {
-    dom.systemTabs.innerHTML = allTags.map(tag =>
-      `<button class="system-tab${tag===lastSystem?' active':''}" data-system="${tag}">${tag}</button>`
-    ).join('');
+    dom.systemTabs.innerHTML = tags.map(t => `<button class="system-tab" data-system="${t}">${t}</button>`).join('');
+    dom.paperCardGrid.innerHTML = ""; // nothing to click; direct start
 
     dom.systemTabs.querySelectorAll('.system-tab').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         dom.systemTabs.querySelectorAll('.system-tab').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        lastSystem = btn.dataset.system;
-        renderSystemCard(lastSystem);
+
+        // Create a synthetic paper and START immediately
+        const systemName = btn.dataset.system;
+        currentPaper = {
+          id: `system-${systemName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+          name: `${systemName} — All Years`,
+          examType: QUIZ_CONFIG.title || 'Practice',
+          _system: systemName
+        };
+        quizMode = 'practice';
+        await startQuiz(null);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     });
 
-    // pick first or last selected
-    if (lastSystem) renderSystemCard(lastSystem);
-    else {
-      const first = dom.systemTabs.querySelector('.system-tab');
-      if (first) { first.classList.add('active'); lastSystem = first.dataset.system; renderSystemCard(lastSystem); }
-    }
-  } else {
-    // fallback — render all as cards
-    dom.paperCardGrid.innerHTML = allTags.map(t => systemCardHTML(t)).join('');
-    bindSystemCardClickers();
+    // Auto-click the first tab for immediate experience
+    const firstTab = dom.systemTabs.querySelector('.system-tab');
+    if (firstTab) firstTab.click();
   }
 }
 
-function systemCardHTML(systemName, count = null) {
-  const countBadge = count !== null
-    ? `<span class="exam-hash" style="margin-left:.4rem">${count} Qs</span>` : '';
-  return `
-    <a href="#" class="topic-card rad-card tilt group focusable block" data-system="${systemName}">
-      <div class="rad-card-inner p-5 flex items-center justify-between">
-        <div>
-          <p class="text-sm font-semibold text-emerald-800">System Focus ${countBadge}</p>
-          <h3 class="text-xl font-bold text-slate-900 mt-1">${systemName}</h3>
-        </div>
-        <i data-feather="arrow-right-circle" class="w-7 h-7 text-slate-400 group-hover:text-emerald-600 transition-colors"></i>
-      </div>
-    </a>
-  `;
-}
-
-function getQuestionsForSystem(systemName) {
-  const target = normalizeTag(systemName);
-  const pool = [];
-  for (const questions of paperCache.values()) pool.push(...questions);
-  return pool.filter(q => splitTags(q.tag).includes(target));
-}
-
-function renderSystemCard(systemName) {
-  const qs = getQuestionsForSystem(systemName);
-  dom.paperCardGrid.innerHTML = systemCardHTML(systemName, qs.length);
-  bindSystemCardClickers();
-  safeFeather();
-}
-
-function bindSystemCardClickers() {
-  dom.paperCardGrid.querySelectorAll('.topic-card[data-system]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      const systemName = btn.dataset.system;
-      currentPaper = {
-        id: `system-${systemName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-        name: `${systemName} — All Years`,
-        examType: QUIZ_CONFIG.title || 'Practice',
-        _system: systemName
-      };
-      quizMode = 'practice';
-      startQuiz(null);
-    });
-  });
-}
-
-/* ---------------------
-   QUIZ FLOW
---------------------- */
+// ---------------------
+// QUIZ FLOW
+// ---------------------
 function showScreen(id) {
   dom.screens.forEach(s => s.classList.toggle('active', s.id === id));
   safeFeather();
@@ -427,24 +381,28 @@ async function startQuiz(resumeState, directQuestionId = null) {
   dom.quizContent.style.display = 'block';
 }
 
-function updateLoading(msg) { if (dom.loadingMessage) dom.loadingMessage.textContent = msg; }
+function updateLoading(msg) {
+  if (dom.loadingMessage) dom.loadingMessage.textContent = msg;
+}
 
 async function loadWorkingQuestions() {
   allQuestions = [];
 
-  // System mode: merge all and filter by tag
+  // System mode: merge all papers from cache then filter by tag
   if (currentPaper._system) {
     await ensureAllPapersCached();
-    const target = normalizeTag(currentPaper._system);
     const pool = [];
-    for (const questions of paperCache.values()) pool.push(...questions);
-    allQuestions = pool.filter(q => splitTags(q.tag).includes(target));
-    // stable contiguous ids for this session
+    for (const qs of paperCache.values()) pool.push(...qs);
+    const target = normalize(currentPaper._system);
+    allQuestions = pool.filter(q =>
+      (q.tagsNormalized || []).includes(target)
+    );
+    // Re-index IDs contiguously for session
     allQuestions = allQuestions.map((q, i) => ({ ...q, id: `${currentPaper.id}-${i}` }));
     return;
   }
 
-  // Year mode
+  // Year mode: fetch just one sheet (use cache if present)
   const cfg = QUIZ_CONFIG.ALL_QUIZ_DATA[currentPaper.id];
   if (!cfg?.sheetId || !cfg?.gid) throw new Error('Missing sheet configuration.');
   if (paperCache.has(currentPaper.id)) {
@@ -482,6 +440,11 @@ function parseCSVToQuestions(csvText, paperIdForId) {
     const correctIndex = letterMap[(correctAns || '').trim().toLowerCase()];
 
     if (question && correctIndex !== undefined && options.length > 0) {
+      const tagsNormalized = (tag || '')
+        .split(',')
+        .map(normalize)
+        .filter(Boolean);
+
       return {
         id: `${paperIdForId || 'paper'}-${idx}`,
         text: question,
@@ -489,18 +452,19 @@ function parseCSVToQuestions(csvText, paperIdForId) {
         correctIndex,
         explanation: explanation || 'N/A',
         image, imageForExplTag,
-        tag: (tag || ''), // raw; split later
-        subtag: (subtag || '').trim(),
-        exam: (exam || '').trim()
+        tag: tag || '',
+        tagsNormalized,
+        subtag: normalize(subtag),
+        exam: normalize(exam)
       };
     }
     return null;
   }).filter(Boolean);
 }
 
-/* ---------------------
-   RENDER QUESTION
---------------------- */
+// ---------------------
+// NAV + QUESTION RENDER
+// ---------------------
 function createQuestionNav() {
   dom.paginationHeader.innerHTML =
     allQuestions.map((_, i) => `<div class="page-box" data-index="${i}">${i + 1}</div>`).join('');
@@ -541,13 +505,18 @@ function showQuestion(index) {
   const isFlagged    = flaggedQuestions.has(q.id);
   const isAnswered   = userAnswers[index] !== undefined;
 
-  const examHash = q.exam ? `<span class="exam-hash">#${q.exam.replace(/\s+/g,'')}</span>` : '';
+  // Chips: show both #Exam and #Tag (first tag if multiple)
+  const firstTag = (q.tagsNormalized && q.tagsNormalized[0]) ? q.tagsNormalized[0] : "";
+  const chips = [
+    toChip(q.exam),
+    toChip(firstTag)
+  ].join('');
 
   let html = `
     <div class="question-title-bar">
       <span class="question-number">Q ${index + 1} / ${allQuestions.length}</span>
       <div class="question-controls">
-        ${examHash}
+        ${chips}
         <button class="icon-btn flag-btn ${isFlagged ? 'flagged' : ''}" ${isReviewing ? 'disabled' : ''}><i data-feather="flag"></i></button>
         <button class="icon-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" ${isReviewing ? 'disabled' : ''}><i data-feather="bookmark"></i></button>
       </div>
@@ -596,9 +565,9 @@ function handleOptionClick(e) {
   saveState();
 }
 
-/* ---------------------
-   SOUND
---------------------- */
+// ---------------------
+// SOUND
+// ---------------------
 function initializeSound() {
   const s = localStorage.getItem('radmentor_sound_pref');
   isSoundOn = s !== 'off';
@@ -614,9 +583,9 @@ function updateSoundIcon() {
   safeFeather();
 }
 
-/* ---------------------
-   FLAGS / BOOKMARKS
---------------------- */
+// ---------------------
+// FLAGS / BOOKMARKS
+// ---------------------
 function toggleFlag(id) {
   flaggedQuestions.has(id) ? flaggedQuestions.delete(id) : flaggedQuestions.add(id);
   dom.questionsDisplay.querySelector('.flag-btn')?.classList.toggle('flagged', flaggedQuestions.has(id));
@@ -643,7 +612,9 @@ async function toggleBookmark(qid, qtext) {
       userBookmarks.add(qid);
       btn?.classList.add('bookmarked');
     }
-  } catch(e) { console.warn('bookmark failed', e); }
+  } catch(e) {
+    console.warn('bookmark failed', e);
+  }
 }
 
 async function fetchUserBookmarks() {
@@ -657,9 +628,9 @@ async function fetchUserBookmarks() {
   }
 }
 
-/* ---------------------
-   TIMER & STATE
---------------------- */
+// ---------------------
+// TIMER & STATE
+// ---------------------
 function saveState() {
   if (!currentUser || !currentPaper || isReviewing) return;
   const key = `radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`;
@@ -694,9 +665,9 @@ function startTimer() {
   }
 }
 
-/* ---------------------
-   RESULTS
---------------------- */
+// ---------------------
+// RESULTS
+// ---------------------
 async function finishExam() {
   clearInterval(quizInterval);
   showScreen('results-screen');
@@ -813,9 +784,9 @@ async function getAIInsights(incorrectQs) {
   }
 }
 
-/* ---------------------
-   REVIEW
---------------------- */
+// ---------------------
+// REVIEW
+// ---------------------
 function setupReview(type) {
   isReviewing = true;
   if (type === 'all') reviewFilter = allQuestions.map((_, i) => i);
