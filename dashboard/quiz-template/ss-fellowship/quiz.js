@@ -9,7 +9,7 @@ import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generat
 // CONFIG (overridden by page)
 // ---------------------
 let QUIZ_CONFIG = {
-  GOOGLE_AI_API_KEY: "AIzaSyDi7D6W2xjtReXVFkpSSXG_xTJBqRGswxs",
+  GOOGLE_AI_API_KEY: "",
   ALL_QUIZ_DATA: {},
   PAPER_METADATA: [],
   FIREBASE_CONFIG: {}
@@ -21,6 +21,11 @@ const EXAM_DURATIONS = {
   "INI SS": 1.5 * 60 * 60,
   "Fellowship exam": 1.5 * 60 * 60
 };
+
+// Aggregates config (histogram-based, scalable)
+const HISTOGRAM_BUCKETS = 10; // 0–10, 10–20, ... 90–100
+const initHistogram = () => Array.from({ length: HISTOGRAM_BUCKETS }, () => 0);
+const getBucketIndex = (scorePercent) => Math.min(HISTOGRAM_BUCKETS - 1, Math.max(0, Math.floor(scorePercent / (100 / HISTOGRAM_BUCKETS))));
 
 // ---------------------
 // APP STATE
@@ -97,7 +102,7 @@ export function initQuizApp(config){
   });
 
   // Paper click (delegated)
-  dom.paperCardGrid.addEventListener('click', (e)=>{
+  dom.paperCardGrid?.addEventListener('click', (e)=>{
     const button = e.target.closest('.paper-button');
     if(button){
       const { id, name, examtype } = button.dataset;
@@ -108,7 +113,7 @@ export function initQuizApp(config){
   });
 
   // Mode toggle with confirm
-  dom.modeToggle.addEventListener('change', ()=>{
+  dom.modeToggle?.addEventListener('change', ()=>{
     const newMode = dom.modeToggle.checked ? 'exam' : 'practice';
     showCustomConfirm(`Switching to ${newMode} mode will clear your current session. Continue?`,
       ()=> setQuizMode(newMode),
@@ -116,9 +121,9 @@ export function initQuizApp(config){
     );
   });
 
-  dom.soundToggleBtn.addEventListener('click', toggleSound);
+  dom.soundToggleBtn?.addEventListener('click', toggleSound);
 
-  dom.finishQuizBtn.addEventListener('click', ()=>{
+  dom.finishQuizBtn?.addEventListener('click', ()=>{
     const msg = quizMode==='exam' ? 'Are you sure you want to finish the exam?' : 'Are you sure you want to finish this practice session?';
     showCustomConfirm(msg, ()=>finishExam(), ()=>{});
   });
@@ -142,17 +147,19 @@ function handleDirectLink(user){
   }
   // Render paper cards in the enhanced style (keeps .paper-button for CSS/JS)
   showScreen('topic-screen');
-  dom.paperCardGrid.innerHTML = QUIZ_CONFIG.PAPER_METADATA.map(p=>`
-    <button class="paper-button rad-card text-left" data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
-      <div class="rad-card-inner p-4 flex items-center justify-between">
-        <div>
-          <div class="text-xs text-slate-500">${p.examType}</div>
-          <div class="text-lg font-semibold text-slate-900">${p.name}</div>
+  if(dom.paperCardGrid){
+    dom.paperCardGrid.innerHTML = QUIZ_CONFIG.PAPER_METADATA.map(p=>`
+      <button class="paper-button rad-card text-left" data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
+        <div class="rad-card-inner p-4 flex items-center justify-between">
+          <div>
+            <div class="text-xs text-slate-500">${p.examType}</div>
+            <div class="text-lg font-semibold text-slate-900">${p.name}</div>
+          </div>
+          <i data-feather="arrow-right" class="w-5 h-5 text-slate-500"></i>
         </div>
-        <i data-feather="arrow-right" class="w-5 h-5 text-slate-500"></i>
-      </div>
-    </button>`).join('');
-  if(window.feather){ feather.replace(); }
+      </button>`).join('');
+    if(window.feather){ feather.replace(); }
+  }
 }
 
 function setQuizMode(newMode){
@@ -278,7 +285,7 @@ function showQuestion(index){
         if(quizMode==='exam' && i===userAnswers[index]) cls += ' selected';
         if(shouldDisable && i===q.correctIndex) cls += ' correct';
         else if(shouldDisable && i===userAnswers[index]) cls += ' incorrect';
-        return `<button class="${cls}" data-index="${i}" ${shouldDisable?'disabled':''}>${opt}</button>`;
+        return `<button class=\"${cls}\" data-index=\"${i}\" ${shouldDisable?'disabled':''}>${opt}</button>`;
       }).join('')}
     </div>`;
 
@@ -412,16 +419,22 @@ async function finishExam(){
     options:{ responsive:true, maintainAspectRatio:false }
   });
 
-  localStorage.removeItem(`radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`);
+  // Clear local session
+  localStorage.removeItem(`radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser?.uid}`);
 
-  if(quizMode==='exam'){
-    const { average, percentile } = await saveTestResultAndGetStats({ score:correct, total:allQuestions.length });
-    document.getElementById('average-score').textContent = `${average.toFixed(1)}%`;
-    document.getElementById('percentile-rank').textContent = percentile.toFixed(1);
+  // Persist attempt + update aggregates only for Exam mode
+  if(quizMode==='exam' && currentUser){
+    await Promise.all([
+      saveUserAttempt(scorePercent),
+      updateAggregatesAndGetStats(scorePercent).then(({ average, percentile })=>{
+        document.getElementById('average-score').textContent = `${average.toFixed(1)}%`;
+        document.getElementById('percentile-rank').textContent = percentile.toFixed(1);
+      })
+    ]);
     await getAIInsights(incorrectQs);
   }else{
     document.getElementById('peer-comparison-content').innerHTML = '<p>Peer comparison is only available in Exam Mode.</p>';
-    document.getElementById('ai-insights-card').innerHTML = `<div class="flex items-start gap-4"><div class="ai-avatar">🤖</div><div class="ai-message flex-grow"><p>AI Insights are only available for Exam Mode results.</p></div></div>`;
+    document.getElementById('ai-insights-card').innerHTML = `<div class=\"flex items-start gap-4\"><div class=\"ai-avatar\">🤖</div><div class=\"ai-message flex-grow\"><p>AI Insights are only available for Exam Mode results.</p></div></div>`;
   }
 
   document.getElementById('back-to-topics-btn').addEventListener('click', ()=>{ showScreen('topic-screen'); handleDirectLink(currentUser); });
@@ -430,39 +443,66 @@ async function finishExam(){
   document.getElementById('review-flagged-btn').addEventListener('click', ()=> setupReview('flagged'));
 }
 
-async function saveTestResultAndGetStats(attempt){
+// Save one user's attempt under users/{uid}/attempts/{autoId}
+async function saveUserAttempt(scorePercent){
+  try{
+    const attemptsCol = collection(db, 'users', currentUser.uid, 'attempts');
+    // Auto-ID by creating a doc() without id then setDoc
+    const attemptRef = doc(attemptsCol);
+    await setDoc(attemptRef, {
+      paperId: currentPaper.id,
+      paperName: currentPaper.name,
+      mode: quizMode,
+      scorePercent,
+      totalQuestions: allQuestions.length,
+      elapsedSeconds,
+      finishedAt: serverTimestamp()
+    });
+  }catch(e){ console.error('saveUserAttempt failed:', e); }
+}
+
+// Update quizAggregates/{paperId} using running mean + histogram (no unbounded arrays)
+async function updateAggregatesAndGetStats(scorePercent){
   const aggregatesRef = doc(db, 'quizAggregates', currentPaper.id);
-  let final = { average:0, percentile:100 };
+  let out = { average: scorePercent, percentile: 100 };
   try{
     await runTransaction(db, async (tx)=>{
       const snap = await tx.get(aggregatesRef);
-      const scorePercent = allQuestions.length>0 ? (attempt.score/allQuestions.length)*100 : 0;
+      const b = getBucketIndex(scorePercent);
       if(!snap.exists()){
-        tx.set(aggregatesRef, { totalAttempts:1, averageScore:scorePercent, scores:[scorePercent] });
-        final = { average:scorePercent, percentile:100 };
+        const hist = initHistogram(); hist[b] = 1;
+        tx.set(aggregatesRef, { totalAttempts: 1, averageScore: scorePercent, histogram: hist });
+        out = { average: scorePercent, percentile: 100 };
       }else{
         const data = snap.data();
-        const scores = data.scores || [];
-        final.percentile = scores.length>0 ? (scores.filter(s=>s<scorePercent).length / scores.length) * 100 : 100;
-        const newTotal = data.totalAttempts + 1;
-        const newAvg = ((data.averageScore * data.totalAttempts) + scorePercent) / newTotal;
-        scores.push(scorePercent);
-        tx.update(aggregatesRef, { totalAttempts:newTotal, averageScore:newAvg, scores });
-        final.average = newAvg;
+        const total = (data.totalAttempts || 0);
+        const prevAvg = data.averageScore || 0;
+        const hist = Array.isArray(data.histogram) ? data.histogram.slice() : initHistogram();
+        // Percentile BEFORE including current (how many prior < you)
+        const lowerCount = hist.slice(0, b).reduce((s,v)=>s+v,0);
+        const priorTotal = hist.reduce((s,v)=>s+v,0);
+        const percentile = priorTotal>0 ? (lowerCount/priorTotal)*100 : 100;
+        out.percentile = percentile;
+        // Update running mean
+        const newTotal = total + 1;
+        const newAvg = ((prevAvg * total) + scorePercent) / newTotal;
+        hist[b] = (hist[b]||0) + 1;
+        tx.update(aggregatesRef, { totalAttempts: newTotal, averageScore: newAvg, histogram: hist });
+        out.average = newAvg;
       }
     });
-  }catch(e){ console.error('Transaction failed:', e); }
-  return final;
+  }catch(e){ console.error('updateAggregatesAndGetStats failed:', e); }
+  return out;
 }
 
 async function getAIInsights(incorrectQs){
   const insightsDiv = document.getElementById('ai-insights-content');
   insightsDiv.innerHTML = '<p>Generating personalized insights...</p>';
-  if(!QUIZ_CONFIG.AIzaSyDi7D6W2xjtReXVFkpSSXG_xTJBqRGswxs){ insightsDiv.innerHTML = '<p>AI features are not enabled. Please add a Google AI API key.</p>'; return; }
+  if(!QUIZ_CONFIG.GOOGLE_AI_API_KEY){ insightsDiv.innerHTML = '<p>AI features are not enabled. Please add a Google AI API key.</p>'; return; }
   if(incorrectQs.length===0){ insightsDiv.innerHTML = '<p>Flawless victory! You answered all questions correctly. No areas for improvement found.</p>'; return; }
 
   try{
-    const genAI = new GoogleGenerativeAI(QUIZ_CONFIG.AIzaSyDi7D6W2xjtReXVFkpSSXG_xTJBqRGswxs);
+    const genAI = new GoogleGenerativeAI(QUIZ_CONFIG.GOOGLE_AI_API_KEY);
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const prompt = `A user answered these radiology exam questions incorrectly. Identify 2-3 core concepts they are struggling with and give concise, actionable study advice. Questions::\n${incorrectQs.map(q=>`- ${q.text}`).join('\n')}`;
     const result = await model.generateContent(prompt);
@@ -471,7 +511,7 @@ async function getAIInsights(incorrectQs){
     else{ insightsDiv.innerHTML = '<p>Could not retrieve AI insights at this time.</p>'; }
   }catch(err){
     console.error('AI Error:', err);
-    insightsDiv.innerHTML = '<p>Could not retrieve RadMentor insights at this time. Please check your API key and try again.</p>';
+    insightsDiv.innerHTML = '<p>Could not retrieve AI insights at this time. Please check your API key and try again.</p>';
   }
 }
 
