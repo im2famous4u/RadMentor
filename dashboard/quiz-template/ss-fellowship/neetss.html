@@ -18,7 +18,7 @@
   <div id="authCheckScreen" class="screen active">
     <div class="selection-container">
       <div class="loader"></div>
-      <p class="mt-4 text-lg" style="color:var(--text-color-light)">Initializing Session...</p>
+      <p class="mt-4">Initializing Session...</p>
     </div>
   </div>
 
@@ -27,27 +27,31 @@
     <!-- Topic / Paper Selection Screen -->
     <!-- =============================== -->
     <div id="topic-screen" class="screen">
-      <div class="selection-container" style="padding:1.75rem">
+      <div class="selection-container">
 
         <!-- Hero Header -->
-        <header style="margin-bottom:1.25rem">
-          <h1 style="font-weight:900; letter-spacing:.2px; margin:0; font-size:2.2rem; color:var(--header-text-color)">NEET SS Exam</h1>
-          <p style="margin:.35rem 0 1.25rem; color:var(--text-color-light); font-size:1.05rem">
+        <header style="margin-bottom:.75rem">
+          <h1 style="margin:0; font-weight:900; letter-spacing:.2px;">NEET SS Exam</h1>
+          <p style="margin:.35rem 0 1.1rem; color:#64748b">
             Choose a paper to start your practice or exam session. Switch to system-wise to drill by organ system.
           </p>
         </header>
 
         <!-- View toggle: Year left, System right -->
-        <div class="view-toggle-bar" style="display:flex; align-items:center; justify-content:space-between; gap:.75rem; margin-bottom:.5rem">
-          <button id="yearwise-btn" class="view-pill active active-pill" aria-pressed="true">Year-wise</button>
-          <button id="systemwise-btn" class="view-pill" aria-pressed="false">System-wise</button>
+        <div class="view-toggle-bar" style="display:flex; justify-content:space-between; align-items:center; gap:.75rem;">
+          <div class="view-toggle-wrap">
+            <button id="yearwise-btn" class="view-pill active" aria-pressed="true">Year-wise</button>
+          </div>
+          <div class="view-toggle-wrap">
+            <button id="systemwise-btn" class="view-pill" aria-pressed="false">System-wise</button>
+          </div>
         </div>
 
         <!-- System tabs (hidden until System-wise is active) -->
-        <div id="system-tabs" class="mt-4 mb-2 flex flex-wrap justify-center gap-2 hidden"></div>
+        <div id="system-tabs" class="hidden"></div>
 
         <!-- Cards Grid (year-wise cards or single system card) -->
-        <div id="paper-card-grid" class="mt-6" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:1rem;"></div>
+        <div id="paper-card-grid" class="topic-grid" style="margin-top:14px;"></div>
       </div>
     </div>
 
@@ -59,12 +63,12 @@
         <div class="quiz-header">
           <h1 id="quiz-title">NEET SS Paper</h1>
           <div class="header-controls">
-            <span class="mode-label text-gray-800">Practice</span>
+            <span class="mode-label">Practice</span>
             <label class="switch" aria-label="Toggle Exam Mode">
               <input type="checkbox" id="mode-toggle-checkbox" />
               <span class="slider"></span>
             </label>
-            <span class="mode-label text-gray-400">Exam</span>
+            <span class="mode-label" style="color:#94a3b8">Exam</span>
             <span class="timer" id="timer">00:00</span>
             <button class="finish-btn-header" id="finish-quiz-btn">Finish</button>
             <button class="icon-btn" id="sound-toggle-btn" title="Toggle sounds">
@@ -80,7 +84,7 @@
 
         <div id="loading-container" style="display:none; padding:2rem;">
           <div class="loader"></div>
-          <p class="mt-4 text-lg text-center" id="loading-message" style="color:var(--text-color-light)">Loading...</p>
+          <p class="mt-4 text-center" id="loading-message">Loading...</p>
         </div>
       </div>
     </div>
@@ -159,7 +163,6 @@
 
     const neetssConfig = {
       GOOGLE_AI_API_KEY: '',
-
       ALL_QUIZ_DATA: {
         "neet-ss-2025": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "0" },
         "neet-ss-2024": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "385825325" },
@@ -167,7 +170,6 @@
         "neet-ss-2022": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "472403230" },
         "neet-ss-2021": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "1502909003" }
       },
-
       PAPER_METADATA: [
         { id: "neet-ss-2025", name: "NEET SS 2025", examType: "NEET SS" },
         { id: "neet-ss-2024", name: "NEET SS 2024", examType: "NEET SS" },
@@ -175,9 +177,7 @@
         { id: "neet-ss-2022", name: "NEET SS 2022", examType: "NEET SS" },
         { id: "neet-ss-2021", name: "NEET SS 2021", examType: "NEET SS" }
       ],
-
       title: "NEET SS",
-
       FIREBASE_CONFIG: {
         apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
         authDomain: "radiology-mcqs.firebaseapp.com",
