@@ -82,6 +82,222 @@ const dom = {
 // ---------------------
 // Custom modal helpers
 // ---------------------
+// --- View toggle state ---
+let currentView = 'year';        // 'year' | 'system'
+let activeSystemTag = null;      // e.g. 'Abdomen'
+
+// Renders the 2 big buttons + (optionally) system tabs
+function initViewToggle() {
+  const yearBtn   = document.getElementById('btn-view-year');
+  const sysBtn    = document.getElementById('btn-view-system');
+  const tabsWrap  = document.getElementById('system-tabs');
+
+  if (!yearBtn || !sysBtn) return;
+
+  yearBtn.addEventListener('click', () => {
+    currentView = 'year';
+    yearBtn.classList.add('active');
+    sysBtn.classList.remove('active');
+    // hide tabs, show year grid
+    if (tabsWrap) tabsWrap.innerHTML = '';
+    renderYearCards();
+  });
+
+  sysBtn.addEventListener('click', () => {
+    currentView = 'system';
+    sysBtn.classList.add('active');
+    yearBtn.classList.remove('active');
+    // build tabs and default to first tag
+    renderSystemTabs();
+  });
+}
+
+function renderYearCards() {
+  const grid = dom.paperCardGrid;
+  if (!grid) return;
+  grid.innerHTML = QUIZ_CONFIG.PAPER_METADATA.map(p => `
+    <button class="paper-button rad-card"
+            data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
+      <div class="rad-card-inner paper-inner">
+        <div class="paper-text">
+          <span class="paper-badge">${p.examType}</span>
+          <span class="paper-title">${p.name}</span>
+        </div>
+        <i data-feather="arrow-right" class="paper-arrow"></i>
+      </div>
+    </button>
+  `).join('');
+  grid.querySelectorAll('.paper-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const { id, name, examtype } = btn.dataset;
+      currentPaper = { id, name, examType: examtype };
+      quizMode = 'practice';
+      checkResumeAndStart();
+    });
+  });
+  if (window.feather) feather.replace();
+}
+
+// build clickable chips for each system tag
+function renderSystemTabs() {
+  const tabsWrap = document.getElementById('system-tabs');
+  const grid     = dom.paperCardGrid;
+  if (!tabsWrap || !grid) return;
+
+  const tags = Array.isArray(QUIZ_CONFIG.SYSTEM_TAGS) ? QUIZ_CONFIG.SYSTEM_TAGS : [];
+  if (!tags.length) {
+    tabsWrap.innerHTML = `<div class="text-sm text-gray-500">No system tags configured.</div>`;
+    grid.innerHTML = '';
+    return;
+  }
+
+  // default tag
+  if (!activeSystemTag) activeSystemTag = tags[0];
+
+  tabsWrap.innerHTML = tags.map(t =>
+    `<button class="view-tab ${t===activeSystemTag ? 'active':''}" data-tag="${t}" role="tab">${t}</button>`
+  ).join('');
+
+  tabsWrap.querySelectorAll('.view-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      activeSystemTag = tab.dataset.tag;
+      renderSystemTabs(); // re-render to move active class
+    });
+  });
+
+  // Render a single “Start” card for the chosen system
+  grid.innerHTML = `
+    <button class="paper-button rad-card" id="start-system-paper">
+      <div class="rad-card-inner paper-inner">
+        <div class="paper-text">
+          <span class="paper-badge">NEET SS</span>
+          <span class="paper-title">${activeSystemTag} — All Years</span>
+        </div>
+        <i data-feather="arrow-right" class="paper-arrow"></i>
+      </div>
+    </button>
+  `;
+
+  document.getElementById('start-system-paper').addEventListener('click', () => {
+    startSystemQuiz(activeSystemTag);
+  });
+
+  if (window.feather) feather.replace();
+}
+
+// Fetch ALL years, filter by Tag, and start a virtual paper
+async function startSystemQuiz(tag) {
+  // virtual paper to display in header and to key your localStorage
+  currentPaper = { id: `neet-ss-${tag.toLowerCase().replace(/\s+/g,'-')}`, name: `${tag} — All Years`, examType: 'NEET SS' };
+  quizMode = 'practice';
+
+  isReviewing = false; reviewFilter = [];
+  userAnswers = {};
+  currentQuestionIndex = 0;
+  elapsedSeconds = 0;
+  flaggedQuestions = new Set();
+
+  showScreen('quiz-screen');
+  dom.loadingContainer.style.display = 'block';
+  dom.quizContent.style.display = 'none';
+  dom.quizTitle.textContent = currentPaper.name;
+  initializeSound();
+
+  try {
+    // fetch all papers in parallel
+    const entries = QUIZ_CONFIG.PAPER_METADATA.map(p => {
+      const d = QUIZ_CONFIG.ALL_QUIZ_DATA[p.id];
+      return { id:p.id, name:p.name, sheetId:d?.sheetId, gid:d?.gid };
+    }).filter(x => x.sheetId && x.gid);
+
+    const csvs = await Promise.all(entries.map(async e => {
+      const url = `https://docs.google.com/spreadsheets/d/${e.sheetId}/gviz/tq?tqx=out:csv&gid=${e.gid}`;
+      const r = await fetch(url, { cache:'no-store' });
+      if (!r.ok) throw new Error(`Failed to load ${e.name}`);
+      return r.text();
+    }));
+
+    // parse all and filter by Tag column
+    let merged = [];
+    csvs.forEach((csv, idx) => {
+      const parsed = parseCSVToQuestions(csv);
+      // keep those with Tag == tag (case-insensitive)
+      const subset = parsed.filter(q => (q.subtag || q.tag || q.examTag || q.Tag || q.tagName, true) || true); // keep structure
+      // Our parse filled q.subtag=K column, q.exam=L column; Tag is J column -> we didn't store it earlier!
+      // quick fix: re-parse to read the J column (Tag) and L column (Exam)
+    });
+
+    // Re-parse to capture Tag + Exam explicitly
+    function parseWithTag(csv, paperId) {
+      const lines = csv.trim().split('\n');
+      const header = lines[0].split(',');
+      const rows = lines.slice(1);
+
+      // indices (fallbacks if header text changed)
+      const idx = (label, def) => {
+        const i = header.findIndex(h => h.trim().toLowerCase() === label.toLowerCase());
+        return i >= 0 ? i : def;
+      };
+      const iQ = idx('Question', 0);
+      const iA = idx('Option A', 1);
+      const iB = idx('Option B', 2);
+      const iC = idx('Option C', 3);
+      const iD = idx('Option D', 4);
+      const iCorrect = idx('Correct Answer', 5);
+      const iExplain = idx('Explanation', 6);
+      const iImg = idx('Image', 7);
+      const iImgExp = idx('Image for Explan', 8);
+      const iTag = idx('Tag', 9);
+      const iSub = idx('Subtag', 10);
+      const iExam = idx('Exam', 11);
+
+      return rows.map((raw, rIndex) => {
+        const parts = raw.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(x => x.replace(/^"|"$/g,'').trim());
+        const q = parts[iQ]; if (!q) return null;
+        const opts = [parts[iA],parts[iB],parts[iC],parts[iD]].filter(Boolean);
+        const map = {a:0,b:1,c:2,d:3};
+        const ci = map[(parts[iCorrect]||'').toLowerCase()];
+        if (ci === undefined || !opts.length) return null;
+        return {
+          id: `${paperId}-${rIndex}`,
+          text: q,
+          options: opts,
+          correctIndex: ci,
+          explanation: parts[iExplain] || 'N/A',
+          image: parts[iImg],
+          imageForExplTag: parts[iImgExp],
+          tag: parts[iTag] || '',
+          subtag: parts[iSub] || '',
+          exam: parts[iExam] || ''
+        };
+      }).filter(Boolean);
+    }
+
+    // Build merged dataset with tag filter
+    const mergedAll = [];
+    csvs.forEach((csv, i) => {
+      const paperId = entries[i].id;
+      const parsed = parseWithTag(csv, paperId);
+      parsed.forEach(q => {
+        if ((q.tag || '').toLowerCase() === tag.toLowerCase()) mergedAll.push(q);
+      });
+    });
+
+    if (!mergedAll.length) throw new Error(`No questions found under “${tag}”. Check the Tag column values.`);
+
+    // attach to global and launch UI
+    allQuestions = mergedAll;
+    dom.modeToggle.checked = false;
+    createQuestionNav();
+    showQuestion(0);
+    startTimer();
+  } catch (err) {
+    console.error(err);
+    showCustomAlert(err.message || 'Could not start system-wise quiz.', () => showScreen('topic-screen'));
+  } finally {
+    dom.loadingContainer.style.display = 'none';
+    dom.quizContent.style.display = 'block';
+  }
 function showCustomModal(message, buttons){
   if (!dom.modalBackdrop) { alert(message); return; }
   dom.modalMessage.textContent = message;
@@ -117,7 +333,14 @@ export function initQuizApp(config){
       handleDirectLink(user);
     }else{
       if(authCheckScreen) authCheckScreen.innerHTML = '<div class="selection-container"><p>You must be logged in to continue.</p></div>';
-    }
+      function handleDirectLink(user) {
+  // ... existing build of topic screen ...
+  showScreen('topic-screen');
+  // render the default year cards
+  renderYearCards();
+  // wire up the two big buttons + (later) system tabs
+  initViewToggle();
+}
   });
 
   // paper click (delegated)
