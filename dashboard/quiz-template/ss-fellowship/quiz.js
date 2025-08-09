@@ -3,12 +3,12 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import {
-  // initializeFirestore to force long-polling (ad-blocker safe)
+  // Force long-polling so Firestore works behind ad-blockers/proxies
   initializeFirestore,
+  getFirestore,
   doc, runTransaction, collection, getDocs, setDoc, deleteDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-// Google Generative AI
 import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai/+esm";
 
 // ---------------------
@@ -19,11 +19,14 @@ let QUIZ_CONFIG = {
   ALL_QUIZ_DATA: {},
   PAPER_METADATA: [],
   FIREBASE_CONFIG: {},
-  ENABLE_SYSTEM_WISE: false,   // set true in NEETSS page
-  SYSTEM_TAGS: []              // list of tags for tabs (NEETSS only)
+  // Optional: used by System-wise mode. You can override from HTML.
+  SYSTEM_TAGS: [
+    "Neuroradiology","Head and Neck","Chest","Abdomen","Genitourinary",
+    "OBG","Breast imaging","Recent advances","Paediatrics","MSK","Anatomy","Physics","Nuclear medicine"
+  ]
 };
 
-// Map exam types to duration (seconds)
+// Exam durations (seconds)
 const EXAM_DURATIONS = {
   "NEET SS": 3 * 60 * 60,
   "INI SS": 1.5 * 60 * 60,
@@ -31,10 +34,10 @@ const EXAM_DURATIONS = {
 };
 
 // Aggregates config (histogram-based, scalable)
-const HISTOGRAM_BUCKETS = 10; // 0–10, 10–20, ... 90–100
+const HISTOGRAM_BUCKETS = 10;
 const initHistogram = () => Array.from({ length: HISTOGRAM_BUCKETS }, () => 0);
-const getBucketIndex = (scorePercent) =>
-  Math.min(HISTOGRAM_BUCKETS - 1, Math.max(0, Math.floor(scorePercent / (100 / HISTOGRAM_BUCKETS))));
+const getBucketIndex = (p) =>
+  Math.min(HISTOGRAM_BUCKETS - 1, Math.max(0, Math.floor(p / (100 / HISTOGRAM_BUCKETS))));
 
 // ---------------------
 // APP STATE
@@ -48,10 +51,9 @@ let isReviewing = false;
 let isSoundOn = true;
 let db, auth;
 
-// extra state for System-wise (NEET SS)
-let viewBy = 'year';             // 'year' | 'system'
-let selectedSystem = null;       // current tag
-let allYearCache = null;         // merged questions across all sheets (for system-wise)
+// Year/System toggle state
+let currentView = 'year';        // 'year' | 'system'
+let activeSystemTag = null;
 
 // Cache DOM
 const dom = {
@@ -72,234 +74,13 @@ const dom = {
   modalBackdrop: document.getElementById('custom-modal-backdrop'),
   modalMessage: document.getElementById('modal-message'),
   modalButtons: document.getElementById('modal-buttons'),
-  loadingMessage: document.getElementById('loading-message'),
-  // view toggle + tabs (exist in NEETSS only)
-  systemTabs: document.getElementById('system-tabs'),
-  viewYearBtn: document.getElementById('view-year'),
-  viewSystemBtn: document.getElementById('view-system')
+  loadingMessage: document.getElementById('loading-message')
 };
 
 // ---------------------
 // Custom modal helpers
 // ---------------------
-// --- View toggle state ---
-let currentView = 'year';        // 'year' | 'system'
-let activeSystemTag = null;      // e.g. 'Abdomen'
-
-// Renders the 2 big buttons + (optionally) system tabs
-function initViewToggle() {
-  const yearBtn   = document.getElementById('btn-view-year');
-  const sysBtn    = document.getElementById('btn-view-system');
-  const tabsWrap  = document.getElementById('system-tabs');
-
-  if (!yearBtn || !sysBtn) return;
-
-  yearBtn.addEventListener('click', () => {
-    currentView = 'year';
-    yearBtn.classList.add('active');
-    sysBtn.classList.remove('active');
-    // hide tabs, show year grid
-    if (tabsWrap) tabsWrap.innerHTML = '';
-    renderYearCards();
-  });
-
-  sysBtn.addEventListener('click', () => {
-    currentView = 'system';
-    sysBtn.classList.add('active');
-    yearBtn.classList.remove('active');
-    // build tabs and default to first tag
-    renderSystemTabs();
-  });
-}
-
-function renderYearCards() {
-  const grid = dom.paperCardGrid;
-  if (!grid) return;
-  grid.innerHTML = QUIZ_CONFIG.PAPER_METADATA.map(p => `
-    <button class="paper-button rad-card"
-            data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
-      <div class="rad-card-inner paper-inner">
-        <div class="paper-text">
-          <span class="paper-badge">${p.examType}</span>
-          <span class="paper-title">${p.name}</span>
-        </div>
-        <i data-feather="arrow-right" class="paper-arrow"></i>
-      </div>
-    </button>
-  `).join('');
-  grid.querySelectorAll('.paper-button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const { id, name, examtype } = btn.dataset;
-      currentPaper = { id, name, examType: examtype };
-      quizMode = 'practice';
-      checkResumeAndStart();
-    });
-  });
-  if (window.feather) feather.replace();
-}
-
-// build clickable chips for each system tag
-function renderSystemTabs() {
-  const tabsWrap = document.getElementById('system-tabs');
-  const grid     = dom.paperCardGrid;
-  if (!tabsWrap || !grid) return;
-
-  const tags = Array.isArray(QUIZ_CONFIG.SYSTEM_TAGS) ? QUIZ_CONFIG.SYSTEM_TAGS : [];
-  if (!tags.length) {
-    tabsWrap.innerHTML = `<div class="text-sm text-gray-500">No system tags configured.</div>`;
-    grid.innerHTML = '';
-    return;
-  }
-
-  // default tag
-  if (!activeSystemTag) activeSystemTag = tags[0];
-
-  tabsWrap.innerHTML = tags.map(t =>
-    `<button class="view-tab ${t===activeSystemTag ? 'active':''}" data-tag="${t}" role="tab">${t}</button>`
-  ).join('');
-
-  tabsWrap.querySelectorAll('.view-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      activeSystemTag = tab.dataset.tag;
-      renderSystemTabs(); // re-render to move active class
-    });
-  });
-
-  // Render a single “Start” card for the chosen system
-  grid.innerHTML = `
-    <button class="paper-button rad-card" id="start-system-paper">
-      <div class="rad-card-inner paper-inner">
-        <div class="paper-text">
-          <span class="paper-badge">NEET SS</span>
-          <span class="paper-title">${activeSystemTag} — All Years</span>
-        </div>
-        <i data-feather="arrow-right" class="paper-arrow"></i>
-      </div>
-    </button>
-  `;
-
-  document.getElementById('start-system-paper').addEventListener('click', () => {
-    startSystemQuiz(activeSystemTag);
-  });
-
-  if (window.feather) feather.replace();
-}
-
-// Fetch ALL years, filter by Tag, and start a virtual paper
-async function startSystemQuiz(tag) {
-  // virtual paper to display in header and to key your localStorage
-  currentPaper = { id: `neet-ss-${tag.toLowerCase().replace(/\s+/g,'-')}`, name: `${tag} — All Years`, examType: 'NEET SS' };
-  quizMode = 'practice';
-
-  isReviewing = false; reviewFilter = [];
-  userAnswers = {};
-  currentQuestionIndex = 0;
-  elapsedSeconds = 0;
-  flaggedQuestions = new Set();
-
-  showScreen('quiz-screen');
-  dom.loadingContainer.style.display = 'block';
-  dom.quizContent.style.display = 'none';
-  dom.quizTitle.textContent = currentPaper.name;
-  initializeSound();
-
-  try {
-    // fetch all papers in parallel
-    const entries = QUIZ_CONFIG.PAPER_METADATA.map(p => {
-      const d = QUIZ_CONFIG.ALL_QUIZ_DATA[p.id];
-      return { id:p.id, name:p.name, sheetId:d?.sheetId, gid:d?.gid };
-    }).filter(x => x.sheetId && x.gid);
-
-    const csvs = await Promise.all(entries.map(async e => {
-      const url = `https://docs.google.com/spreadsheets/d/${e.sheetId}/gviz/tq?tqx=out:csv&gid=${e.gid}`;
-      const r = await fetch(url, { cache:'no-store' });
-      if (!r.ok) throw new Error(`Failed to load ${e.name}`);
-      return r.text();
-    }));
-
-    // parse all and filter by Tag column
-    let merged = [];
-    csvs.forEach((csv, idx) => {
-      const parsed = parseCSVToQuestions(csv);
-      // keep those with Tag == tag (case-insensitive)
-      const subset = parsed.filter(q => (q.subtag || q.tag || q.examTag || q.Tag || q.tagName, true) || true); // keep structure
-      // Our parse filled q.subtag=K column, q.exam=L column; Tag is J column -> we didn't store it earlier!
-      // quick fix: re-parse to read the J column (Tag) and L column (Exam)
-    });
-
-    // Re-parse to capture Tag + Exam explicitly
-    function parseWithTag(csv, paperId) {
-      const lines = csv.trim().split('\n');
-      const header = lines[0].split(',');
-      const rows = lines.slice(1);
-
-      // indices (fallbacks if header text changed)
-      const idx = (label, def) => {
-        const i = header.findIndex(h => h.trim().toLowerCase() === label.toLowerCase());
-        return i >= 0 ? i : def;
-      };
-      const iQ = idx('Question', 0);
-      const iA = idx('Option A', 1);
-      const iB = idx('Option B', 2);
-      const iC = idx('Option C', 3);
-      const iD = idx('Option D', 4);
-      const iCorrect = idx('Correct Answer', 5);
-      const iExplain = idx('Explanation', 6);
-      const iImg = idx('Image', 7);
-      const iImgExp = idx('Image for Explan', 8);
-      const iTag = idx('Tag', 9);
-      const iSub = idx('Subtag', 10);
-      const iExam = idx('Exam', 11);
-
-      return rows.map((raw, rIndex) => {
-        const parts = raw.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(x => x.replace(/^"|"$/g,'').trim());
-        const q = parts[iQ]; if (!q) return null;
-        const opts = [parts[iA],parts[iB],parts[iC],parts[iD]].filter(Boolean);
-        const map = {a:0,b:1,c:2,d:3};
-        const ci = map[(parts[iCorrect]||'').toLowerCase()];
-        if (ci === undefined || !opts.length) return null;
-        return {
-          id: `${paperId}-${rIndex}`,
-          text: q,
-          options: opts,
-          correctIndex: ci,
-          explanation: parts[iExplain] || 'N/A',
-          image: parts[iImg],
-          imageForExplTag: parts[iImgExp],
-          tag: parts[iTag] || '',
-          subtag: parts[iSub] || '',
-          exam: parts[iExam] || ''
-        };
-      }).filter(Boolean);
-    }
-
-    // Build merged dataset with tag filter
-    const mergedAll = [];
-    csvs.forEach((csv, i) => {
-      const paperId = entries[i].id;
-      const parsed = parseWithTag(csv, paperId);
-      parsed.forEach(q => {
-        if ((q.tag || '').toLowerCase() === tag.toLowerCase()) mergedAll.push(q);
-      });
-    });
-
-    if (!mergedAll.length) throw new Error(`No questions found under “${tag}”. Check the Tag column values.`);
-
-    // attach to global and launch UI
-    allQuestions = mergedAll;
-    dom.modeToggle.checked = false;
-    createQuestionNav();
-    showQuestion(0);
-    startTimer();
-  } catch (err) {
-    console.error(err);
-    showCustomAlert(err.message || 'Could not start system-wise quiz.', () => showScreen('topic-screen'));
-  } finally {
-    dom.loadingContainer.style.display = 'none';
-    dom.quizContent.style.display = 'block';
-  }
 function showCustomModal(message, buttons){
-  if (!dom.modalBackdrop) { alert(message); return; }
   dom.modalMessage.textContent = message;
   dom.modalButtons.innerHTML = '';
   buttons.forEach(btn => {
@@ -321,7 +102,6 @@ export function initQuizApp(config){
   QUIZ_CONFIG = { ...QUIZ_CONFIG, ...config };
 
   const app = initializeApp(QUIZ_CONFIG.FIREBASE_CONFIG);
-  // Force long-polling to avoid WebChannel being blocked by ad-blockers / proxies
   db = initializeFirestore(app, { experimentalForceLongPolling: true });
   auth = getAuth(app);
 
@@ -333,24 +113,7 @@ export function initQuizApp(config){
       handleDirectLink(user);
     }else{
       if(authCheckScreen) authCheckScreen.innerHTML = '<div class="selection-container"><p>You must be logged in to continue.</p></div>';
-      function handleDirectLink(user) {
-  // ... existing build of topic screen ...
-  showScreen('topic-screen');
-  // render the default year cards
-  renderYearCards();
-  // wire up the two big buttons + (later) system tabs
-  initViewToggle();
-}
-  });
-
-  // paper click (delegated)
-  dom.paperCardGrid?.addEventListener('click', (e) => {
-    const btn = e.target.closest('.paper-button');
-    if (!btn) return;
-    const { id, name, examtype } = btn.dataset;
-    currentPaper = { id, name, examType: examtype || 'NEET SS' };
-    quizMode = 'practice';
-    checkResumeAndStart();
+    }
   });
 
   // Mode toggle with confirm
@@ -368,26 +131,6 @@ export function initQuizApp(config){
     const msg = quizMode==='exam' ? 'Are you sure you want to finish the exam?' : 'Are you sure you want to finish this practice session?';
     showCustomConfirm(msg, ()=>finishExam(), ()=>{});
   });
-
-  // Year/System toggle (NEET SS)
-  if (QUIZ_CONFIG.ENABLE_SYSTEM_WISE && dom.viewYearBtn && dom.viewSystemBtn) {
-    const setView = (v) => {
-      viewBy = v;
-      dom.viewYearBtn.classList.toggle('active', v === 'year');
-      dom.viewSystemBtn.classList.toggle('active', v === 'system');
-      if (v === 'year') {
-        dom.systemTabs.style.display = 'none';
-        dom.paperCardGrid.style.display = '';
-        renderPaperCards();
-      } else {
-        dom.paperCardGrid.style.display = 'none';
-        dom.systemTabs.style.display = 'flex';
-        renderSystemTabs();
-      }
-    };
-    dom.viewYearBtn.addEventListener('click', () => setView('year'));
-    dom.viewSystemBtn.addEventListener('click', () => setView('system'));
-  }
 }
 
 // ---------------------
@@ -399,112 +142,181 @@ function showScreen(id){
 }
 
 function handleDirectLink(user) {
-  const params = new URLSearchParams(window.location.search);
-  const directQuestionId = params.get('questionId');
+  // Buttons exist only on the topic page (Year/System)
+  const yearBtn = document.getElementById('btn-view-year');
+  const sysBtn  = document.getElementById('btn-view-system');
 
-  if (user && directQuestionId) {
-    const paperId = params.get('paperId');
-    const paper = QUIZ_CONFIG.PAPER_METADATA.find((p) => p.id === paperId);
-    if (paper) {
-      currentPaper = paper;
-      quizMode = 'practice';
-      startQuiz(null, directQuestionId);
-      return;
-    }
-  }
-
-  // Topic screen
   showScreen('topic-screen');
-  if (QUIZ_CONFIG.ENABLE_SYSTEM_WISE && dom.viewYearBtn && dom.viewSystemBtn) {
-    // default to Year-wise
-    if (dom.systemTabs) dom.systemTabs.style.display = 'none';
-    if (dom.paperCardGrid) dom.paperCardGrid.style.display = '';
-    renderPaperCards();
+
+  if (yearBtn && sysBtn) {
+    initViewToggle();
+    // default view
+    currentView = 'year';
+    yearBtn.classList.add('active');
+    renderYearCards();
   } else {
-    renderPaperCards();
+    // Fallback: just render year cards if toggle isn't present in this HTML
+    renderYearCards();
   }
 }
 
-// Build paper cards (year-wise)
-function renderPaperCards() {
-  if (!dom.paperCardGrid) return;
-  dom.paperCardGrid.innerHTML = QUIZ_CONFIG.PAPER_METADATA.map(p => `
-    <button class="paper-button rad-card" data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
+// ---------- Year/System toggle ----------
+function initViewToggle() {
+  const yearBtn   = document.getElementById('btn-view-year');
+  const sysBtn    = document.getElementById('btn-view-system');
+  if (!yearBtn || !sysBtn) return;
+
+  yearBtn.addEventListener('click', () => {
+    currentView = 'year';
+    yearBtn.classList.add('active');
+    sysBtn.classList.remove('active');
+    const tabsWrap = document.getElementById('system-tabs');
+    if (tabsWrap) tabsWrap.innerHTML = '';
+    renderYearCards();
+  });
+
+  sysBtn.addEventListener('click', () => {
+    currentView = 'system';
+    sysBtn.classList.add('active');
+    yearBtn.classList.remove('active');
+    renderSystemTabs();
+  });
+}
+
+function renderYearCards() {
+  const grid = dom.paperCardGrid;
+  if (!grid) return;
+  grid.innerHTML = QUIZ_CONFIG.PAPER_METADATA.map(p => `
+    <button class="paper-button rad-card"
+            data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
       <div class="rad-card-inner paper-inner">
         <div class="paper-text">
-          <span class="paper-badge">${p.examType || ''}</span>
+          <span class="paper-badge">${p.examType}</span>
           <span class="paper-title">${p.name}</span>
         </div>
         <i data-feather="arrow-right" class="paper-arrow"></i>
       </div>
     </button>
   `).join('');
+
+  grid.querySelectorAll('.paper-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const { id, name, examtype } = btn.dataset;
+      currentPaper = { id, name, examType: examtype };
+      quizMode = 'practice';
+      checkResumeAndStart();
+    });
+  });
+
   if (window.feather) feather.replace();
 }
 
-// Build system tabs (NEET SS)
 function renderSystemTabs() {
-  if (!dom.systemTabs) return;
-  const tags = QUIZ_CONFIG.SYSTEM_TAGS || [];
-  dom.systemTabs.innerHTML = tags.map(t => `<button class="tab" data-tag="${t}">${t}</button>`).join('');
-  dom.systemTabs.querySelectorAll('.tab').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      dom.systemTabs.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      selectedSystem = btn.dataset.tag;
-      await startSystemQuiz(selectedSystem);
+  const tabsWrap = document.getElementById('system-tabs');
+  const grid     = dom.paperCardGrid;
+  if (!tabsWrap || !grid) return;
+
+  const tags = Array.isArray(QUIZ_CONFIG.SYSTEM_TAGS) ? QUIZ_CONFIG.SYSTEM_TAGS : [];
+  if (!tags.length) {
+    tabsWrap.innerHTML = `<div class="text-sm text-gray-500">No system tags configured.</div>`;
+    grid.innerHTML = '';
+    return;
+  }
+
+  if (!activeSystemTag) activeSystemTag = tags[0];
+
+  tabsWrap.innerHTML = tags.map(t =>
+    `<button class="view-tab ${t===activeSystemTag ? 'active':''}" data-tag="${t}" role="tab">${t}</button>`
+  ).join('');
+
+  tabsWrap.querySelectorAll('.view-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      activeSystemTag = tab.dataset.tag;
+      renderSystemTabs(); // re-render to apply active state
     });
   });
-}
 
-// Load & merge all sheets once (for system-wise)
-async function ensureMergedQuestions() {
-  if (allYearCache) return allYearCache;
-  const entries = Object.entries(QUIZ_CONFIG.ALL_QUIZ_DATA || {});
-  const merged = [];
-  for (const [id, conf] of entries) {
-    try {
-      const url = `https://docs.google.com/spreadsheets/d/${conf.sheetId}/gviz/tq?tqx=out:csv&gid=${conf.gid}`;
-      const r = await fetch(url, { cache: 'no-store' });
-      if (!r.ok) continue;
-      const csv = await r.text();
-      const parsed = parseCSVToQuestions(csv).map((q, idx) => ({ ...q, id: `${id}-${idx}` }));
-      merged.push(...parsed);
-    } catch (e) { /* skip bad sheet */ }
-  }
-  allYearCache = merged;
-  return merged;
+  grid.innerHTML = `
+    <button class="paper-button rad-card" id="start-system-paper">
+      <div class="rad-card-inner paper-inner">
+        <div class="paper-text">
+          <span class="paper-badge">NEET SS</span>
+          <span class="paper-title">${activeSystemTag} — All Years</span>
+        </div>
+        <i data-feather="arrow-right" class="paper-arrow"></i>
+      </div>
+    </button>
+  `;
+
+  document.getElementById('start-system-paper').addEventListener('click', () => {
+    startSystemQuiz(activeSystemTag);
+  });
+
+  if (window.feather) feather.replace();
 }
 
 async function startSystemQuiz(tag) {
-  if (!tag) return;
-  const merged = await ensureMergedQuestions();
-  allQuestions = merged.filter(q => (q.tag || '').toLowerCase() === tag.toLowerCase());
-  if (allQuestions.length === 0) {
-    showCustomAlert(`No questions found for "${tag}". Try another tag.`);
-    return;
-  }
-  currentPaper = { id: `neet-ss-system-${tag}`, name: `NEET SS — ${tag}`, examType: 'NEET SS' };
+  currentPaper = { id: `neet-ss-${tag.toLowerCase().replace(/\s+/g,'-')}`, name: `${tag} — All Years`, examType: 'NEET SS' };
   quizMode = 'practice';
-  isReviewing = false; reviewFilter = []; userAnswers = {}; flaggedQuestions = new Set();
-  elapsedSeconds = 0; currentQuestionIndex = 0;
+
+  isReviewing = false; reviewFilter = [];
+  userAnswers = {};
+  currentQuestionIndex = 0;
+  elapsedSeconds = 0;
+  flaggedQuestions = new Set();
 
   showScreen('quiz-screen');
-  dom.loadingContainer && (dom.loadingContainer.style.display = 'none');
-  dom.quizContent && (dom.quizContent.style.display = 'block');
-  if (dom.quizTitle) dom.quizTitle.textContent = `${currentPaper.name}`;
-  if (dom.finishQuizBtn) { dom.finishQuizBtn.textContent = 'Finish'; dom.finishQuizBtn.style.display = 'block'; }
+  dom.loadingContainer.style.display = 'block';
+  dom.quizContent.style.display = 'none';
+  dom.quizTitle.textContent = currentPaper.name;
+  initializeSound();
 
-  createQuestionNav();
-  showQuestion(0);
-  startTimer();
+  try {
+    // Collect all year sheets
+    const entries = QUIZ_CONFIG.PAPER_METADATA.map(p => {
+      const d = QUIZ_CONFIG.ALL_QUIZ_DATA[p.id];
+      return { id:p.id, name:p.name, sheetId:d?.sheetId, gid:d?.gid };
+    }).filter(x => x.sheetId && x.gid);
+
+    // Fetch CSVs in parallel
+    const csvs = await Promise.all(entries.map(async e => {
+      const url = `https://docs.google.com/spreadsheets/d/${e.sheetId}/gviz/tq?tqx=out:csv&gid=${e.gid}`;
+      const r = await fetch(url, { cache:'no-store' });
+      if (!r.ok) throw new Error(`Failed to load ${e.name}`);
+      return r.text();
+    }));
+
+    // Parse with Tag+Exam capture and filter
+    const merged = [];
+    csvs.forEach((csv, i) => {
+      const parsed = parseCSVFlexible(csv, entries[i].id);
+      parsed.forEach(q => {
+        if ((q.tag || '').toLowerCase() === tag.toLowerCase()) merged.push(q);
+      });
+    });
+
+    if (!merged.length) throw new Error(`No questions found under “${tag}”. Check the Tag column values.`);
+
+    allQuestions = merged;
+    dom.modeToggle.checked = false;
+    createQuestionNav();
+    showQuestion(0);
+    startTimer();
+  } catch (err) {
+    console.error(err);
+    showCustomAlert(err.message || 'Could not start system-wise quiz.', () => showScreen('topic-screen'));
+  } finally {
+    dom.loadingContainer.style.display = 'none';
+    dom.quizContent.style.display = 'block';
+  }
 }
 
+// ---------------------
+// Mode & resume
+// ---------------------
 function setQuizMode(newMode){
   quizMode = newMode;
-  if (currentUser && currentPaper) {
-    localStorage.removeItem(`radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`);
-  }
+  localStorage.removeItem(`radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`);
   startQuiz(null);
 }
 
@@ -530,8 +342,8 @@ async function startQuiz(resumeState, directQuestionId = null) {
   flaggedQuestions = new Set(resumeState?.flags || []);
 
   showScreen('quiz-screen');
-  if (dom.loadingContainer) dom.loadingContainer.style.display = 'block';
-  if (dom.quizContent) dom.quizContent.style.display = 'none';
+  dom.loadingContainer.style.display = 'block';
+  dom.quizContent.style.display = 'none';
 
   initializeSound();
 
@@ -544,16 +356,19 @@ async function startQuiz(resumeState, directQuestionId = null) {
     }
 
     updateLoadingMessage('Fetching your bookmarks...');
-    await fetchUserBookmarks(); // continue even if it fails
+    await fetchUserBookmarks();
 
     // UI ready
-    if (dom.modeToggle) dom.modeToggle.checked = quizMode === 'exam';
+    dom.modeToggle.checked = quizMode === 'exam';
     const labels = document.querySelectorAll('.mode-label');
-    labels[1]?.classList.toggle('text-gray-800', quizMode === 'exam'); // Exam
-    labels[0]?.classList.toggle('text-gray-800', quizMode !== 'exam'); // Quiz
+    const quizLbl = labels[0];
+    const examLbl = labels[1];
+    examLbl?.classList.toggle('text-gray-800', quizMode === 'exam');
+    quizLbl?.classList.toggle('text-gray-800', quizMode !== 'exam');
 
-    if (dom.quizTitle) dom.quizTitle.textContent = `${currentPaper.name}`;
-    if (dom.finishQuizBtn) { dom.finishQuizBtn.textContent = 'Finish'; dom.finishQuizBtn.style.display = 'block'; }
+    dom.quizTitle.textContent = `${currentPaper.name}`;
+    dom.finishQuizBtn.textContent = 'Finish';
+    dom.finishQuizBtn.style.display = 'block';
 
     createQuestionNav();
 
@@ -571,12 +386,12 @@ async function startQuiz(resumeState, directQuestionId = null) {
     });
     return;
   } finally {
-    if (dom.loadingContainer) dom.loadingContainer.style.display = 'none';
+    dom.loadingContainer.style.display = 'none';
   }
-  if (dom.quizContent) dom.quizContent.style.display = 'block';
+  dom.quizContent.style.display = 'block';
 }
 
-function updateLoadingMessage(msg){ if (dom.loadingMessage) dom.loadingMessage.textContent = msg; }
+function updateLoadingMessage(msg){ dom.loadingMessage.textContent = msg; }
 
 async function fetchQuizData(){
   const paperData = QUIZ_CONFIG.ALL_QUIZ_DATA[currentPaper.id];
@@ -592,37 +407,52 @@ async function fetchQuizData(){
   }catch(err){
     throw new Error('Could not load the question sheet. Check sharing settings and network.');
   }
-  const parsed = parseCSVToQuestions(csvText);
-  allQuestions = Array.isArray(parsed) ? parsed : [];
+  allQuestions = parseCSVFlexible(csvText, currentPaper.id);
 }
 
-function parseCSVToQuestions(csvText) {
-  const lines = csvText.trim().split('\n').slice(1);
-  return lines.map((line, index) => {
-    const parts = line
-      .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
-      .map(p => p.trim().replace(/^"|"$/g, ''));
-    // A:Question B:OptA C:OptB D:OptC E:OptD F:Correct G:Explanation H:Image I:ImageForExpl J:Tag K:Subtag L:Exam
-    const [question, a, b, c, d, correctAns, explanation, image, imageForExplTag, tag, subtag, exam] = parts;
-    const options = [a, b, c, d].filter(Boolean);
-    const letterMap = { a:0, b:1, c:2, d:3 };
-    const correctIndex = letterMap[(correctAns || '').trim().toLowerCase()];
+// Flexible CSV parser (captures Tag + Exam and tolerates column order)
+function parseCSVFlexible(csv, paperId){
+  const rows = csv.trim().split('\n');
+  if (!rows.length) return [];
+  const header = rows[0].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(h=>h.replace(/^"|"$/g,'').trim());
+  const data = rows.slice(1);
 
-    if (question && correctIndex !== undefined && options.length > 0) {
-      return {
-        id: `${currentPaper?.id || 'merged'}-${index}`,
-        text: question,
-        options,
-        correctIndex,
-        explanation: explanation || "N/A",
-        image,
-        imageForExplTag,
-        tag: (tag || '').trim(),
-        subtag: (subtag || '').trim(),
-        exam: (exam || '').trim()
-      };
-    }
-    return null;
+  const idx = (label, def) => {
+    const i = header.findIndex(h => h.trim().toLowerCase() === label.toLowerCase());
+    return i >= 0 ? i : def;
+  };
+  const iQ = idx('Question', 0);
+  const iA = idx('Option A', 1);
+  const iB = idx('Option B', 2);
+  const iC = idx('Option C', 3);
+  const iD = idx('Option D', 4);
+  const iCorrect = idx('Correct Answer', 5);
+  const iExplain = idx('Explanation', 6);
+  const iImg = idx('Image', 7);
+  const iImgExp = idx('Image for Explan', 8);
+  const iTag = idx('Tag', 9);
+  const iSub = idx('Subtag', 10);
+  const iExam = idx('Exam', 11);
+
+  return data.map((line, rIndex)=>{
+    const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p=>p.replace(/^"|"$/g,'').trim());
+    const q = parts[iQ];
+    const opts = [parts[iA],parts[iB],parts[iC],parts[iD]].filter(Boolean);
+    const map = { a:0, b:1, c:2, d:3 };
+    const ci = map[(parts[iCorrect]||'').toLowerCase()];
+    if(!q || ci===undefined || !opts.length) return null;
+    return {
+      id:`${paperId}-${rIndex}`,
+      text:q,
+      options:opts,
+      correctIndex:ci,
+      explanation: parts[iExplain] || 'N/A',
+      image: parts[iImg],
+      imageForExplTag: parts[iImgExp],
+      tag: parts[iTag] || '',
+      subtag: parts[iSub] || '',
+      exam: parts[iExam] || ''
+    };
   }).filter(Boolean);
 }
 
@@ -638,6 +468,13 @@ async function fetchUserBookmarks() {
   }
 }
 
+function formatExamHash(exam) {
+  if (!exam) return '';
+  // Example: "NEET SS 2025" -> "#NEETSS2025"
+  const hash = '#' + exam.replace(/\s+/g,'').toUpperCase();
+  return hash;
+}
+
 function showQuestion(index){
   if(reviewFilter.length>0 && !reviewFilter.includes(index)){
     index = reviewFilter.find(i=>i>=index) ?? reviewFilter[0];
@@ -650,20 +487,20 @@ function showQuestion(index){
   const isFlagged = flaggedQuestions.has(q.id);
   const isAnswered = userAnswers[index] !== undefined;
 
-  const examHash = (q.exam || '').trim()
-    ? `#${q.exam.replace(/\s+/g,'').toUpperCase()}`
-    : '';
-
   let html = `
     <div class="question-title-bar">
       <span class="question-number">Question ${index+1} of ${allQuestions.length}</span>
       <div class="question-controls">
-        ${examHash ? `<span class="exam-hash">${examHash}</span>` : ''}
         <button class="icon-btn flag-btn ${isFlagged?'flagged':''}" ${isReviewing?'disabled':''}><i data-feather="flag"></i></button>
         <button class="icon-btn bookmark-btn ${isBookmarked?'bookmarked':''}" ${isReviewing?'disabled':''}><i data-feather="bookmark"></i></button>
       </div>
     </div>
-    <p class="main-question-text">${q.text}</p>
+
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+      <p class="main-question-text" style="margin:0;">${q.text}</p>
+      ${q.exam ? `<span style="white-space:nowrap; font-size:.9rem; color:#6b7280; font-weight:600;">${formatExamHash(q.exam)}</span>` : ``}
+    </div>
+
     <div>
       ${q.options.map((opt,i)=>{
         const shouldDisable = isReviewing || (quizMode==='practice' && isAnswered);
@@ -748,10 +585,8 @@ function toggleSound(){
 }
 function updateSoundIcon(){
   const icon = isSoundOn ? 'volume-2' : 'volume-x';
-  if (dom.soundToggleBtn) {
-    dom.soundToggleBtn.innerHTML = `<i data-feather="${icon}"></i>`;
-    if(window.feather){ feather.replace(); }
-  }
+  dom.soundToggleBtn.innerHTML = `<i data-feather="${icon}"></i>`;
+  if(window.feather){ feather.replace(); }
 }
 
 // ---------------------
@@ -817,9 +652,7 @@ async function finishExam(){
   });
 
   // Clear local session
-  if (currentUser && currentPaper) {
-    localStorage.removeItem(`radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`);
-  }
+  localStorage.removeItem(`radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser?.uid}`);
 
   // Persist attempt + update aggregates only for Exam mode
   if(quizMode==='exam' && currentUser){
@@ -843,7 +676,6 @@ async function finishExam(){
   document.getElementById('review-flagged-btn').addEventListener('click', ()=> setupReview('flagged'));
 }
 
-// Save one user's attempt under users/{uid}/attempts/{autoId}
 async function saveUserAttempt(scorePercent){
   try{
     const attemptsCol = collection(db, 'users', currentUser.uid, 'attempts');
@@ -860,7 +692,6 @@ async function saveUserAttempt(scorePercent){
   }catch(e){ console.error('saveUserAttempt failed:', e); }
 }
 
-// Update quizAggregates/{paperId} using running mean + histogram (no unbounded arrays)
 async function updateAggregatesAndGetStats(scorePercent){
   const aggregatesRef = doc(db, 'quizAggregates', currentPaper.id);
   let out = { average: scorePercent, percentile: 100 };
@@ -877,12 +708,10 @@ async function updateAggregatesAndGetStats(scorePercent){
         const total = (data.totalAttempts || 0);
         const prevAvg = data.averageScore || 0;
         const hist = Array.isArray(data.histogram) ? data.histogram.slice() : initHistogram();
-        // Percentile BEFORE including current (how many prior < you)
         const lowerCount = hist.slice(0, b).reduce((s,v)=>s+v,0);
         const priorTotal = hist.reduce((s,v)=>s+v,0);
         const percentile = priorTotal>0 ? (lowerCount/priorTotal)*100 : 100;
         out.percentile = percentile;
-        // Update running mean
         const newTotal = total + 1;
         const newAvg = ((prevAvg * total) + scorePercent) / newTotal;
         hist[b] = (hist[b]||0) + 1;
@@ -930,16 +759,16 @@ function startTimer(){
   const total = EXAM_DURATIONS[currentPaper.examType] || 0;
   if(quizMode==='exam' && total>0){
     let remaining = total - elapsedSeconds;
-    if (dom.timerEl) dom.timerEl.textContent = formatTime(remaining);
+    dom.timerEl.textContent = formatTime(remaining);
     quizInterval = setInterval(()=>{
       if(remaining<=0){ clearInterval(quizInterval); showCustomAlert("Time's up! The exam has finished.", ()=>finishExam()); return; }
-      remaining--; elapsedSeconds++; if (dom.timerEl) dom.timerEl.textContent = formatTime(remaining); saveState();
+      remaining--; elapsedSeconds++; dom.timerEl.textContent = formatTime(remaining); saveState();
     }, 1000);
   }else{
     let start = Date.now() - (elapsedSeconds*1000);
     quizInterval = setInterval(()=>{
       elapsedSeconds = Math.floor((Date.now()-start)/1000);
-      if (dom.timerEl) dom.timerEl.textContent = formatTime(elapsedSeconds);
+      dom.timerEl.textContent = formatTime(elapsedSeconds);
       saveState();
     }, 1000);
   }
@@ -958,7 +787,7 @@ function setupReview(type){
     showCustomAlert(`No ${type} questions to review.`, ()=>{ isReviewing=false; finishExam(); });
     return;
   }
-  if (dom.finishQuizBtn) dom.finishQuizBtn.style.display='none';
+  dom.finishQuizBtn.style.display='none';
   showScreen('quiz-screen');
   createQuestionNav();
   showQuestion(reviewFilter[0]);
