@@ -6,168 +6,213 @@
   <title>NEET SS Exam - RadMentor</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://unpkg.com/feather-icons"></script>
-  <!-- Chart.js is needed for the results screen -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
+
+  <!-- Page-scoped polish for the paper tiles -->
+  <style>
+    /* Bigger, symmetric cards */
+    .paper-button-grid {
+      display: grid;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.25rem;
+    }
+    @media (min-width: 640px) { .paper-button-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (min-width: 1024px) { .paper-button-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+    .paper-button.rad-card { padding: 0; border-radius: 1rem; }
+    .paper-button .rad-card-inner {
+      border-radius: calc(1rem - 2px);
+      display: flex; align-items: center; justify-content: space-between;
+      min-height: 116px; padding: 1.25rem 1.25rem;
+      background: rgba(255,255,255,0.85);
+      transition: transform .25s ease, box-shadow .25s ease, background .25s ease;
+    }
+    .paper-button .rad-card-inner:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 18px 40px -22px rgba(15,23,42,.35);
+      background: rgba(255,255,255,0.95);
+    }
+    .paper-meta { font-size: .8rem; color: #64748b; letter-spacing: .02em; margin-bottom: .25rem; }
+    .paper-title { font-size: 1.1rem; font-weight: 800; color: #0f172a; line-height: 1.25rem; }
+    .paper-button i { opacity: .7; }
+    .page-hero h2 { margin: 0 0 .25rem; font-weight: 900; color: #0f172a; }
+    .page-hero p { margin: 0; color: #64748b; }
+    /* Keep the outer glass frame consistent with your design */
+    .rad-card { position:relative; border-radius:1rem; padding:2px; }
+    .rad-card::before{
+      content:""; position:absolute; inset:0; border-radius:inherit; padding:2px;
+      background: linear-gradient(120deg, rgba(30,64,175,.9), rgba(59,130,246,.7));
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      opacity:.85;
+    }
+    .rad-card-inner {
+      border-radius: calc(1rem - 2px);
+      background: rgba(255,255,255,.9);
+      backdrop-filter: blur(6px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 0 0 1px rgba(148,163,184,.15);
+    }
+  </style>
 </head>
 <body>
-  <!-- Auth check screen (hidden by quiz.js when user is authenticated) -->
-  <div id="authCheckScreen" class="screen active">
+
+<!-- Auth check -->
+<div id="authCheckScreen" class="screen active">
+  <div class="selection-container rad-card">
+    <div class="rad-card-inner p-6">
+      <div class="loader"></div>
+      <p class="mt-4 text-lg text-gray-600">Verifying access...</p>
+    </div>
+  </div>
+</div>
+
+<div class="main-container">
+  <!-- Paper selection -->
+  <div id="topic-screen" class="screen">
     <div class="selection-container rad-card">
       <div class="rad-card-inner p-6">
-        <div class="loader"></div>
-        <p class="mt-4 text-lg text-gray-600">Verifying access...</p>
+        <div class="page-hero">
+          <h2 class="text-3xl">NEET SS Exam</h2>
+          <p>Choose a paper to start your practice or exam session.</p>
+        </div>
+        <div id="paper-card-grid" class="paper-button-grid"></div>
       </div>
     </div>
   </div>
 
-  <div class="main-container">
-    <!-- Paper selection -->
-    <div id="topic-screen" class="screen">
-      <div class="selection-container rad-card">
-        <div class="rad-card-inner p-6">
-          <h2 class="text-3xl font-bold mb-2">NEET SS Exam</h2>
-          <p class="text-lg text-gray-600">Choose a paper to start your practice or exam session.</p>
-          <div id="paper-card-grid" class="paper-button-grid mt-4"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Main quiz screen -->
-    <div id="quiz-screen" class="screen">
-      <div class="quiz-container rad-card">
-        <div class="rad-card-inner">
-          <div class="quiz-header">
-            <h1 id="quiz-title">NEET SS Paper</h1>
-            <div class="header-controls">
-              <span class="mode-label text-gray-800">Quiz</span>
-              <label class="switch">
-                <input type="checkbox" id="mode-toggle-checkbox" />
-                <span class="slider"></span>
-              </label>
-              <span class="mode-label text-gray-400">Exam</span>
-              <span class="timer" id="timer">00:00</span>
-              <button class="finish-btn-header" id="finish-quiz-btn">Finish</button>
-              <button class="icon-btn" id="sound-toggle-btn" title="Toggle sounds"><i data-feather="volume-2"></i></button>
-            </div>
-          </div>
-          <div id="quiz-content" style="display:none;">
-            <div class="quiz-pagination-header" id="quiz-pagination-header"></div>
-            <div class="question-area" id="questions-display"></div>
-          </div>
-          <div id="loading-container" class="selection-container" style="display:none; height:300px;">
-            <div class="loader"></div>
-            <p class="mt-4 text-lg text-gray-600" id="loading-message">Loading...</p>
+  <!-- Quiz screen -->
+  <div id="quiz-screen" class="screen">
+    <div class="quiz-container rad-card">
+      <div class="rad-card-inner">
+        <div class="quiz-header">
+          <h1 id="quiz-title">NEET SS Paper</h1>
+          <div class="header-controls">
+            <span class="mode-label text-gray-800">Quiz</span>
+            <label class="switch">
+              <input type="checkbox" id="mode-toggle-checkbox" />
+              <span class="slider"></span>
+            </label>
+            <span class="mode-label text-gray-400">Exam</span>
+            <span class="timer" id="timer">00:00</span>
+            <button class="finish-btn-header" id="finish-quiz-btn">Finish</button>
+            <button class="icon-btn" id="sound-toggle-btn" title="Toggle sounds"><i data-feather="volume-2"></i></button>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Results screen -->
-    <div id="results-screen" class="screen">
-      <div class="results-container rad-card">
-        <div class="rad-card-inner p-6">
-          <h2 class="text-3xl font-bold mb-8 text-center" id="results-heading">Test Results</h2>
-          <div class="results-grid">
-            <div class="stat-card">
-              <h3>Score Summary</h3>
-              <div class="flex flex-col items-center">
-                <p class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 my-4" id="final-score-percent">0%</p>
-                <div class="w-full text-left">
-                  <p class="text-lg font-medium">Correct: <span id="correct-count" class="font-bold">0</span></p>
-                  <p class="text-lg font-medium">Incorrect: <span id="incorrect-count" class="font-bold">0</span></p>
-                  <p class="text-lg font-medium">Unattempted: <span id="unattempted-count" class="font-bold">0</span></p>
-                  <p class="text-lg font-medium">Time Taken: <span id="time-taken" class="font-bold">00:00</span></p>
-                </div>
-              </div>
-            </div>
-            <div class="stat-card">
-              <h3>Performance Chart</h3>
-              <div style="position: relative; height:200px; width:100%;">
-                <canvas id="performanceChart"></canvas>
-              </div>
-            </div>
-            <div class="stat-card">
-              <h3>Peer Comparison</h3>
-              <div id="peer-comparison-content">
-                <p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p>
-                <p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p>
-              </div>
-            </div>
-            <div class="ai-insights-card" id="ai-insights-card">
-              <div class="flex items-start gap-4">
-                <div class="ai-avatar">🤖</div>
-                <div class="ai-message flex-grow">
-                  <p id="ai-insights-content">Generating feedback...</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="results-actions">
-            <button class="results-btn primary" id="review-all-btn">Review All</button>
-            <button class="results-btn danger" id="review-incorrect-btn">Review Incorrect</button>
-            <button class="results-btn warning" id="review-flagged-btn">Review Flagged</button>
-            <button class="results-btn secondary" id="back-to-topics-btn">Back to Papers</button>
-          </div>
+        <div id="quiz-content" style="display:none;">
+          <div class="quiz-pagination-header" id="quiz-pagination-header"></div>
+          <div class="question-area" id="questions-display"></div>
+        </div>
+        <div id="loading-container" class="selection-container" style="display:none; height:300px;">
+          <div class="loader"></div>
+          <p class="mt-4 text-lg text-gray-600" id="loading-message">Loading...</p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Custom Modal -->
-  <div id="custom-modal-backdrop" class="modal">
-    <div class="modal-content">
-      <p id="modal-message">This is a custom modal message.</p>
-      <div id="modal-buttons" class="modal-buttons"></div>
+  <!-- Results -->
+  <div id="results-screen" class="screen">
+    <div class="results-container rad-card">
+      <div class="rad-card-inner p-6">
+        <h2 class="text-3xl font-bold mb-8 text-center" id="results-heading">Test Results</h2>
+        <div class="results-grid">
+          <div class="stat-card">
+            <h3>Score Summary</h3>
+            <div class="flex flex-col items-center">
+              <p class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 my-4" id="final-score-percent">0%</p>
+              <div class="w-full text-left">
+                <p class="text-lg font-medium">Correct: <span id="correct-count" class="font-bold">0</span></p>
+                <p class="text-lg font-medium">Incorrect: <span id="incorrect-count" class="font-bold">0</span></p>
+                <p class="text-lg font-medium">Unattempted: <span id="unattempted-count" class="font-bold">0</span></p>
+                <p class="text-lg font-medium">Time Taken: <span id="time-taken" class="font-bold">00:00</span></p>
+              </div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <h3>Performance Chart</h3>
+            <div style="position: relative; height:200px; width:100%;">
+              <canvas id="performanceChart"></canvas>
+            </div>
+          </div>
+          <div class="stat-card">
+            <h3>Peer Comparison</h3>
+            <div id="peer-comparison-content">
+              <p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p>
+              <p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p>
+            </div>
+          </div>
+          <div class="ai-insights-card" id="ai-insights-card">
+            <div class="flex items-start gap-4">
+              <div class="ai-avatar">🤖</div>
+              <div class="ai-message flex-grow">
+                <p id="ai-insights-content">Generating feedback...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="results-actions">
+          <button class="results-btn primary" id="review-all-btn">Review All</button>
+          <button class="results-btn danger" id="review-incorrect-btn">Review Incorrect</button>
+          <button class="results-btn warning" id="review-flagged-btn">Review Flagged</button>
+          <button class="results-btn secondary" id="back-to-papers-btn">Back to Papers</button>
+        </div>
+      </div>
     </div>
   </div>
+</div>
 
-  <!-- Sounds -->
-  <audio id="correct-sound" src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/assets/correct.mp3" preload="auto"></audio>
-  <audio id="wrong-sound" src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/assets/wrong.mp3" preload="auto"></audio>
+<!-- Custom Modal -->
+<div id="custom-modal-backdrop" class="modal">
+  <div class="modal-content">
+    <p id="modal-message">This is a custom modal message.</p>
+    <div id="modal-buttons" class="modal-buttons"></div>
+  </div>
+</div>
 
-  <script type="module">
-    import { initQuizApp } from './quiz.js';
+<audio id="correct-sound" src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/assets/correct.mp3" preload="auto"></audio>
+<audio id="wrong-sound" src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/assets/wrong.mp3" preload="auto"></audio>
 
-    // NEET SS specific configuration
-    const neetssConfig = {
-      // Provide a Google AI key if you want AI Insights on results
-      AIzaSyDi7D6W2xjtReXVFkpSSXG_xTJBqRGswxs: '',
+<script type="module">
+  import { initQuizApp } from './quiz.js';
 
-      // Map paper IDs to Google Sheets
-      ALL_QUIZ_DATA: {
-        'neet-ss-paper1': { sheetId: '16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk', gid: '0' },
-        'neet-ss-paper2': { sheetId: '16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk', gid: '385825325' },
-        'neet-ss-paper3': { sheetId: '16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk', gid: '1302055466' },
-        'neet-ss-paper4': { sheetId: '16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk', gid: '472403230' },
-        'neet-ss-paper5': { sheetId: '16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk', gid: '1502909003' }
-      },
+  // NEET SS – year-labelled papers
+  const neetssConfig = {
+    GOOGLE_AI_API_KEY: '',
 
-      // Buttons for the topic screen
-      PAPER_METADATA: [
-        { id: 'neet-ss-paper1', name: 'Paper 1', examType: 'NEET SS' },
-        { id: 'neet-ss-paper2', name: 'Paper 2', examType: 'NEET SS' },
-        { id: 'neet-ss-paper3', name: 'Paper 3', examType: 'NEET SS' },
-        { id: 'neet-ss-paper4', name: 'Paper 4', examType: 'NEET SS' },
-        { id: 'neet-ss-paper5', name: 'Paper 5', examType: 'NEET SS' }
-      ],
+    // Map IDs to your sheet tabs/gids (unchanged)
+    ALL_QUIZ_DATA: {
+      "neet-ss-2025": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "0" },
+      "neet-ss-2024": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "385825325" },
+      "neet-ss-2023": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "1302055466" },
+      "neet-ss-2022": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "472403230" },
+      "neet-ss-2021": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "1502909003" }
+    },
 
-      // Firebase configuration
-      FIREBASE_CONFIG: {
-        apiKey: 'AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw',
-        authDomain: 'radiology-mcqs.firebaseapp.com',
-        projectId: 'radiology-mcqs',
-        storageBucket: 'radiology-mcqs.appspot.com',
-        messagingSenderId: '862300415358',
-        appId: '1:862300415358:web:097d5e413f388e30587f2f',
-        measurementId: 'G-0V1SD1H95V'
-      }
-    };
+    // What users see on the tiles
+    PAPER_METADATA: [
+      { id: "neet-ss-2025", name: "NEET SS 2025", examType: "NEET SS" },
+      { id: "neet-ss-2024", name: "NEET SS 2024", examType: "NEET SS" },
+      { id: "neet-ss-2023", name: "NEET SS 2023", examType: "NEET SS" },
+      { id: "neet-ss-2022", name: "NEET SS 2022", examType: "NEET SS" },
+      { id: "neet-ss-2021", name: "NEET SS 2021", examType: "NEET SS" }
+    ],
 
-    // Initialize the quiz app with the NEET SS configuration
-    document.addEventListener('DOMContentLoaded', () => {
-      initQuizApp(neetssConfig);
-      if(window.feather){ feather.replace(); }
-    });
-  </script>
+    FIREBASE_CONFIG: {
+      apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
+      authDomain: "radiology-mcqs.firebaseapp.com",
+      projectId: "radiology-mcqs",
+      storageBucket: "radiology-mcqs.appspot.com",
+      messagingSenderId: "862300415358",
+      appId: "1:862300415358:web:097d5e413f388e30587f2f",
+      measurementId: "G-0V1SD1H95V"
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initQuizApp(neetssConfig);
+    if (window.feather) feather.replace();
+  });
+</script>
 </body>
 </html>
