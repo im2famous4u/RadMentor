@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import {
-  // NOTE: we import initializeFirestore to force long-polling (ad-blocker safe)
   getFirestore,
   initializeFirestore,
   doc, runTransaction, collection, getDocs, setDoc, deleteDoc, serverTimestamp
@@ -10,9 +9,9 @@ import {
 // Google Generative AI SDK
 import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai/+esm";
 
-// ---------------------
-// CONFIG (overridden by page)
-// ---------------------
+/* ---------------------
+   CONFIG (overridden by page)
+--------------------- */
 let QUIZ_CONFIG = {
   GOOGLE_AI_API_KEY: "",
   ALL_QUIZ_DATA: {},
@@ -20,22 +19,23 @@ let QUIZ_CONFIG = {
   FIREBASE_CONFIG: {}
 };
 
-// Map exam types to duration (seconds)
+/* ---------------------
+   CONSTANTS
+--------------------- */
 const EXAM_DURATIONS = {
   "NEET SS": 3 * 60 * 60,
   "INI SS": 1.5 * 60 * 60,
   "Fellowship exam": 1.5 * 60 * 60
 };
 
-// Aggregates config (histogram-based, scalable)
 const HISTOGRAM_BUCKETS = 10; // 0–10, 10–20, ... 90–100
 const initHistogram = () => Array.from({ length: HISTOGRAM_BUCKETS }, () => 0);
 const getBucketIndex = (scorePercent) =>
-  Math.min(HISTOGRAM_BUCKETS - 1, Math.max(0, Math.floor(scorePercent / (100 / HISTOGRAM_BUCKETS)))) ;
+  Math.min(HISTOGRAM_BUCKETS - 1, Math.max(0, Math.floor(scorePercent / (100 / HISTOGRAM_BUCKETS))));
 
-// ---------------------
-// APP STATE
-// ---------------------
+/* ---------------------
+   APP STATE
+--------------------- */
 let allQuestions = [], currentQuestionIndex = 0, currentUser = null;
 let userBookmarks = new Set(), flaggedQuestions = new Set();
 let reviewFilter = [];
@@ -45,7 +45,9 @@ let isReviewing = false;
 let isSoundOn = true;
 let db, auth;
 
-// Cache DOM
+/* ---------------------
+   DOM CACHE
+--------------------- */
 const dom = {
   screens: document.querySelectorAll('.screen'),
   paperCardGrid: document.getElementById('paper-card-grid'),
@@ -67,9 +69,9 @@ const dom = {
   loadingMessage: document.getElementById('loading-message')
 };
 
-// ---------------------
-// Custom modal helpers
-// ---------------------
+/* ---------------------
+   MODAL HELPERS
+--------------------- */
 function showCustomModal(message, buttons){
   dom.modalMessage.textContent = message;
   dom.modalButtons.innerHTML = '';
@@ -85,37 +87,38 @@ function showCustomModal(message, buttons){
 const showCustomConfirm = (msg, ok, cancel=()=>{}) => showCustomModal(msg,[{text:'Yes',isPrimary:true,onClick:ok},{text:'No',isPrimary:false,onClick:cancel}]);
 const showCustomAlert = (msg, ok=()=>{}) => showCustomModal(msg,[{text:'OK',isPrimary:true,onClick:ok}]);
 
-// ---------------------
-// INIT ENTRYPOINT
-// ---------------------
+/* ---------------------
+   INIT ENTRYPOINT
+--------------------- */
 export function initQuizApp(config){
   QUIZ_CONFIG = { ...QUIZ_CONFIG, ...config };
 
   const app = initializeApp(QUIZ_CONFIG.FIREBASE_CONFIG);
-  // Force long-polling to avoid WebChannel being blocked by ad-blockers / proxies
+  // Force long-polling (ad-blocker/proxy safe)
   db = initializeFirestore(app, { experimentalForceLongPolling: true });
   auth = getAuth(app);
 
   onAuthStateChanged(auth, (user) => {
     const authCheckScreen = document.getElementById('authCheckScreen');
     currentUser = user;
-    if(user){
-      if(authCheckScreen) authCheckScreen.style.display = 'none';
+    if (user) {
+      if (authCheckScreen) authCheckScreen.style.display = 'none';
       handleDirectLink(user);
-    }else{
-      if(authCheckScreen) authCheckScreen.innerHTML = '<div class="selection-container"><p>You must be logged in to continue.</p></div>';
+    } else {
+      if (authCheckScreen) {
+        authCheckScreen.innerHTML = '<div class="selection-container"><p>You must be logged in to continue.</p></div>';
+      }
     }
   });
 
-  // Paper click (delegated)
-  dom.paperCardGrid?.addEventListener('click', (e)=>{
+  // Paper click (delegated, so it works no matter when we render)
+  dom.paperCardGrid?.addEventListener('click', (e) => {
     const button = e.target.closest('.paper-button');
-    if(button){
-      const { id, name, examtype } = button.dataset;
-      currentPaper = { id, name, examType: examtype };
-      quizMode = 'practice';
-      checkResumeAndStart();
-    }
+    if (!button) return;
+    const { id, name, examtype } = button.dataset;
+    currentPaper = { id, name, examType: examtype };
+    quizMode = 'practice';
+    checkResumeAndStart();
   });
 
   // Mode toggle with confirm
@@ -130,43 +133,59 @@ export function initQuizApp(config){
   dom.soundToggleBtn?.addEventListener('click', toggleSound);
 
   dom.finishQuizBtn?.addEventListener('click', ()=>{
-    const msg = quizMode==='exam' ? 'Are you sure you want to finish the exam?' : 'Are you sure you want to finish this practice session?';
+    const msg = quizMode==='exam'
+      ? 'Are you sure you want to finish the exam?'
+      : 'Are you sure you want to finish this practice session?';
     showCustomConfirm(msg, ()=>finishExam(), ()=>{});
   });
 }
 
-// ---------------------
-// Core UI helpers
-// ---------------------
+/* ---------------------
+   CORE UI HELPERS
+--------------------- */
 function showScreen(id){
   dom.screens.forEach(s => s.classList.toggle('active', s.id===id));
-  if(window.feather){ feather.replace(); }
+  if (window.feather) feather.replace();
 }
 
-function handleDirectLink(user){
+function handleDirectLink(user) {
   const params = new URLSearchParams(window.location.search);
   const directQuestionId = params.get('questionId');
-  if(user && directQuestionId){
+
+  if (user && directQuestionId) {
     const paperId = params.get('paperId');
-    const paper = QUIZ_CONFIG.PAPER_METADATA.find(p=>p.id===paperId);
-    if(paper){ currentPaper = paper; quizMode='practice'; startQuiz(null, directQuestionId); return; }
+    const paper = QUIZ_CONFIG.PAPER_METADATA.find((p) => p.id === paperId);
+    if (paper) {
+      currentPaper = paper;
+      quizMode = 'practice';
+      startQuiz(null, directQuestionId);
+      return;
+    }
   }
-  // Render paper cards (keeps .paper-button)
+
+  // Render compact, symmetric paper tiles
   showScreen('topic-screen');
-  if(dom.paperCardGrid){
-    dom.paperCardGrid.innerHTML = QUIZ_CONFIG.PAPER_METADATA
-      .map(p=>`
-        <button class="paper-button rad-card text-left" data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
-          <div class="rad-card-inner p-4 flex items-center justify-between">
-            <div>
-              <div class="text-xs text-slate-500">${p.examType}</div>
-              <div class="text-lg font-semibold text-slate-900">${p.name}</div>
-            </div>
-            <i data-feather="arrow-right" class="w-5 h-5 text-slate-500"></i>
-          </div>
-        </button>`).join('');
-    if(window.feather){ feather.replace(); }
+  if (!dom.paperCardGrid) return;
+
+  let html = '';
+  for (const p of QUIZ_CONFIG.PAPER_METADATA) {
+    html += (
+      '<button class="paper-button rad-card" ' +
+        'data-id="' + p.id + '" ' +
+        'data-name="' + p.name + '" ' +
+        'data-examtype="' + p.examType + '">' +
+        '<div class="rad-card-inner paper-inner">' +
+          '<div class="paper-text">' +
+            '<span class="paper-badge">' + p.examType + '</span>' +
+            '<span class="paper-title">' + p.name + '</span>' +
+          '</div>' +
+          '<i data-feather="arrow-right" class="paper-arrow"></i>' +
+        '</div>' +
+      '</button>'
+    );
   }
+  dom.paperCardGrid.innerHTML = html;
+  if (window.feather) feather.replace();
 }
 
 function setQuizMode(newMode){
@@ -178,17 +197,19 @@ function setQuizMode(newMode){
 function checkResumeAndStart(){
   const key = `radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`;
   const saved = localStorage.getItem(key);
-  if(saved){
+  if (saved) {
     showCustomConfirm(`You have an unfinished ${quizMode} session. Resume?`,
       ()=> startQuiz(JSON.parse(saved)),
       ()=> { localStorage.removeItem(key); startQuiz(null); }
     );
-  }else{ startQuiz(null); }
+  } else {
+    startQuiz(null);
+  }
 }
 
-// ---------------------
-// QUIZ FLOW
-// ---------------------
+/* ---------------------
+   QUIZ FLOW
+--------------------- */
 async function startQuiz(resumeState, directQuestionId = null) {
   isReviewing = false; reviewFilter = [];
   userAnswers = resumeState?.answers || {};
@@ -238,10 +259,11 @@ async function startQuiz(resumeState, directQuestionId = null) {
     console.error('Start quiz failed:', err);
     showCustomAlert(err?.message || 'Error preparing the session. Please try again.', () => {
       showScreen('topic-screen');
+      handleDirectLink(currentUser);
     });
     return;
   } finally {
-    dom.loadingContainer.style.display = 'none'; // ensure loader hides
+    dom.loadingContainer.style.display = 'none';
   }
   dom.quizContent.style.display = 'block';
 }
@@ -392,9 +414,9 @@ function updateQuestionNav(){
   active?.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'center' });
 }
 
-// ---------------------
-// Sound prefs
-// ---------------------
+/* ---------------------
+   SOUND
+--------------------- */
 function initializeSound(){
   const saved = localStorage.getItem('radmentor_sound_pref');
   isSoundOn = saved !== 'off';
@@ -411,9 +433,9 @@ function updateSoundIcon(){
   if(window.feather){ feather.replace(); }
 }
 
-// ---------------------
-// Flags & Bookmarks
-// ---------------------
+/* ---------------------
+   FLAGS & BOOKMARKS
+--------------------- */
 function toggleFlag(id){
   flaggedQuestions.has(id) ? flaggedQuestions.delete(id) : flaggedQuestions.add(id);
   document.querySelector('.flag-btn')?.classList.toggle('flagged', flaggedQuestions.has(id));
@@ -445,9 +467,9 @@ async function toggleBookmark(questionId, questionText){
   }
 }
 
-// ---------------------
-// Finish & Results
-// ---------------------
+/* ---------------------
+   FINISH & RESULTS
+--------------------- */
 async function finishExam(){
   clearInterval(quizInterval);
   showScreen('results-screen');
@@ -492,13 +514,14 @@ async function finishExam(){
       `<div class="flex items-start gap-4"><div class="ai-avatar">🤖</div><div class="ai-message flex-grow"><p>AI Insights are only available for Exam Mode results.</p></div></div>`;
   }
 
-  document.getElementById('back-to-topics-btn').addEventListener('click', ()=>{ showScreen('topic-screen'); handleDirectLink(currentUser); });
+  document.getElementById('back-to-topics-btn').addEventListener('click', ()=>{
+    showScreen('topic-screen'); handleDirectLink(currentUser);
+  });
   document.getElementById('review-all-btn').addEventListener('click', ()=> setupReview('all'));
   document.getElementById('review-incorrect-btn').addEventListener('click', ()=> setupReview('incorrect'));
   document.getElementById('review-flagged-btn').addEventListener('click', ()=> setupReview('flagged'));
 }
 
-// Save one user's attempt under users/{uid}/attempts/{autoId}
 async function saveUserAttempt(scorePercent){
   try{
     const attemptsCol = collection(db, 'users', currentUser.uid, 'attempts');
@@ -515,7 +538,6 @@ async function saveUserAttempt(scorePercent){
   }catch(e){ console.error('saveUserAttempt failed:', e); }
 }
 
-// Update quizAggregates/{paperId} using running mean + histogram (no unbounded arrays)
 async function updateAggregatesAndGetStats(scorePercent){
   const aggregatesRef = doc(db, 'quizAggregates', currentPaper.id);
   let out = { average: scorePercent, percentile: 100 };
@@ -532,7 +554,7 @@ async function updateAggregatesAndGetStats(scorePercent){
         const total = (data.totalAttempts || 0);
         const prevAvg = data.averageScore || 0;
         const hist = Array.isArray(data.histogram) ? data.histogram.slice() : initHistogram();
-        // Percentile BEFORE including current (how many prior < you)
+        // Percentile BEFORE including current
         const lowerCount = hist.slice(0, b).reduce((s,v)=>s+v,0);
         const priorTotal = hist.reduce((s,v)=>s+v,0);
         const percentile = priorTotal>0 ? (lowerCount/priorTotal)*100 : 100;
@@ -558,10 +580,10 @@ async function getAIInsights(incorrectQs){
   try{
     const genAI = new GoogleGenerativeAI(QUIZ_CONFIG.GOOGLE_AI_API_KEY);
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const prompt = `A user answered these radiology exam questions incorrectly. Identify 2-3 core concepts they are struggling with and give concise, actionable study advice. Questions:\\n${incorrectQs.map(q=>`- ${q.text}`).join('\\n')}`;
+    const prompt = `A user answered these radiology exam questions incorrectly. Identify 2-3 core concepts they are struggling with and give concise, actionable study advice. Questions:\n${incorrectQs.map(q=>`- ${q.text}`).join('\n')}`;
     const result = await model.generateContent(prompt);
     const text = result?.response?.text?.();
-    if(text){ insightsDiv.innerHTML = text.replace(/\\n/g,'<br>').replace(/\\*/g,''); }
+    if(text){ insightsDiv.innerHTML = text.replace(/\n/g,'<br>').replace(/\*/g,''); }
     else{ insightsDiv.innerHTML = '<p>Could not retrieve AI insights at this time.</p>'; }
   }catch(err){
     console.error('AI Error:', err);
@@ -569,9 +591,9 @@ async function getAIInsights(incorrectQs){
   }
 }
 
-// ---------------------
-// Persistence & Timer
-// ---------------------
+/* ---------------------
+   PERSISTENCE & TIMER
+--------------------- */
 function saveState(){
   if(!currentUser || !currentPaper || isReviewing) return;
   const state = { answers:userAnswers, index:currentQuestionIndex, elapsedSeconds, flags:[...flaggedQuestions] };
@@ -600,9 +622,9 @@ function startTimer(){
   }
 }
 
-// ---------------------
-// Review mode
-// ---------------------
+/* ---------------------
+   REVIEW MODE
+--------------------- */
 function setupReview(type){
   isReviewing = true;
   if(type==='all') reviewFilter = allQuestions.map((_,i)=>i);
