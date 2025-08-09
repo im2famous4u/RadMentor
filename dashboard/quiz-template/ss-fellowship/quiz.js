@@ -176,9 +176,18 @@ export function initQuizApp(config) {
 let currentView = 'year'; // 'year' | 'system'
 function setView(v) {
   currentView = v;
+
+  // Toggle pill states
   dom.yearBtn?.classList.toggle('active', v === 'year');
   dom.systemBtn?.classList.toggle('active', v === 'system');
 
+  // Always reset grid before drawing a new view
+  if (dom.paperCardGrid) {
+    dom.paperCardGrid.className = 'topic-grid'; // ensure grid class
+    dom.paperCardGrid.innerHTML = '';
+  }
+
+  // Show/hide system tabs
   if (v === 'year') {
     dom.systemTabs?.classList.add('hidden');
     renderYearWise();
@@ -209,12 +218,18 @@ async function handleDirectLinkOrShowTopics() {
 // Pretty rad-card tiles (horizontal grid)
 function renderYearWise() {
   if (!dom.paperCardGrid) return;
-  dom.paperCardGrid.innerHTML = '';
+
+  // Guard: if no metadata configured
+  if (!Array.isArray(QUIZ_CONFIG.PAPER_METADATA) || QUIZ_CONFIG.PAPER_METADATA.length === 0) {
+    dom.paperCardGrid.innerHTML = `<p class="text-slate-500">No papers configured.</p>`;
+    return;
+  }
+
   const frag = document.createDocumentFragment();
 
   QUIZ_CONFIG.PAPER_METADATA.forEach(p => {
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = `
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
       <a href="#" class="rad-card tilt group focusable block topic-card" data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
         <div class="rad-card-inner p-5 flex items-center justify-between">
           <div>
@@ -225,7 +240,7 @@ function renderYearWise() {
         </div>
       </a>
     `.trim();
-    frag.appendChild(wrapper.firstChild);
+    frag.appendChild(wrap.firstChild);
   });
 
   dom.paperCardGrid.appendChild(frag);
@@ -244,8 +259,8 @@ function renderYearWise() {
 
 // --- System-wise (start on tab click) ---
 async function ensureAllPapersCached() {
-  // show a subtle message only once
-  if (dom.paperCardGrid) {
+  // only show analyzing message when system view is active
+  if (currentView === 'system' && dom.paperCardGrid) {
     dom.paperCardGrid.innerHTML = `<p class="text-slate-500 text-center col-span-full">Analyzing question banks, please wait...</p>`;
   }
   const jobs = Object.entries(QUIZ_CONFIG.ALL_QUIZ_DATA).map(async ([paperId, { sheetId, gid }]) => {
@@ -330,7 +345,9 @@ function showScreen(id) {
 
 function setQuizMode(newMode) {
   quizMode = newMode;
-  localStorage.removeItem(`radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`);
+  if (currentPaper && currentUser) {
+    localStorage.removeItem(`radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`);
+  }
   startQuiz(null);
 }
 
