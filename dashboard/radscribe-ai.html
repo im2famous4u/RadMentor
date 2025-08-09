@@ -1,714 +1,569 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RadScribe AI - Report Generator</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts - Poppins -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Times+New+Roman&display=swap" rel="stylesheet">
-    <!-- Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        /* Custom styles for the new design */
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f0f2f5; /* Light grey background */
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RadScribe AI - Report Generator (Light Theme)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* ===== THEME TOKENS ===== */
+    :root {
+      --bg: #f7f9fc;
+      --card: rgba(255,255,255,0.8);
+      --text: #0f172a;
+      --muted: #64748b;
+      --surface-border: rgba(15,23,42,0.06);
+      --brand-1: #6d28d9; /* violet-700 */
+      --brand-2: #22d3ee; /* cyan-400 */
+      --brand-3: #8b5cf6; /* violet-500 */
+      --ring: rgba(99,102,241,0.25);
+    }
+    [data-theme="dark"] {
+      --bg: #0b1020;
+      --card: rgba(255,255,255,0.06);
+      --text: #e5e7eb;
+      --muted: #a1a1aa;
+      --surface-border: rgba(255,255,255,0.12);
+      --ring: rgba(34,211,238,0.35);
+    }
 
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.5s ease-in-out forwards;
-        }
+    html, body { height: 100%; }
+    body { font-family: 'Sora', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background: var(--bg); color: var(--text); transition: background 400ms ease; }
 
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-        
-        /* Card styling */
-        .content-card {
-            background: white;
-            border-radius: 1.5rem;
-            padding: 2.5rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
-            width: 100%;
-            max-width: 56rem; /* Equivalent to max-w-5xl */
-            margin: 2rem auto;
-        }
+    /* ===== Aurora / Light Glow Background ===== */
+    .aurora { position: fixed; inset: 0; pointer-events: none; z-index: -1; }
+    body:not([data-theme="dark"]) .aurora {
+      background: radial-gradient(60vw 60vw at 10% 20%, rgba(34,211,238,0.18), transparent 60%),
+                  radial-gradient(50vw 50vw at 80% 10%, rgba(139,92,246,0.15), transparent 60%),
+                  radial-gradient(40vw 40vw at 60% 80%, rgba(59,130,246,0.12), transparent 60%),
+                  linear-gradient(180deg, #f7f9fc 0%, #f0f4ff 100%);
+      filter: blur(0px);
+    }
+    [data-theme="dark"] .aurora {
+      background: radial-gradient(60vw 60vw at 10% 20%, rgba(34,211,238,0.18), transparent 60%),
+                  radial-gradient(50vw 50vw at 80% 10%, rgba(139,92,246,0.22), transparent 60%),
+                  radial-gradient(40vw 40vw at 60% 80%, rgba(99,102,241,0.15), transparent 60%),
+                  linear-gradient(180deg, #0b1020 0%, #0e1328 100%);
+    }
 
-        /* Tab styling */
-        .tab-button.active {
-            background-color: #4f46e5; /* Indigo 600 */
-            color: white;
-            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
-        }
-        .tab-button {
-            transition: all 0.3s ease;
-        }
+    .aurora::before, .aurora::after { content: ""; position: absolute; inset: -10%; filter: blur(80px); opacity: .45; background: conic-gradient(from 0deg, rgba(34,211,238,.16), rgba(139,92,246,.16), rgba(236,72,153,.12), rgba(34,197,94,.12), rgba(34,211,238,.16)); animation: spin 36s linear infinite; }
+    .aurora::after { animation-direction: reverse; animation-duration: 46s; mix-blend-mode: screen; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Input group with icon */
-        .input-group {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-        .input-group input,
-        .input-group select,
-        .input-group textarea {
-            padding-left: 2.5rem;
-            font-family: 'Poppins', sans-serif;
-            border-radius: 0.75rem;
-            border: 1px solid #d1d5db;
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-        .input-group input:focus,
-        .input-group select:focus,
-        .input-group textarea:focus {
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
-        }
-        .input-group .icon {
-            position: absolute;
-            left: 0.75rem;
-            color: #6b7280;
-            pointer-events: none;
-        }
+    /* ===== Subtle page tint while generating ===== */
+    .page-tint { position: fixed; inset: 0; pointer-events: none; z-index: 30; opacity: 0; transition: opacity 400ms ease; }
+    body.generating .page-tint { opacity: .25; }
+    body:not([data-theme="dark"]).generating .page-tint { background: radial-gradient(1200px 800px at 50% 10%, rgba(125,211,252,.5), transparent 60%), radial-gradient(1000px 600px at 20% 90%, rgba(196,181,253,.45), transparent 60%); }
+    [data-theme="dark"].generating .page-tint { background: radial-gradient(1200px 800px at 50% 10%, rgba(56,189,248,.25), transparent 60%), radial-gradient(1000px 600px at 20% 90%, rgba(167,139,250,.22), transparent 60%); }
 
-        /* Generated Report Display */
-        #reportOutputDisplay {
-            font-family: 'Times New Roman', Times, serif;
-            line-height: 1.6;
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 1rem;
-            padding: 2rem;
-            min-height: 20rem;
-            overflow-y: auto;
-        }
-        
-        #reportOutputDisplay .report-patient-name {
-            text-align: center;
-            font-weight: 700;
-            text-transform: uppercase;
-            margin-bottom: 1rem;
-            font-size: 1.25rem;
-            color: #111827;
-        }
-        #reportOutputDisplay .report-grid {
-            display: grid;
-            grid-template-columns: 150px 1fr;
-            gap: 0.5rem 1rem;
-        }
-        #reportOutputDisplay .report-grid-label {
-            font-weight: bold;
-            color: #374151;
-        }
-        #reportOutputDisplay .report-section-heading {
-            font-weight: 700;
-            color: #1f2937;
-            margin-top: 1.25rem;
-            margin-bottom: 0.5rem;
-            font-size: 1.1rem;
-        }
-        
-        /* Message Box */
-        .message-box {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 1000;
-            opacity: 0;
-            transform: translateY(-20px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
-        }
-        .message-box.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        /* Loader */
-        .loader {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid #ffffff;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+    /* ===== Glass Card ===== */
+    .glass { background: var(--card); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--surface-border); border-radius: 1.25rem; box-shadow: 0 18px 50px rgba(2,6,23,.08); }
 
-        /* Hologram Logo Animation */
-        .hologram-logo {
-            width: 40px;
-            height: 40px;
-        }
-        .hologram-logo .circle {
-            stroke-dasharray: 150;
-            animation: rotate 4s linear infinite;
-            transform-origin: center;
-        }
-        .hologram-logo .inner-circle {
-            animation-delay: -2s;
-        }
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-    </style>
+    /* ===== Tabs ===== */
+    .tab-button { transition: all .25s ease; color: var(--muted); }
+    .tab-button.active { color: #fff; background: linear-gradient(135deg, var(--brand-1), var(--brand-2)); box-shadow: 0 10px 25px rgba(34, 211, 238, .25); }
+
+    /* Inputs */
+    .input, .select, .textarea { background: rgba(255,255,255,0.7); border: 1px solid var(--surface-border); color: var(--text); border-radius: .9rem; outline: none; transition: box-shadow .2s, border .2s; }
+    [data-theme="dark"] .input, [data-theme="dark"] .select, [data-theme="dark"] .textarea { background: rgba(255,255,255,0.06); color: #e5e7eb; }
+    .input:focus, .select:focus, .textarea:focus { border-color: var(--brand-3); box-shadow: 0 0 0 4px var(--ring); }
+    .label { color: var(--muted); }
+
+    /* Iconed input */
+    .input-wrap { position: relative; }
+    .input-wrap .icon { position: absolute; left: .9rem; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+    .input-wrap .input, .input-wrap .select, .input-wrap .textarea { padding-left: 2.5rem; }
+
+    /* Buttons */
+    .btn-primary { background: linear-gradient(135deg, var(--brand-1), var(--brand-3)); color: white; border-radius: .9rem; font-weight: 700; letter-spacing: .2px; box-shadow: 0 10px 30px rgba(109,40,217,.25); transition: transform .08s ease, box-shadow .2s ease; }
+    .btn-primary:hover { box-shadow: 0 18px 40px rgba(109, 40, 217, .35); }
+    .btn-primary:active { transform: translateY(1px); }
+    .btn-ghost { background: rgba(255,255,255,0.7); border: 1px solid var(--surface-border); border-radius: .9rem; }
+    [data-theme="dark"] .btn-ghost { background: rgba(255,255,255,0.06); color: #e5e7eb; }
+
+    /* Report area */
+    #reportOutputDisplay { font-family: 'Times New Roman', Times, serif; line-height: 1.65; color: #0f172a; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; min-height: 18rem; }
+    #reportOutputDisplay .report-patient-name { text-align:center; font-weight:800; text-transform:uppercase; margin-bottom:.75rem; font-size:1.1rem; color:#0f172a; }
+    #reportOutputDisplay .report-grid { display:grid; grid-template-columns: 160px 1fr; gap:.5rem 1rem; }
+    #reportOutputDisplay .report-grid-label { font-weight:700; color:#1f2937; }
+    #reportOutputDisplay .report-section-heading { font-weight:800; color:#0f172a; margin:.9rem 0 .35rem; font-size:1.05rem; }
+
+    /* Toast */
+    .message-box { position: fixed; top: 18px; right: 18px; color: white; padding: .9rem 1.2rem; border-radius: .9rem; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; opacity: 0; transform: translateY(-12px); transition: .25s ease; }
+    .message-box.show { opacity: 1; transform: translateY(0); }
+
+    /* Generating Overlay */
+    .gen-overlay { position: fixed; inset: 0; display:none; align-items:center; justify-content:center; z-index: 60; }
+    .gen-card { width: min(560px, 92vw); }
+    .orbs { position: relative; width: 110px; height: 110px; margin: 0 auto; }
+    .orbs::before, .orbs::after { content: ""; position: absolute; inset: 0; border-radius: 9999px; border: 4px solid transparent; }
+    .orbs::before { border-top-color: var(--brand-2); animation: spin 1.4s linear infinite; filter: drop-shadow(0 0 14px rgba(34,211,238,.6)); }
+    .orbs::after { border-right-color: var(--brand-1); animation: spin 2s linear infinite reverse; filter: drop-shadow(0 0 18px rgba(109,40,217,.55)); }
+    .progress { height: 8px; border-radius: 9999px; overflow: hidden; background: rgba(15,23,42,0.08); }
+    .progress .bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--brand-2), var(--brand-3)); box-shadow: 0 6px 22px rgba(34,211,238,.4); transition: width .25s ease; }
+    .pulse-dot { width: 10px; height: 10px; background: #0ea5e9; border-radius: 9999px; margin: 0 5px; opacity: .5; animation: pulse 1.2s ease-in-out infinite; }
+    .pulse-dot:nth-child(2){ animation-delay: .2s;} .pulse-dot:nth-child(3){ animation-delay: .4s; }
+    @keyframes pulse { 0%,100% { transform: scale(.9); opacity:.4;} 50% { transform: scale(1.25); opacity: .9; } }
+
+    /* Theme switcher pill */
+    .switch { display:flex; align-items:center; gap:.5rem; background: rgba(255,255,255,.7); border:1px solid var(--surface-border); padding:.35rem; border-radius: 9999px; }
+    [data-theme="dark"] .switch { background: rgba(255,255,255,0.06); color:#e5e7eb; }
+    .switch button { padding:.35rem .7rem; border-radius: 9999px; font-weight:700; font-size:.85rem; color: var(--muted); }
+    .switch button.active { color:#fff; background: linear-gradient(135deg, var(--brand-1), var(--brand-2)); box-shadow: 0 8px 20px rgba(34,211,238,.25); }
+  </style>
 </head>
-<body class="text-gray-800">
+<body>
+  <div class="aurora"></div>
+  <div class="page-tint"></div>
 
-    <!-- Header -->
-    <header class="bg-white shadow-sm p-4 flex justify-between items-center sticky top-0 z-50 h-[80px]">
-        <div class="flex items-center space-x-3">
-            <svg class="hologram-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <circle class="circle" cx="50" cy="50" r="45" stroke="#4f46e5" stroke-width="5" fill="none" />
-                <circle class="circle inner-circle" cx="50" cy="50" r="30" stroke="#818cf8" stroke-width="5" fill="none" />
-                <path d="M30 50 H70 M50 30 V70" stroke="#a5b4fc" stroke-width="4" />
-            </svg>
-            <h1 class="text-2xl font-bold text-gray-800">RadScribe AI</h1>
+  <!-- Header -->
+  <header class="glass p-4 md:p-5 flex justify-between items-center sticky top-0 z-40">
+    <div class="flex items-center gap-3">
+      <svg class="w-10 h-10" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="42" stroke="url(#g1)" stroke-width="6" fill="none" />
+        <circle cx="50" cy="50" r="28" stroke="url(#g2)" stroke-width="6" fill="none" />
+        <defs>
+          <linearGradient id="g1" x1="0" x2="1">
+            <stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#8b5cf6"/>
+          </linearGradient>
+          <linearGradient id="g2" x1="1" x2="0">
+            <stop offset="0%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#6d28d9"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight">RadScribe <span class="text-sky-500">AI</span></h1>
+    </div>
+    <div class="hidden md:flex items-end gap-4">
+      <div>
+        <label for="patientName" class="label text-xs">Patient Name (Optional)</label>
+        <input id="patientName" class="input w-56 px-3 py-2" placeholder="e.g., John Smith" />
+      </div>
+      <div>
+        <label for="radiologistName" class="label text-xs">Radiologist Name (Optional)</label>
+        <input id="radiologistName" class="input w-56 px-3 py-2" placeholder="e.g., Dr. Jane Doe" />
+      </div>
+      <div>
+        <label for="rmcNumber" class="label text-xs">RMC Number (Optional)</label>
+        <input id="rmcNumber" class="input w-48 px-3 py-2" placeholder="e.g., DMC-12345" />
+      </div>
+      <!-- Theme Toggle -->
+      <div class="switch ml-4" role="tablist" aria-label="Theme switch">
+        <button id="themeLight" class="active" aria-selected="true">Light</button>
+        <button id="themeDark">Dark</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Toast -->
+  <div id="messageBox" class="message-box"></div>
+
+  <!-- Main -->
+  <main class="max-w-6xl mx-auto p-4 md:p-8">
+    <div class="glass p-5 md:p-8">
+      <div class="flex bg-white/70 border border-[rgba(0,0,0,0.06)] rounded-xl p-1 mb-8">
+        <button id="tab-ct" class="tab-button flex-1 px-3 py-2 rounded-lg text-sm font-semibold active">CT</button>
+        <button id="tab-mri" class="tab-button flex-1 px-3 py-2 rounded-lg text-sm font-semibold">MRI</button>
+        <button id="tab-usg" class="tab-button flex-1 px-3 py-2 rounded-lg text-sm font-semibold">USG</button>
+        <button id="tab-conventional" class="tab-button flex-1 px-3 py-2 rounded-lg text-sm font-semibold">Conventional</button>
+        <button id="tab-ir" class="tab-button flex-1 px-3 py-2 rounded-lg text-sm font-semibold">IR</button>
+      </div>
+
+      <div id="tab-content" class="space-y-5"></div>
+
+      <div id="generatedReportOutput" class="mt-10 hidden">
+        <div class="h-px w-full bg-gradient-to-r from-transparent via-slate-300 to-transparent mb-6"></div>
+        <h3 class="text-lg md:text-xl font-extrabold mb-4 text-center">Generated Report</h3>
+        <div id="reportOutputDisplay"></div>
+        <div class="flex flex-col sm:flex-row gap-4 mt-6">
+          <button id="copyReportButton" class="btn-ghost px-6 py-3 font-semibold flex-1 flex items-center justify-center gap-2"><i data-lucide="copy" class="w-5 h-5"></i>Copy Report</button>
+          <button id="exportWordButton" class="btn-primary px-6 py-3 flex-1 flex items-center justify-center gap-2"><i data-lucide="file-down" class="w-5 h-5"></i>Export to Word</button>
         </div>
-        <div class="flex items-center space-x-4">
-             <div>
-                <label for="patientName" class="text-xs font-medium text-gray-500">Patient Name (Optional)</label>
-                <input type="text" id="patientName" class="w-48 p-2 border border-gray-300 rounded-md text-sm" placeholder="e.g., John Smith">
+      </div>
+    </div>
+  </main>
+
+  <!-- Generating Overlay -->
+  <section id="generatingOverlay" class="gen-overlay">
+    <div class="gen-card glass p-6 md:p-8">
+      <div class="orbs mb-6"></div>
+      <p class="text-center text-xl font-extrabold mb-2">Synthesizing your report…</p>
+      <p id="genStatus" class="text-center text-slate-600 mb-4">Analyzing clinical history</p>
+      <div class="progress"><div id="genBar" class="bar"></div></div>
+      <div class="flex items-center justify-center gap-2 mt-5">
+        <div class="pulse-dot"></div><div class="pulse-dot"></div><div class="pulse-dot"></div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Respect system theme on first load, default to light
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (prefersDark) document.body.setAttribute('data-theme','dark');
+
+    // Theme switch events
+    const btnLight = document.getElementById('themeLight');
+    const btnDark = document.getElementById('themeDark');
+    function setTheme(mode){
+      if(mode==='dark'){ document.body.setAttribute('data-theme','dark'); btnDark.classList.add('active'); btnLight.classList.remove('active'); }
+      else { document.body.removeAttribute('data-theme'); btnLight.classList.add('active'); btnDark.classList.remove('active'); }
+    }
+    btnLight?.addEventListener('click',()=>setTheme('light'));
+    btnDark?.addEventListener('click',()=>setTheme('dark'));
+
+    // ------- Templates (same IDs to preserve functionality) -------
+    const formTemplates = {
+      ct: `
+        <div id="content-ct" class="space-y-5">
+          <h3 class="text-lg font-bold">CT Report Details</h3>
+          <div>
+            <label for="ctStudyType" class="label block mb-1">Study Type</label>
+            <div class="input-wrap">
+              <i data-lucide="scan" class="icon w-5 h-5"></i>
+              <select id="ctStudyType" class="select w-full px-3 py-3">
+                <option value="">Select CT Study</option>
+                <option value="ct-head">CT Head</option>
+                <option value="ct-chest">CT Chest</option>
+                <option value="ct-abdomen">CT Abdomen</option>
+                <option value="ct-pelvis">CT Pelvis</option>
+                <option value="ct-spine">CT Spine</option>
+                <option value="ct-angio">CT Angiography</option>
+              </select>
             </div>
+          </div>
+          <div>
+            <label for="ctClinicalHistory" class="label block mb-1">Clinical History</label>
+            <div class="input-wrap">
+              <i data-lucide="clipboard-list" class="icon w-5 h-5"></i>
+              <textarea id="ctClinicalHistory" rows="2" class="textarea w-full px-3 py-3" placeholder="e.g., Suspected stroke, trauma..."></textarea>
+            </div>
+          </div>
+          <div>
+            <label for="ctFindings" class="label block mb-1">Brief Findings (Radscribe will expand)</label>
+            <div class="input-wrap">
+              <i data-lucide="microscope" class="icon w-5 h-5"></i>
+              <textarea id="ctFindings" rows="5" class="textarea w-full px-3 py-3" placeholder="e.g., 'Right frontal lobe infarct'..."></textarea>
+            </div>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-4 pt-2">
+            <button id="generateCtReport" class="btn-primary w-full py-3 flex items-center justify-center gap-2"><i data-lucide="sparkles" class="w-5 h-5"></i>Generate Report</button>
+            <button id="clearCtForm" class="btn-ghost w-full py-3 flex items-center justify-center gap-2"><i data-lucide="rotate-ccw" class="w-5 h-5"></i>Clear</button>
+          </div>
+        </div>`,
+      mri: `
+        <div id="content-mri" class="space-y-5">
+          <h3 class="text-lg font-bold">MRI Report Details</h3>
+          <div>
+            <label for="mriStudyType" class="label block mb-1">Study Type</label>
+            <div class="input-wrap">
+              <i data-lucide="scan" class="icon w-5 h-5"></i>
+              <select id="mriStudyType" class="select w-full px-3 py-3">
+                <option value="">Select MRI Study</option>
+                <option value="mri-brain">MRI Brain</option>
+                <option value="mri-spine">MRI Spine</option>
+                <option value="mri-knee">MRI Knee</option>
+                <option value="mri-shoulder">MRI Shoulder</option>
+                <option value="mri-abdomen">MRI Abdomen</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label for="mriClinicalHistory" class="label block mb-1">Clinical History</label>
+            <div class="input-wrap">
+              <i data-lucide="clipboard-list" class="icon w-5 h-5"></i>
+              <textarea id="mriClinicalHistory" rows="2" class="textarea w-full px-3 py-3" placeholder="e.g., Suspected MS, ligament injury..."></textarea>
+            </div>
+          </div>
+          <div>
+            <label for="mriFindings" class="label block mb-1">Brief Findings (AI will expand)</label>
+            <div class="input-wrap">
+              <i data-lucide="microscope" class="icon w-5 h-5"></i>
+              <textarea id="mriFindings" rows="5" class="textarea w-full px-3 py-3" placeholder="e.g., 'ACL tear'..."></textarea>
+            </div>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-4 pt-2">
+            <button id="generateMriReport" class="btn-primary w-full py-3 flex items-center justify-center gap-2"><i data-lucide="sparkles" class="w-5 h-5"></i>Generate Report</button>
+            <button id="clearMriForm" class="btn-ghost w-full py-3 flex items-center justify-center gap-2"><i data-lucide="rotate-ccw" class="w-5 h-5"></i>Clear</button>
+          </div>
+        </div>`,
+      usg: `
+        <div id="content-usg" class="space-y-5">
+          <h3 class="text-lg font-bold">Ultrasound Report Details</h3>
+          <div>
+            <label for="usgScanType" class="label block mb-1">Study Type</label>
+            <div class="input-wrap">
+              <i data-lucide="scan" class="icon w-5 h-5"></i>
+              <select id="usgScanType" class="select w-full px-3 py-3">
+                <option value="">Select USG Scan</option>
+                <option value="usg-abdomen">Abdomen</option>
+                <option value="usg-pelvis">Pelvis</option>
+                <option value="usg-thyroid">Thyroid</option>
+                <option value="usg-scrotum">Scrotum</option>
+                <option value="usg-breast">Breast</option>
+                <option value="usg-neck">Neck</option>
+                <option value="usg-vascular">Vascular</option>
+                <option value="usg-obstetric">Obstetric</option>
+                <option value="usg-kubs">KUB/Renal</option>
+                <option value="usg-musculoskeletal">Musculoskeletal</option>
+              </select>
+            </div>
+          </div>
+          <div id="usgAbdomenOptions" class="hidden space-y-4">
             <div>
-                <label for="radiologistName" class="text-xs font-medium text-gray-500">Radiologist Name (Optional)</label>
-                <input type="text" id="radiologistName" class="w-48 p-2 border border-gray-300 rounded-md text-sm" placeholder="e.g., Dr. Jane Doe">
+              <label for="usgFattyLiver" class="label block mb-1">Fatty Liver Grade</label>
+              <div class="input-wrap">
+                <i data-lucide="thermometer" class="icon w-5 h-5"></i>
+                <select id="usgFattyLiver" class="select w-full px-3 py-3">
+                  <option value="none">None / Normal</option>
+                  <option value="grade1">Grade 1</option>
+                  <option value="grade2">Grade 2</option>
+                  <option value="grade3">Grade 3</option>
+                </select>
+              </div>
             </div>
-            <div>
-                <label for="rmcNumber" class="text-xs font-medium text-gray-500">RMC Number (Optional)</label>
-                <input type="text" id="rmcNumber" class="w-48 p-2 border border-gray-300 rounded-md text-sm" placeholder="e.g., DMC-12345">
+          </div>
+          <div>
+            <label for="usgClinicalHistory" class="label block mb-1">Clinical History</label>
+            <div class="input-wrap">
+              <i data-lucide="clipboard-list" class="icon w-5 h-5"></i>
+              <textarea id="usgClinicalHistory" rows="2" class="textarea w-full px-3 py-3" placeholder="e.g., Abdominal pain..."></textarea>
             </div>
-        </div>
-    </header>
-
-    <!-- Message Box -->
-    <div id="messageBox" class="message-box"></div>
-
-    <!-- Main Content -->
-    <main class="p-4 md:p-8">
-        <div class="content-card fade-in">
-            <!-- Modality Tabs -->
-            <div class="flex justify-center gap-2 mb-8 bg-gray-100 p-1.5 rounded-xl">
-                <button id="tab-ct" class="tab-button flex-1 px-3 py-2 rounded-lg text-sm font-semibold text-gray-600 active whitespace-nowrap">CT</button>
-                <button id="tab-mri" class="tab-button flex-1 px-3 py-2 rounded-lg text-sm font-semibold text-gray-600 whitespace-nowrap">MRI</button>
-                <button id="tab-usg" class="tab-button flex-1 px-3 py-2 rounded-lg text-sm font-semibold text-gray-600 whitespace-nowrap">USG</button>
-                <button id="tab-conventional" class="tab-button flex-1 px-3 py-2 rounded-lg text-sm font-semibold text-gray-600 whitespace-nowrap">Conventional</button>
-                <button id="tab-ir" class="tab-button flex-1 px-3 py-2 rounded-lg text-sm font-semibold text-gray-600 whitespace-nowrap">IR</button>
+          </div>
+          <div>
+            <label for="usgFindings" class="label block mb-1">Brief Findings (AI will expand)</label>
+            <div class="input-wrap">
+              <i data-lucide="microscope" class="icon w-5 h-5"></i>
+              <textarea id="usgFindings" rows="5" class="textarea w-full px-3 py-3" placeholder="e.g., 'Gallstones present'..."></textarea>
             </div>
-
-            <!-- Tab Content -->
-            <div id="tab-content" class="space-y-4">
-                <!-- All tab panes will be dynamically shown/hidden here -->
+          </div>
+          <div class="flex flex-col sm:flex-row gap-4 pt-2">
+            <button id="generateUsgReport" class="btn-primary w-full py-3 flex items-center justify-center gap-2"><i data-lucide="sparkles" class="w-5 h-5"></i>Generate Report</button>
+            <button id="clearUsgForm" class="btn-ghost w-full py-3 flex items-center justify-center gap-2"><i data-lucide="rotate-ccw" class="w-5 h-5"></i>Clear</button>
+          </div>
+        </div>`,
+      conventional: `
+        <div id="content-conventional" class="space-y-5">
+          <h3 class="text-lg font-bold">Conventional Imaging Details</h3>
+          <div>
+            <label for="conventionalStudyType" class="label block mb-1">Study Type</label>
+            <div class="input-wrap">
+              <i data-lucide="film" class="icon w-5 h-5"></i>
+              <select id="conventionalStudyType" class="select w-full px-3 py-3">
+                <option value="">Select Study</option>
+                <optgroup label="X-ray">
+                  <option value="xray-chest">Chest X-ray</option>
+                  <option value="xray-abdomen">Abdomen X-ray</option>
+                  <option value="xray-extremity">Extremity X-ray</option>
+                  <option value="xray-spine">Spine X-ray</option>
+                </optgroup>
+                <optgroup label="Barium Studies">
+                  <option value="barium-swallow">Barium Swallow</option>
+                  <option value="barium-meal">Barium Meal</option>
+                  <option value="barium-enema">Barium Enema</option>
+                </optgroup>
+                <option value="ivp">IVP</option>
+                <option value="mcu">MCU</option>
+                <option value="hsg">HSG</option>
+              </select>
             </div>
-
-            <!-- Generated Report Output -->
-            <div id="generatedReportOutput" class="mt-10 hidden fade-in">
-                <div class="border-t border-gray-200 pt-8">
-                    <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Generated Report</h3>
-                    <div id="reportOutputDisplay">
-                        <!-- AI generated report will appear here -->
-                    </div>
-                    <div class="flex space-x-4 mt-6">
-                         <button id="copyReportButton" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all w-full flex items-center justify-center">
-                            <i data-lucide="copy" class="w-5 h-5 mr-2"></i> Copy Report
-                        </button>
-                        <button id="exportWordButton" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all w-full flex items-center justify-center">
-                            <i data-lucide="file-down" class="w-5 h-5 mr-2"></i> Export to Word
-                        </button>
-                    </div>
-                </div>
+          </div>
+          <div>
+            <label for="conventionalClinicalHistory" class="label block mb-1">Clinical History</label>
+            <div class="input-wrap">
+              <i data-lucide="clipboard-list" class="icon w-5 h-5"></i>
+              <textarea id="conventionalClinicalHistory" rows="2" class="textarea w-full px-3 py-3" placeholder="e.g., Cough, infertility...	extarea>
             </div>
-        </div>
-    </main>
-
-    <script>
-        // --- All HTML Templates for Forms ---
-        const formTemplates = {
-            ct: `
-                <div id="content-ct" class="tab-pane space-y-4 fade-in">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">CT Report Details</h3>
-                    <div>
-                        <label for="ctStudyType" class="block text-sm font-medium text-gray-700 mb-1">Study Type</label>
-                        <div class="input-group">
-                            <i data-lucide="scan" class="icon w-5 h-5"></i>
-                            <select id="ctStudyType" class="p-3">
-                                <option value="">Select CT Study</option>
-                                <option value="ct-head">CT Head</option>
-                                <option value="ct-chest">CT Chest</option>
-                                <option value="ct-abdomen">CT Abdomen</option>
-                                <option value="ct-pelvis">CT Pelvis</option>
-                                <option value="ct-spine">CT Spine</option>
-                                <option value="ct-angio">CT Angiography</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="ctClinicalHistory" class="block text-sm font-medium text-gray-700 mb-1">Clinical History</label>
-                        <div class="input-group">
-                            <i data-lucide="clipboard-list" class="icon w-5 h-5"></i>
-                            <textarea id="ctClinicalHistory" rows="2" class="p-3" placeholder="e.g., Suspected stroke, trauma..."></textarea>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="ctFindings" class="block text-sm font-medium text-gray-700 mb-1">Brief Findings (AI will expand)</label>
-                        <div class="input-group">
-                            <i data-lucide="microscope" class="icon w-5 h-5"></i>
-                            <textarea id="ctFindings" rows="5" class="p-3" placeholder="e.g., 'Right frontal lobe infarct'..."></textarea>
-                        </div>
-                    </div>
-                    <div class="flex space-x-4 pt-2">
-                        <button id="generateCtReport" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all w-full flex items-center justify-center">
-                            <i data-lucide="sparkles" class="w-5 h-5 mr-2"></i> Generate Report
-                        </button>
-                        <button id="clearCtForm" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 rounded-xl transition-all w-full flex items-center justify-center">
-                            <i data-lucide="rotate-ccw" class="w-5 h-5 mr-2"></i> Clear
-                        </button>
-                    </div>
-                </div>`,
-            mri: `
-                <div id="content-mri" class="tab-pane space-y-4 fade-in">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">MRI Report Details</h3>
-                    <div>
-                        <label for="mriStudyType" class="block text-sm font-medium text-gray-700 mb-1">Study Type</label>
-                        <div class="input-group">
-                            <i data-lucide="scan" class="icon w-5 h-5"></i>
-                            <select id="mriStudyType" class="p-3">
-                                <option value="">Select MRI Study</option>
-                                <option value="mri-brain">MRI Brain</option>
-                                <option value="mri-spine">MRI Spine</option>
-                                <option value="mri-knee">MRI Knee</option>
-                                <option value="mri-shoulder">MRI Shoulder</option>
-                                <option value="mri-abdomen">MRI Abdomen</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="mriClinicalHistory" class="block text-sm font-medium text-gray-700 mb-1">Clinical History</label>
-                        <div class="input-group">
-                            <i data-lucide="clipboard-list" class="icon w-5 h-5"></i>
-                            <textarea id="mriClinicalHistory" rows="2" class="p-3" placeholder="e.g., Suspected MS, ligament injury..."></textarea>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="mriFindings" class="block text-sm font-medium text-gray-700 mb-1">Brief Findings (AI will expand)</label>
-                        <div class="input-group">
-                            <i data-lucide="microscope" class="icon w-5 h-5"></i>
-                            <textarea id="mriFindings" rows="5" class="p-3" placeholder="e.g., 'ACL tear'..."></textarea>
-                        </div>
-                    </div>
-                    <div class="flex space-x-4 pt-2">
-                        <button id="generateMriReport" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all w-full flex items-center justify-center">
-                            <i data-lucide="sparkles" class="w-5 h-5 mr-2"></i> Generate Report
-                        </button>
-                        <button id="clearMriForm" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 rounded-xl transition-all w-full flex items-center justify-center">
-                            <i data-lucide="rotate-ccw" class="w-5 h-5 mr-2"></i> Clear
-                        </button>
-                    </div>
-                </div>`,
-            usg: `
-                <div id="content-usg" class="tab-pane space-y-4 fade-in">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Ultrasound Report Details</h3>
-                     <div>
-                        <label for="usgScanType" class="block text-sm font-medium text-gray-700 mb-1">Study Type</label>
-                        <div class="input-group">
-                            <i data-lucide="scan" class="icon w-5 h-5"></i>
-                            <select id="usgScanType" class="p-3">
-                                <option value="">Select USG Scan</option>
-                                <option value="usg-abdomen">Abdomen</option>
-                                <option value="usg-pelvis">Pelvis</option>
-                                <option value="usg-thyroid">Thyroid</option>
-                                <option value="usg-scrotum">Scrotum</option>
-                                <option value="usg-breast">Breast</option>
-                                <option value="usg-neck">Neck</option>
-                                <option value="usg-vascular">Vascular</option>
-                                <option value="usg-obstetric">Obstetric</option>
-                                <option value="usg-kubs">KUB/Renal</option>
-                                <option value="usg-musculoskeletal">Musculoskeletal</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div id="usgAbdomenOptions" class="hidden space-y-4">
-                         <div>
-                            <label for="usgFattyLiver" class="block text-sm font-medium text-gray-700 mb-1">Fatty Liver Grade</label>
-                            <div class="input-group">
-                                <i data-lucide="thermometer" class="icon w-5 h-5"></i>
-                                <select id="usgFattyLiver" class="p-3">
-                                    <option value="none">None / Normal</option>
-                                    <option value="grade1">Grade 1</option>
-                                    <option value="grade2">Grade 2</option>
-                                    <option value="grade3">Grade 3</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="usgClinicalHistory" class="block text-sm font-medium text-gray-700 mb-1">Clinical History</label>
-                        <div class="input-group">
-                            <i data-lucide="clipboard-list" class="icon w-5 h-5"></i>
-                            <textarea id="usgClinicalHistory" rows="2" class="p-3" placeholder="e.g., Abdominal pain..."></textarea>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="usgFindings" class="block text-sm font-medium text-gray-700 mb-1">Brief Findings (AI will expand)</label>
-                        <div class="input-group">
-                            <i data-lucide="microscope" class="icon w-5 h-5"></i>
-                            <textarea id="usgFindings" rows="5" class="p-3" placeholder="e.g., 'Gallstones present'..."></textarea>
-                        </div>
-                    </div>
-                    <div class="flex space-x-4 pt-2">
-                        <button id="generateUsgReport" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all w-full flex items-center justify-center">
-                            <i data-lucide="sparkles" class="w-5 h-5 mr-2"></i> Generate Report
-                        </button>
-                        <button id="clearUsgForm" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 rounded-xl transition-all w-full flex items-center justify-center">
-                            <i data-lucide="rotate-ccw" class="w-5 h-5 mr-2"></i> Clear
-                        </button>
-                    </div>
-                </div>`,
-            conventional: `
-                <div id="content-conventional" class="tab-pane space-y-4 fade-in">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Conventional Imaging Details</h3>
-                     <div>
-                        <label for="conventionalStudyType" class="block text-sm font-medium text-gray-700 mb-1">Study Type</label>
-                        <div class="input-group">
-                            <i data-lucide="film" class="icon w-5 h-5"></i>
-                            <select id="conventionalStudyType" class="p-3">
-                                <option value="">Select Study</option>
-                                <optgroup label="X-ray">
-                                    <option value="xray-chest">Chest X-ray</option>
-                                    <option value="xray-abdomen">Abdomen X-ray</option>
-                                    <option value="xray-extremity">Extremity X-ray</option>
-                                    <option value="xray-spine">Spine X-ray</option>
-                                </optgroup>
-                                <optgroup label="Barium Studies">
-                                    <option value="barium-swallow">Barium Swallow</option>
-                                    <option value="barium-meal">Barium Meal</option>
-                                    <option value="barium-enema">Barium Enema</option>
-                                </optgroup>
-                                <option value="ivp">IVP</option>
-                                <option value="mcu">MCU</option>
-                                <option value="hsg">HSG</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="conventionalClinicalHistory" class="block text-sm font-medium text-gray-700 mb-1">Clinical History</label>
-                        <div class="input-group">
-                            <i data-lucide="clipboard-list" class="icon w-5 h-5"></i>
-                            <textarea id="conventionalClinicalHistory" rows="2" class="p-3" placeholder="e.g., Cough, infertility..."></textarea>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="conventionalFindings" class="block text-sm font-medium text-gray-700 mb-1">Brief Findings (AI will expand)</label>
-                        <div class="input-group">
-                            <i data-lucide="microscope" class="icon w-5 h-5"></i>
-                            <textarea id="conventionalFindings" rows="5" class="p-3" placeholder="e.g., 'Consolidation right lower lobe'..."></textarea>
-                        </div>
-                    </div>
-                    <div class="flex space-x-4 pt-2">
-                        <button id="generateConventionalReport" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all w-full flex items-center justify-center">
-                            <i data-lucide="sparkles" class="w-5 h-5 mr-2"></i> Generate Report
-                        </button>
-                        <button id="clearConventionalForm" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 rounded-xl transition-all w-full flex items-center justify-center">
-                            <i data-lucide="rotate-ccw" class="w-5 h-5 mr-2"></i> Clear
-                        </button>
-                    </div>
-                </div>`,
-            ir: `
-                <div id="content-ir" class="tab-pane space-y-4 fade-in">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">IR Procedure Details</h3>
-                    <div>
-                        <label for="irProcedureType" class="block text-sm font-medium text-gray-700 mb-1">Procedure Type</label>
-                        <div class="input-group">
-                            <i data-lucide="syringe" class="icon w-5 h-5"></i>
-                            <select id="irProcedureType" class="p-3">
-                                <option value="">Select IR Procedure</option>
-                                <option value="ir-biopsy">Biopsy</option>
-                                <option value="ir-drainage">Drainage</option>
-                                <option value="ir-embolization">Embolization</option>
-                                <option value="ir-angiography">Angiography</option>
-                                <option value="ir-nephrostomy">Nephrostomy</option>
-                                <option value="ir-gastrostomy">Gastrostomy</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="irPreDiagnosis" class="block text-sm font-medium text-gray-700 mb-1">Pre-Procedure Diagnosis</label>
-                        <div class="input-group">
-                            <i data-lucide="clipboard-check" class="icon w-5 h-5"></i>
-                            <textarea id="irPreDiagnosis" rows="2" class="p-3" placeholder="e.g., Suspected malignancy..."></textarea>
-                        </div>
-                    </div>
-                     <div>
-                        <label for="irProcedurePerformed" class="block text-sm font-medium text-gray-700 mb-1">Procedure Performed</label>
-                        <div class="input-group">
-                            <i data-lucide="activity" class="icon w-5 h-5"></i>
-                            <textarea id="irProcedurePerformed" rows="2" class="p-3" placeholder="e.g., CT guided liver biopsy..."></textarea>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="irFindings" class="block text-sm font-medium text-gray-700 mb-1">Brief Findings</label>
-                        <div class="input-group">
-                            <i data-lucide="microscope" class="icon w-5 h-5"></i>
-                            <textarea id="irFindings" rows="3" class="p-3" placeholder="Enter brief findings..."></textarea>
-                        </div>
-                    </div>
-                     <div>
-                        <label for="irPostNotes" class="block text-sm font-medium text-gray-700 mb-1">Post-Procedure Notes</label>
-                        <div class="input-group">
-                            <i data-lucide="notebook-text" class="icon w-5 h-5"></i>
-                            <textarea id="irPostNotes" rows="3" class="p-3" placeholder="e.g., Patient tolerated well..."></textarea>
-                        </div>
-                    </div>
-                    <div class="flex space-x-4 pt-2">
-                        <button id="generateIrReport" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transition-all w-full flex items-center justify-center">
-                            <i data-lucide="sparkles" class="w-5 h-5 mr-2"></i> Generate Report
-                        </button>
-                        <button id="clearIrForm" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 rounded-xl transition-all w-full flex items-center justify-center">
-                            <i data-lucide="rotate-ccw" class="w-5 h-5 mr-2"></i> Clear
-                        </button>
-                    </div>
-                </div>`
-        };
-
-        // Function to display messages
-        function showMessage(message, type = 'success') {
-            const messageBox = document.getElementById('messageBox');
-            messageBox.textContent = message;
-            messageBox.style.backgroundColor = type === 'error' ? '#ef4444' : '#22c55e'; // Red-500 or Green-500
-            messageBox.classList.add('show');
-            setTimeout(() => {
-                messageBox.classList.remove('show');
-            }, 3000);
-        }
-
-        // Tab and Form Management
-        const tabContentContainer = document.getElementById('tab-content');
-
-        function activateTab(modality) {
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`tab-${modality}`).classList.add('active');
-            
-            tabContentContainer.innerHTML = formTemplates[modality];
-            lucide.createIcons();
-            
-            // Add event listeners to the newly created buttons
-            document.getElementById(`generate${modality.charAt(0).toUpperCase() + modality.slice(1)}Report`).addEventListener('click', () => generateReport(modality));
-            document.getElementById(`clear${modality.charAt(0).toUpperCase() + modality.slice(1)}Form`).addEventListener('click', () => clearForm(modality));
-
-            // Special handling for USG form
-            if (modality === 'usg') {
-                document.getElementById('usgScanType').addEventListener('change', handleUsgScanTypeChange);
-            }
-            
-            // Hide generated report on tab switch
-            document.getElementById('generatedReportOutput').classList.add('hidden');
-        }
-        
-        function handleUsgScanTypeChange() {
-            const scanType = document.getElementById('usgScanType').value;
-            const abdomenOptions = document.getElementById('usgAbdomenOptions');
-            if (scanType === 'usg-abdomen') {
-                abdomenOptions.classList.remove('hidden');
-            } else {
-                abdomenOptions.classList.add('hidden');
-            }
-        }
-
-        function clearForm(modality) {
-            activateTab(modality); // Reload the form to reset it
-            showMessage(`${modality.toUpperCase()} form cleared!`, 'success');
-        }
-
-        // Generate Report Logic
-        async function generateReport(modality) {
-            const apiKey = "AIzaSyDi7D6W2xjtReXVFkpSSXG_xTJBqRGswxs";
-
-            let patientName = document.getElementById('patientName').value.trim();
-            let radiologistName = document.getElementById('radiologistName').value.trim();
-            let rmcNumber = document.getElementById('rmcNumber').value.trim();
-            
-            let radiologistSignature = "";
-            if (radiologistName) {
-                radiologistSignature = radiologistName;
-                if (rmcNumber) {
-                    radiologistSignature += `, ${rmcNumber}`;
-                }
-            }
-
-            const generateButton = document.getElementById(`generate${modality.charAt(0).toUpperCase() + modality.slice(1)}Report`);
-            const originalButtonHTML = generateButton.innerHTML;
-            generateButton.disabled = true;
-            generateButton.innerHTML = '<div class="loader"></div>';
-
-            const generatedReportOutput = document.getElementById('generatedReportOutput');
-            const reportOutputDisplay = document.getElementById('reportOutputDisplay');
-
-            // --- Collect data from the current form ---
-            const studyType = document.getElementById(`${modality}StudyType`)?.value || '';
-            const clinicalHistory = document.getElementById(`${modality}ClinicalHistory`)?.value || '';
-            const briefFindings = document.getElementById(`${modality}Findings`)?.value || '';
-
-            if (!studyType || !clinicalHistory.trim() || !briefFindings.trim()) {
-                showMessage('Please fill all required fields in the form.', 'error');
-                generateButton.disabled = false;
-                generateButton.innerHTML = originalButtonHTML;
-                lucide.createIcons();
-                return;
-            }
-            
-            const patientNameHTML = patientName ? `<b class="report-patient-name">${patientName}</b><hr>` : '';
-            const signatureHTML = radiologistSignature ? `<p style="margin-top: 2rem;"><b>Sign of Radiologist:</b> ${radiologistSignature}</p>` : '';
-
-            let prompt = `Generate a detailed, professional radiology report. The output must be valid HTML.
-            Use a two-column grid for the main report sections (Technique, Findings).
-            For the 'Findings' section, break down observations by anatomical region or system.
-            The 'Impression' must be a concise, numbered list.
-            ---
-            Patient Name: ${patientName || 'Not Provided'}
-            Radiologist: ${radiologistSignature || 'Not Provided'}
-            Modality: ${modality.toUpperCase()}
-            Study Type: ${studyType.replace(/-/g, ' ')}
-            Clinical History: ${clinicalHistory}
-            Brief Findings: ${briefFindings}
-            ---
-            HTML Structure to follow:
-            ${patientNameHTML}
-            <div class="report-grid">
-                <div class="report-grid-label">Clinical History:</div>
-                <div>${clinicalHistory}</div>
-                <div class="report-grid-label">Technique:</div>
-                <div>[Detailed technique description based on modality and study type]</div>
+          </div>
+          <div>
+            <label for="conventionalFindings" class="label block mb-1">Brief Findings (AI will expand)</label>
+            <div class="input-wrap">
+              <i data-lucide="microscope" class="icon w-5 h-5"></i>
+              <textarea id="conventionalFindings" rows="5" class="textarea w-full px-3 py-3" placeholder="e.g., 'Consolidation right lower lobe'..."></textarea>
             </div>
-            <p class="report-section-heading">Findings:</p>
-            <div class="report-grid">
-                <div class="report-grid-label">[Anatomical Region 1]:</div>
-                <div>[Detailed findings for this region, expanding on the user's brief findings]</div>
-                <div class="report-grid-label">[Anatomical Region 2]:</div>
-                <div>[Findings for this region]</div>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-4 pt-2">
+            <button id="generateConventionalReport" class="btn-primary w-full py-3 flex items-center justify-center gap-2"><i data-lucide="sparkles" class="w-5 h-5"></i>Generate Report</button>
+            <button id="clearConventionalForm" class="btn-ghost w-full py-3 flex items-center justify-center gap-2"><i data-lucide="rotate-ccw" class="w-5 h-5"></i>Clear</button>
+          </div>
+        </div>`,
+      ir: `
+        <div id="content-ir" class="space-y-5">
+          <h3 class="text-lg font-bold">IR Procedure Details</h3>
+          <div>
+            <label for="irProcedureType" class="label block mb-1">Procedure Type</label>
+            <div class="input-wrap">
+              <i data-lucide="syringe" class="icon w-5 h-5"></i>
+              <select id="irProcedureType" class="select w-full px-3 py-3">
+                <option value="">Select IR Procedure</option>
+                <option value="ir-biopsy">Biopsy</option>
+                <option value="ir-drainage">Drainage</option>
+                <option value="ir-embolization">Embolization</option>
+                <option value="ir-angiography">Angiography</option>
+                <option value="ir-nephrostomy">Nephrostomy</option>
+                <option value="ir-gastrostomy">Gastrostomy</option>
+              </select>
             </div>
-            <p class="report-section-heading">Impression:</p>
-            <ol style="list-style-type: decimal; margin-left: 1.5rem; padding-left: 0.5rem;">
-                <li>[Numbered key finding 1]</li>
-                <li>[Numbered key finding 2, if applicable]</li>
-            </ol>
-            ${signatureHTML}`;
-            
-            try {
-                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+          </div>
+          <div>
+            <label for="irPreDiagnosis" class="label block mb-1">Pre-Procedure Diagnosis</label>
+            <div class="input-wrap">
+              <i data-lucide="clipboard-check" class="icon w-5 h-5"></i>
+              <textarea id="irPreDiagnosis" rows="2" class="textarea w-full px-3 py-3" placeholder="e.g., Suspected malignancy..."></textarea>
+            </div>
+          </div>
+          <div>
+            <label for="irProcedurePerformed" class="label block mb-1">Procedure Performed</label>
+            <div class="input-wrap">
+              <i data-lucide="activity" class="icon w-5 h-5"></i>
+              <textarea id="irProcedurePerformed" rows="2" class="textarea w-full px-3 py-3" placeholder="e.g., CT guided liver biopsy..."></textarea>
+            </div>
+          </div>
+          <div>
+            <label for="irFindings" class="label block mb-1">Brief Findings</label>
+            <div class="input-wrap">
+              <i data-lucide="microscope" class="icon w-5 h-5"></i>
+              <textarea id="irFindings" rows="3" class="textarea w-full px-3 py-3" placeholder="Enter brief findings..."></textarea>
+            </div>
+          </div>
+          <div>
+            <label for="irPostNotes" class="label block mb-1">Post-Procedure Notes</label>
+            <div class="input-wrap">
+              <i data-lucide="notebook-text" class="icon w-5 h-5"></i>
+              <textarea id="irPostNotes" rows="3" class="textarea w-full px-3 py-3" placeholder="e.g., Patient tolerated well..."></textarea>
+            </div>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-4 pt-2">
+            <button id="generateIrReport" class="btn-primary w-full py-3 flex items-center justify-center gap-2"><i data-lucide="sparkles" class="w-5 h-5"></i>Generate Report</button>
+            <button id="clearIrForm" class="btn-ghost w-full py-3 flex items-center justify-center gap-2"><i data-lucide="rotate-ccw" class="w-5 h-5"></i>Clear</button>
+          </div>
+        </div>`
+    };
 
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+    function showMessage(message, type = 'success') {
+      const messageBox = document.getElementById('messageBox');
+      messageBox.textContent = message;
+      messageBox.style.background = type === 'error' ? 'linear-gradient(135deg,#ef4444,#b91c1c)' : 'linear-gradient(135deg,#16a34a,#22c55e)';
+      messageBox.classList.add('show');
+      setTimeout(() => messageBox.classList.remove('show'), 3000);
+    }
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`API Error: ${errorData.error.message}`);
-                }
+    const tabContentContainer = document.getElementById('tab-content');
 
-                const result = await response.json();
-                const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+    function activateTab(modality) {
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`tab-${modality}`).classList.add('active');
+      tabContentContainer.innerHTML = formTemplates[modality];
+      lucide.createIcons();
+      document.getElementById(`generate${modality.charAt(0).toUpperCase() + modality.slice(1)}Report`).addEventListener('click', () => generateReport(modality));
+      document.getElementById(`clear${modality.charAt(0).toUpperCase() + modality.slice(1)}Form`).addEventListener('click', () => clearForm(modality));
+      if (modality === 'usg') document.getElementById('usgScanType').addEventListener('change', handleUsgScanTypeChange);
+      document.getElementById('generatedReportOutput').classList.add('hidden');
+    }
 
-                if (aiText) {
-                    reportOutputDisplay.innerHTML = aiText.trim();
-                    generatedReportOutput.classList.remove('hidden');
-                    showMessage('Report generated successfully!', 'success');
-                } else {
-                    throw new Error('No content received from API.');
-                }
-            } catch (error) {
-                console.error('Error generating report:', error);
-                showMessage(`Error: ${error.message}`, 'error');
-            } finally {
-                generateButton.disabled = false;
-                generateButton.innerHTML = originalButtonHTML;
-                lucide.createIcons();
-            }
-        }
-        
-        function exportToWord() {
-            const reportContent = document.getElementById('reportOutputDisplay').innerHTML;
-            if (!reportContent) {
-                showMessage('Please generate a report first.', 'error');
-                return;
-            }
-            
-            const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' "+
-            "xmlns:w='urn:schemas-microsoft-com:office:word' "+
-            "xmlns='http://www.w3.org/TR/REC-html40'>"+
-            "<head><meta charset='utf-8'><title>Export HTML to Word Document</title></head><body>";
-            const footer = "</body></html>";
-            const sourceHTML = header + reportContent + footer;
-            
-            const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
-            const fileDownload = document.createElement("a");
-            document.body.appendChild(fileDownload);
-            fileDownload.href = source;
-            fileDownload.download = 'radiology-report.doc';
-            fileDownload.click();
-            document.body.removeChild(fileDownload);
-        }
+    function handleUsgScanTypeChange() {
+      const scanType = document.getElementById('usgScanType').value;
+      const abdomenOptions = document.getElementById('usgAbdomenOptions');
+      scanType === 'usg-abdomen' ? abdomenOptions.classList.remove('hidden') : abdomenOptions.classList.add('hidden');
+    }
 
-        function copyReport() {
-            const reportContent = document.getElementById('reportOutputDisplay');
-            const range = document.createRange();
-            range.selectNode(reportContent);
-            window.getSelection().removeAllRanges();
-            window.getSelection().addRange(range);
-            try {
-                document.execCommand('copy');
-                showMessage('Report copied to clipboard!', 'success');
-            } catch (err) {
-                showMessage('Failed to copy report.', 'error');
-            }
-            window.getSelection().removeAllRanges();
-        }
-        
-        // Initial setup on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.tab-button').forEach(btn => {
-                btn.addEventListener('click', () => activateTab(btn.id.replace('tab-', '')));
-            });
+    function clearForm(modality) { activateTab(modality); showMessage(`${modality.toUpperCase()} form cleared!`); }
 
-            activateTab('ct'); // Activate the first tab by default
-            lucide.createIcons();
-            
-            // Add event listeners for the output buttons after they are potentially visible
-            document.getElementById('copyReportButton').addEventListener('click', copyReport);
-            document.getElementById('exportWordButton').addEventListener('click', exportToWord);
-        });
-    </script>
+    // Enthusiastic overlay & subtle background shift
+    const overlay = document.getElementById('generatingOverlay');
+    const genBar = document.getElementById('genBar');
+    const genStatus = document.getElementById('genStatus');
+    let genTimer;
+    function showGenerating() {
+      document.body.classList.add('generating');
+      overlay.style.display = 'flex';
+      genBar.style.width = '0%';
+      const steps = ['Analyzing clinical history','Inferring technique & protocol','Expanding structured findings','Prioritizing key impressions','Formatting for export'];
+      let i = 0; let p = 0; genStatus.textContent = steps[i];
+      clearInterval(genTimer);
+      genTimer = setInterval(() => {
+        p = Math.min(100, p + Math.random()*10 + 5);
+        genBar.style.width = p + '%';
+        if (p > (i+1)*20 && i < steps.length-1) { i++; genStatus.textContent = steps[i]; }
+        if (p >= 100) clearInterval(genTimer);
+      }, 250);
+    }
+    function hideGenerating(){ document.body.classList.remove('generating'); overlay.style.display='none'; clearInterval(genTimer); }
+
+    // Generate Report (same logic/IDs)
+    async function generateReport(modality) {
+      const apiKey = "AIzaSyDi7D6W2xjtReXVFkpSSXG_xTJBqRGswxs";
+      const patientName = document.getElementById('patientName').value.trim();
+      const radiologistName = document.getElementById('radiologistName').value.trim();
+      const rmcNumber = document.getElementById('rmcNumber').value.trim();
+      let radiologistSignature = radiologistName ? (rmcNumber ? `${radiologistName}, ${rmcNumber}` : radiologistName) : '';
+
+      const btn = document.getElementById(`generate${modality.charAt(0).toUpperCase() + modality.slice(1)}Report`);
+      const original = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="animate-pulse">Generating…</span>';
+      showGenerating();
+
+      const generatedReportOutput = document.getElementById('generatedReportOutput');
+      const reportOutputDisplay = document.getElementById('reportOutputDisplay');
+
+      const studyType = document.getElementById(`${modality}StudyType`)?.value || '';
+      const clinicalHistory = document.getElementById(`${modality}ClinicalHistory`)?.value || '';
+      const briefFindings = document.getElementById(`${modality}Findings`)?.value || '';
+
+      if (!studyType || !clinicalHistory.trim() || !briefFindings.trim()) {
+        showMessage('Please fill all required fields in the form.', 'error');
+        btn.disabled = false; btn.innerHTML = original; lucide.createIcons(); hideGenerating(); return;
+      }
+
+      const patientNameHTML = patientName ? `<b class="report-patient-name">${patientName}</b><hr>` : '';
+      const signatureHTML = radiologistSignature ? `<p style="margin-top: 2rem;"><b>Sign of Radiologist:</b> ${radiologistSignature}</p>` : '';
+
+      const prompt = `Generate a detailed, professional radiology report. The output must be valid HTML. Use a two-column grid for the main report sections (Technique, Findings). For the 'Findings' section, break down observations by anatomical region or system. The 'Impression' must be a concise, numbered list. --- Patient Name: ${patientName || 'Not Provided'} Radiologist: ${radiologistSignature || 'Not Provided'} Modality: ${modality.toUpperCase()} Study Type: ${studyType.replace(/-/g, ' ')} Clinical History: ${clinicalHistory} Brief Findings: ${briefFindings} --- HTML Structure to follow: ${patientNameHTML} <div class="report-grid"> <div class="report-grid-label">Clinical History:</div> <div>${clinicalHistory}</div> <div class="report-grid-label">Technique:</div> <div>[Detailed technique description based on modality and study type]</div> </div> <p class="report-section-heading">Findings:</p> <div class="report-grid"> <div class="report-grid-label">[Anatomical Region 1]:</div> <div>[Detailed findings for this region, expanding on the user's brief findings]</div> <div class="report-grid-label">[Anatomical Region 2]:</div> <div>[Findings for this region]</div> </div> <p class="report-section-heading">Impression:</p> <ol style="list-style-type: decimal; margin-left: 1.5rem; padding-left: 0.5rem;"> <li>[Numbered key finding 1]</li> <li>[Numbered key finding 2, if applicable]</li> </ol> ${signatureHTML}`;
+
+      try {
+        const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+        const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (!response.ok) { const errorData = await response.json(); throw new Error(`API Error: ${errorData.error.message}`); }
+        const result = await response.json();
+        const aiText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (aiText) { reportOutputDisplay.innerHTML = aiText.trim(); generatedReportOutput.classList.remove('hidden'); showMessage('Report generated successfully!', 'success'); }
+        else { throw new Error('No content received from API.'); }
+      } catch (error) {
+        console.error('Error generating report:', error);
+        showMessage(`Error: ${error.message}`, 'error');
+      } finally {
+        hideGenerating(); btn.disabled = false; btn.innerHTML = original; lucide.createIcons();
+      }
+    }
+
+    function exportToWord() {
+      const reportContent = document.getElementById('reportOutputDisplay').innerHTML;
+      if (!reportContent) { showMessage('Please generate a report first.', 'error'); return; }
+      const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' "+
+        "xmlns:w='urn:schemas-microsoft-com:office:word' "+
+        "xmlns='http://www.w3.org/TR/REC-html40'>"+
+        "<head><meta charset='utf-8'><title>Export HTML to Word Document</title></head><body>";
+      const footer = "</body></html>";
+      const sourceHTML = header + reportContent + footer;
+      const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
+      const a = document.createElement('a'); document.body.appendChild(a); a.href = source; a.download = 'radiology-report.doc'; a.click(); document.body.removeChild(a);
+    }
+
+    function copyReport() {
+      const reportContent = document.getElementById('reportOutputDisplay');
+      const range = document.createRange(); range.selectNode(reportContent); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      try { document.execCommand('copy'); showMessage('Report copied to clipboard!'); } catch { showMessage('Failed to copy report.', 'error'); }
+      sel.removeAllRanges();
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.tab-button').forEach(btn => btn.addEventListener('click', () => activateTab(btn.id.replace('tab-', ''))));
+      activateTab('ct');
+      lucide.createIcons();
+      document.getElementById('copyReportButton').addEventListener('click', copyReport);
+      document.getElementById('exportWordButton').addEventListener('click', exportToWord);
+    });
+  </script>
 </body>
 </html>
