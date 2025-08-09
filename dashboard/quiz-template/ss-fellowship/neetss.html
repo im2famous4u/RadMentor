@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>NEET SS Exam - RadMentor</title>
 
@@ -9,11 +9,29 @@
   <script src="https://unpkg.com/feather-icons"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
 
-  <!-- Shared quiz styles (includes rad-card + tabs) -->
-  <link rel="stylesheet" href="style.css" />
+  <!-- Shared quiz styles -->
+  <link rel="stylesheet" href="style.css"/>
+
+  <!-- Page-only tweaks for bigger, split toggle + gradient active border -->
+  <style>
+    /* Split the two toggle buttons to left/right */
+    .view-toggle.split { display:flex; align-items:center; gap:12px; margin:14px 0 18px; }
+    .view-toggle.split .spacer { flex:1; }
+    /* Slightly larger buttons */
+    .vt-btn { font-size: 1rem; padding: .72rem 1.15rem; border-radius: 999px; }
+    /* Gold→red gradient border when active */
+    .vt-btn.active {
+      position: relative;
+      border-color: transparent !important;
+      background:
+        linear-gradient(#fff, #fff) padding-box,
+        linear-gradient(90deg, #f59e0b, #ef4444) border-box;
+      box-shadow: 0 6px 18px rgba(245, 158, 11, .12);
+    }
+  </style>
 </head>
 <body>
-  <!-- Auth check screen (hidden by quiz.js when user is authenticated) -->
+  <!-- Auth check -->
   <div id="authCheckScreen" class="screen active">
     <div class="selection-container">
       <div class="loader"></div>
@@ -25,25 +43,24 @@
     <!-- Topic / Paper selection -->
     <div id="topic-screen" class="screen">
       <div class="selection-container">
-        <h1 style="color:var(--header-text-color); font-size:2.2rem; font-weight:800; margin:0 0 .35rem;">
+        <h1 style="color:var(--header-text-color); font-size:2.35rem; font-weight:800; margin:0 0 .35rem;">
           NEET SS Exam
         </h1>
-        <p style="color:var(--text-color-light); font-size:1.05rem; margin:.2rem 0 1rem;">
+        <p style="color:var(--text-color-light); font-size:1.06rem; margin:.2rem 0 1rem;">
           Choose a paper to start your practice or exam session.
         </p>
 
-        <!-- View toggle: Year vs System (quiz.js wires this up) -->
-        <div id="view-toggle" class="view-toggle" aria-label="Choose view">
+        <!-- Split toggle: Year-wise left, System-wise right -->
+        <div id="view-toggle" class="view-toggle split" aria-label="Choose view">
           <button id="btn-view-year"   type="button" class="vt-btn active">Year wise</button>
+          <span class="spacer"></span>
           <button id="btn-view-system" type="button" class="vt-btn">System wise</button>
         </div>
 
-        <!-- System tabs appear when “System wise” is active -->
-        <div id="system-tabs" class="view-tabs" role="tablist" aria-label="Systems">
-          <!-- quiz.js injects <button class="tab" data-tag="Abdomen">Abdomen</button> etc. -->
-        </div>
+        <!-- System tabs (hidden until System-wise is active; quiz.js fills these) -->
+        <div id="system-tabs" class="view-tabs" role="tablist" aria-label="Systems"></div>
 
-        <!-- Grid of year/system cards (quiz.js renders into this) -->
+        <!-- Grid for paper cards (Year-wise or filtered System-wise) -->
         <div id="paper-card-grid" class="paper-button-grid"></div>
       </div>
     </div>
@@ -56,7 +73,7 @@
           <div class="header-controls">
             <span class="mode-label" style="color:#0f172a;">Quiz</span>
             <label class="switch" title="Toggle Exam Mode">
-              <input type="checkbox" id="mode-toggle-checkbox" />
+              <input type="checkbox" id="mode-toggle-checkbox"/>
               <span class="slider"></span>
             </label>
             <span class="mode-label" style="color:#9ca3af;">Exam</span>
@@ -68,13 +85,11 @@
           </div>
         </div>
 
-        <!-- Pagination + Question area -->
         <div id="quiz-content" style="display:none;">
           <div class="quiz-pagination-header" id="quiz-pagination-header"></div>
           <div class="question-area" id="questions-display"></div>
         </div>
 
-        <!-- Loader shown while preparing quiz -->
         <div id="loading-container" class="selection-container" style="display:none; height:280px;">
           <div class="loader"></div>
           <p class="mt-4" id="loading-message" style="font-size:1.05rem; color:var(--text-color-light);">
@@ -84,15 +99,14 @@
       </div>
     </div>
 
-    <!-- Results screen -->
+    <!-- Results -->
     <div id="results-screen" class="screen">
       <div class="results-container">
-        <h2 id="results-heading" class="text-center" style="font-size:2rem; font-weight:800; margin: .25rem 0 1.25rem; color:var(--header-text-color);">
+        <h2 id="results-heading" class="text-center" style="font-size:2rem; font-weight:800; margin:.25rem 0 1.25rem; color:var(--header-text-color);">
           Test Results
         </h2>
 
         <div class="results-grid">
-          <!-- Score Summary -->
           <div class="stat-card">
             <h3>Score Summary</h3>
             <div class="flex flex-col items-center">
@@ -109,7 +123,6 @@
             </div>
           </div>
 
-          <!-- Chart -->
           <div class="stat-card">
             <h3>Performance Chart</h3>
             <div style="position:relative; height:200px; width:100%;">
@@ -117,7 +130,6 @@
             </div>
           </div>
 
-          <!-- Peer comparison -->
           <div class="stat-card">
             <h3>Peer Comparison</h3>
             <div id="peer-comparison-content">
@@ -126,7 +138,6 @@
             </div>
           </div>
 
-          <!-- AI Insights -->
           <div class="ai-insights-card" id="ai-insights-card">
             <div class="flex items-start gap-4">
               <div class="ai-avatar">🤖</div>
@@ -137,7 +148,6 @@
           </div>
         </div>
 
-        <!-- Actions -->
         <div class="results-actions">
           <button class="results-btn primary"  id="review-all-btn">Review All</button>
           <button class="results-btn danger"   id="review-incorrect-btn">Review Incorrect</button>
@@ -164,20 +174,17 @@
   <script type="module">
     import { initQuizApp } from './quiz.js';
 
-    // NEET SS – year-labelled papers (ids must match the sheet map below)
     const neetssConfig = {
       GOOGLE_AI_API_KEY: '',
 
-      // Map year IDs to Google Sheets
       ALL_QUIZ_DATA: {
         "neet-ss-2025": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "0" },
-        "neet-ss-2024": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "385825325" },
-        "neet-ss-2023": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "1302055466" },
-        "neet-ss-2022": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "472403230" },
-        "neet-ss-2021": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "1502909003" }
+        "neet-ss-2024": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "1098765432" },
+        "neet-ss-2023": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "2043187659" },
+        "neet-ss-2022": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "1234567890" },
+        "neet-ss-2021": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "987654321" }
       },
 
-      // Year tiles shown on topic screen
       PAPER_METADATA: [
         { id: "neet-ss-2025", name: "NEET SS 2025", examType: "NEET SS" },
         { id: "neet-ss-2024", name: "NEET SS 2024", examType: "NEET SS" },
@@ -186,13 +193,12 @@
         { id: "neet-ss-2021", name: "NEET SS 2021", examType: "NEET SS" }
       ],
 
-      // For the System-wise view (tabs) — tags must match your Sheet’s Tag column
+      /* These must match the “Tag” column values in your sheet */
       SYSTEM_TAGS: [
         "Anatomy","Abdomen","Chest","Physics","Recent advances","Neuroradiology",
         "MSK","OBG","Head and Neck","Genitourinary","Nuclear medicine","Paediatrics"
       ],
 
-      // Firebase (same project you already use)
       FIREBASE_CONFIG: {
         apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
         authDomain: "radiology-mcqs.firebaseapp.com",
@@ -204,7 +210,6 @@
       }
     };
 
-    // Start the app
     document.addEventListener('DOMContentLoaded', () => {
       initQuizApp(neetssConfig);
       if (window.feather) feather.replace();
