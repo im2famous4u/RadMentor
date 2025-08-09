@@ -1,135 +1,137 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Dashboard</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/feather-icons"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://unpkg.com/feather-icons"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
 </head>
 <body>
+  <div class="main-container">
 
-<div class="main-container">
-
-    <!-- Screen for selecting a quiz paper -->
+    <!-- Topic / Paper Selection -->
     <div id="topic-screen" class="screen active">
-        <div class="selection-container">
-            <h2 class="text-3xl font-bold mb-4">Select a Paper</h2>
-            <p class="text-lg text-gray-600">Choose from available exams to start a practice or exam session.</p>
-            <div id="paper-card-grid" class="paper-button-grid">
-                <!-- Paper buttons will be dynamically inserted here by the JS -->
-            </div>
+      <div class="selection-container rad-card">
+        <div class="rad-card-inner p-4">
+          <h2 class="text-3xl font-bold mb-2">Select a Paper</h2>
+          <p class="text-lg text-gray-600">Choose from available exams to start a practice or exam session.</p>
+          <div id="paper-card-grid" class="paper-button-grid mt-4">
+            <!-- Paper buttons injected by quiz.js -->
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- Main quiz screen -->
+    <!-- Main Quiz Screen -->
     <div id="quiz-screen" class="screen">
-        <div class="quiz-container">
-            <!-- Header for Quiz -->
-            <div class="quiz-header">
-                <h1 id="quiz-title">Quiz Title</h1>
-                <div class="header-controls">
-                    <span class="mode-label text-gray-800">Quiz</span>
-                    <label class="switch">
-                        <input type="checkbox" id="mode-toggle-checkbox">
-                        <span class="slider"></span>
-                    </label>
-                    <span class="mode-label text-gray-400">Exam</span>
-                    <span class="timer" id="timer">00:00</span>
-                    <button class="finish-btn-header" id="finish-quiz-btn">Finish</button>
-                    <button class="icon-btn" id="sound-toggle-btn"><i data-feather="volume-2"></i></button>
-                </div>
+      <div class="quiz-container rad-card">
+        <div class="rad-card-inner">
+          <!-- Header -->
+          <div class="quiz-header">
+            <h1 id="quiz-title">Quiz Title</h1>
+            <div class="header-controls">
+              <span class="mode-label text-gray-800">Quiz</span>
+              <label class="switch">
+                <input type="checkbox" id="mode-toggle-checkbox" />
+                <span class="slider"></span>
+              </label>
+              <span class="mode-label text-gray-400">Exam</span>
+              <span class="timer" id="timer">00:00</span>
+              <button class="finish-btn-header" id="finish-quiz-btn">Finish</button>
+              <button class="icon-btn" id="sound-toggle-btn" title="Toggle sounds"><i data-feather="volume-2"></i></button>
             </div>
+          </div>
 
-            <!-- Quiz content area (hidden while loading) -->
-            <div id="quiz-content" style="display: none;">
-                <div class="quiz-pagination-header" id="quiz-pagination-header">
-                    <!-- Pagination boxes for questions will be inserted here -->
-                </div>
-                <div class="question-area" id="questions-display">
-                    <!-- Questions and options will be displayed here -->
-                </div>
-            </div>
-            
-            <!-- Loading indicator -->
-            <div id="loading-container" class="selection-container" style="display:none; height: 300px;">
-                <div class="loader"></div>
-                <p class="mt-4 text-lg text-gray-600" id="loading-message">Loading...</p>
-            </div>
+          <!-- Quiz content (hidden while loading) -->
+          <div id="quiz-content" style="display:none;">
+            <div class="quiz-pagination-header" id="quiz-pagination-header"></div>
+            <div class="question-area" id="questions-display"></div>
+          </div>
+
+          <!-- Loading state -->
+          <div id="loading-container" class="selection-container" style="display:none; height: 300px;">
+            <div class="loader"></div>
+            <p class="mt-4 text-lg text-gray-600" id="loading-message">Loading...</p>
+          </div>
         </div>
+      </div>
     </div>
 
-    <!-- Results screen -->
+    <!-- Results Screen -->
     <div id="results-screen" class="screen">
-        <div class="results-container">
-            <h2 class="text-3xl font-bold mb-8 text-center" id="results-heading">Test Results</h2>
-            <div class="results-grid">
-                <!-- Score Summary Card -->
-                <div class="stat-card">
-                    <h3>Score Summary</h3>
-                    <div class="flex flex-col items-center">
-                        <p class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 my-4" id="final-score-percent">0%</p>
-                        <div class="w-full text-left">
-                            <p class="text-lg font-medium">Correct: <span id="correct-count" class="font-bold">0</span></p>
-                            <p class="text-lg font-medium">Incorrect: <span id="incorrect-count" class="font-bold">0</span></p>
-                            <p class="text-lg font-medium">Unattempted: <span id="unattempted-count" class="font-bold">0</span></p>
-                            <p class="text-lg font-medium">Time Taken: <span id="time-taken" class="font-bold">00:00</span></p>
-                        </div>
-                    </div>
+      <div class="results-container rad-card">
+        <div class="rad-card-inner p-4">
+          <h2 class="text-3xl font-bold mb-8 text-center" id="results-heading">Test Results</h2>
+          <div class="results-grid">
+            <!-- Score Summary Card -->
+            <div class="stat-card">
+              <h3>Score Summary</h3>
+              <div class="flex flex-col items-center">
+                <p class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 my-4" id="final-score-percent">0%</p>
+                <div class="w-full text-left">
+                  <p class="text-lg font-medium">Correct: <span id="correct-count" class="font-bold">0</span></p>
+                  <p class="text-lg font-medium">Incorrect: <span id="incorrect-count" class="font-bold">0</span></p>
+                  <p class="text-lg font-medium">Unattempted: <span id="unattempted-count" class="font-bold">0</span></p>
+                  <p class="text-lg font-medium">Time Taken: <span id="time-taken" class="font-bold">00:00</span></p>
                 </div>
-                
-                <!-- Performance Chart Card -->
-                <div class="stat-card">
-                    <h3>Performance Chart</h3>
-                    <div style="position: relative; height:200px; width:100%;">
-                        <canvas id="performanceChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Peer Comparison Card -->
-                <div class="stat-card">
-                    <h3>Peer Comparison</h3>
-                    <div id="peer-comparison-content">
-                        <p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p>
-                        <p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p>
-                    </div>
-                </div>
-
-                <!-- AI Insights Card (updated for interactivity) -->
-                <div class="ai-insights-card" id="ai-insights-card">
-                    <div class="flex items-start gap-4">
-                        <div class="ai-avatar">🤖</div>
-                        <div class="ai-message flex-grow">
-                            <p id="ai-insights-content">Generating feedback...</p>
-                        </div>
-                    </div>
-                </div>
+              </div>
             </div>
 
-            <!-- Action buttons -->
-            <div class="results-actions">
-                <button class="results-btn primary" id="review-all-btn">Review All</button>
-                <button class="results-btn danger" id="review-incorrect-btn">Review Incorrect</button>
-                <button class="results-btn warning" id="review-flagged-btn">Review Flagged</button>
-                <button class="results-btn secondary" id="back-to-topics-btn">Back to Papers</button>
+            <!-- Performance Chart Card -->
+            <div class="stat-card">
+              <h3>Performance Chart</h3>
+              <div style="position: relative; height:200px; width:100%;">
+                <canvas id="performanceChart"></canvas>
+              </div>
             </div>
+
+            <!-- Peer Comparison Card -->
+            <div class="stat-card">
+              <h3>Peer Comparison</h3>
+              <div id="peer-comparison-content">
+                <p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p>
+                <p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p>
+              </div>
+            </div>
+
+            <!-- AI Insights Card -->
+            <div class="ai-insights-card" id="ai-insights-card">
+              <div class="flex items-start gap-4">
+                <div class="ai-avatar">🤖</div>
+                <div class="ai-message flex-grow">
+                  <p id="ai-insights-content">Generating feedback...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="results-actions">
+            <button class="results-btn primary" id="review-all-btn">Review All</button>
+            <button class="results-btn danger" id="review-incorrect-btn">Review Incorrect</button>
+            <button class="results-btn warning" id="review-flagged-btn">Review Flagged</button>
+            <button class="results-btn secondary" id="back-to-topics-btn">Back to Papers</button>
+          </div>
         </div>
+      </div>
     </div>
-</div>
+  </div>
 
-<!-- Custom Modal to replace alerts and confirms -->
-<div id="custom-modal-backdrop" class="modal">
+  <!-- Custom Modal -->
+  <div id="custom-modal-backdrop" class="modal">
     <div class="modal-content">
-        <p id="modal-message">This is a custom modal message.</p>
-        <div id="modal-buttons" class="modal-buttons">
-            <!-- Buttons will be injected here -->
-        </div>
+      <p id="modal-message">This is a custom modal message.</p>
+      <div id="modal-buttons" class="modal-buttons"></div>
     </div>
-</div>
+  </div>
 
-<audio id="correct-sound" src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/assets/correct.mp3" preload="auto"></audio>
-<audio id="wrong-sound" src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/assets/wrong.mp3" preload="auto"></audio>
-<script type="module" src="quiz.js"></script>
+  <!-- Sounds -->
+  <audio id="correct-sound" src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/assets/correct.mp3" preload="auto"></audio>
+  <audio id="wrong-sound" src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/assets/wrong.mp3" preload="auto"></audio>
+
+  <script type="module" src="quiz.js"></script>
+  <script>window.addEventListener('DOMContentLoaded', ()=>{ if(window.feather){ feather.replace(); } });</script>
 </body>
 </html>
