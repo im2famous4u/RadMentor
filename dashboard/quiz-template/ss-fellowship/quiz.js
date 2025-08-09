@@ -108,22 +108,14 @@ export function initQuizApp(config){
   });
 
   // Paper click (delegated)
-  // Render paper cards (compact, symmetric)
-showScreen('topic-screen');
-if (dom.paperCardGrid) {
-  dom.paperCardGrid.innerHTML = QUIZ_CONFIG.PAPER_METADATA.map(p => `
-    <button class="paper-button rad-card" data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
-      <div class="rad-card-inner paper-inner">
-        <div class="paper-text">
-          <span class="paper-badge">${p.examType}</span>
-          <span class="paper-title">${p.name}</span>
-        </div>
-        <i data-feather="arrow-right" class="paper-arrow"></i>
-      </div>
-    </button>
-  `).join('');
-  if (window.feather) feather.replace();
-}
+  dom.paperCardGrid?.addEventListener('click', (e)=>{
+    const button = e.target.closest('.paper-button');
+    if(button){
+      const { id, name, examtype } = button.dataset;
+      currentPaper = { id, name, examType: examtype };
+      quizMode = 'practice';
+      checkResumeAndStart();
+    }
   });
 
   // Mode toggle with confirm
@@ -151,44 +143,30 @@ function showScreen(id){
   if(window.feather){ feather.replace(); }
 }
 
-function handleDirectLink(user) {
+function handleDirectLink(user){
   const params = new URLSearchParams(window.location.search);
   const directQuestionId = params.get('questionId');
-
-  if (user && directQuestionId) {
+  if(user && directQuestionId){
     const paperId = params.get('paperId');
-    const paper = QUIZ_CONFIG.PAPER_METADATA.find((p) => p.id === paperId);
-    if (paper) {
-      currentPaper = paper;
-      quizMode = 'practice';
-      startQuiz(null, directQuestionId);
-      return;
-    }
+    const paper = QUIZ_CONFIG.PAPER_METADATA.find(p=>p.id===paperId);
+    if(paper){ currentPaper = paper; quizMode='practice'; startQuiz(null, directQuestionId); return; }
   }
-
-  // Render compact, symmetric paper tiles safely
+  // Render paper cards (keeps .paper-button)
   showScreen('topic-screen');
-  if (!dom.paperCardGrid) return;
-
-  let html = '';
-  for (const p of QUIZ_CONFIG.PAPER_METADATA) {
-    html += (
-      '<button class="paper-button rad-card" ' +
-        'data-id="' + p.id + '" ' +
-        'data-name="' + p.name + '" ' +
-        'data-examtype="' + p.examType + '">' +
-        '<div class="rad-card-inner paper-inner">' +
-          '<div class="paper-text">' +
-            '<span class="paper-badge">' + p.examType + '</span>' +
-            '<span class="paper-title">' + p.name + '</span>' +
-          '</div>' +
-          '<i data-feather="arrow-right" class="paper-arrow"></i>' +
-        '</div>' +
-      '</button>'
-    );
+  if(dom.paperCardGrid){
+    dom.paperCardGrid.innerHTML = QUIZ_CONFIG.PAPER_METADATA
+      .map(p=>`
+        <button class="paper-button rad-card text-left" data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
+          <div class="rad-card-inner p-4 flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-500">${p.examType}</div>
+              <div class="text-lg font-semibold text-slate-900">${p.name}</div>
+            </div>
+            <i data-feather="arrow-right" class="w-5 h-5 text-slate-500"></i>
+          </div>
+        </button>`).join('');
+    if(window.feather){ feather.replace(); }
   }
-  dom.paperCardGrid.innerHTML = html;
-  if (window.feather) feather.replace();
 }
 
 function setQuizMode(newMode){
