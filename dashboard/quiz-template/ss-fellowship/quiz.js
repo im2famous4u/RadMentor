@@ -202,8 +202,11 @@ async function startQuiz(resumeState, directQuestionId=null){
   updateLoadingMessage('Session ready! Starting quiz...');
 
   dom.modeToggle.checked = quizMode === 'exam';
-  dom.modeLabelExam.classList.toggle('text-gray-800', quizMode==='exam');
-  dom.modeLabelQuiz.classList.toggle('text-gray-800', quizMode!=='exam');
+  const labels = document.querySelectorAll('.mode-label');
+const quizLbl  = labels[0];
+const examLbl  = labels[1];
+examLbl?.classList.toggle('text-gray-800',  quizMode === 'exam');
+quizLbl?.classList.toggle('text-gray-800',  quizMode !== 'exam');
 
   dom.loadingContainer.style.display = 'none';
   dom.quizContent.style.display = 'block';
