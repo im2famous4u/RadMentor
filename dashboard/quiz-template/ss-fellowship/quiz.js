@@ -283,17 +283,27 @@ async function renderSystemWise() {
     return;
   }
 
-  // tabs
+  // Build tabs (no auto-click, no auto-start)
   if (dom.systemTabs) {
     dom.systemTabs.innerHTML = tags.map(t => `<button class="system-tab" data-system="${t}">${t}</button>`).join('');
-    dom.paperCardGrid.innerHTML = ""; // nothing to click; direct start
 
+    // Friendly prompt in the grid area
+    dom.paperCardGrid.innerHTML = `
+      <div class="rad-card rad-green tilt">
+        <div class="rad-card-inner p-5">
+          <p class="text-sm font-semibold text-emerald-800 mb-1">System-wise</p>
+          <h3 class="text-lg font-bold text-slate-900">Select a system above to begin.</h3>
+          <p class="text-slate-600 mt-1">We’ll pull questions across all years for that system.</p>
+        </div>
+      </div>
+    `;
+
+    // Start only when the user clicks a tab
     dom.systemTabs.querySelectorAll('.system-tab').forEach(btn => {
       btn.addEventListener('click', async () => {
         dom.systemTabs.querySelectorAll('.system-tab').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
-        // Create a synthetic paper and START immediately
         const systemName = btn.dataset.system;
         currentPaper = {
           id: `system-${systemName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
@@ -306,12 +316,9 @@ async function renderSystemWise() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     });
-
-    // Auto-click the first tab for immediate experience
-    const firstTab = dom.systemTabs.querySelector('.system-tab');
-    if (firstTab) firstTab.click();
   }
 }
+
 
 // ---------------------
 // QUIZ FLOW
