@@ -1,4 +1,4 @@
-// quiz.js  — unified engine with Year-wise + System-wise support
+// quiz.js — unified engine with Year-wise + System-wise support
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
@@ -14,10 +14,10 @@ import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generat
 // ---------------------
 let QUIZ_CONFIG = {
   GOOGLE_AI_API_KEY: "",
-  ALL_QUIZ_DATA: {},        // { paperId: { sheetId, gid } }
-  PAPER_METADATA: [],       // [{id,name,examType}]
+  ALL_QUIZ_DATA: {},      // { paperId: { sheetId, gid } }
+  PAPER_METADATA: [],     // [{id,name,examType}]
   FIREBASE_CONFIG: {},
-  title: ""                 // optional, only for headers
+  title: ""               // optional, only for headers
 };
 
 // exam durations (seconds)
@@ -63,7 +63,7 @@ const dom = {
   paperCardGrid: document.getElementById('paper-card-grid'),
   yearBtn: document.getElementById('yearwise-btn'),
   systemBtn: document.getElementById('systemwise-btn'),
-  systemTabs: document.getElementById('system-tabs'),
+  systemTabs: document.getElementById('system-tabs'), // NEW: For system tabs
 
   // quiz screen
   quizScreen: document.getElementById('quiz-screen'),
@@ -174,14 +174,16 @@ export function initQuizApp(config) {
 let currentView = 'year'; // 'year' | 'system'
 function setView(v) {
   currentView = v;
-  updateViewPills();
-  if (v === 'year') renderYearWise();
-  else renderSystemWise();
-}
-function updateViewPills() {
-  // If your HTML has special pills, toggle styles here
-  dom.yearBtn?.classList.toggle('active-pill', currentView === 'year');
-  dom.systemBtn?.classList.toggle('active-pill', currentView === 'system');
+  dom.yearBtn?.classList.toggle('active', v === 'year');
+  dom.systemBtn?.classList.toggle('active', v === 'system');
+
+  if (v === 'year') {
+    dom.systemTabs?.classList.add('hidden');
+    renderYearWise();
+  } else {
+    dom.systemTabs?.classList.remove('hidden');
+    renderSystemWise();
+  }
 }
 
 async function handleDirectLinkOrShowTopics() {
@@ -198,28 +200,33 @@ async function handleDirectLinkOrShowTopics() {
     }
   }
   showScreen('topic-screen');
-  setView('year');
+  setView('year'); // Default to year-wise view
   safeFeather();
 }
 
-// YEAR-WISE
+// MODIFIED: This function now uses the stylish card from the latest designs
 function renderYearWise() {
   if (!dom.paperCardGrid) return;
-  const cards = QUIZ_CONFIG.PAPER_METADATA.map(p => `
-    <button class="paper-button rad-card" data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
-      <div class="rad-card-inner paper-inner">
-        <div class="paper-text">
-          <span class="paper-badge">${p.examType}</span>
-          <span class="paper-title">${p.name}</span>
+  dom.paperCardGrid.innerHTML = ''; // Clear previous view
+  
+  QUIZ_CONFIG.PAPER_METADATA.forEach(p => {
+    const cardHTML = `
+      <a href="#" class="topic-card rad-card tilt group focusable block" data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
+        <div class="rad-card-inner p-5 flex items-center justify-between">
+          <div>
+            <p class="text-sm font-semibold text-blue-800">${p.examType}</p>
+            <h3 class="text-xl font-bold text-slate-900 mt-1">${p.name}</h3>
+          </div>
+          <i data-feather="arrow-right-circle" class="w-7 h-7 text-slate-400 group-hover:text-blue-600 transition-colors"></i>
         </div>
-        <i data-feather="arrow-right" class="paper-arrow"></i>
-      </div>
-    </button>
-  `).join('');
-  dom.paperCardGrid.innerHTML = cards;
-  // click binding (delegation)
-  dom.paperCardGrid.querySelectorAll('.paper-button').forEach(btn => {
-    btn.addEventListener('click', () => {
+      </a>
+    `;
+    dom.paperCardGrid.innerHTML += cardHTML;
+  });
+
+  dom.paperCardGrid.querySelectorAll('.topic-card').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
       const { id, name, examtype } = btn.dataset;
       currentPaper = { id, name, examType: examtype };
       quizMode = 'practice';
@@ -229,96 +236,121 @@ function renderYearWise() {
   safeFeather();
 }
 
-// SYSTEM-WISE
-// Build tabs from all tags in all papers (cached).
-async function renderSystemWise() {
-  // Ensure cache for all papers (or at least tags)
-  await ensureAllPapersCached();
 
-  const tags = uniqueTagsFromCache();
-  if (!tags.length) {
-    dom.paperCardGrid.innerHTML = `
-      <div class="paper-button rad-card">
-        <div class="rad-card-inner paper-inner">
-          <div class="paper-text">
-            <span class="paper-badge">Systems</span>
-            <span class="paper-title">No tags found — check the "Tag" column in sheets</span>
-          </div>
-        </div>
-      </div>`;
+// --- NEW: System-Wise View Logic ---
+
+// Fetches all papers to ensure tags are available
+async function ensureAllPapersCached() {
+  dom.paperCardGrid.innerHTML = `<p class="text-slate-500 text-center col-span-full">Analyzing question banks, please wait...</p>`;
+  const promises = Object.entries(QUIZ_CONFIG.ALL_QUIZ_DATA).map(async ([paperId, { sheetId, gid }]) => {
+    if (paperCache.has(paperId)) return;
+    try {
+      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) return;
+      const csv = await response.text();
+      paperCache.set(paperId, parseCSVToQuestions(csv, paperId));
+    } catch (error) {
+      console.error(`Failed to fetch or parse paper: ${paperId}`, error);
+    }
+  });
+  await Promise.all(promises);
+}
+
+// Extracts all unique tags from the cached papers
+function uniqueTagsFromCache() {
+  const tagSet = new Set();
+  for (const questions of paperCache.values()) {
+    for (const q of questions) {
+      // Handle multiple tags in one cell, separated by commas
+      (q.tag || '').split(',').forEach(tag => {
+        const normalized = normalizeTag(tag);
+        if (normalized) tagSet.add(normalized);
+      });
+    }
+  }
+  return Array.from(tagSet).sort((a, b) => a.localeCompare(b));
+}
+
+// Renders the main system-wise view with tabs
+async function renderSystemWise() {
+  await ensureAllPapersCached();
+  const allTags = uniqueTagsFromCache();
+
+  if (!allTags.length) {
+    dom.paperCardGrid.innerHTML = `<p class="text-slate-500 text-center col-span-full">No system tags found. Check Column J in your sheets.</p>`;
     return;
   }
 
-  // build tabs
+  // Render the clickable tabs for each system
   if (dom.systemTabs) {
-    dom.systemTabs.innerHTML = tags.map(t =>
-      `<button class="view-tab" data-system="${t}">${t}</button>`).join('');
-    dom.systemTabs.querySelectorAll('.view-tab').forEach(btn => {
+    dom.systemTabs.innerHTML = allTags.map(tag =>
+      `<button class="system-tab" data-system="${tag}">${tag}</button>`
+    ).join('');
+
+    dom.systemTabs.querySelectorAll('.system-tab').forEach(btn => {
       btn.addEventListener('click', () => {
-        dom.systemTabs.querySelectorAll('.view-tab').forEach(x => x.classList.remove('active'));
+        dom.systemTabs.querySelectorAll('.system-tab').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         renderSystemCard(btn.dataset.system);
       });
     });
-    // activate first tab
-    dom.systemTabs.querySelector('.view-tab')?.classList.add('active');
-  }
 
-  renderSystemCard(tags[0]);
-  safeFeather();
+    // Activate the first tab by default
+    const firstTab = dom.systemTabs.querySelector('.system-tab');
+    if (firstTab) {
+      firstTab.classList.add('active');
+      renderSystemCard(firstTab.dataset.system);
+    }
+  } else {
+    // Fallback if no tab container: just render all cards
+    dom.paperCardGrid.innerHTML = allTags.map(tag => renderSystemCard(tag, false)).join('');
+    bindSystemCardClickers();
+  }
 }
 
-function renderSystemCard(systemName) {
-  if (!dom.paperCardGrid) return;
-  dom.paperCardGrid.innerHTML = `
-    <button class="paper-button rad-card" data-system="${systemName}">
-      <div class="rad-card-inner paper-inner">
-        <div class="paper-text">
-          <span class="paper-badge">System</span>
-          <span class="paper-title">${systemName} — All Years</span>
+// Renders a single "Start Quiz" card for a given system
+function renderSystemCard(systemName, renderToGrid = true) {
+  const cardHTML = `
+    <a href="#" class="topic-card rad-card tilt group focusable block" data-system="${systemName}">
+      <div class="rad-card-inner p-5 flex items-center justify-between">
+        <div>
+          <p class="text-sm font-semibold text-emerald-800">System Focus</p>
+          <h3 class="text-xl font-bold text-slate-900 mt-1">${systemName}</h3>
         </div>
-        <i data-feather="arrow-right" class="paper-arrow"></i>
+        <i data-feather="arrow-right-circle" class="w-7 h-7 text-slate-400 group-hover:text-emerald-600 transition-colors"></i>
       </div>
-    </button>`;
-  const btn = dom.paperCardGrid.querySelector('.paper-button');
-  btn.addEventListener('click', () => {
-    // synthetic paper for system session
-    currentPaper = {
-      id: `system-${systemName.toLowerCase().replace(/\s+/g, '-')}`,
-      name: `${systemName} — All Years`,
-      examType: QUIZ_CONFIG.title || 'NEET SS',
-      _system: systemName
-    };
-    quizMode = 'practice';
-    startQuiz(null);
+    </a>
+  `;
+  if (renderToGrid) {
+    dom.paperCardGrid.innerHTML = cardHTML;
+    bindSystemCardClickers();
+  }
+  return cardHTML; // for non-grid rendering
+}
+
+// Binds click events to system cards
+function bindSystemCardClickers() {
+  dom.paperCardGrid.querySelectorAll('.topic-card[data-system]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const systemName = btn.dataset.system;
+      // Create a "synthetic" paper for this system-based session
+      currentPaper = {
+        id: `system-${systemName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+        name: `${systemName} - All Years`,
+        examType: QUIZ_CONFIG.title || 'Practice',
+        _system: systemName // This special property triggers the system-wise logic
+      };
+      quizMode = 'practice';
+      startQuiz(null); // System-wise sessions don't support resume
+    });
   });
   safeFeather();
 }
 
-function uniqueTagsFromCache() {
-  const set = new Set();
-  for (const arr of paperCache.values()) {
-    for (const q of arr) {
-      const t = normalizeTag(q.tag);
-      if (t) set.add(t);
-    }
-  }
-  return Array.from(set).sort((a, b) => a.localeCompare(b));
-}
+// --- End of System-Wise Logic ---
 
-async function ensureAllPapersCached() {
-  const entries = Object.entries(QUIZ_CONFIG.ALL_QUIZ_DATA);
-  for (const [paperId, { sheetId, gid }] of entries) {
-    if (paperCache.has(paperId)) continue;
-    try {
-      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
-      const r = await fetch(url, { cache: 'no-store' });
-      if (!r.ok) continue;
-      const csv = await r.text();
-      paperCache.set(paperId, parseCSVToQuestions(csv, paperId));
-    } catch (_) { /* ignore */ }
-  }
-}
 
 // ---------------------
 // QUIZ FLOW
@@ -359,15 +391,14 @@ async function startQuiz(resumeState, directQuestionId = null) {
 
   try {
     updateLoading(`Preparing questions for: ${currentPaper.name}...`);
-    await loadWorkingQuestions();
+    await loadWorkingQuestions(); // This now handles system-wise logic
 
     if (!allQuestions.length)
-      throw new Error('No questions found. Check sharing settings, GID, and column order.');
+      throw new Error('No questions found for this selection.');
 
     updateLoading('Fetching your bookmarks...');
     await fetchUserBookmarks();
 
-    // header UI
     dom.modeToggle.checked = quizMode === 'exam';
     dom.quizTitle.textContent = currentPaper.name;
     dom.finishQuizBtn.style.display = 'block';
@@ -393,16 +424,22 @@ function updateLoading(msg) {
   if (dom.loadingMessage) dom.loadingMessage.textContent = msg;
 }
 
+// MODIFIED: This function now handles system-wise question aggregation
 async function loadWorkingQuestions() {
   allQuestions = [];
-  // System mode: merge all papers then filter by tag
+  
+  // System mode: merge all papers from cache then filter by tag
   if (currentPaper._system) {
-    await ensureAllPapersCached();
+    await ensureAllPapersCached(); // Make sure all data is available
     const pool = [];
-    for (const arr of paperCache.values()) pool.push(...arr);
-    const want = normalizeTag(currentPaper._system);
-    allQuestions = pool.filter(q => normalizeTag(q.tag) === want);
-    // reindex IDs to keep them contiguous for nav
+    for (const questions of paperCache.values()) {
+      pool.push(...questions);
+    }
+    const targetSystem = normalizeTag(currentPaper._system);
+    allQuestions = pool.filter(q => 
+      (q.tag || '').split(',').map(normalizeTag).includes(targetSystem)
+    );
+    // Re-index IDs to be contiguous for this specific session
     allQuestions = allQuestions.map((q, i) => ({ ...q, id: `${currentPaper.id}-${i}` }));
     return;
   }
@@ -435,9 +472,9 @@ function parseCSVToQuestions(csvText, paperIdForId) {
       question, a, b, c, d,
       correctAns, explanation,
       image, imageForExplTag,
-      tag,        // J
-      subtag,     // K
-      exam        // L
+      tag,       // J
+      subtag,    // K
+      exam       // L
     ] = parts;
 
     const options = [a, b, c, d].filter(Boolean);
@@ -452,7 +489,7 @@ function parseCSVToQuestions(csvText, paperIdForId) {
         correctIndex,
         explanation: explanation || 'N/A',
         image, imageForExplTag,
-        tag: (tag || '').trim(),
+        tag: tag || '', // Keep as raw string, will be split later
         subtag: (subtag || '').trim(),
         exam: (exam || '').trim()
       };
@@ -461,9 +498,16 @@ function parseCSVToQuestions(csvText, paperIdForId) {
   }).filter(Boolean);
 }
 
+
+// --- The rest of the file (RENDER QUESTION, SOUND, FLAGS, TIMER, RESULTS, REVIEW) ---
+// --- remains the same as your original and does not need to be changed. ---
+// --- Paste this code over your entire file. ---
+
+
 // ---------------------
 // RENDER QUESTION
 // ---------------------
+let currentQuestionIndex = 0; // NEW: Added definition for linter
 function createQuestionNav() {
   dom.paginationHeader.innerHTML =
     allQuestions.map((_, i) => `<div class="page-box" data-index="${i}">${i + 1}</div>`).join('');
