@@ -108,14 +108,22 @@ export function initQuizApp(config){
   });
 
   // Paper click (delegated)
-  dom.paperCardGrid?.addEventListener('click', (e)=>{
-    const button = e.target.closest('.paper-button');
-    if(button){
-      const { id, name, examtype } = button.dataset;
-      currentPaper = { id, name, examType: examtype };
-      quizMode = 'practice';
-      checkResumeAndStart();
-    }
+  // Render paper cards (compact, symmetric)
+showScreen('topic-screen');
+if (dom.paperCardGrid) {
+  dom.paperCardGrid.innerHTML = QUIZ_CONFIG.PAPER_METADATA.map(p => `
+    <button class="paper-button rad-card" data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
+      <div class="rad-card-inner paper-inner">
+        <div class="paper-text">
+          <span class="paper-badge">${p.examType}</span>
+          <span class="paper-title">${p.name}</span>
+        </div>
+        <i data-feather="arrow-right" class="paper-arrow"></i>
+      </div>
+    </button>
+  `).join('');
+  if (window.feather) feather.replace();
+}
   });
 
   // Mode toggle with confirm
