@@ -1,6 +1,11 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-import { getFirestore, doc, runTransaction, collection, getDocs, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+import {
+  // NOTE: we import initializeFirestore to force long-polling (ad-blocker safe)
+  getFirestore,
+  initializeFirestore,
+  doc, runTransaction, collection, getDocs, setDoc, deleteDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 // Google Generative AI SDK
 import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai/+esm";
@@ -25,7 +30,8 @@ const EXAM_DURATIONS = {
 // Aggregates config (histogram-based, scalable)
 const HISTOGRAM_BUCKETS = 10; // 0–10, 10–20, ... 90–100
 const initHistogram = () => Array.from({ length: HISTOGRAM_BUCKETS }, () => 0);
-const getBucketIndex = (scorePercent) => Math.min(HISTOGRAM_BUCKETS - 1, Math.max(0, Math.floor(scorePercent / (100 / HISTOGRAM_BUCKETS))));
+const getBucketIndex = (scorePercent) =>
+  Math.min(HISTOGRAM_BUCKETS - 1, Math.max(0, Math.floor(scorePercent / (100 / HISTOGRAM_BUCKETS)))) ;
 
 // ---------------------
 // APP STATE
@@ -58,9 +64,7 @@ const dom = {
   modalBackdrop: document.getElementById('custom-modal-backdrop'),
   modalMessage: document.getElementById('modal-message'),
   modalButtons: document.getElementById('modal-buttons'),
-  loadingMessage: document.getElementById('loading-message'),
-  modeLabelQuiz: document.querySelector('.mode-label:first-of-type'),
-  modeLabelExam: document.querySelector('.mode-label:last-of-type')
+  loadingMessage: document.getElementById('loading-message')
 };
 
 // ---------------------
@@ -86,9 +90,11 @@ const showCustomAlert = (msg, ok=()=>{}) => showCustomModal(msg,[{text:'OK',isPr
 // ---------------------
 export function initQuizApp(config){
   QUIZ_CONFIG = { ...QUIZ_CONFIG, ...config };
+
   const app = initializeApp(QUIZ_CONFIG.FIREBASE_CONFIG);
+  // Force long-polling to avoid WebChannel being blocked by ad-blockers / proxies
+  db = initializeFirestore(app, { experimentalForceLongPolling: true });
   auth = getAuth(app);
-  db = getFirestore(app);
 
   onAuthStateChanged(auth, (user) => {
     const authCheckScreen = document.getElementById('authCheckScreen');
@@ -145,19 +151,20 @@ function handleDirectLink(user){
     const paper = QUIZ_CONFIG.PAPER_METADATA.find(p=>p.id===paperId);
     if(paper){ currentPaper = paper; quizMode='practice'; startQuiz(null, directQuestionId); return; }
   }
-  // Render paper cards in the enhanced style (keeps .paper-button for CSS/JS)
+  // Render paper cards (keeps .paper-button)
   showScreen('topic-screen');
   if(dom.paperCardGrid){
-    dom.paperCardGrid.innerHTML = QUIZ_CONFIG.PAPER_METADATA.map(p=>`
-      <button class="paper-button rad-card text-left" data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
-        <div class="rad-card-inner p-4 flex items-center justify-between">
-          <div>
-            <div class="text-xs text-slate-500">${p.examType}</div>
-            <div class="text-lg font-semibold text-slate-900">${p.name}</div>
+    dom.paperCardGrid.innerHTML = QUIZ_CONFIG.PAPER_METADATA
+      .map(p=>`
+        <button class="paper-button rad-card text-left" data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
+          <div class="rad-card-inner p-4 flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-500">${p.examType}</div>
+              <div class="text-lg font-semibold text-slate-900">${p.name}</div>
+            </div>
+            <i data-feather="arrow-right" class="w-5 h-5 text-slate-500"></i>
           </div>
-          <i data-feather="arrow-right" class="w-5 h-5 text-slate-500"></i>
-        </div>
-      </button>`).join('');
+        </button>`).join('');
     if(window.feather){ feather.replace(); }
   }
 }
@@ -182,7 +189,7 @@ function checkResumeAndStart(){
 // ---------------------
 // QUIZ FLOW
 // ---------------------
-async function startQuiz(resumeState, directQuestionId=null){
+async function startQuiz(resumeState, directQuestionId = null) {
   isReviewing = false; reviewFilter = [];
   userAnswers = resumeState?.answers || {};
   currentQuestionIndex = resumeState?.index || 0;
@@ -195,86 +202,104 @@ async function startQuiz(resumeState, directQuestionId=null){
 
   initializeSound();
 
-  updateLoadingMessage(`Finding data for paper: ${currentPaper.name}...`);
-  await fetchQuizData();
-  updateLoadingMessage('Fetching your bookmarks...');
-  await fetchUserBookmarks();
-  showLoader("Session ready! Starting quiz...");
+  try {
+    updateLoadingMessage(`Finding data for paper: ${currentPaper.name}...`);
+    await fetchQuizData();
 
-fetchQuestions(selectedPaperId)
-    .then(data => {
-        if (!data || data.length === 0) {
-            hideLoader();
-            showModal("No questions found for this paper.");
-            return;
-        }
-        hideLoader();
-        // continue existing quiz rendering code here
-        renderQuestions(data);
-    })
-    .catch(err => {
-        console.error("Error loading quiz:", err);
-        hideLoader();
-        showModal("Error loading quiz data. Please try again later.");
+    if (!allQuestions.length) {
+      throw new Error('No questions found in the sheet. Check sharing settings, gid, and column order.');
+    }
+
+    updateLoadingMessage('Fetching your bookmarks...');
+    await fetchUserBookmarks(); // continue even if it fails
+
+    // UI ready
+    dom.modeToggle.checked = quizMode === 'exam';
+    const labels = document.querySelectorAll('.mode-label');
+    const quizLbl = labels[0];
+    const examLbl = labels[1];
+    examLbl?.classList.toggle('text-gray-800', quizMode === 'exam');
+    quizLbl?.classList.toggle('text-gray-800', quizMode !== 'exam');
+
+    dom.quizTitle.textContent = `${currentPaper.name}`;
+    dom.finishQuizBtn.textContent = 'Finish';
+    dom.finishQuizBtn.style.display = 'block';
+
+    createQuestionNav();
+
+    if (directQuestionId) {
+      const i = allQuestions.findIndex(q => q.id === directQuestionId);
+      showQuestion(i >= 0 ? i : 0);
+    } else {
+      showQuestion(currentQuestionIndex);
+    }
+    startTimer();
+  } catch (err) {
+    console.error('Start quiz failed:', err);
+    showCustomAlert(err?.message || 'Error preparing the session. Please try again.', () => {
+      showScreen('topic-screen');
     });
-
-  dom.modeToggle.checked = quizMode === 'exam';
-  const labels = document.querySelectorAll('.mode-label');
-const quizLbl  = labels[0];
-const examLbl  = labels[1];
-examLbl?.classList.toggle('text-gray-800',  quizMode === 'exam');
-quizLbl?.classList.toggle('text-gray-800',  quizMode !== 'exam');
-
-  dom.loadingContainer.style.display = 'none';
+    return;
+  } finally {
+    dom.loadingContainer.style.display = 'none'; // ensure loader hides
+  }
   dom.quizContent.style.display = 'block';
-  dom.quizTitle.textContent = `${currentPaper.name}`;
-  dom.finishQuizBtn.textContent = 'Finish';
-  dom.finishQuizBtn.style.display = 'block';
-  createQuestionNav();
-
-  if(directQuestionId){
-    const i = allQuestions.findIndex(q=>q.id===directQuestionId);
-    showQuestion(i>=0?i:0);
-  }else{ showQuestion(currentQuestionIndex); }
-  startTimer();
 }
 
 function updateLoadingMessage(msg){ dom.loadingMessage.textContent = msg; }
 
 async function fetchQuizData(){
   const paperData = QUIZ_CONFIG.ALL_QUIZ_DATA[currentPaper.id];
-  const url = `https://docs.google.com/spreadsheets/d/${paperData.sheetId}/gviz/tq?tqx=out:csv&gid=${paperData.gid}`;
-  try{
-    const r = await fetch(url);
-    const csv = await r.text();
-    allQuestions = parseCSVToQuestions(csv);
-  }catch(err){
-    console.error('Fetch Error:', err);
-    showCustomAlert('Error loading quiz data. Please try again.', ()=> showScreen('topic-screen'));
+  if (!paperData?.sheetId || !paperData?.gid) {
+    throw new Error('Missing sheet configuration for this paper.');
   }
+  const url = `https://docs.google.com/spreadsheets/d/${paperData.sheetId}/gviz/tq?tqx=out:csv&gid=${paperData.gid}`;
+  let csvText = '';
+  try{
+    const r = await fetch(url, { cache: 'no-store' });
+    if(!r.ok) throw new Error(`Sheet fetch failed (${r.status}).`);
+    csvText = await r.text();
+  }catch(err){
+    throw new Error('Could not load the question sheet. Check sharing settings and network.');
+  }
+  const parsed = parseCSVToQuestions(csvText);
+  allQuestions = Array.isArray(parsed) ? parsed : [];
 }
 
 function parseCSVToQuestions(csv){
   const lines = csv.trim().split('\n').slice(1);
   return lines.map((line, idx)=>{
-    const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p=>p.trim().replace(/^"|"$/g,''));
+    const parts = line
+      .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+      .map(p=>p.trim().replace(/^"|"$/g,''));
     const [question, a,b,c,d, correctAns, explanation, image, imageForExplTag, subtag, exam] = parts;
     const options = [a,b,c,d].filter(Boolean);
     const letterMap = { a:0, b:1, c:2, d:3 };
     const correctIndex = letterMap[(correctAns||'').trim().toLowerCase()];
     if(question && correctIndex!==undefined && options.length>0){
-      return { id:`${currentPaper.id}-${idx}`, text:question, options, correctIndex,
-        explanation: explanation || 'N/A', image, imageForExplTag, subtag, exam };
+      return {
+        id:`${currentPaper.id}-${idx}`,
+        text:question,
+        options,
+        correctIndex,
+        explanation: explanation || 'N/A',
+        image, imageForExplTag, subtag, exam
+      };
     }
     return null;
   }).filter(Boolean);
 }
 
-async function fetchUserBookmarks(){
-  if(!currentUser) return;
-  const ref = collection(db, 'users', currentUser.uid, 'bookmarks');
-  const snap = await getDocs(ref);
-  userBookmarks = new Set(snap.docs.map(d=>d.id));
+async function fetchUserBookmarks() {
+  if (!currentUser) { userBookmarks = new Set(); return; }
+  try {
+    const bookmarksRef = collection(db, "users", currentUser.uid, "bookmarks");
+    const snapshot = await getDocs(bookmarksRef);
+    userBookmarks = new Set(snapshot.docs.map(d => d.id));
+  } catch (e) {
+    console.warn('Bookmarks read failed (continuing without them):', e);
+    userBookmarks = new Set();
+  }
 }
 
 function showQuestion(index){
@@ -305,7 +330,7 @@ function showQuestion(index){
         if(quizMode==='exam' && i===userAnswers[index]) cls += ' selected';
         if(shouldDisable && i===q.correctIndex) cls += ' correct';
         else if(shouldDisable && i===userAnswers[index]) cls += ' incorrect';
-        return `<button class=\"${cls}\" data-index=\"${i}\" ${shouldDisable?'disabled':''}>${opt}</button>`;
+        return `<button class="${cls}" data-index="${i}" ${shouldDisable?'disabled':''}>${opt}</button>`;
       }).join('')}
     </div>`;
 
@@ -400,14 +425,23 @@ async function toggleBookmark(questionId, questionText){
   if(!currentUser) return;
   const ref = doc(db, 'users', currentUser.uid, 'bookmarks', questionId);
   const btn = dom.questionsDisplay.querySelector('.bookmark-btn');
-  if(userBookmarks.has(questionId)){
-    await deleteDoc(ref);
-    userBookmarks.delete(questionId);
-    btn?.classList.remove('bookmarked');
-  }else{
-    await setDoc(ref, { questionText, topic: `${currentPaper.name}`, timestamp: serverTimestamp(), linkToQuestion: `${window.location.pathname}?paperId=${currentPaper.id}&questionId=${questionId}` });
-    userBookmarks.add(questionId);
-    btn?.classList.add('bookmarked');
+  try{
+    if(userBookmarks.has(questionId)){
+      await deleteDoc(ref);
+      userBookmarks.delete(questionId);
+      btn?.classList.remove('bookmarked');
+    }else{
+      await setDoc(ref, {
+        questionText,
+        topic: `${currentPaper.name}`,
+        timestamp: serverTimestamp(),
+        linkToQuestion: `${window.location.pathname}?paperId=${currentPaper.id}&questionId=${questionId}`
+      });
+      userBookmarks.add(questionId);
+      btn?.classList.add('bookmarked');
+    }
+  }catch(e){
+    console.warn('Bookmark toggle failed:', e);
   }
 }
 
@@ -454,7 +488,8 @@ async function finishExam(){
     await getAIInsights(incorrectQs);
   }else{
     document.getElementById('peer-comparison-content').innerHTML = '<p>Peer comparison is only available in Exam Mode.</p>';
-    document.getElementById('ai-insights-card').innerHTML = `<div class=\"flex items-start gap-4\"><div class=\"ai-avatar\">🤖</div><div class=\"ai-message flex-grow\"><p>AI Insights are only available for Exam Mode results.</p></div></div>`;
+    document.getElementById('ai-insights-card').innerHTML =
+      `<div class="flex items-start gap-4"><div class="ai-avatar">🤖</div><div class="ai-message flex-grow"><p>AI Insights are only available for Exam Mode results.</p></div></div>`;
   }
 
   document.getElementById('back-to-topics-btn').addEventListener('click', ()=>{ showScreen('topic-screen'); handleDirectLink(currentUser); });
@@ -467,7 +502,6 @@ async function finishExam(){
 async function saveUserAttempt(scorePercent){
   try{
     const attemptsCol = collection(db, 'users', currentUser.uid, 'attempts');
-    // Auto-ID by creating a doc() without id then setDoc
     const attemptRef = doc(attemptsCol);
     await setDoc(attemptRef, {
       paperId: currentPaper.id,
@@ -524,10 +558,10 @@ async function getAIInsights(incorrectQs){
   try{
     const genAI = new GoogleGenerativeAI(QUIZ_CONFIG.GOOGLE_AI_API_KEY);
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const prompt = `A user answered these radiology exam questions incorrectly. Identify 2-3 core concepts they are struggling with and give concise, actionable study advice. Questions::\n${incorrectQs.map(q=>`- ${q.text}`).join('\n')}`;
+    const prompt = `A user answered these radiology exam questions incorrectly. Identify 2-3 core concepts they are struggling with and give concise, actionable study advice. Questions:\\n${incorrectQs.map(q=>`- ${q.text}`).join('\\n')}`;
     const result = await model.generateContent(prompt);
     const text = result?.response?.text?.();
-    if(text){ insightsDiv.innerHTML = text.replace(/\n/g,'<br>').replace(/\*/g,''); }
+    if(text){ insightsDiv.innerHTML = text.replace(/\\n/g,'<br>').replace(/\\*/g,''); }
     else{ insightsDiv.innerHTML = '<p>Could not retrieve AI insights at this time.</p>'; }
   }catch(err){
     console.error('AI Error:', err);
@@ -558,7 +592,11 @@ function startTimer(){
     }, 1000);
   }else{
     let start = Date.now() - (elapsedSeconds*1000);
-    quizInterval = setInterval(()=>{ elapsedSeconds = Math.floor((Date.now()-start)/1000); dom.timerEl.textContent = formatTime(elapsedSeconds); saveState(); }, 1000);
+    quizInterval = setInterval(()=>{
+      elapsedSeconds = Math.floor((Date.now()-start)/1000);
+      dom.timerEl.textContent = formatTime(elapsedSeconds);
+      saveState();
+    }, 1000);
   }
 }
 
