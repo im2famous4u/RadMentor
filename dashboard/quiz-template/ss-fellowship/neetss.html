@@ -1,223 +1,155 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>NEET SS Exam - RadMentor</title>
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Icons / Charts -->
+  <!-- Feather Icons + Chart.js -->
   <script src="https://unpkg.com/feather-icons"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
 
-  <!-- Shared quiz styles (buttons, pagination, results, modal, etc.) -->
-  <link rel="stylesheet" href="style.css"/>
-
-  <style>
-    :root{
-      --rad-blue-start:#1e40af;
-      --rad-blue-end:#3b82f6;
-    }
-    body{
-      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
-      background:
-        radial-gradient(1200px 400px at 10% -10%, rgba(59,130,246,.12), transparent 60%),
-        radial-gradient(1200px 400px at 90% -10%, rgba(16,185,129,.12), transparent 60%),
-        linear-gradient(180deg,#f8fafc 0%,#ffffff 60%);
-    }
-    .rad-grid:before{
-      content:""; position:fixed; inset:0; pointer-events:none;
-      background-image:
-        linear-gradient(rgba(15,23,42,0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(15,23,42,0.05) 1px, transparent 1px);
-      background-size:24px 24px, 24px 24px;
-      mask-image: radial-gradient(closest-side, rgba(0,0,0,.35), transparent 70%);
-    }
-    .rad-noise:after{
-      content:""; position:fixed; inset:0; pointer-events:none; opacity:.035;
-      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" stitchTiles="stitch"/></filter><rect width="120" height="120" filter="url(%23n)" opacity="0.3"/></svg>');
-      mix-blend-mode:multiply;
-    }
-    .rad-underline{ position:relative; display:inline-block; }
-    .rad-underline:after{
-      content:""; position:absolute; left:0; right:0; bottom:-6px; height:3px; border-radius:9999px;
-      background:linear-gradient(90deg,var(--rad-blue-start),var(--rad-blue-end));
-      opacity:.65; filter:blur(.2px); animation:sweep 3.2s linear infinite; background-size:200% 100%;
-    }
-    @keyframes sweep{ 0%{background-position:0% 0} 100%{background-position:200% 0} }
-
-    /* Glass gradient frame */
-    .rad-card{ position:relative; border-radius:1rem; padding:2px; isolation:isolate; transition:transform .35s, box-shadow .35s; }
-    .rad-card:before{
-      content:""; position:absolute; inset:0; border-radius:inherit; padding:2px;
-      background:linear-gradient(120deg, rgba(30,64,175,.9), rgba(59,130,246,.7));
-      -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      -webkit-mask-composite:xor; mask-composite:exclude; opacity:.9; transition:opacity .35s;
-    }
-    .rad-card-inner{
-      border-radius:calc(1rem - 2px); background:rgba(255,255,255,.92); backdrop-filter:blur(6px);
-      box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 0 0 1px rgba(148,163,184,.15);
-    }
-    .rad-card:hover{ transform:translateY(-6px) scale(1.01); box-shadow:0 22px 50px -18px rgba(15,23,42,.25); }
-    .rad-card:hover:before{ opacity:1; }
-    @media (prefers-reduced-motion:no-preference){ .tilt:hover{ transform:perspective(900px) rotateX(2deg) rotateY(-2deg) translateY(-4px); } }
-
-    /* Compact paper tiles (matches quiz.js structure) */
-    .paper-button.rad-card{ padding:0; border-radius:12px; }
-    .paper-inner{
-      border-radius:10px; min-height:96px; padding:14px 16px;
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-      transition:transform .2s, box-shadow .2s, background .2s;
-    }
-    .paper-inner:hover{ transform:translateY(-2px); background:#fff; }
-    .paper-text{ display:flex; align-items:center; gap:10px; min-width:0; }
-    .paper-badge{
-      font-size:10.5px; font-weight:600; letter-spacing:.02em;
-      color:#0f3a8a; background:#e8f0ff; border:1px solid #d6e3ff;
-      padding:3px 8px; border-radius:9999px; white-space:nowrap; flex:0 0 auto;
-    }
-    .paper-title{
-      font-size:15px; font-weight:800; color:#0f172a;
-      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-    }
-    .paper-arrow{ width:18px; height:18px; color:#64748b; opacity:.85; flex:0 0 auto; }
-
-    /* Grid density */
-    #paper-card-grid{ margin-top:2rem; display:grid; gap:14px; grid-template-columns:repeat(1,minmax(0,1fr)); }
-    @media (min-width:640px){ #paper-card-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
-    @media (min-width:1280px){ #paper-card-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
-  </style>
+  <!-- Shared quiz styles (includes rad-card + tabs) -->
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body class="antialiased text-slate-700 rad-grid rad-noise">
-
-  <!-- Auth check (managed by quiz.js) -->
+<body>
+  <!-- Auth check screen (hidden by quiz.js when user is authenticated) -->
   <div id="authCheckScreen" class="screen active">
-    <div class="max-w-6xl mx-auto px-6 pt-10">
-      <div class="rad-card">
-        <div class="rad-card-inner p-6 text-center">
-          <div class="loader"></div>
-          <p class="mt-4 text-lg text-gray-600">Verifying access...</p>
-        </div>
-      </div>
+    <div class="selection-container">
+      <div class="loader"></div>
+      <p class="mt-4" style="font-size:1.05rem; color:var(--text-color-light);">Verifying access…</p>
     </div>
   </div>
 
-  <!-- Topic Selection -->
-  <div id="topic-screen" class="screen">
-    <main class="relative max-w-6xl mx-auto px-6 py-10">
-      <section class="text-center">
-        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">
-          NEET SS <span class="rad-underline">Exam Papers</span>
+  <div class="main-container">
+    <!-- Topic / Paper selection -->
+    <div id="topic-screen" class="screen">
+      <div class="selection-container">
+        <h1 style="color:var(--header-text-color); font-size:2.2rem; font-weight:800; margin:0 0 .35rem;">
+          NEET SS Exam
         </h1>
-        <p class="mt-4 max-w-2xl mx-auto text-slate-600">
-          Choose a paper to start your practice or exam session. Each paper is curated from previous years for high-yield prep.
+        <p style="color:var(--text-color-light); font-size:1.05rem; margin:.2rem 0 1rem;">
+          Choose a paper to start your practice or exam session.
         </p>
-      </section>
 
-      <!-- Cards injected by quiz.js -->
-      <section id="paper-card-grid"></section>
-    </main>
-  </div>
+        <!-- View toggle: Year vs System (quiz.js wires this up) -->
+        <div id="view-toggle" class="view-toggle" aria-label="Choose view">
+          <button id="btn-view-year"   type="button" class="vt-btn active">Year wise</button>
+          <button id="btn-view-system" type="button" class="vt-btn">System wise</button>
+        </div>
 
-  <!-- Quiz Screen (structure required by quiz.js) -->
-  <div id="quiz-screen" class="screen">
-    <div class="max-w-6xl mx-auto px-6 pb-10">
-      <div class="rad-card">
-        <div class="rad-card-inner">
-          <div class="quiz-header">
-            <h1 id="quiz-title">NEET SS Paper</h1>
-            <div class="header-controls">
-              <span class="mode-label text-gray-800">Quiz</span>
-              <label class="switch">
-                <input type="checkbox" id="mode-toggle-checkbox"/>
-                <span class="slider"></span>
-              </label>
-              <span class="mode-label text-gray-400">Exam</span>
-              <span class="timer" id="timer">00:00</span>
-              <button class="finish-btn-header" id="finish-quiz-btn">Finish</button>
-              <button class="icon-btn" id="sound-toggle-btn" title="Toggle sounds"><i data-feather="volume-2"></i></button>
+        <!-- System tabs appear when “System wise” is active -->
+        <div id="system-tabs" class="view-tabs" role="tablist" aria-label="Systems">
+          <!-- quiz.js injects <button class="tab" data-tag="Abdomen">Abdomen</button> etc. -->
+        </div>
+
+        <!-- Grid of year/system cards (quiz.js renders into this) -->
+        <div id="paper-card-grid" class="paper-button-grid"></div>
+      </div>
+    </div>
+
+    <!-- Main quiz screen -->
+    <div id="quiz-screen" class="screen">
+      <div class="quiz-container">
+        <div class="quiz-header">
+          <h1 id="quiz-title">NEET SS Paper</h1>
+          <div class="header-controls">
+            <span class="mode-label" style="color:#0f172a;">Quiz</span>
+            <label class="switch" title="Toggle Exam Mode">
+              <input type="checkbox" id="mode-toggle-checkbox" />
+              <span class="slider"></span>
+            </label>
+            <span class="mode-label" style="color:#9ca3af;">Exam</span>
+            <span class="timer" id="timer">00:00</span>
+            <button class="finish-btn-header" id="finish-quiz-btn">Finish</button>
+            <button class="icon-btn" id="sound-toggle-btn" title="Toggle sounds">
+              <i data-feather="volume-2"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Pagination + Question area -->
+        <div id="quiz-content" style="display:none;">
+          <div class="quiz-pagination-header" id="quiz-pagination-header"></div>
+          <div class="question-area" id="questions-display"></div>
+        </div>
+
+        <!-- Loader shown while preparing quiz -->
+        <div id="loading-container" class="selection-container" style="display:none; height:280px;">
+          <div class="loader"></div>
+          <p class="mt-4" id="loading-message" style="font-size:1.05rem; color:var(--text-color-light);">
+            Loading…
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results screen -->
+    <div id="results-screen" class="screen">
+      <div class="results-container">
+        <h2 id="results-heading" class="text-center" style="font-size:2rem; font-weight:800; margin: .25rem 0 1.25rem; color:var(--header-text-color);">
+          Test Results
+        </h2>
+
+        <div class="results-grid">
+          <!-- Score Summary -->
+          <div class="stat-card">
+            <h3>Score Summary</h3>
+            <div class="flex flex-col items-center">
+              <p id="final-score-percent"
+                 style="font-size:3.25rem; font-weight:900; background:linear-gradient(90deg,#3b82f6,#a855f7); -webkit-background-clip:text; background-clip:text; color:transparent; margin:.6rem 0;">
+                0%
+              </p>
+              <div class="w-full" style="text-align:left;">
+                <p class="text-lg font-medium">Correct: <span id="correct-count" class="font-bold">0</span></p>
+                <p class="text-lg font-medium">Incorrect: <span id="incorrect-count" class="font-bold">0</span></p>
+                <p class="text-lg font-medium">Unattempted: <span id="unattempted-count" class="font-bold">0</span></p>
+                <p class="text-lg font-medium">Time Taken: <span id="time-taken" class="font-bold">00:00</span></p>
+              </div>
             </div>
           </div>
 
-          <div id="quiz-content" style="display:none;">
-            <div class="quiz-pagination-header" id="quiz-pagination-header"></div>
-            <div class="question-area" id="questions-display"></div>
+          <!-- Chart -->
+          <div class="stat-card">
+            <h3>Performance Chart</h3>
+            <div style="position:relative; height:200px; width:100%;">
+              <canvas id="performanceChart"></canvas>
+            </div>
           </div>
 
-          <div id="loading-container" class="selection-container" style="display:none; height:300px;">
-            <div class="loader"></div>
-            <p class="mt-4 text-lg text-gray-600" id="loading-message">Loading...</p>
+          <!-- Peer comparison -->
+          <div class="stat-card">
+            <h3>Peer Comparison</h3>
+            <div id="peer-comparison-content">
+              <p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p>
+              <p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p>
+            </div>
           </div>
+
+          <!-- AI Insights -->
+          <div class="ai-insights-card" id="ai-insights-card">
+            <div class="flex items-start gap-4">
+              <div class="ai-avatar">🤖</div>
+              <div class="ai-message flex-grow">
+                <p id="ai-insights-content">Generating feedback...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="results-actions">
+          <button class="results-btn primary"  id="review-all-btn">Review All</button>
+          <button class="results-btn danger"   id="review-incorrect-btn">Review Incorrect</button>
+          <button class="results-btn warning"  id="review-flagged-btn">Review Flagged</button>
+          <button class="results-btn secondary" id="back-to-topics-btn">Back to Papers</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Results Screen (structure required by quiz.js) -->
-  <div id="results-screen" class="screen">
-    <div class="max-w-6xl mx-auto px-6 pb-10">
-      <div class="rad-card">
-        <div class="rad-card-inner p-6">
-          <h2 class="text-3xl font-bold mb-8 text-center" id="results-heading">Test Results</h2>
-          <div class="results-grid">
-            <div class="stat-card">
-              <h3>Score Summary</h3>
-              <div class="flex flex-col items-center">
-                <p class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 my-4" id="final-score-percent">0%</p>
-                <div class="w-full text-left">
-                  <p class="text-lg font-medium">Correct: <span id="correct-count" class="font-bold">0</span></p>
-                  <p class="text-lg font-medium">Incorrect: <span id="incorrect-count" class="font-bold">0</span></p>
-                  <p class="text-lg font-medium">Unattempted: <span id="unattempted-count" class="font-bold">0</span></p>
-                  <p class="text-lg font-medium">Time Taken: <span id="time-taken" class="font-bold">00:00</span></p>
-                </div>
-              </div>
-            </div>
-
-            <div class="stat-card">
-              <h3>Performance Chart</h3>
-              <div style="position: relative; height:200px; width:100%;">
-                <canvas id="performanceChart"></canvas>
-              </div>
-            </div>
-
-            <div class="stat-card">
-              <h3>Peer Comparison</h3>
-              <div id="peer-comparison-content">
-                <p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p>
-                <p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p>
-              </div>
-            </div>
-
-            <div class="ai-insights-card" id="ai-insights-card">
-              <div class="flex items-start gap-4">
-                <div class="ai-avatar">🤖</div>
-                <div class="ai-message flex-grow">
-                  <p id="ai-insights-content">Generating feedback...</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="results-actions">
-            <button class="results-btn primary" id="review-all-btn">Review All</button>
-            <button class="results-btn danger" id="review-incorrect-btn">Review Incorrect</button>
-            <button class="results-btn warning" id="review-flagged-btn">Review Flagged</button>
-            <button class="results-btn secondary" id="back-to-topics-btn">Back to Papers</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal -->
-  <div id="custom-modal-backdrop" class="modal">
+  <!-- Custom Modal -->
+  <div id="custom-modal-backdrop" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-message">
     <div class="modal-content">
       <p id="modal-message">This is a custom modal message.</p>
       <div id="modal-buttons" class="modal-buttons"></div>
@@ -226,16 +158,17 @@
 
   <!-- Sounds -->
   <audio id="correct-sound" src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/assets/correct.mp3" preload="auto"></audio>
-  <audio id="wrong-sound" src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/assets/wrong.mp3" preload="auto"></audio>
+  <audio id="wrong-sound"   src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/assets/wrong.mp3" preload="auto"></audio>
 
   <!-- Boot -->
   <script type="module">
     import { initQuizApp } from './quiz.js';
 
-    // Year-labelled NEET SS papers (ids/names must match quiz.js expectations)
+    // NEET SS – year-labelled papers (ids must match the sheet map below)
     const neetssConfig = {
       GOOGLE_AI_API_KEY: '',
 
+      // Map year IDs to Google Sheets
       ALL_QUIZ_DATA: {
         "neet-ss-2025": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "0" },
         "neet-ss-2024": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "385825325" },
@@ -244,6 +177,7 @@
         "neet-ss-2021": { sheetId: "16wV4XJqFpgdJejIqWRvnL3ZwCKp8C8DWj12ukrsNqHk", gid: "1502909003" }
       },
 
+      // Year tiles shown on topic screen
       PAPER_METADATA: [
         { id: "neet-ss-2025", name: "NEET SS 2025", examType: "NEET SS" },
         { id: "neet-ss-2024", name: "NEET SS 2024", examType: "NEET SS" },
@@ -252,7 +186,13 @@
         { id: "neet-ss-2021", name: "NEET SS 2021", examType: "NEET SS" }
       ],
 
-      // Your Firebase project (same as before)
+      // For the System-wise view (tabs) — tags must match your Sheet’s Tag column
+      SYSTEM_TAGS: [
+        "Anatomy","Abdomen","Chest","Physics","Recent advances","Neuroradiology",
+        "MSK","OBG","Head and Neck","Genitourinary","Nuclear medicine","Paediatrics"
+      ],
+
+      // Firebase (same project you already use)
       FIREBASE_CONFIG: {
         apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
         authDomain: "radiology-mcqs.firebaseapp.com",
@@ -264,7 +204,11 @@
       }
     };
 
-    initQuizApp(neetssConfig);
+    // Start the app
+    document.addEventListener('DOMContentLoaded', () => {
+      initQuizApp(neetssConfig);
+      if (window.feather) feather.replace();
+    });
   </script>
 </body>
 </html>
