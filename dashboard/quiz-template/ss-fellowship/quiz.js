@@ -1,4 +1,4 @@
-// quiz.js — unified engine with Year-wise + System-wise support
+// quiz.js — unified engine with Year-wise + System-wise support (polished)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
@@ -9,32 +9,32 @@ import {
 
 import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai/+esm";
 
-// ---------------------
-// CONFIG (overridden by page)
-// ---------------------
+/* ---------------------
+   CONFIG (overridden by page)
+--------------------- */
 let QUIZ_CONFIG = {
   GOOGLE_AI_API_KEY: "",
   ALL_QUIZ_DATA: {},      // { paperId: { sheetId, gid } }
   PAPER_METADATA: [],     // [{id,name,examType}]
   FIREBASE_CONFIG: {},
-  title: ""               // optional, only for headers
+  title: ""               // optional
 };
 
-// exam durations (seconds)
+/* durations in seconds */
 const EXAM_DURATIONS = {
   "NEET SS": 3 * 60 * 60,
   "INI SS":  1.5 * 60 * 60,
   "Fellowship exam": 1.5 * 60 * 60
 };
 
-// histogram for aggregates
+/* aggregates */
 const HISTOGRAM_BUCKETS = 10;
 const initHistogram = () => Array.from({ length: HISTOGRAM_BUCKETS }, () => 0);
 const getBucketIndex = (pct) => Math.min(HISTOGRAM_BUCKETS - 1, Math.max(0, Math.floor(pct / (100 / HISTOGRAM_BUCKETS))));
 
-// ---------------------
-// STATE
-// ---------------------
+/* ---------------------
+   STATE
+--------------------- */
 let db, auth;
 let currentUser = null;
 
@@ -49,23 +49,24 @@ let userBookmarks = new Set();
 let elapsedSeconds = 0;
 let quizInterval = null;
 let isSoundOn = true;
+let currentQuestionIndex = 0;
 
-// cache: paperId -> parsed questions
-const paperCache = new Map();   // Map<string, Question[]>
+/* cache: paperId -> parsed questions */
+const paperCache = new Map();
 
-// dom cache
+/* dom cache */
 const dom = {
   screens: document.querySelectorAll('.screen'),
   authCheck: document.getElementById('authCheckScreen'),
 
-  // topic screen
+  // topic
   topicScreen: document.getElementById('topic-screen'),
   paperCardGrid: document.getElementById('paper-card-grid'),
   yearBtn: document.getElementById('yearwise-btn'),
   systemBtn: document.getElementById('systemwise-btn'),
-  systemTabs: document.getElementById('system-tabs'), // NEW: For system tabs
+  systemTabs: document.getElementById('system-tabs'),
 
-  // quiz screen
+  // quiz
   quizScreen: document.getElementById('quiz-screen'),
   quizTitle: document.getElementById('quiz-title'),
   loadingContainer: document.getElementById('loading-container'),
@@ -80,7 +81,7 @@ const dom = {
   correctSound: document.getElementById('correct-sound'),
   wrongSound: document.getElementById('wrong-sound'),
 
-  // results screen
+  // results
   resultsScreen: document.getElementById('results-screen'),
 
   // modal
@@ -89,9 +90,9 @@ const dom = {
   modalButtons: document.getElementById('modal-buttons'),
 };
 
-// ---------------------
-// UTIL
-// ---------------------
+/* ---------------------
+   UTIL
+--------------------- */
 const byId = (id) => document.getElementById(id);
 const safeFeather = () => { if (window.feather) feather.replace(); };
 const formatTime = (s) => {
@@ -99,10 +100,15 @@ const formatTime = (s) => {
   return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
 };
 const normalizeTag = (t) => (t || '').replace(/\s+/g, ' ').trim();
+const splitTags = (raw) =>
+  (raw || '')
+    .split(',')
+    .map(normalizeTag)
+    .filter(Boolean);
 
-// ---------------------
-// MODAL
-// ---------------------
+/* ---------------------
+   MODAL
+--------------------- */
 function showCustomModal(message, buttons) {
   if (!dom.modalBackdrop) return alert(message);
   dom.modalMessage.textContent = message;
@@ -120,9 +126,9 @@ const showCustomAlert  = (m, ok=()=>{}) => showCustomModal(m, [{ text:'OK', isPr
 const showCustomConfirm = (m, ok, cancel=()=>{}) =>
   showCustomModal(m, [{ text:'Yes', isPrimary:true, onClick: ok }, { text:'No', isPrimary:false, onClick: cancel }]);
 
-// ---------------------
-// INIT
-// ---------------------
+/* ---------------------
+   INIT
+--------------------- */
 export function initQuizApp(config) {
   QUIZ_CONFIG = { ...QUIZ_CONFIG, ...config };
 
@@ -130,7 +136,7 @@ export function initQuizApp(config) {
   db   = initializeFirestore(app, { experimentalForceLongPolling: true });
   auth = getAuth(app);
 
-  // UI wiring for view toggles (if present)
+  // view toggles
   dom.yearBtn?.addEventListener('click', () => setView('year'));
   dom.systemBtn?.addEventListener('click', () => setView('system'));
 
@@ -168,14 +174,20 @@ export function initQuizApp(config) {
   });
 }
 
-// ---------------------
-// TOPIC VIEW (Year/System)
-// ---------------------
+/* ---------------------
+   TOPIC VIEW (Year/System)
+--------------------- */
 let currentView = 'year'; // 'year' | 'system'
+let lastSystem = null;
+
 function setView(v) {
   currentView = v;
+
+  // visual state for pills (matches CSS .active / .active-pill)
   dom.yearBtn?.classList.toggle('active', v === 'year');
+  dom.yearBtn?.classList.toggle('active-pill', v === 'year');
   dom.systemBtn?.classList.toggle('active', v === 'system');
+  dom.systemBtn?.classList.toggle('active-pill', v === 'system');
 
   if (v === 'year') {
     dom.systemTabs?.classList.add('hidden');
@@ -200,28 +212,27 @@ async function handleDirectLinkOrShowTopics() {
     }
   }
   showScreen('topic-screen');
-  setView('year'); // Default to year-wise view
+  setView('year'); // default
   safeFeather();
 }
 
-// MODIFIED: This function now uses the stylish card from the latest designs
+/* ---------- Year-wise cards ---------- */
 function renderYearWise() {
   if (!dom.paperCardGrid) return;
-  dom.paperCardGrid.innerHTML = ''; // Clear previous view
-  
+  dom.paperCardGrid.innerHTML = '';
+
   QUIZ_CONFIG.PAPER_METADATA.forEach(p => {
-    const cardHTML = `
+    dom.paperCardGrid.insertAdjacentHTML('beforeend', `
       <a href="#" class="topic-card rad-card tilt group focusable block" data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
         <div class="rad-card-inner p-5 flex items-center justify-between">
           <div>
             <p class="text-sm font-semibold text-blue-800">${p.examType}</p>
             <h3 class="text-xl font-bold text-slate-900 mt-1">${p.name}</h3>
           </div>
-          <i data-feather="arrow-right-circle" class="w-7 h-7 text-slate-400 group-hover:text-blue-600 transition-colors"></i>
+          <i data-feather="arrow-right-circle" class="paper-arrow"></i>
         </div>
       </a>
-    `;
-    dom.paperCardGrid.innerHTML += cardHTML;
+    `);
   });
 
   dom.paperCardGrid.querySelectorAll('.topic-card').forEach(btn => {
@@ -236,13 +247,12 @@ function renderYearWise() {
   safeFeather();
 }
 
-
-// --- NEW: System-Wise View Logic ---
-
-// Fetches all papers to ensure tags are available
+/* ---------- System-wise view ---------- */
 async function ensureAllPapersCached() {
-  dom.paperCardGrid.innerHTML = `<p class="text-slate-500 text-center col-span-full">Analyzing question banks, please wait...</p>`;
-  const promises = Object.entries(QUIZ_CONFIG.ALL_QUIZ_DATA).map(async ([paperId, { sheetId, gid }]) => {
+  dom.paperCardGrid.innerHTML =
+    `<p class="text-slate-500 text-center col-span-full">Analyzing question banks, please wait...</p>`;
+
+  const tasks = Object.entries(QUIZ_CONFIG.ALL_QUIZ_DATA).map(async ([paperId, { sheetId, gid }]) => {
     if (paperCache.has(paperId)) return;
     try {
       const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
@@ -250,29 +260,21 @@ async function ensureAllPapersCached() {
       if (!response.ok) return;
       const csv = await response.text();
       paperCache.set(paperId, parseCSVToQuestions(csv, paperId));
-    } catch (error) {
-      console.error(`Failed to fetch or parse paper: ${paperId}`, error);
-    }
+    } catch (err) { console.error(`Fetch/parse failed: ${paperId}`, err); }
   });
-  await Promise.all(promises);
+  await Promise.all(tasks);
 }
 
-// Extracts all unique tags from the cached papers
 function uniqueTagsFromCache() {
   const tagSet = new Set();
   for (const questions of paperCache.values()) {
     for (const q of questions) {
-      // Handle multiple tags in one cell, separated by commas
-      (q.tag || '').split(',').forEach(tag => {
-        const normalized = normalizeTag(tag);
-        if (normalized) tagSet.add(normalized);
-      });
+      for (const tag of splitTags(q.tag)) tagSet.add(tag);
     }
   }
   return Array.from(tagSet).sort((a, b) => a.localeCompare(b));
 }
 
-// Renders the main system-wise view with tabs
 async function renderSystemWise() {
   await ensureAllPapersCached();
   const allTags = uniqueTagsFromCache();
@@ -282,79 +284,84 @@ async function renderSystemWise() {
     return;
   }
 
-  // Render the clickable tabs for each system
+  // tabs
   if (dom.systemTabs) {
     dom.systemTabs.innerHTML = allTags.map(tag =>
-      `<button class="system-tab" data-system="${tag}">${tag}</button>`
+      `<button class="system-tab${tag===lastSystem?' active':''}" data-system="${tag}">${tag}</button>`
     ).join('');
 
     dom.systemTabs.querySelectorAll('.system-tab').forEach(btn => {
       btn.addEventListener('click', () => {
         dom.systemTabs.querySelectorAll('.system-tab').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        renderSystemCard(btn.dataset.system);
+        lastSystem = btn.dataset.system;
+        renderSystemCard(lastSystem);
       });
     });
 
-    // Activate the first tab by default
-    const firstTab = dom.systemTabs.querySelector('.system-tab');
-    if (firstTab) {
-      firstTab.classList.add('active');
-      renderSystemCard(firstTab.dataset.system);
+    // pick first or last selected
+    if (lastSystem) renderSystemCard(lastSystem);
+    else {
+      const first = dom.systemTabs.querySelector('.system-tab');
+      if (first) { first.classList.add('active'); lastSystem = first.dataset.system; renderSystemCard(lastSystem); }
     }
   } else {
-    // Fallback if no tab container: just render all cards
-    dom.paperCardGrid.innerHTML = allTags.map(tag => renderSystemCard(tag, false)).join('');
+    // fallback — render all as cards
+    dom.paperCardGrid.innerHTML = allTags.map(t => systemCardHTML(t)).join('');
     bindSystemCardClickers();
   }
 }
 
-// Renders a single "Start Quiz" card for a given system
-function renderSystemCard(systemName, renderToGrid = true) {
-  const cardHTML = `
+function systemCardHTML(systemName, count = null) {
+  const countBadge = count !== null
+    ? `<span class="exam-hash" style="margin-left:.4rem">${count} Qs</span>` : '';
+  return `
     <a href="#" class="topic-card rad-card tilt group focusable block" data-system="${systemName}">
       <div class="rad-card-inner p-5 flex items-center justify-between">
         <div>
-          <p class="text-sm font-semibold text-emerald-800">System Focus</p>
+          <p class="text-sm font-semibold text-emerald-800">System Focus ${countBadge}</p>
           <h3 class="text-xl font-bold text-slate-900 mt-1">${systemName}</h3>
         </div>
         <i data-feather="arrow-right-circle" class="w-7 h-7 text-slate-400 group-hover:text-emerald-600 transition-colors"></i>
       </div>
     </a>
   `;
-  if (renderToGrid) {
-    dom.paperCardGrid.innerHTML = cardHTML;
-    bindSystemCardClickers();
-  }
-  return cardHTML; // for non-grid rendering
 }
 
-// Binds click events to system cards
+function getQuestionsForSystem(systemName) {
+  const target = normalizeTag(systemName);
+  const pool = [];
+  for (const questions of paperCache.values()) pool.push(...questions);
+  return pool.filter(q => splitTags(q.tag).includes(target));
+}
+
+function renderSystemCard(systemName) {
+  const qs = getQuestionsForSystem(systemName);
+  dom.paperCardGrid.innerHTML = systemCardHTML(systemName, qs.length);
+  bindSystemCardClickers();
+  safeFeather();
+}
+
 function bindSystemCardClickers() {
   dom.paperCardGrid.querySelectorAll('.topic-card[data-system]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       const systemName = btn.dataset.system;
-      // Create a "synthetic" paper for this system-based session
       currentPaper = {
         id: `system-${systemName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-        name: `${systemName} - All Years`,
+        name: `${systemName} — All Years`,
         examType: QUIZ_CONFIG.title || 'Practice',
-        _system: systemName // This special property triggers the system-wise logic
+        _system: systemName
       };
       quizMode = 'practice';
-      startQuiz(null); // System-wise sessions don't support resume
+      startQuiz(null);
     });
   });
-  safeFeather();
 }
 
-// --- End of System-Wise Logic ---
-
-
-// ---------------------
-// QUIZ FLOW
-// ---------------------
+/* ---------------------
+   QUIZ FLOW
+--------------------- */
 function showScreen(id) {
   dom.screens.forEach(s => s.classList.toggle('active', s.id === id));
   safeFeather();
@@ -391,7 +398,7 @@ async function startQuiz(resumeState, directQuestionId = null) {
 
   try {
     updateLoading(`Preparing questions for: ${currentPaper.name}...`);
-    await loadWorkingQuestions(); // This now handles system-wise logic
+    await loadWorkingQuestions();
 
     if (!allQuestions.length)
       throw new Error('No questions found for this selection.');
@@ -420,31 +427,24 @@ async function startQuiz(resumeState, directQuestionId = null) {
   dom.quizContent.style.display = 'block';
 }
 
-function updateLoading(msg) {
-  if (dom.loadingMessage) dom.loadingMessage.textContent = msg;
-}
+function updateLoading(msg) { if (dom.loadingMessage) dom.loadingMessage.textContent = msg; }
 
-// MODIFIED: This function now handles system-wise question aggregation
 async function loadWorkingQuestions() {
   allQuestions = [];
-  
-  // System mode: merge all papers from cache then filter by tag
+
+  // System mode: merge all and filter by tag
   if (currentPaper._system) {
-    await ensureAllPapersCached(); // Make sure all data is available
+    await ensureAllPapersCached();
+    const target = normalizeTag(currentPaper._system);
     const pool = [];
-    for (const questions of paperCache.values()) {
-      pool.push(...questions);
-    }
-    const targetSystem = normalizeTag(currentPaper._system);
-    allQuestions = pool.filter(q => 
-      (q.tag || '').split(',').map(normalizeTag).includes(targetSystem)
-    );
-    // Re-index IDs to be contiguous for this specific session
+    for (const questions of paperCache.values()) pool.push(...questions);
+    allQuestions = pool.filter(q => splitTags(q.tag).includes(target));
+    // stable contiguous ids for this session
     allQuestions = allQuestions.map((q, i) => ({ ...q, id: `${currentPaper.id}-${i}` }));
     return;
   }
 
-  // Year mode: fetch just one sheet (use cache if present)
+  // Year mode
   const cfg = QUIZ_CONFIG.ALL_QUIZ_DATA[currentPaper.id];
   if (!cfg?.sheetId || !cfg?.gid) throw new Error('Missing sheet configuration.');
   if (paperCache.has(currentPaper.id)) {
@@ -489,7 +489,7 @@ function parseCSVToQuestions(csvText, paperIdForId) {
         correctIndex,
         explanation: explanation || 'N/A',
         image, imageForExplTag,
-        tag: tag || '', // Keep as raw string, will be split later
+        tag: (tag || ''), // raw; split later
         subtag: (subtag || '').trim(),
         exam: (exam || '').trim()
       };
@@ -498,16 +498,9 @@ function parseCSVToQuestions(csvText, paperIdForId) {
   }).filter(Boolean);
 }
 
-
-// --- The rest of the file (RENDER QUESTION, SOUND, FLAGS, TIMER, RESULTS, REVIEW) ---
-// --- remains the same as your original and does not need to be changed. ---
-// --- Paste this code over your entire file. ---
-
-
-// ---------------------
-// RENDER QUESTION
-// ---------------------
-let currentQuestionIndex = 0; // NEW: Added definition for linter
+/* ---------------------
+   RENDER QUESTION
+--------------------- */
 function createQuestionNav() {
   dom.paginationHeader.innerHTML =
     allQuestions.map((_, i) => `<div class="page-box" data-index="${i}">${i + 1}</div>`).join('');
@@ -603,9 +596,9 @@ function handleOptionClick(e) {
   saveState();
 }
 
-// ---------------------
-// SOUND
-// ---------------------
+/* ---------------------
+   SOUND
+--------------------- */
 function initializeSound() {
   const s = localStorage.getItem('radmentor_sound_pref');
   isSoundOn = s !== 'off';
@@ -621,9 +614,9 @@ function updateSoundIcon() {
   safeFeather();
 }
 
-// ---------------------
-// FLAGS / BOOKMARKS
-// ---------------------
+/* ---------------------
+   FLAGS / BOOKMARKS
+--------------------- */
 function toggleFlag(id) {
   flaggedQuestions.has(id) ? flaggedQuestions.delete(id) : flaggedQuestions.add(id);
   dom.questionsDisplay.querySelector('.flag-btn')?.classList.toggle('flagged', flaggedQuestions.has(id));
@@ -650,9 +643,7 @@ async function toggleBookmark(qid, qtext) {
       userBookmarks.add(qid);
       btn?.classList.add('bookmarked');
     }
-  } catch(e) {
-    console.warn('bookmark failed', e);
-  }
+  } catch(e) { console.warn('bookmark failed', e); }
 }
 
 async function fetchUserBookmarks() {
@@ -666,9 +657,9 @@ async function fetchUserBookmarks() {
   }
 }
 
-// ---------------------
-// TIMER & STATE
-// ---------------------
+/* ---------------------
+   TIMER & STATE
+--------------------- */
 function saveState() {
   if (!currentUser || !currentPaper || isReviewing) return;
   const key = `radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`;
@@ -703,9 +694,9 @@ function startTimer() {
   }
 }
 
-// ---------------------
-// RESULTS
-// ---------------------
+/* ---------------------
+   RESULTS
+--------------------- */
 async function finishExam() {
   clearInterval(quizInterval);
   showScreen('results-screen');
@@ -822,9 +813,9 @@ async function getAIInsights(incorrectQs) {
   }
 }
 
-// ---------------------
-// REVIEW
-// ---------------------
+/* ---------------------
+   REVIEW
+--------------------- */
 function setupReview(type) {
   isReviewing = true;
   if (type === 'all') reviewFilter = allQuestions.map((_, i) => i);
