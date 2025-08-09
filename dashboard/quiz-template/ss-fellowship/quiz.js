@@ -199,7 +199,24 @@ async function startQuiz(resumeState, directQuestionId=null){
   await fetchQuizData();
   updateLoadingMessage('Fetching your bookmarks...');
   await fetchUserBookmarks();
-  updateLoadingMessage('Session ready! Starting quiz...');
+  showLoader("Session ready! Starting quiz...");
+
+fetchQuestions(selectedPaperId)
+    .then(data => {
+        if (!data || data.length === 0) {
+            hideLoader();
+            showModal("No questions found for this paper.");
+            return;
+        }
+        hideLoader();
+        // continue existing quiz rendering code here
+        renderQuestions(data);
+    })
+    .catch(err => {
+        console.error("Error loading quiz:", err);
+        hideLoader();
+        showModal("Error loading quiz data. Please try again later.");
+    });
 
   dom.modeToggle.checked = quizMode === 'exam';
   const labels = document.querySelectorAll('.mode-label');
