@@ -1,41 +1,44 @@
+// dashboard/quiz-template/ss-fellowship/quiz.js
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import {
-  getFirestore,
+  // initializeFirestore to force long-polling (ad-blocker safe)
   initializeFirestore,
   doc, runTransaction, collection, getDocs, setDoc, deleteDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-// Google Generative AI SDK
+// Google Generative AI
 import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai/+esm";
 
-/* ---------------------
-   CONFIG (overridden by page)
---------------------- */
+// ---------------------
+// CONFIG (overridden by page)
+// ---------------------
 let QUIZ_CONFIG = {
   GOOGLE_AI_API_KEY: "",
   ALL_QUIZ_DATA: {},
   PAPER_METADATA: [],
-  FIREBASE_CONFIG: {}
+  FIREBASE_CONFIG: {},
+  ENABLE_SYSTEM_WISE: false,   // set true in NEETSS page
+  SYSTEM_TAGS: []              // list of tags for tabs (NEETSS only)
 };
 
-/* ---------------------
-   CONSTANTS
---------------------- */
+// Map exam types to duration (seconds)
 const EXAM_DURATIONS = {
   "NEET SS": 3 * 60 * 60,
   "INI SS": 1.5 * 60 * 60,
   "Fellowship exam": 1.5 * 60 * 60
 };
 
+// Aggregates config (histogram-based, scalable)
 const HISTOGRAM_BUCKETS = 10; // 0–10, 10–20, ... 90–100
 const initHistogram = () => Array.from({ length: HISTOGRAM_BUCKETS }, () => 0);
 const getBucketIndex = (scorePercent) =>
   Math.min(HISTOGRAM_BUCKETS - 1, Math.max(0, Math.floor(scorePercent / (100 / HISTOGRAM_BUCKETS))));
 
-/* ---------------------
-   APP STATE
---------------------- */
+// ---------------------
+// APP STATE
+// ---------------------
 let allQuestions = [], currentQuestionIndex = 0, currentUser = null;
 let userBookmarks = new Set(), flaggedQuestions = new Set();
 let reviewFilter = [];
@@ -45,9 +48,12 @@ let isReviewing = false;
 let isSoundOn = true;
 let db, auth;
 
-/* ---------------------
-   DOM CACHE
---------------------- */
+// extra state for System-wise (NEET SS)
+let viewBy = 'year';             // 'year' | 'system'
+let selectedSystem = null;       // current tag
+let allYearCache = null;         // merged questions across all sheets (for system-wise)
+
+// Cache DOM
 const dom = {
   screens: document.querySelectorAll('.screen'),
   paperCardGrid: document.getElementById('paper-card-grid'),
@@ -66,13 +72,18 @@ const dom = {
   modalBackdrop: document.getElementById('custom-modal-backdrop'),
   modalMessage: document.getElementById('modal-message'),
   modalButtons: document.getElementById('modal-buttons'),
-  loadingMessage: document.getElementById('loading-message')
+  loadingMessage: document.getElementById('loading-message'),
+  // view toggle + tabs (exist in NEETSS only)
+  systemTabs: document.getElementById('system-tabs'),
+  viewYearBtn: document.getElementById('view-year'),
+  viewSystemBtn: document.getElementById('view-system')
 };
 
-/* ---------------------
-   MODAL HELPERS
---------------------- */
+// ---------------------
+// Custom modal helpers
+// ---------------------
 function showCustomModal(message, buttons){
+  if (!dom.modalBackdrop) { alert(message); return; }
   dom.modalMessage.textContent = message;
   dom.modalButtons.innerHTML = '';
   buttons.forEach(btn => {
@@ -87,36 +98,34 @@ function showCustomModal(message, buttons){
 const showCustomConfirm = (msg, ok, cancel=()=>{}) => showCustomModal(msg,[{text:'Yes',isPrimary:true,onClick:ok},{text:'No',isPrimary:false,onClick:cancel}]);
 const showCustomAlert = (msg, ok=()=>{}) => showCustomModal(msg,[{text:'OK',isPrimary:true,onClick:ok}]);
 
-/* ---------------------
-   INIT ENTRYPOINT
---------------------- */
+// ---------------------
+// INIT ENTRYPOINT
+// ---------------------
 export function initQuizApp(config){
   QUIZ_CONFIG = { ...QUIZ_CONFIG, ...config };
 
   const app = initializeApp(QUIZ_CONFIG.FIREBASE_CONFIG);
-  // Force long-polling (ad-blocker/proxy safe)
+  // Force long-polling to avoid WebChannel being blocked by ad-blockers / proxies
   db = initializeFirestore(app, { experimentalForceLongPolling: true });
   auth = getAuth(app);
 
   onAuthStateChanged(auth, (user) => {
     const authCheckScreen = document.getElementById('authCheckScreen');
     currentUser = user;
-    if (user) {
-      if (authCheckScreen) authCheckScreen.style.display = 'none';
+    if(user){
+      if(authCheckScreen) authCheckScreen.style.display = 'none';
       handleDirectLink(user);
-    } else {
-      if (authCheckScreen) {
-        authCheckScreen.innerHTML = '<div class="selection-container"><p>You must be logged in to continue.</p></div>';
-      }
+    }else{
+      if(authCheckScreen) authCheckScreen.innerHTML = '<div class="selection-container"><p>You must be logged in to continue.</p></div>';
     }
   });
 
-  // Paper click (delegated, so it works no matter when we render)
+  // paper click (delegated)
   dom.paperCardGrid?.addEventListener('click', (e) => {
-    const button = e.target.closest('.paper-button');
-    if (!button) return;
-    const { id, name, examtype } = button.dataset;
-    currentPaper = { id, name, examType: examtype };
+    const btn = e.target.closest('.paper-button');
+    if (!btn) return;
+    const { id, name, examtype } = btn.dataset;
+    currentPaper = { id, name, examType: examtype || 'NEET SS' };
     quizMode = 'practice';
     checkResumeAndStart();
   });
@@ -133,19 +142,37 @@ export function initQuizApp(config){
   dom.soundToggleBtn?.addEventListener('click', toggleSound);
 
   dom.finishQuizBtn?.addEventListener('click', ()=>{
-    const msg = quizMode==='exam'
-      ? 'Are you sure you want to finish the exam?'
-      : 'Are you sure you want to finish this practice session?';
+    const msg = quizMode==='exam' ? 'Are you sure you want to finish the exam?' : 'Are you sure you want to finish this practice session?';
     showCustomConfirm(msg, ()=>finishExam(), ()=>{});
   });
+
+  // Year/System toggle (NEET SS)
+  if (QUIZ_CONFIG.ENABLE_SYSTEM_WISE && dom.viewYearBtn && dom.viewSystemBtn) {
+    const setView = (v) => {
+      viewBy = v;
+      dom.viewYearBtn.classList.toggle('active', v === 'year');
+      dom.viewSystemBtn.classList.toggle('active', v === 'system');
+      if (v === 'year') {
+        dom.systemTabs.style.display = 'none';
+        dom.paperCardGrid.style.display = '';
+        renderPaperCards();
+      } else {
+        dom.paperCardGrid.style.display = 'none';
+        dom.systemTabs.style.display = 'flex';
+        renderSystemTabs();
+      }
+    };
+    dom.viewYearBtn.addEventListener('click', () => setView('year'));
+    dom.viewSystemBtn.addEventListener('click', () => setView('system'));
+  }
 }
 
-/* ---------------------
-   CORE UI HELPERS
---------------------- */
+// ---------------------
+// Core UI helpers
+// ---------------------
 function showScreen(id){
   dom.screens.forEach(s => s.classList.toggle('active', s.id===id));
-  if (window.feather) feather.replace();
+  if(window.feather){ feather.replace(); }
 }
 
 function handleDirectLink(user) {
@@ -163,53 +190,115 @@ function handleDirectLink(user) {
     }
   }
 
-  // Render compact, symmetric paper tiles
+  // Topic screen
   showScreen('topic-screen');
-  if (!dom.paperCardGrid) return;
-
-  let html = '';
-  for (const p of QUIZ_CONFIG.PAPER_METADATA) {
-    html += (
-      '<button class="paper-button rad-card" ' +
-        'data-id="' + p.id + '" ' +
-        'data-name="' + p.name + '" ' +
-        'data-examtype="' + p.examType + '">' +
-        '<div class="rad-card-inner paper-inner">' +
-          '<div class="paper-text">' +
-            '<span class="paper-badge">' + p.examType + '</span>' +
-            '<span class="paper-title">' + p.name + '</span>' +
-          '</div>' +
-          '<i data-feather="arrow-right" class="paper-arrow"></i>' +
-        '</div>' +
-      '</button>'
-    );
+  if (QUIZ_CONFIG.ENABLE_SYSTEM_WISE && dom.viewYearBtn && dom.viewSystemBtn) {
+    // default to Year-wise
+    if (dom.systemTabs) dom.systemTabs.style.display = 'none';
+    if (dom.paperCardGrid) dom.paperCardGrid.style.display = '';
+    renderPaperCards();
+  } else {
+    renderPaperCards();
   }
-  dom.paperCardGrid.innerHTML = html;
+}
+
+// Build paper cards (year-wise)
+function renderPaperCards() {
+  if (!dom.paperCardGrid) return;
+  dom.paperCardGrid.innerHTML = QUIZ_CONFIG.PAPER_METADATA.map(p => `
+    <button class="paper-button rad-card" data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
+      <div class="rad-card-inner paper-inner">
+        <div class="paper-text">
+          <span class="paper-badge">${p.examType || ''}</span>
+          <span class="paper-title">${p.name}</span>
+        </div>
+        <i data-feather="arrow-right" class="paper-arrow"></i>
+      </div>
+    </button>
+  `).join('');
   if (window.feather) feather.replace();
+}
+
+// Build system tabs (NEET SS)
+function renderSystemTabs() {
+  if (!dom.systemTabs) return;
+  const tags = QUIZ_CONFIG.SYSTEM_TAGS || [];
+  dom.systemTabs.innerHTML = tags.map(t => `<button class="tab" data-tag="${t}">${t}</button>`).join('');
+  dom.systemTabs.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      dom.systemTabs.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedSystem = btn.dataset.tag;
+      await startSystemQuiz(selectedSystem);
+    });
+  });
+}
+
+// Load & merge all sheets once (for system-wise)
+async function ensureMergedQuestions() {
+  if (allYearCache) return allYearCache;
+  const entries = Object.entries(QUIZ_CONFIG.ALL_QUIZ_DATA || {});
+  const merged = [];
+  for (const [id, conf] of entries) {
+    try {
+      const url = `https://docs.google.com/spreadsheets/d/${conf.sheetId}/gviz/tq?tqx=out:csv&gid=${conf.gid}`;
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) continue;
+      const csv = await r.text();
+      const parsed = parseCSVToQuestions(csv).map((q, idx) => ({ ...q, id: `${id}-${idx}` }));
+      merged.push(...parsed);
+    } catch (e) { /* skip bad sheet */ }
+  }
+  allYearCache = merged;
+  return merged;
+}
+
+async function startSystemQuiz(tag) {
+  if (!tag) return;
+  const merged = await ensureMergedQuestions();
+  allQuestions = merged.filter(q => (q.tag || '').toLowerCase() === tag.toLowerCase());
+  if (allQuestions.length === 0) {
+    showCustomAlert(`No questions found for "${tag}". Try another tag.`);
+    return;
+  }
+  currentPaper = { id: `neet-ss-system-${tag}`, name: `NEET SS — ${tag}`, examType: 'NEET SS' };
+  quizMode = 'practice';
+  isReviewing = false; reviewFilter = []; userAnswers = {}; flaggedQuestions = new Set();
+  elapsedSeconds = 0; currentQuestionIndex = 0;
+
+  showScreen('quiz-screen');
+  dom.loadingContainer && (dom.loadingContainer.style.display = 'none');
+  dom.quizContent && (dom.quizContent.style.display = 'block');
+  if (dom.quizTitle) dom.quizTitle.textContent = `${currentPaper.name}`;
+  if (dom.finishQuizBtn) { dom.finishQuizBtn.textContent = 'Finish'; dom.finishQuizBtn.style.display = 'block'; }
+
+  createQuestionNav();
+  showQuestion(0);
+  startTimer();
 }
 
 function setQuizMode(newMode){
   quizMode = newMode;
-  localStorage.removeItem(`radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`);
+  if (currentUser && currentPaper) {
+    localStorage.removeItem(`radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`);
+  }
   startQuiz(null);
 }
 
 function checkResumeAndStart(){
   const key = `radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`;
   const saved = localStorage.getItem(key);
-  if (saved) {
+  if(saved){
     showCustomConfirm(`You have an unfinished ${quizMode} session. Resume?`,
       ()=> startQuiz(JSON.parse(saved)),
       ()=> { localStorage.removeItem(key); startQuiz(null); }
     );
-  } else {
-    startQuiz(null);
-  }
+  }else{ startQuiz(null); }
 }
 
-/* ---------------------
-   QUIZ FLOW
---------------------- */
+// ---------------------
+// QUIZ FLOW
+// ---------------------
 async function startQuiz(resumeState, directQuestionId = null) {
   isReviewing = false; reviewFilter = [];
   userAnswers = resumeState?.answers || {};
@@ -218,8 +307,8 @@ async function startQuiz(resumeState, directQuestionId = null) {
   flaggedQuestions = new Set(resumeState?.flags || []);
 
   showScreen('quiz-screen');
-  dom.loadingContainer.style.display = 'block';
-  dom.quizContent.style.display = 'none';
+  if (dom.loadingContainer) dom.loadingContainer.style.display = 'block';
+  if (dom.quizContent) dom.quizContent.style.display = 'none';
 
   initializeSound();
 
@@ -235,16 +324,13 @@ async function startQuiz(resumeState, directQuestionId = null) {
     await fetchUserBookmarks(); // continue even if it fails
 
     // UI ready
-    dom.modeToggle.checked = quizMode === 'exam';
+    if (dom.modeToggle) dom.modeToggle.checked = quizMode === 'exam';
     const labels = document.querySelectorAll('.mode-label');
-    const quizLbl = labels[0];
-    const examLbl = labels[1];
-    examLbl?.classList.toggle('text-gray-800', quizMode === 'exam');
-    quizLbl?.classList.toggle('text-gray-800', quizMode !== 'exam');
+    labels[1]?.classList.toggle('text-gray-800', quizMode === 'exam'); // Exam
+    labels[0]?.classList.toggle('text-gray-800', quizMode !== 'exam'); // Quiz
 
-    dom.quizTitle.textContent = `${currentPaper.name}`;
-    dom.finishQuizBtn.textContent = 'Finish';
-    dom.finishQuizBtn.style.display = 'block';
+    if (dom.quizTitle) dom.quizTitle.textContent = `${currentPaper.name}`;
+    if (dom.finishQuizBtn) { dom.finishQuizBtn.textContent = 'Finish'; dom.finishQuizBtn.style.display = 'block'; }
 
     createQuestionNav();
 
@@ -259,16 +345,15 @@ async function startQuiz(resumeState, directQuestionId = null) {
     console.error('Start quiz failed:', err);
     showCustomAlert(err?.message || 'Error preparing the session. Please try again.', () => {
       showScreen('topic-screen');
-      handleDirectLink(currentUser);
     });
     return;
   } finally {
-    dom.loadingContainer.style.display = 'none';
+    if (dom.loadingContainer) dom.loadingContainer.style.display = 'none';
   }
-  dom.quizContent.style.display = 'block';
+  if (dom.quizContent) dom.quizContent.style.display = 'block';
 }
 
-function updateLoadingMessage(msg){ dom.loadingMessage.textContent = msg; }
+function updateLoadingMessage(msg){ if (dom.loadingMessage) dom.loadingMessage.textContent = msg; }
 
 async function fetchQuizData(){
   const paperData = QUIZ_CONFIG.ALL_QUIZ_DATA[currentPaper.id];
@@ -288,24 +373,30 @@ async function fetchQuizData(){
   allQuestions = Array.isArray(parsed) ? parsed : [];
 }
 
-function parseCSVToQuestions(csv){
-  const lines = csv.trim().split('\n').slice(1);
-  return lines.map((line, idx)=>{
+function parseCSVToQuestions(csvText) {
+  const lines = csvText.trim().split('\n').slice(1);
+  return lines.map((line, index) => {
     const parts = line
       .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
-      .map(p=>p.trim().replace(/^"|"$/g,''));
-    const [question, a,b,c,d, correctAns, explanation, image, imageForExplTag, subtag, exam] = parts;
-    const options = [a,b,c,d].filter(Boolean);
+      .map(p => p.trim().replace(/^"|"$/g, ''));
+    // A:Question B:OptA C:OptB D:OptC E:OptD F:Correct G:Explanation H:Image I:ImageForExpl J:Tag K:Subtag L:Exam
+    const [question, a, b, c, d, correctAns, explanation, image, imageForExplTag, tag, subtag, exam] = parts;
+    const options = [a, b, c, d].filter(Boolean);
     const letterMap = { a:0, b:1, c:2, d:3 };
-    const correctIndex = letterMap[(correctAns||'').trim().toLowerCase()];
-    if(question && correctIndex!==undefined && options.length>0){
+    const correctIndex = letterMap[(correctAns || '').trim().toLowerCase()];
+
+    if (question && correctIndex !== undefined && options.length > 0) {
       return {
-        id:`${currentPaper.id}-${idx}`,
-        text:question,
+        id: `${currentPaper?.id || 'merged'}-${index}`,
+        text: question,
         options,
         correctIndex,
-        explanation: explanation || 'N/A',
-        image, imageForExplTag, subtag, exam
+        explanation: explanation || "N/A",
+        image,
+        imageForExplTag,
+        tag: (tag || '').trim(),
+        subtag: (subtag || '').trim(),
+        exam: (exam || '').trim()
       };
     }
     return null;
@@ -336,10 +427,15 @@ function showQuestion(index){
   const isFlagged = flaggedQuestions.has(q.id);
   const isAnswered = userAnswers[index] !== undefined;
 
+  const examHash = (q.exam || '').trim()
+    ? `#${q.exam.replace(/\s+/g,'').toUpperCase()}`
+    : '';
+
   let html = `
     <div class="question-title-bar">
       <span class="question-number">Question ${index+1} of ${allQuestions.length}</span>
       <div class="question-controls">
+        ${examHash ? `<span class="exam-hash">${examHash}</span>` : ''}
         <button class="icon-btn flag-btn ${isFlagged?'flagged':''}" ${isReviewing?'disabled':''}><i data-feather="flag"></i></button>
         <button class="icon-btn bookmark-btn ${isBookmarked?'bookmarked':''}" ${isReviewing?'disabled':''}><i data-feather="bookmark"></i></button>
       </div>
@@ -414,9 +510,9 @@ function updateQuestionNav(){
   active?.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'center' });
 }
 
-/* ---------------------
-   SOUND
---------------------- */
+// ---------------------
+// Sound prefs
+// ---------------------
 function initializeSound(){
   const saved = localStorage.getItem('radmentor_sound_pref');
   isSoundOn = saved !== 'off';
@@ -429,13 +525,15 @@ function toggleSound(){
 }
 function updateSoundIcon(){
   const icon = isSoundOn ? 'volume-2' : 'volume-x';
-  dom.soundToggleBtn.innerHTML = `<i data-feather="${icon}"></i>`;
-  if(window.feather){ feather.replace(); }
+  if (dom.soundToggleBtn) {
+    dom.soundToggleBtn.innerHTML = `<i data-feather="${icon}"></i>`;
+    if(window.feather){ feather.replace(); }
+  }
 }
 
-/* ---------------------
-   FLAGS & BOOKMARKS
---------------------- */
+// ---------------------
+// Flags & Bookmarks
+// ---------------------
 function toggleFlag(id){
   flaggedQuestions.has(id) ? flaggedQuestions.delete(id) : flaggedQuestions.add(id);
   document.querySelector('.flag-btn')?.classList.toggle('flagged', flaggedQuestions.has(id));
@@ -467,9 +565,9 @@ async function toggleBookmark(questionId, questionText){
   }
 }
 
-/* ---------------------
-   FINISH & RESULTS
---------------------- */
+// ---------------------
+// Finish & Results
+// ---------------------
 async function finishExam(){
   clearInterval(quizInterval);
   showScreen('results-screen');
@@ -496,7 +594,9 @@ async function finishExam(){
   });
 
   // Clear local session
-  localStorage.removeItem(`radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser?.uid}`);
+  if (currentUser && currentPaper) {
+    localStorage.removeItem(`radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`);
+  }
 
   // Persist attempt + update aggregates only for Exam mode
   if(quizMode==='exam' && currentUser){
@@ -514,14 +614,13 @@ async function finishExam(){
       `<div class="flex items-start gap-4"><div class="ai-avatar">🤖</div><div class="ai-message flex-grow"><p>AI Insights are only available for Exam Mode results.</p></div></div>`;
   }
 
-  document.getElementById('back-to-topics-btn').addEventListener('click', ()=>{
-    showScreen('topic-screen'); handleDirectLink(currentUser);
-  });
+  document.getElementById('back-to-topics-btn').addEventListener('click', ()=>{ showScreen('topic-screen'); handleDirectLink(currentUser); });
   document.getElementById('review-all-btn').addEventListener('click', ()=> setupReview('all'));
   document.getElementById('review-incorrect-btn').addEventListener('click', ()=> setupReview('incorrect'));
   document.getElementById('review-flagged-btn').addEventListener('click', ()=> setupReview('flagged'));
 }
 
+// Save one user's attempt under users/{uid}/attempts/{autoId}
 async function saveUserAttempt(scorePercent){
   try{
     const attemptsCol = collection(db, 'users', currentUser.uid, 'attempts');
@@ -538,6 +637,7 @@ async function saveUserAttempt(scorePercent){
   }catch(e){ console.error('saveUserAttempt failed:', e); }
 }
 
+// Update quizAggregates/{paperId} using running mean + histogram (no unbounded arrays)
 async function updateAggregatesAndGetStats(scorePercent){
   const aggregatesRef = doc(db, 'quizAggregates', currentPaper.id);
   let out = { average: scorePercent, percentile: 100 };
@@ -554,7 +654,7 @@ async function updateAggregatesAndGetStats(scorePercent){
         const total = (data.totalAttempts || 0);
         const prevAvg = data.averageScore || 0;
         const hist = Array.isArray(data.histogram) ? data.histogram.slice() : initHistogram();
-        // Percentile BEFORE including current
+        // Percentile BEFORE including current (how many prior < you)
         const lowerCount = hist.slice(0, b).reduce((s,v)=>s+v,0);
         const priorTotal = hist.reduce((s,v)=>s+v,0);
         const percentile = priorTotal>0 ? (lowerCount/priorTotal)*100 : 100;
@@ -591,9 +691,9 @@ async function getAIInsights(incorrectQs){
   }
 }
 
-/* ---------------------
-   PERSISTENCE & TIMER
---------------------- */
+// ---------------------
+// Persistence & Timer
+// ---------------------
 function saveState(){
   if(!currentUser || !currentPaper || isReviewing) return;
   const state = { answers:userAnswers, index:currentQuestionIndex, elapsedSeconds, flags:[...flaggedQuestions] };
@@ -607,24 +707,24 @@ function startTimer(){
   const total = EXAM_DURATIONS[currentPaper.examType] || 0;
   if(quizMode==='exam' && total>0){
     let remaining = total - elapsedSeconds;
-    dom.timerEl.textContent = formatTime(remaining);
+    if (dom.timerEl) dom.timerEl.textContent = formatTime(remaining);
     quizInterval = setInterval(()=>{
       if(remaining<=0){ clearInterval(quizInterval); showCustomAlert("Time's up! The exam has finished.", ()=>finishExam()); return; }
-      remaining--; elapsedSeconds++; dom.timerEl.textContent = formatTime(remaining); saveState();
+      remaining--; elapsedSeconds++; if (dom.timerEl) dom.timerEl.textContent = formatTime(remaining); saveState();
     }, 1000);
   }else{
     let start = Date.now() - (elapsedSeconds*1000);
     quizInterval = setInterval(()=>{
       elapsedSeconds = Math.floor((Date.now()-start)/1000);
-      dom.timerEl.textContent = formatTime(elapsedSeconds);
+      if (dom.timerEl) dom.timerEl.textContent = formatTime(elapsedSeconds);
       saveState();
     }, 1000);
   }
 }
 
-/* ---------------------
-   REVIEW MODE
---------------------- */
+// ---------------------
+// Review mode
+// ---------------------
 function setupReview(type){
   isReviewing = true;
   if(type==='all') reviewFilter = allQuestions.map((_,i)=>i);
@@ -635,7 +735,7 @@ function setupReview(type){
     showCustomAlert(`No ${type} questions to review.`, ()=>{ isReviewing=false; finishExam(); });
     return;
   }
-  dom.finishQuizBtn.style.display='none';
+  if (dom.finishQuizBtn) dom.finishQuizBtn.style.display='none';
   showScreen('quiz-screen');
   createQuestionNav();
   showQuestion(reviewFilter[0]);
