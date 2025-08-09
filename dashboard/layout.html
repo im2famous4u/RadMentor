@@ -315,44 +315,92 @@
     </div>
 
     <!-- The iframe will load content pages here -->
-    <iframe id="contentFrame" src="/dashboard/dashboard.html" class="flex-1 overflow-y-auto"></iframe>
+   <iframe id="contentFrame" src="about:blank" class="flex-1 overflow-y-auto"></iframe>
 
   </main>
 
   <!-- Shared JavaScript -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Dropdown menu logic (for goals and user profile)
-      const goalsDropdownButton = document.getElementById('goalsDropdownButton');
-      const goalsDropdown = document.getElementById('goalsDropdown');
-      const userProfileIcon = document.getElementById('userProfileIcon');
-      const userDropdown = document.getElementById('userDropdown');
+        // --- Dropdown Menu Logic ---
+        const goalsDropdownButton = document.getElementById('goalsDropdownButton');
+        const goalsDropdown = document.getElementById('goalsDropdown');
+        const userProfileIcon = document.getElementById('userProfileIcon');
+        const userDropdown = document.getElementById('userDropdown');
 
-      // Toggle goals dropdown
-      if (goalsDropdownButton) {
-        goalsDropdownButton.addEventListener('click', () => {
-          goalsDropdown.classList.toggle('show');
-        });
-      }
-
-      // Toggle user dropdown
-      if (userProfileIcon) {
-        userProfileIcon.addEventListener('click', () => {
-          userDropdown.classList.toggle('show');
-        });
-      }
-
-      // Close dropdowns when clicking outside
-      window.addEventListener('click', (event) => {
-        if (goalsDropdown && goalsDropdownButton && !goalsDropdownButton.contains(event.target) && !goalsDropdown.contains(event.target)) {
-          goalsDropdown.classList.remove('show');
+        // Toggle goals dropdown
+        if (goalsDropdownButton) {
+            goalsDropdownButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                goalsDropdown.classList.toggle('show');
+                userDropdown.classList.remove('show'); // Close other dropdown
+            });
         }
-        if (userDropdown && userProfileIcon && !userProfileIcon.contains(event.target) && !userDropdown.contains(event.target)) {
-          userDropdown.classList.remove('show');
+
+        // Toggle user dropdown
+        if (userProfileIcon) {
+            userProfileIcon.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+                goalsDropdown.classList.remove('show'); // Close other dropdown
+            });
         }
-      });
+
+        // Close dropdowns when clicking outside
+        window.addEventListener('click', (event) => {
+            if (goalsDropdown && !goalsDropdown.contains(event.target)) {
+                goalsDropdown.classList.remove('show');
+            }
+            if (userDropdown && !userDropdown.contains(event.target)) {
+                userDropdown.classList.remove('show');
+            }
+        });
+
+        // --- Iframe and Navigation Logic ---
+        const navLinks = document.querySelectorAll('.sidebar-link');
+        const iframe = document.getElementById('contentFrame');
+        const goalsDropdownLinks = document.querySelectorAll('#goalsDropdown a');
+
+        function updateIframe(url, section) {
+            iframe.src = url;
+            // Update active class for sidebar links
+            navLinks.forEach(link => {
+                if (link.dataset.section === section) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+            // Update the goals dropdown button text
+            document.getElementById('currentGoalText').textContent = `Current Goal: ${section.charAt(0).toUpperCase() + section.slice(1)}`;
+        }
+
+        // Add click listeners to sidebar links
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                updateIframe(e.currentTarget.href, e.currentTarget.dataset.section);
+            });
+        });
+
+        // Add click listeners to goals dropdown links
+        goalsDropdownLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                updateIframe(e.currentTarget.href, e.currentTarget.dataset.section);
+                goalsDropdown.classList.remove('show'); // Close dropdown after clicking
+            });
+        });
+
+        // Set initial active state based on current iframe src
+        const initialSrc = iframe.src.split('/').pop().split('.')[0];
+        const initialLink = document.querySelector(`.sidebar-link[data-section="${initialSrc}"]`);
+        if (initialLink) {
+            initialLink.classList.add('active');
+            document.getElementById('currentGoalText').textContent = `Current Goal: ${initialSrc.charAt(0).toUpperCase() + initialSrc.slice(1)}`;
+        }
     });
-  </script>
+</script>
 
 </body>
 </html>
