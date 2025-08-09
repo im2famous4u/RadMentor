@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superspeciality Exams</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        /* Add any specific styles for this page here if needed */
+        .ss-card {
+            background-color: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 2rem;
+            border-radius: 1.5rem;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .ss-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 12px 25px rgba(99, 102, 241, 0.4);
+            border-color: var(--primary-color);
+        }
+
+        .ss-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--header-text-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .ss-card p {
+            font-size: 1rem;
+            color: var(--text-color-light);
+        }
+
+        .ss-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="selection-container">
+        <h2 class="text-3xl font-bold mb-4">Superspeciality Exams</h2>
+        <p class="text-lg text-gray-600">Select an exam below to begin your practice session.</p>
+
+        <div class="ss-grid">
+            <!-- NEET SS Card -->
+            <a href="neet-ss.html" class="ss-card">
+                <div class="p-4 bg-white/20 rounded-full mb-4">
+                    <i data-feather="monitor" class="text-blue-500 w-8 h-8"></i>
+                </div>
+                <h3>NEET SS</h3>
+                <p>National Eligibility cum Entrance Test for Superspeciality</p>
+            </a>
+
+            <!-- INI SS Card -->
+            <a href="ini-ss.html" class="ss-card">
+                <div class="p-4 bg-white/20 rounded-full mb-4">
+                    <i data-feather="clipboard" class="text-green-500 w-8 h-8"></i>
+                </div>
+                <h3>INI SS</h3>
+                <p>Institute of National Importance Superspeciality Entrance Exam</p>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    feather.replace();
+</script>
+
+</body>
+</html>
