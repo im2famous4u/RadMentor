@@ -1,45 +1,33 @@
-// quiz.js — unified engine with Year-wise + System-wise support (polished UI)
+// quiz.js — FULL engine wired to `neetss.html` topic IDs
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 import {
   initializeFirestore, runTransaction,
-  getFirestore, collection, getDocs, setDoc, deleteDoc, doc, serverTimestamp
+  collection, getDocs, setDoc, deleteDoc, doc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-
 import { GoogleGenerativeAI } from "https://cdn.jsdelivr.net/npm/@google/generative-ai/+esm";
 
-// ---------------------
-// CONFIG (overridden by page)
-// ---------------------
+/* ---------------- Config (overridden per page) ---------------- */
 let QUIZ_CONFIG = {
   GOOGLE_AI_API_KEY: "",
   ALL_QUIZ_DATA: {},      // { paperId: { sheetId, gid } }
   PAPER_METADATA: [],     // [{id,name,examType}]
   FIREBASE_CONFIG: {},
-  title: ""               // optional, used for synthetic paper titles
+  title: ""               // used for synthetic titles in system-wise
 };
 
-// exam durations (seconds)
-const EXAM_DURATIONS = {
-  "NEET SS": 3 * 60 * 60,
-  "INI SS":  1.5 * 60 * 60,
-  "Fellowship exam": 1.5 * 60 * 60
-};
-
-// histogram for aggregates
+/* ---------------- Constants ---------------- */
+const EXAM_DURATIONS = { "NEET SS": 10800, "INI SS": 5400, "Fellowship exam": 5400 };
 const HISTOGRAM_BUCKETS = 10;
 const initHistogram = () => Array.from({ length: HISTOGRAM_BUCKETS }, () => 0);
-const getBucketIndex = (pct) => Math.min(HISTOGRAM_BUCKETS - 1, Math.max(0, Math.floor(pct / (100 / HISTOGRAM_BUCKETS))));
+const getBucketIndex = (p) => Math.min(HISTOGRAM_BUCKETS - 1, Math.max(0, Math.floor(p / (100 / HISTOGRAM_BUCKETS))));
 
-// ---------------------
-// STATE
-// ---------------------
-let db, auth;
-let currentUser = null;
+/* ---------------- State ---------------- */
+let db, auth, currentUser = null;
 
-let allQuestions = [];          // working pool for an active session
-let currentPaper = null;        // {id,name,examType,_system?}
+let allQuestions = [];
+let currentPaper = null;                // { id, name, examType, _system? }
 let quizMode = "practice";
 let isReviewing = false;
 let reviewFilter = [];
@@ -51,80 +39,71 @@ let quizInterval = null;
 let isSoundOn = true;
 let currentQuestionIndex = 0;
 
-// cache: paperId -> parsed questions
-const paperCache = new Map();   // Map<string, Question[]>
+const paperCache = new Map();          // paperId -> parsed questions
 
-// dom cache
+/* ---------------- DOM Cache ---------------- */
 const dom = {
-  screens: document.querySelectorAll('.screen'),
-  authCheck: document.getElementById('authCheckScreen'),
-
-  // topic screen
-  topicScreen: document.getElementById('topic-screen'),
-  paperCardGrid: document.getElementById('paper-card-grid'),
-  yearBtn: document.getElementById('yearwise-btn'),
-  systemBtn: document.getElementById('systemwise-btn'),
-  systemTabs: document.getElementById('system-tabs'),
-
-  // quiz screen
-  quizScreen: document.getElementById('quiz-screen'),
-  quizTitle: document.getElementById('quiz-title'),
-  loadingContainer: document.getElementById('loading-container'),
-  loadingMessage: document.getElementById('loading-message'),
-  quizContent: document.getElementById('quiz-content'),
-  paginationHeader: document.getElementById('quiz-pagination-header'),
-  questionsDisplay: document.getElementById('questions-display'),
-  timerEl: document.getElementById('timer'),
-  modeToggle: document.getElementById('mode-toggle-checkbox'),
-  finishQuizBtn: document.getElementById('finish-quiz-btn'),
-  soundToggleBtn: document.getElementById('sound-toggle-btn'),
-  correctSound: document.getElementById('correct-sound'),
-  wrongSound: document.getElementById('wrong-sound'),
-
-  // results screen
-  resultsScreen: document.getElementById('results-screen'),
-
-  // modal
-  modalBackdrop: document.getElementById('custom-modal-backdrop'),
-  modalMessage: document.getElementById('modal-message'),
-  modalButtons: document.getElementById('modal-buttons'),
+  screens: document.querySelectorAll(".screen"),
+  // Topic
+  topicScreen: document.getElementById("topic-screen"),
+  yearBtn: document.getElementById("yearwise-btn"),
+  systemBtn: document.getElementById("systemwise-btn"),
+  yearWrap: document.getElementById("yearwise-content"),
+  systemWrap: document.getElementById("systemwise-content"),
+  yearGrid: document.getElementById("yearwise-card-grid"),
+  systemGrid: document.getElementById("systemwise-card-grid"),
+  systemTabs: document.getElementById("system-tabs"),
+  // Quiz
+  quizScreen: document.getElementById("quiz-screen"),
+  quizTitle: document.getElementById("quiz-title"),
+  loadingContainer: document.getElementById("loading-container"),
+  loadingMessage: document.getElementById("loading-message"),
+  quizContent: document.getElementById("quiz-content"),
+  paginationHeader: document.getElementById("quiz-pagination-header"),
+  questionsDisplay: document.getElementById("questions-display"),
+  timerEl: document.getElementById("timer"),
+  modeToggle: document.getElementById("mode-toggle-checkbox"),
+  finishQuizBtn: document.getElementById("finish-quiz-btn"),
+  soundToggleBtn: document.getElementById("sound-toggle-btn"),
+  correctSound: document.getElementById("correct-sound"),
+  wrongSound: document.getElementById("wrong-sound"),
+  // Results
+  resultsScreen: document.getElementById("results-screen"),
+  // Auth gate/modal
+  authCheck: document.getElementById("authCheckScreen"),
+  modalBackdrop: document.getElementById("custom-modal-backdrop"),
+  modalMessage: document.getElementById("modal-message"),
+  modalButtons: document.getElementById("modal-buttons"),
 };
 
-// ---------------------
-// UTIL
-// ---------------------
+/* ---------------- Utils ---------------- */
 const byId = (id) => document.getElementById(id);
 const safeFeather = () => { if (window.feather) feather.replace(); };
-const formatTime = (s) => {
-  const m = Math.floor(s / 60), r = s % 60;
-  return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
-};
-const normalize = (t) => (t || '').replace(/\s+/g, ' ').trim();
-const toChip = (txt) => txt ? `<span class="exam-hash">#${txt.replace(/\s+/g,'')}</span>` : "";
+const formatTime = (s) => `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+const normalize = (t) => (t || "").replace(/\s+/g, " ").trim();
+const toChip = (txt) => txt ? `<span class="exam-hash">#${txt.replace(/\s+/g,"")}</span>` : "";
 
-// ---------------------
-// MODAL
-// ---------------------
+/* ---------------- Modal helpers ---------------- */
 function showCustomModal(message, buttons) {
   if (!dom.modalBackdrop) return alert(message);
-  dom.modalMessage.textContent = message;
-  dom.modalButtons.innerHTML = '';
-  (buttons || [{ text: 'OK', isPrimary: true, onClick: () => {} }]).forEach(b => {
-    const el = document.createElement('button');
-    el.textContent = b.text;
-    el.className = `results-btn ${b.isPrimary ? 'primary' : 'secondary'}`;
-    el.onclick = () => { dom.modalBackdrop.style.display = 'none'; b.onClick?.(); };
-    dom.modalButtons.appendChild(el);
-  });
-  dom.modalBackdrop.style.display = 'flex';
+  if (dom.modalMessage) dom.modalMessage.textContent = message;
+  if (dom.modalButtons) {
+    dom.modalButtons.innerHTML = "";
+    (buttons || [{ text: "OK", isPrimary: true, onClick: () => {} }]).forEach(b => {
+      const el = document.createElement("button");
+      el.textContent = b.text;
+      el.className = `results-btn ${b.isPrimary ? "primary" : "secondary"}`;
+      el.onclick = () => { dom.modalBackdrop.style.display = "none"; b.onClick?.(); };
+      dom.modalButtons.appendChild(el);
+    });
+  }
+  dom.modalBackdrop.style.display = "flex";
 }
-const showCustomAlert  = (m, ok=()=>{}) => showCustomModal(m, [{ text:'OK', isPrimary:true, onClick: ok }]);
+const showCustomAlert  = (m, ok=()=>{}) => showCustomModal(m, [{ text:"OK", isPrimary:true, onClick: ok }]);
 const showCustomConfirm = (m, ok, cancel=()=>{}) =>
-  showCustomModal(m, [{ text:'Yes', isPrimary:true, onClick: ok }, { text:'No', isPrimary:false, onClick: cancel }]);
+  showCustomModal(m, [{ text:"Yes", isPrimary:true, onClick: ok }, { text:"No", isPrimary:false, onClick: cancel }]);
 
-// ---------------------
-// INIT
-// ---------------------
+/* ---------------- Init ---------------- */
 export function initQuizApp(config) {
   QUIZ_CONFIG = { ...QUIZ_CONFIG, ...config };
 
@@ -132,103 +111,86 @@ export function initQuizApp(config) {
   db   = initializeFirestore(app, { experimentalForceLongPolling: true });
   auth = getAuth(app);
 
-  // UI wiring for view toggles (if present)
-  dom.yearBtn?.addEventListener('click', () => setView('year'));
-  dom.systemBtn?.addEventListener('click', () => setView('system'));
+  dom.yearBtn?.addEventListener("click", () => setView("year"));
+  dom.systemBtn?.addEventListener("click", () => setView("system"));
 
-  // mode toggle
-  dom.modeToggle?.addEventListener('change', () => {
-    const newMode = dom.modeToggle.checked ? 'exam' : 'practice';
+  dom.modeToggle?.addEventListener("change", () => {
+    const newMode = dom.modeToggle.checked ? "exam" : "practice";
     showCustomConfirm(`Switching to ${newMode} mode will clear your current session. Continue?`,
       () => setQuizMode(newMode),
       () => dom.modeToggle.checked = !dom.modeToggle.checked
     );
   });
-
-  // sounds
-  dom.soundToggleBtn?.addEventListener('click', toggleSound);
-
-  // finish
-  dom.finishQuizBtn?.addEventListener('click', () => {
-    const msg = quizMode === 'exam'
-      ? 'Are you sure you want to finish the exam?'
-      : 'Are you sure you want to finish this practice session?';
-    showCustomConfirm(msg, () => finishExam());
-  });
+  dom.soundToggleBtn?.addEventListener("click", toggleSound);
+  dom.finishQuizBtn?.addEventListener("click", () =>
+    showCustomConfirm(quizMode === "exam" ? "Finish exam?" : "Finish practice session?", () => finishExam())
+  );
 
   onAuthStateChanged(auth, async (user) => {
     currentUser = user;
-    if (user) {
-      if (dom.authCheck) dom.authCheck.style.display = 'none';
-      await handleDirectLinkOrShowTopics();
-    } else {
+    if (!user) {
       if (dom.authCheck) {
-        dom.authCheck.innerHTML =
-          '<div class="selection-container"><p>You must be logged in to continue.</p></div>';
+        dom.authCheck.innerHTML = `
+          <div class="selection-container">
+            <div class="loader"></div>
+            <p class="mt-4" style="color:var(--text-color-light)">Please sign in…</p>
+          </div>`;
       }
+      return;
     }
+    if (dom.authCheck) dom.authCheck.style.display = "none";
+    await handleDirectLinkOrShowTopics();
   });
 }
 
-// ---------------------
-// TOPIC VIEW (Year/System)
-// ---------------------
-let currentView = 'year'; // 'year' | 'system'
+/* ---------------- Topic View ---------------- */
+let currentView = "year";
+
 function setView(v) {
   currentView = v;
 
-  // Toggle pill states
-  dom.yearBtn?.classList.toggle('active', v === 'year');
-  dom.systemBtn?.classList.toggle('active', v === 'system');
+  dom.yearBtn?.classList.toggle("active", v === "year");
+  dom.systemBtn?.classList.toggle("active", v === "system");
 
-  // Always reset grid before drawing a new view
-  if (dom.paperCardGrid) {
-    dom.paperCardGrid.className = 'topic-grid'; // ensure grid class
-    dom.paperCardGrid.innerHTML = '';
-  }
+  dom.yearWrap?.classList.toggle("hidden", v !== "year");
+  dom.systemWrap?.classList.toggle("hidden", v !== "system");
 
-  // Show/hide system tabs
-  if (v === 'year') {
-    dom.systemTabs?.classList.add('hidden');
-    renderYearWise();
-  } else {
-    dom.systemTabs?.classList.remove('hidden');
-    renderSystemWise();
-  }
+  if (v === "year") renderYearWise();
+  else renderSystemWise();
 }
 
 async function handleDirectLinkOrShowTopics() {
+  // direct question deep-link support (optional in your flow)
   const params = new URLSearchParams(window.location.search);
-  const directQuestionId = params.get('questionId');
+  const directQuestionId = params.get("questionId");
   if (currentUser && directQuestionId) {
-    const paperId = params.get('paperId');
+    const paperId = params.get("paperId");
     const paper   = QUIZ_CONFIG.PAPER_METADATA.find(p => p.id === paperId);
     if (paper) {
       currentPaper = paper;
-      quizMode = 'practice';
+      quizMode = "practice";
       await startQuiz(null, directQuestionId);
       return;
     }
   }
-  showScreen('topic-screen');
-  setView('year'); // Default to year-wise view
+  showScreen("topic-screen");
+  setView("year");
   safeFeather();
 }
 
-// Pretty rad-card tiles (horizontal grid)
+/* ---------- YEAR-WISE ---------- */
 function renderYearWise() {
-  if (!dom.paperCardGrid) return;
+  if (!dom.yearGrid) return;
+  dom.yearGrid.innerHTML = "";
 
-  // Guard: if no metadata configured
-  if (!Array.isArray(QUIZ_CONFIG.PAPER_METADATA) || QUIZ_CONFIG.PAPER_METADATA.length === 0) {
-    dom.paperCardGrid.innerHTML = `<p class="text-slate-500">No papers configured.</p>`;
+  if (!Array.isArray(QUIZ_CONFIG.PAPER_METADATA) || !QUIZ_CONFIG.PAPER_METADATA.length) {
+    dom.yearGrid.innerHTML = `<p class="text-slate-500">No papers configured.</p>`;
     return;
   }
 
   const frag = document.createDocumentFragment();
-
   QUIZ_CONFIG.PAPER_METADATA.forEach(p => {
-    const wrap = document.createElement('div');
+    const wrap = document.createElement("div");
     wrap.innerHTML = `
       <a href="#" class="rad-card tilt group focusable block topic-card" data-id="${p.id}" data-name="${p.name}" data-examtype="${p.examType}">
         <div class="rad-card-inner p-5 flex items-center justify-between">
@@ -242,115 +204,86 @@ function renderYearWise() {
     `.trim();
     frag.appendChild(wrap.firstChild);
   });
+  dom.yearGrid.appendChild(frag);
 
-  dom.paperCardGrid.appendChild(frag);
-
-  dom.paperCardGrid.querySelectorAll('.topic-card').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+  dom.yearGrid.querySelectorAll(".topic-card").forEach(btn => {
+    btn.addEventListener("click", (e) => {
       e.preventDefault();
       const { id, name, examtype } = btn.dataset;
       currentPaper = { id, name, examType: examtype };
-      quizMode = 'practice';
+      quizMode = "practice";
       checkResumeAndStart();
     });
   });
   safeFeather();
 }
 
-// --- System-wise (start on tab click) ---
+/* ---------- SYSTEM-WISE ---------- */
 async function ensureAllPapersCached() {
-  // only show analyzing message when system view is active
-  if (currentView === 'system' && dom.paperCardGrid) {
-    dom.paperCardGrid.innerHTML = `<p class="text-slate-500 text-center col-span-full">Analyzing question banks, please wait...</p>`;
-  }
   const jobs = Object.entries(QUIZ_CONFIG.ALL_QUIZ_DATA).map(async ([paperId, { sheetId, gid }]) => {
     if (paperCache.has(paperId)) return;
     try {
       const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
-      const r = await fetch(url, { cache: 'no-store' });
+      const r = await fetch(url, { cache: "no-store" });
       if (!r.ok) return;
       const csv = await r.text();
       paperCache.set(paperId, parseCSVToQuestions(csv, paperId));
-    } catch(e) { console.error('cache fetch fail', paperId, e); }
+    } catch (e) { console.error("cache fetch fail", paperId, e); }
   });
   await Promise.all(jobs);
 }
-
 function uniqueTagsFromCache() {
-  const tagSet = new Set();
+  const s = new Set();
   for (const qs of paperCache.values()) {
-    for (const q of qs) {
-      (q.tag || '').split(',').forEach(t => {
-        const n = normalize(t);
-        if (n) tagSet.add(n);
-      });
-    }
+    for (const q of qs) (q.tag || "").split(",").forEach(t => { const n = normalize(t); if (n) s.add(n); });
   }
-  return Array.from(tagSet).sort((a,b) => a.localeCompare(b));
+  return Array.from(s).sort((a,b)=>a.localeCompare(b));
 }
-
 async function renderSystemWise() {
-  await ensureAllPapersCached();
+  if (!dom.systemTabs || !dom.systemGrid) return;
+  dom.systemTabs.innerHTML = "";
+  dom.systemGrid.innerHTML = `<div class="rad-card rad-green tilt"><div class="rad-card-inner p-5">
+      <p class="text-sm font-semibold text-emerald-800 mb-1">System-wise</p>
+      <h3 class="text-lg font-bold text-slate-900">Select a system above to begin.</h3>
+      <p class="text-slate-600 mt-1">We’ll pull questions across all years for that system.</p>
+  </div></div>`;
 
+  await ensureAllPapersCached();
   const tags = uniqueTagsFromCache();
   if (!tags.length) {
-    dom.paperCardGrid.innerHTML = `<p class="text-slate-500 text-center col-span-full">No system tags found. Check the Tag column in your sheets.</p>`;
+    dom.systemGrid.innerHTML = `<p class="text-slate-500">No system tags found (check Tag column).</p>`;
     return;
   }
 
-  // Build tabs (no auto-click, no auto-start)
-  if (dom.systemTabs) {
-    dom.systemTabs.innerHTML = tags.map(t => `<button class="system-tab" data-system="${t}">${t}</button>`).join('');
-
-    // Friendly prompt in the grid area
-    dom.paperCardGrid.innerHTML = `
-      <div class="rad-card rad-green tilt">
-        <div class="rad-card-inner p-5">
-          <p class="text-sm font-semibold text-emerald-800 mb-1">System-wise</p>
-          <h3 class="text-lg font-bold text-slate-900">Select a system above to begin.</h3>
-          <p class="text-slate-600 mt-1">We’ll pull questions across all years for that system.</p>
-        </div>
-      </div>
-    `;
-
-    // Start only when the user clicks a tab
-    dom.systemTabs.querySelectorAll('.system-tab').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        dom.systemTabs.querySelectorAll('.system-tab').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const systemName = btn.dataset.system;
-        currentPaper = {
-          id: `system-${systemName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
-          name: `${systemName} — All Years`,
-          examType: QUIZ_CONFIG.title || 'Practice',
-          _system: systemName
-        };
-        quizMode = 'practice';
-        await startQuiz(null);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
+  dom.systemTabs.innerHTML = tags.map(t => `<button class="system-tab" data-system="${t}">${t}</button>`).join("");
+  dom.systemTabs.querySelectorAll(".system-tab").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      dom.systemTabs.querySelectorAll(".system-tab").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const systemName = btn.dataset.system;
+      currentPaper = {
+        id: `system-${systemName.toLowerCase().replace(/[^a-z0-9]/g,"-")}`,
+        name: `${systemName} — All Years`,
+        examType: QUIZ_CONFIG.title || "Practice",
+        _system: systemName
+      };
+      quizMode = "practice";
+      await startQuiz(null);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
-  }
+  });
 }
 
-
-// ---------------------
-// QUIZ FLOW
-// ---------------------
+/* ---------------- Quiz Flow ---------------- */
 function showScreen(id) {
-  dom.screens.forEach(s => s.classList.toggle('active', s.id === id));
+  dom.screens.forEach(s => s.classList.toggle("active", s.id === id));
   safeFeather();
 }
-
-function setQuizMode(newMode) {
-  quizMode = newMode;
-  if (currentPaper && currentUser) {
-    localStorage.removeItem(`radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`);
-  }
+function setQuizMode(m) {
+  quizMode = m;
+  if (currentPaper && currentUser) localStorage.removeItem(`radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`);
   startQuiz(null);
 }
-
 function checkResumeAndStart() {
   const key = `radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`;
   const saved = localStorage.getItem(key);
@@ -369,24 +302,22 @@ async function startQuiz(resumeState, directQuestionId = null) {
   flaggedQuestions = new Set(resumeState?.flags || []);
   let startIndex = resumeState?.index || 0;
 
-  showScreen('quiz-screen');
-  dom.loadingContainer.style.display = 'block';
-  dom.quizContent.style.display = 'none';
+  showScreen("quiz-screen");
+  if (dom.loadingContainer) dom.loadingContainer.style.display = "block";
+  if (dom.quizContent) dom.quizContent.style.display = "none";
   initializeSound();
 
   try {
     updateLoading(`Preparing questions for: ${currentPaper.name}...`);
     await loadWorkingQuestions();
+    if (!allQuestions.length) throw new Error("No questions found for this selection.");
 
-    if (!allQuestions.length)
-      throw new Error('No questions found for this selection.');
-
-    updateLoading('Fetching your bookmarks...');
+    updateLoading("Fetching your bookmarks...");
     await fetchUserBookmarks();
 
-    dom.modeToggle.checked = quizMode === 'exam';
-    dom.quizTitle.textContent = currentPaper.name;
-    dom.finishQuizBtn.style.display = 'block';
+    if (dom.modeToggle) dom.modeToggle.checked = quizMode === "exam";
+    if (dom.quizTitle) dom.quizTitle.textContent = currentPaper.name;
+    if (dom.finishQuizBtn) dom.finishQuizBtn.style.display = "block";
 
     createQuestionNav();
     if (directQuestionId) {
@@ -397,87 +328,57 @@ async function startQuiz(resumeState, directQuestionId = null) {
     startTimer();
   } catch (err) {
     console.error(err);
-    showCustomAlert(err?.message || 'Error preparing the session.', () => showScreen('topic-screen'));
+    showCustomAlert(err?.message || "Error preparing the session.", () => showScreen("topic-screen"));
     return;
   } finally {
-    dom.loadingContainer.style.display = 'none';
+    if (dom.loadingContainer) dom.loadingContainer.style.display = "none";
   }
-  dom.quizContent.style.display = 'block';
+  if (dom.quizContent) dom.quizContent.style.display = "block";
 }
-
-function updateLoading(msg) {
-  if (dom.loadingMessage) dom.loadingMessage.textContent = msg;
-}
+function updateLoading(msg){ if (dom.loadingMessage) dom.loadingMessage.textContent = msg; }
 
 async function loadWorkingQuestions() {
   allQuestions = [];
-
-  // System mode: merge all papers from cache then filter by tag
   if (currentPaper._system) {
     await ensureAllPapersCached();
     const pool = [];
     for (const qs of paperCache.values()) pool.push(...qs);
     const target = normalize(currentPaper._system);
-    allQuestions = pool.filter(q =>
-      (q.tagsNormalized || []).includes(target)
-    );
-    // Re-index IDs contiguously for session
-    allQuestions = allQuestions.map((q, i) => ({ ...q, id: `${currentPaper.id}-${i}` }));
+    allQuestions = pool.filter(q => (q.tagsNormalized || []).includes(target))
+                       .map((q,i)=>({ ...q, id:`${currentPaper.id}-${i}` }));
     return;
   }
-
-  // Year mode: fetch just one sheet (use cache if present)
   const cfg = QUIZ_CONFIG.ALL_QUIZ_DATA[currentPaper.id];
-  if (!cfg?.sheetId || !cfg?.gid) throw new Error('Missing sheet configuration.');
+  if (!cfg?.sheetId || !cfg?.gid) throw new Error("Missing sheet configuration.");
   if (paperCache.has(currentPaper.id)) {
-    allQuestions = paperCache.get(currentPaper.id).map((q, i) => ({ ...q, id: `${currentPaper.id}-${i}` }));
+    allQuestions = paperCache.get(currentPaper.id).map((q,i)=>({ ...q, id:`${currentPaper.id}-${i}` }));
     return;
   }
   const url = `https://docs.google.com/spreadsheets/d/${cfg.sheetId}/gviz/tq?tqx=out:csv&gid=${cfg.gid}`;
-  const r = await fetch(url, { cache: 'no-store' });
+  const r = await fetch(url, { cache: "no-store" });
   if (!r.ok) throw new Error(`Sheet fetch failed (${r.status}).`);
   const csv = await r.text();
   const parsed = parseCSVToQuestions(csv, currentPaper.id);
   paperCache.set(currentPaper.id, parsed);
-  allQuestions = parsed.map((q, i) => ({ ...q, id: `${currentPaper.id}-${i}` }));
+  allQuestions = parsed.map((q,i)=>({ ...q, id:`${currentPaper.id}-${i}` }));
 }
 
 function parseCSVToQuestions(csvText, paperIdForId) {
-  const lines = csvText.trim().split('\n').slice(1); // skip header
+  const lines = csvText.trim().split("\n").slice(1);
   return lines.map((line, idx) => {
-    const parts = line
-      .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
-      .map(p => p.trim().replace(/^"|"$/g, ''));
-
-    // A..L columns (Tag is J)
-    const [
-      question, a, b, c, d,
-      correctAns, explanation,
-      image, imageForExplTag,
-      tag,       // J
-      subtag,    // K
-      exam       // L
-    ] = parts;
-
-    const options = [a, b, c, d].filter(Boolean);
-    const letterMap = { a: 0, b: 1, c: 2, d: 3 };
-    const correctIndex = letterMap[(correctAns || '').trim().toLowerCase()];
-
-    if (question && correctIndex !== undefined && options.length > 0) {
-      const tagsNormalized = (tag || '')
-        .split(',')
-        .map(normalize)
-        .filter(Boolean);
-
+    const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ""));
+    const [question,a,b,c,d,correctAns,explanation,image,imageForExplTag,tag,subtag,exam] = parts;
+    const options = [a,b,c,d].filter(Boolean);
+    const map = { a:0,b:1,c:2,d:3 };
+    const correctIndex = map[(correctAns || "").trim().toLowerCase()];
+    if (question && correctIndex !== undefined && options.length) {
+      const tagsNormalized = (tag || "").split(",").map(normalize).filter(Boolean);
       return {
-        id: `${paperIdForId || 'paper'}-${idx}`,
-        text: question,
-        options,
-        correctIndex,
-        explanation: explanation || 'N/A',
+        id: `${paperIdForId || "paper"}-${idx}`,
+        text: question, options, correctIndex,
+        explanation: explanation || "N/A",
         image, imageForExplTag,
-        tag: tag || '',
-        tagsNormalized,
+        tag: tag || "", tagsNormalized,
         subtag: normalize(subtag),
         exam: normalize(exam)
       };
@@ -486,42 +387,32 @@ function parseCSVToQuestions(csvText, paperIdForId) {
   }).filter(Boolean);
 }
 
-// ---------------------
-// NAV + QUESTION RENDER
-// ---------------------
+/* ---------------- Nav + Render Question ---------------- */
 function createQuestionNav() {
+  if (!dom.paginationHeader) return;
   dom.paginationHeader.innerHTML =
-    allQuestions.map((_, i) => `<div class="page-box" data-index="${i}">${i + 1}</div>`).join('');
-  dom.paginationHeader.querySelectorAll('.page-box').forEach(box => {
-    box.addEventListener('click', () => showQuestion(parseInt(box.dataset.index)));
+    allQuestions.map((_,i)=>`<div class="page-box" data-index="${i}">${i+1}</div>`).join("");
+  dom.paginationHeader.querySelectorAll(".page-box").forEach(box=>{
+    box.addEventListener("click",()=>showQuestion(parseInt(box.dataset.index)));
   });
 }
-
 function updateQuestionNav() {
-  dom.paginationHeader.querySelectorAll('.page-box').forEach(box => {
+  if (!dom.paginationHeader) return;
+  dom.paginationHeader.querySelectorAll(".page-box").forEach(box=>{
     const i = parseInt(box.dataset.index);
-    box.className = 'page-box';
-    if (i === currentQuestionIndex) box.classList.add('active');
+    box.className = "page-box";
+    if (i === currentQuestionIndex) box.classList.add("active");
     if (userAnswers[i] !== undefined) {
-      if (quizMode === 'practice' || isReviewing) {
-        const correct = userAnswers[i] === allQuestions[i].correctIndex;
-        box.classList.add(correct ? 'answered-correct' : 'answered-incorrect');
-      } else {
-        box.classList.add('answered-correct');
-        box.style.backgroundColor = 'var(--primary-color)';
-        box.style.borderColor = 'var(--primary-color)';
-        box.style.color = 'white';
-      }
+      const correct = userAnswers[i] === allQuestions[i].correctIndex;
+      box.classList.add((quizMode === "practice" || isReviewing) ? (correct ? "answered-correct":"answered-incorrect") : "answered-correct");
     }
-    if (flaggedQuestions.has(allQuestions[i].id)) box.classList.add('flagged');
+    if (flaggedQuestions.has(allQuestions[i].id)) box.classList.add("flagged");
   });
-  dom.paginationHeader.querySelector('.page-box.active')?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  dom.paginationHeader.querySelector(".page-box.active")?.scrollIntoView({ behavior:"smooth", block:"nearest", inline:"center" });
 }
-
 function showQuestion(index) {
-  if (reviewFilter.length > 0 && !reviewFilter.includes(index)) {
-    index = reviewFilter.find(i => i >= index) ?? reviewFilter[0];
-  }
+  if (!dom.questionsDisplay) return;
+  if (reviewFilter.length > 0 && !reviewFilter.includes(index)) index = reviewFilter.find(i=>i>=index) ?? reviewFilter[0];
   currentQuestionIndex = index;
   const q = allQuestions[index]; if (!q) return;
 
@@ -529,172 +420,106 @@ function showQuestion(index) {
   const isFlagged    = flaggedQuestions.has(q.id);
   const isAnswered   = userAnswers[index] !== undefined;
 
-  // Chips: show both #Exam and #Tag (first tag if multiple)
   const firstTag = (q.tagsNormalized && q.tagsNormalized[0]) ? q.tagsNormalized[0] : "";
-  const chips = [
-    toChip(q.exam),
-    toChip(firstTag)
-  ].join('');
+  const chips = [toChip(q.exam), toChip(firstTag)].join("");
 
   let html = `
     <div class="question-title-bar">
       <span class="question-number">Q ${index + 1} / ${allQuestions.length}</span>
       <div class="question-controls">
         ${chips}
-        <button class="icon-btn flag-btn ${isFlagged ? 'flagged' : ''}" ${isReviewing ? 'disabled' : ''}><i data-feather="flag"></i></button>
-        <button class="icon-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" ${isReviewing ? 'disabled' : ''}><i data-feather="bookmark"></i></button>
+        <button class="icon-btn flag-btn ${isFlagged ? "flagged":""}" ${isReviewing ? "disabled":""}><i data-feather="flag"></i></button>
+        <button class="icon-btn bookmark-btn ${isBookmarked ? "bookmarked":""}" ${isReviewing ? "disabled":""}><i data-feather="bookmark"></i></button>
       </div>
     </div>
     <p class="main-question-text">${q.text}</p>
     <div>
-      ${q.options.map((opt, i) => {
-        const shouldDisable = isReviewing || (quizMode === 'practice' && isAnswered);
-        let cls = 'option-btn';
-        if (quizMode === 'exam' && i === userAnswers[index]) cls += ' selected';
-        if (shouldDisable && i === q.correctIndex) cls += ' correct';
-        else if (shouldDisable && i === userAnswers[index]) cls += ' incorrect';
-        return `<button class="${cls}" data-index="${i}" ${shouldDisable ? 'disabled' : ''}>${opt}</button>`;
-      }).join('')}
+      ${q.options.map((opt,i)=>{
+        const lock = isReviewing || (quizMode === "practice" && isAnswered);
+        let cls = "option-btn";
+        if (quizMode === "exam" && i === userAnswers[index]) cls += " selected";
+        if (lock && i === q.correctIndex) cls += " correct";
+        else if (lock && i === userAnswers[index]) cls += " incorrect";
+        return `<button class="${cls}" data-index="${i}" ${lock ? "disabled":""}>${opt}</button>`;
+      }).join("")}
     </div>
   `;
-
-  if ((quizMode === 'practice' && isAnswered) || isReviewing) {
+  if ((quizMode === "practice" && isAnswered) || isReviewing) {
     html += `<div class="explanation-box"><h4>Explanation</h4><p>${q.explanation}</p></div>`;
   }
-
   dom.questionsDisplay.innerHTML = html;
 
-  dom.questionsDisplay.querySelector('.flag-btn')?.addEventListener('click', () => toggleFlag(q.id));
-  dom.questionsDisplay.querySelector('.bookmark-btn')?.addEventListener('click', () => toggleBookmark(q.id, q.text));
-
-  if (!isReviewing && !(quizMode === 'practice' && isAnswered)) {
-    dom.questionsDisplay.querySelectorAll('.option-btn').forEach(b => b.addEventListener('click', handleOptionClick));
+  dom.questionsDisplay.querySelector(".flag-btn")?.addEventListener("click",()=>toggleFlag(q.id));
+  dom.questionsDisplay.querySelector(".bookmark-btn")?.addEventListener("click",()=>toggleBookmark(q.id,q.text));
+  if (!isReviewing && !(quizMode === "practice" && isAnswered)) {
+    dom.questionsDisplay.querySelectorAll(".option-btn").forEach(b=>b.addEventListener("click", handleOptionClick));
   }
   updateQuestionNav();
   safeFeather();
 }
-
 function handleOptionClick(e) {
   const selectedIndex = parseInt(e.target.dataset.index);
   userAnswers[currentQuestionIndex] = selectedIndex;
-  const q = allQuestions[currentQuestionIndex];
-  const correct = selectedIndex === q.correctIndex;
-
-  if (quizMode === 'practice') {
-    if (isSoundOn) (correct ? dom.correctSound : dom.wrongSound).play();
-    showQuestion(currentQuestionIndex);
-  } else {
-    showQuestion(currentQuestionIndex);
-  }
+  const correct = selectedIndex === allQuestions[currentQuestionIndex].correctIndex;
+  if (quizMode === "practice" && isSoundOn) (correct ? dom.correctSound : dom.wrongSound).play();
+  showQuestion(currentQuestionIndex);
   saveState();
 }
 
-// ---------------------
-// SOUND
-// ---------------------
-function initializeSound() {
-  const s = localStorage.getItem('radmentor_sound_pref');
-  isSoundOn = s !== 'off';
-  updateSoundIcon();
-}
-function toggleSound() {
-  isSoundOn = !isSoundOn;
-  localStorage.setItem('radmentor_sound_pref', isSoundOn ? 'on' : 'off');
-  updateSoundIcon();
-}
-function updateSoundIcon() {
-  dom.soundToggleBtn.innerHTML = `<i data-feather="${isSoundOn ? 'volume-2' : 'volume-x'}"></i>`;
-  safeFeather();
-}
+/* ---------------- Sound / Flags / Bookmarks ---------------- */
+function initializeSound(){ const s = localStorage.getItem("radmentor_sound_pref"); isSoundOn = s !== "off"; updateSoundIcon(); }
+function toggleSound(){ isSoundOn = !isSoundOn; localStorage.setItem("radmentor_sound_pref", isSoundOn ? "on":"off"); updateSoundIcon(); }
+function updateSoundIcon(){ dom.soundToggleBtn && (dom.soundToggleBtn.innerHTML = `<i data-feather="${isSoundOn ? "volume-2":"volume-x"}"></i>`); safeFeather(); }
 
-// ---------------------
-// FLAGS / BOOKMARKS
-// ---------------------
-function toggleFlag(id) {
+function toggleFlag(id){
   flaggedQuestions.has(id) ? flaggedQuestions.delete(id) : flaggedQuestions.add(id);
-  dom.questionsDisplay.querySelector('.flag-btn')?.classList.toggle('flagged', flaggedQuestions.has(id));
-  updateQuestionNav();
-  saveState();
+  dom.questionsDisplay.querySelector(".flag-btn")?.classList.toggle("flagged", flaggedQuestions.has(id));
+  updateQuestionNav(); saveState();
 }
-
-async function toggleBookmark(qid, qtext) {
+async function toggleBookmark(qid, qtext){
   if (!currentUser) return;
-  const ref = doc(db, 'users', currentUser.uid, 'bookmarks', qid);
-  const btn = dom.questionsDisplay.querySelector('.bookmark-btn');
-  try {
-    if (userBookmarks.has(qid)) {
-      await deleteDoc(ref);
-      userBookmarks.delete(qid);
-      btn?.classList.remove('bookmarked');
-    } else {
-      await setDoc(ref, {
-        questionText: qtext,
-        topic: currentPaper.name,
-        timestamp: serverTimestamp(),
-        linkToQuestion: `${window.location.pathname}?paperId=${currentPaper.id}&questionId=${qid}`
-      });
-      userBookmarks.add(qid);
-      btn?.classList.add('bookmarked');
-    }
-  } catch(e) {
-    console.warn('bookmark failed', e);
-  }
+  const ref = doc(db, "users", currentUser.uid, "bookmarks", qid);
+  const btn = dom.questionsDisplay.querySelector(".bookmark-btn");
+  try{
+    if (userBookmarks.has(qid)) { await deleteDoc(ref); userBookmarks.delete(qid); btn?.classList.remove("bookmarked"); }
+    else { await setDoc(ref, { questionText:qtext, topic: currentPaper.name, timestamp: serverTimestamp(), linkToQuestion: `${window.location.pathname}?paperId=${currentPaper.id}&questionId=${qid}` });
+           userBookmarks.add(qid); btn?.classList.add("bookmarked"); }
+  }catch(e){ console.warn("bookmark failed", e); }
 }
-
-async function fetchUserBookmarks() {
+async function fetchUserBookmarks(){
   if (!currentUser) { userBookmarks = new Set(); return; }
-  try {
-    const snap = await getDocs(collection(db, 'users', currentUser.uid, 'bookmarks'));
-    userBookmarks = new Set(snap.docs.map(d => d.id));
-  } catch(e) {
-    console.warn('bookmarks read failed', e);
-    userBookmarks = new Set();
-  }
+  try{ const snap = await getDocs(collection(db, "users", currentUser.uid, "bookmarks"));
+       userBookmarks = new Set(snap.docs.map(d=>d.id)); }
+  catch(e){ console.warn("bookmarks read failed", e); userBookmarks = new Set(); }
 }
 
-// ---------------------
-// TIMER & STATE
-// ---------------------
-function saveState() {
+/* ---------------- Timer & State ---------------- */
+function saveState(){
   if (!currentUser || !currentPaper || isReviewing) return;
   const key = `radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`;
-  const state = { answers: userAnswers, index: currentQuestionIndex, elapsedSeconds, flags: [...flaggedQuestions] };
+  const state = { answers:userAnswers, index:currentQuestionIndex, elapsedSeconds, flags:[...flaggedQuestions] };
   localStorage.setItem(key, JSON.stringify(state));
 }
-
-function startTimer() {
+function startTimer(){
   clearInterval(quizInterval);
   const total = EXAM_DURATIONS[currentPaper.examType] || 0;
-
-  if (quizMode === 'exam' && total > 0) {
+  if (quizMode === "exam" && total > 0){
     let remaining = total - elapsedSeconds;
-    dom.timerEl.textContent = formatTime(remaining);
-    quizInterval = setInterval(() => {
-      if (remaining <= 0) {
-        clearInterval(quizInterval);
-        showCustomAlert("Time's up! The exam has finished.", () => finishExam());
-        return;
-      }
-      remaining--; elapsedSeconds++;
-      dom.timerEl.textContent = formatTime(remaining);
-      saveState();
-    }, 1000);
+    dom.timerEl && (dom.timerEl.textContent = formatTime(remaining));
+    quizInterval = setInterval(()=>{
+      if (remaining <= 0){ clearInterval(quizInterval); showCustomAlert("Time's up! The exam has finished.", ()=>finishExam()); return; }
+      remaining--; elapsedSeconds++; dom.timerEl && (dom.timerEl.textContent = formatTime(remaining)); saveState();
+    },1000);
   } else {
-    let start = Date.now() - (elapsedSeconds * 1000);
-    quizInterval = setInterval(() => {
-      elapsedSeconds = Math.floor((Date.now() - start) / 1000);
-      dom.timerEl.textContent = formatTime(elapsedSeconds);
-      saveState();
-    }, 1000);
+    const start = Date.now() - (elapsedSeconds*1000);
+    quizInterval = setInterval(()=>{ elapsedSeconds = Math.floor((Date.now()-start)/1000); dom.timerEl && (dom.timerEl.textContent = formatTime(elapsedSeconds)); saveState(); },1000);
   }
 }
 
-// ---------------------
-// RESULTS
-// ---------------------
+/* ---------------- Results & Insights ---------------- */
 async function finishExam() {
   clearInterval(quizInterval);
-  showScreen('results-screen');
+  showScreen("results-screen");
 
   let correct = 0, incorrect = 0;
   const incorrectQs = [];
@@ -708,46 +533,51 @@ async function finishExam() {
   const unattempted = allQuestions.length - (correct + incorrect);
   const pct = allQuestions.length ? (correct / allQuestions.length) * 100 : 0;
 
-  byId('final-score-percent').textContent = `${pct.toFixed(1)}%`;
-  byId('correct-count').textContent = correct;
-  byId('incorrect-count').textContent = incorrect;
-  byId('unattempted-count').textContent = unattempted;
-  byId('time-taken').textContent = formatTime(elapsedSeconds);
+  byId("final-score-percent") && (byId("final-score-percent").textContent = `${pct.toFixed(1)}%`);
+  byId("correct-count") && (byId("correct-count").textContent = correct);
+  byId("incorrect-count") && (byId("incorrect-count").textContent = incorrect);
+  byId("unattempted-count") && (byId("unattempted-count").textContent = unattempted);
+  byId("time-taken") && (byId("time-taken").textContent = formatTime(elapsedSeconds));
 
-  if (window.performanceChart instanceof Chart) window.performanceChart.destroy();
-  window.performanceChart = new Chart(byId('performanceChart'), {
-    type:'doughnut',
-    data:{ labels:['Correct','Incorrect','Unattempted'], datasets:[{ data:[correct,incorrect,unattempted], backgroundColor:['#22c55e','#ef4444','#f59e0b'] }] },
-    options:{ responsive:true, maintainAspectRatio:false }
-  });
+  if (window.performanceChart instanceof Chart) window.performanceChart.destroy?.();
+  const canvas = byId("performanceChart");
+  if (canvas && window.Chart) {
+    window.performanceChart = new Chart(canvas, {
+      type: "doughnut",
+      data: { labels: ["Correct","Incorrect","Unattempted"], datasets:[{ data:[correct,incorrect,unattempted], backgroundColor:["#22c55e","#ef4444","#f59e0b"] }] },
+      options:{ responsive:true, maintainAspectRatio:false }
+    });
+  }
 
   // clear local
-  localStorage.removeItem(`radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser?.uid}`);
+  if (currentUser) localStorage.removeItem(`radmentor_quiz_${currentPaper.id}_${quizMode}_${currentUser.uid}`);
 
-  if (quizMode === 'exam' && currentUser) {
+  if (quizMode === "exam" && currentUser) {
     await Promise.all([
       saveUserAttempt(pct),
       updateAggregatesAndGetStats(pct).then(({ average, percentile }) => {
-        byId('average-score').textContent = `${average.toFixed(1)}%`;
-        byId('percentile-rank').textContent = percentile.toFixed(1);
+        byId("average-score") && (byId("average-score").textContent = `${average.toFixed(1)}%`);
+        byId("percentile-rank") && (byId("percentile-rank").textContent = percentile.toFixed(1));
       })
     ]);
     await getAIInsights(incorrectQs);
   } else {
-    byId('peer-comparison-content').innerHTML = '<p>Peer comparison is only available in Exam Mode.</p>';
-    byId('ai-insights-card').innerHTML =
+    const pc = byId("peer-comparison-content");
+    if (pc) pc.innerHTML = "<p>Peer comparison is only available in Exam Mode.</p>";
+    const ai = byId("ai-insights-card");
+    if (ai) ai.innerHTML =
       `<div class="flex items-start gap-4"><div class="ai-avatar">🤖</div><div class="ai-message flex-grow"><p>AI Insights are only available for Exam Mode results.</p></div></div>`;
   }
 
-  byId('back-to-topics-btn').addEventListener('click', () => { showScreen('topic-screen'); setView(currentView); });
-  byId('review-all-btn').addEventListener('click', () => setupReview('all'));
-  byId('review-incorrect-btn').addEventListener('click', () => setupReview('incorrect'));
-  byId('review-flagged-btn').addEventListener('click', () => setupReview('flagged'));
+  byId("back-to-topics-btn")?.addEventListener("click", () => { showScreen("topic-screen"); setView(currentView); });
+  byId("review-all-btn")?.addEventListener("click", () => setupReview("all"));
+  byId("review-incorrect-btn")?.addEventListener("click", () => setupReview("incorrect"));
+  byId("review-flagged-btn")?.addEventListener("click", () => setupReview("flagged"));
 }
 
 async function saveUserAttempt(scorePercent) {
   try {
-    const attemptsCol = collection(db, 'users', currentUser.uid, 'attempts');
+    const attemptsCol = collection(db, "users", currentUser.uid, "attempts");
     await setDoc(doc(attemptsCol), {
       paperId: currentPaper.id,
       paperName: currentPaper.name,
@@ -757,11 +587,10 @@ async function saveUserAttempt(scorePercent) {
       elapsedSeconds,
       finishedAt: serverTimestamp()
     });
-  } catch(e) { console.error('saveUserAttempt failed', e); }
+  } catch(e) { console.error("saveUserAttempt failed", e); }
 }
-
 async function updateAggregatesAndGetStats(scorePercent) {
-  const ref = doc(db, 'quizAggregates', currentPaper.id);
+  const ref = doc(db, "quizAggregates", currentPaper.id);
   let out = { average: scorePercent, percentile: 100 };
   try {
     await runTransaction(db, async (tx) => {
@@ -785,44 +614,41 @@ async function updateAggregatesAndGetStats(scorePercent) {
         out.average = newAvg;
       }
     });
-  } catch(e) { console.error('updateAggregates failed', e); }
+  } catch(e) { console.error("updateAggregates failed", e); }
   return out;
 }
-
 async function getAIInsights(incorrectQs) {
-  const div = byId('ai-insights-content');
-  div.innerHTML = '<p>Generating personalized insights...</p>';
-  if (!QUIZ_CONFIG.GOOGLE_AI_API_KEY) { div.innerHTML = '<p>AI features are not enabled.</p>'; return; }
-  if (!incorrectQs.length) { div.innerHTML = '<p>Flawless victory! No areas for improvement.</p>'; return; }
+  const div = byId("ai-insights-content");
+  if (div) div.innerHTML = "<p>Generating personalized insights...</p>";
+  if (!QUIZ_CONFIG.GOOGLE_AI_API_KEY) { if (div) div.innerHTML = "<p>AI features are not enabled.</p>"; return; }
+  if (!incorrectQs.length) { if (div) div.innerHTML = "<p>Flawless victory! No areas for improvement.</p>"; return; }
 
   try {
     const genAI = new GoogleGenerativeAI(QUIZ_CONFIG.GOOGLE_AI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const prompt = `A user answered these radiology exam questions incorrectly. Identify 2-3 core concepts they are struggling with and give concise, actionable study advice.\nQuestions:\n${incorrectQs.map(q => `- ${q.text}`).join('\n')}`;
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const prompt = `A user answered these radiology exam questions incorrectly. Identify 2-3 core concepts they are struggling with and give concise, actionable study advice.\nQuestions:\n${incorrectQs.map(q => `- ${q.text}`).join("\n")}`;
     const result = await model.generateContent(prompt);
     const text = result?.response?.text?.();
-    div.innerHTML = text ? text.replace(/\n/g, '<br>').replace(/\*/g,'') : '<p>Could not retrieve AI insights at this time.</p>';
+    if (div) div.innerHTML = text ? text.replace(/\n/g, "<br>").replace(/\*/g,"") : "<p>Could not retrieve AI insights at this time.</p>";
   } catch(e) {
-    console.error('AI error', e);
-    div.innerHTML = '<p>Could not retrieve AI insights at this time.</p>';
+    console.error("AI error", e);
+    if (div) div.innerHTML = "<p>Could not retrieve AI insights at this time.</p>";
   }
 }
 
-// ---------------------
-// REVIEW
-// ---------------------
+/* ---------------- Review ---------------- */
 function setupReview(type) {
   isReviewing = true;
-  if (type === 'all') reviewFilter = allQuestions.map((_, i) => i);
-  else if (type === 'incorrect') reviewFilter = allQuestions.map((q,i)=>i).filter(i => userAnswers[i] !== undefined && userAnswers[i] !== allQuestions[i].correctIndex);
-  else if (type === 'flagged') reviewFilter = allQuestions.map((q,i)=>i).filter(i => flaggedQuestions.has(q.id));
+  if (type === "all") reviewFilter = allQuestions.map((_, i) => i);
+  else if (type === "incorrect") reviewFilter = allQuestions.map((q,i)=>i).filter(i => userAnswers[i] !== undefined && userAnswers[i] !== allQuestions[i].correctIndex);
+  else if (type === "flagged") reviewFilter = allQuestions.map((q,i)=>i).filter(i => flaggedQuestions.has(q.id));
 
   if (!reviewFilter.length) {
     showCustomAlert(`No ${type} questions to review.`, () => { isReviewing = false; finishExam(); });
     return;
   }
-  dom.finishQuizBtn.style.display = 'none';
-  showScreen('quiz-screen');
+  dom.finishQuizBtn && (dom.finishQuizBtn.style.display = "none");
+  showScreen("quiz-screen");
   createQuestionNav();
   showQuestion(reviewFilter[0]);
 }
