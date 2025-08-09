@@ -1,122 +1,274 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fellowship Exams Pro - RadMentor</title>
-    <!-- Sets the base path for all relative URLs to /dashboard/ -->
-    <base href="/dashboard/">
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-    <script src="https://unpkg.com/feather-icons"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- This will correctly resolve to /dashboard/quiz/style.css -->
-    <link rel="stylesheet" href="quiz/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fellowship Exams - RadMentor</title>
+
+  <!-- Tailwind for the modern layout -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+
+  <!-- Icons & Charts -->
+  <script src="https://unpkg.com/feather-icons"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
+
+  <!-- Shared quiz styles (pagination, results, modal, etc.) -->
+  <link rel="stylesheet" href="style.css"/>
+
+  <style>
+    :root{ --rad-blue-start:#1e40af; --rad-blue-end:#3b82f6; }
+    body{
+      font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(1200px 400px at 10% -10%, rgba(59,130,246,.12), transparent 60%),
+        radial-gradient(1200px 400px at 90% -10%, rgba(16,185,129,.12), transparent 60%),
+        linear-gradient(180deg,#f8fafc 0%,#ffffff 60%);
+    }
+    .rad-grid:before{
+      content:""; position:fixed; inset:0; pointer-events:none;
+      background-image:
+        linear-gradient(rgba(15,23,42,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15,23,42,0.05) 1px, transparent 1px);
+      background-size:24px 24px,24px 24px;
+      mask-image: radial-gradient(closest-side, rgba(0,0,0,.35), transparent 70%);
+    }
+    .rad-noise:after{
+      content:""; position:fixed; inset:0; pointer-events:none; opacity:.035;
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" stitchTiles="stitch"/></filter><rect width="120" height="120" filter="url(%23n)" opacity="0.3"/></svg>');
+      mix-blend-mode:multiply;
+    }
+    .rad-underline{ position:relative; display:inline-block; }
+    .rad-underline:after{
+      content:""; position:absolute; left:0; right:0; bottom:-6px; height:3px; border-radius:9999px;
+      background:linear-gradient(90deg,var(--rad-blue-start),var(--rad-blue-end));
+      opacity:.65; filter:blur(.2px); animation:sweep 3.2s linear infinite; background-size:200% 100%;
+    }
+    @keyframes sweep{ 0%{background-position:0% 0} 100%{background-position:200% 0} }
+
+    /* Glass gradient frame */
+    .rad-card{ position:relative; border-radius:1rem; padding:2px; isolation:isolate; transition:transform .35s, box-shadow .35s; }
+    .rad-card:before{
+      content:""; position:absolute; inset:0; border-radius:inherit; padding:2px;
+      background:linear-gradient(120deg, rgba(30,64,175,.9), rgba(59,130,246,.7));
+      -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite:xor; mask-composite:exclude; opacity:.9; transition:opacity .35s;
+    }
+    .rad-card-inner{
+      border-radius:calc(1rem - 2px); background:rgba(255,255,255,.92); backdrop-filter:blur(6px);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 0 0 1px rgba(148,163,184,.15);
+    }
+    .rad-card:hover{ transform:translateY(-6px) scale(1.01); box-shadow:0 22px 50px -18px rgba(15,23,42,.25); }
+    .rad-card:hover:before{ opacity:1; }
+
+    /* Compact symmetric tiles */
+    .paper-button.rad-card{ padding:0; border-radius:12px; }
+    .paper-inner{
+      border-radius:10px; min-height:96px; padding:14px 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      transition:transform .2s, box-shadow .2s, background .2s;
+    }
+    .paper-inner:hover{ transform:translateY(-2px); background:#fff; }
+    .paper-text{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .paper-badge{
+      font-size:10.5px; font-weight:600; letter-spacing:.02em;
+      color:#075985; background:#e0fbff; border:1px solid #bae6fd;
+      padding:3px 8px; border-radius:9999px; white-space:nowrap; flex:0 0 auto;
+    }
+    .paper-title{
+      font-size:15px; font-weight:800; color:#0f172a;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .paper-arrow{ width:18px; height:18px; color:#64748b; opacity:.85; flex:0 0 auto; }
+
+    /* Grid density */
+    #paper-card-grid{ margin-top:2rem; display:grid; gap:14px; grid-template-columns:repeat(1,minmax(0,1fr)); }
+    @media (min-width:640px){ #paper-card-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (min-width:1280px){ #paper-card-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+  </style>
 </head>
-<body>
-    <!-- Auth Screen: Shown while checking login status -->
-    <div id="authCheckScreen" class="screen active">
-        <div class="selection-container">
+<body class="antialiased text-slate-700 rad-grid rad-noise">
+
+  <!-- Auth Screen -->
+  <div id="authCheckScreen" class="screen active">
+    <div class="max-w-6xl mx-auto px-6 pt-10">
+      <div class="rad-card">
+        <div class="rad-card-inner p-6 text-center">
+          <div class="loader"></div>
+          <p class="mt-4 text-lg text-gray-600">Initializing Session...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Topic Selection -->
+  <div id="topic-screen" class="screen">
+    <main class="relative max-w-6xl mx-auto px-6 py-10">
+      <section class="text-center">
+        <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">
+          Fellowship <span class="rad-underline">Exams</span>
+        </h1>
+        <p class="mt-4 max-w-2xl mx-auto text-slate-600">
+          Choose a paper to start your practice or exam session.
+        </p>
+      </section>
+
+      <section id="paper-card-grid">
+        <!-- Cards injected by quiz.js -->
+      </section>
+    </main>
+  </div>
+
+  <!-- Main Quiz Screen (structure expected by quiz.js) -->
+  <div id="quiz-screen" class="screen">
+    <div class="max-w-6xl mx-auto px-6 pb-10">
+      <div class="rad-card">
+        <div class="rad-card-inner">
+          <div class="quiz-header">
+            <h1 id="quiz-title">Fellowship Paper</h1>
+            <div class="header-controls">
+              <span class="mode-label text-gray-800">Quiz</span>
+              <label class="switch">
+                <input type="checkbox" id="mode-toggle-checkbox"/>
+                <span class="slider"></span>
+              </label>
+              <span class="mode-label text-gray-400">Exam</span>
+              <span class="timer" id="timer">00:00</span>
+              <button class="finish-btn-header" id="finish-quiz-btn">Finish</button>
+              <button class="icon-btn" id="sound-toggle-btn" title="Toggle sounds"><i data-feather="volume-2"></i></button>
+            </div>
+          </div>
+
+          <div id="quiz-content" style="display:none;">
+            <div class="quiz-pagination-header" id="quiz-pagination-header"></div>
+            <div class="question-area" id="questions-display"></div>
+          </div>
+
+          <div id="loading-container" class="selection-container" style="display:none; height:300px;">
             <div class="loader"></div>
-            <p style="margin-top: 1rem; font-weight: 500; color: var(--text-color-light);">Initializing Session...</p>
+            <p class="mt-4 text-lg text-gray-600" id="loading-message">Loading...</p>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Main Container for the app -->
-    <div class="main-container">
-        <!-- Topic/Paper Selection Screen -->
-        <div id="topic-screen" class="screen">
-            <div class="selection-container">
-                <h1 style="color: var(--header-text-color); font-size: 2.2rem; font-weight: 800;">Fellowship Exams</h1>
-                <p style="color: var(--text-color-light); font-size: 1.1rem; max-width: 600px; margin: 1rem auto 0;">Excel in the top fellowship exams from around the world with our curated question papers.</p>
-                <div id="paper-card-grid" class="paper-button-grid"></div>
-            </div>
-        </div>
-
-        <!-- Quiz Screen -->
-        <div id="quiz-screen" class="screen">
-            <div class="quiz-container">
-                <div class="quiz-header">
-                    <h1 id="quiz-title"></h1>
-                    <div class="header-controls">
-                        <div class="mode-toggle">
-                            <span>Practice</span>
-                            <label class="switch">
-                                <input type="checkbox" id="mode-toggle-checkbox">
-                                <span class="slider"></span>
-                            </label>
-                            <span>Exam</span>
-                        </div>
-                        <span id="timer" class="timer">00:00</span>
-                        <button class="icon-btn" id="sound-toggle-btn"><i data-feather="volume-2"></i></button>
-                        <button class="finish-btn-header" id="finish-quiz-btn">Finish</button>
-                    </div>
+  <!-- Results Screen -->
+  <div id="results-screen" class="screen">
+    <div class="max-w-6xl mx-auto px-6 pb-10">
+      <div class="rad-card">
+        <div class="rad-card-inner p-6">
+          <h2 class="text-3xl font-bold mb-8 text-center" id="results-heading">Test Results</h2>
+          <div class="results-grid">
+            <div class="stat-card">
+              <h3>Score Summary</h3>
+              <div class="flex flex-col items-center">
+                <p class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 my-4" id="final-score-percent">0%</p>
+                <div class="w-full text-left">
+                  <p class="text-lg font-medium">Correct: <span id="correct-count" class="font-bold">0</span></p>
+                  <p class="text-lg font-medium">Incorrect: <span id="incorrect-count" class="font-bold">0</span></p>
+                  <p class="text-lg font-medium">Unattempted: <span id="unattempted-count" class="font-bold">0</span></p>
+                  <p class="text-lg font-medium">Time Taken: <span id="time-taken" class="font-bold">00:00</span></p>
                 </div>
-                <div id="quiz-content">
-                    <div id="loading-container" style="text-align:center; padding: 4rem;">
-                        <div class="loader"></div>
-                    </div>
-                    <div id="questions-display" class="question-area" style="display:none;"></div>
-                </div>
-                <div id="quiz-pagination-header" class="quiz-pagination-header"></div>
+              </div>
             </div>
+            <div class="stat-card">
+              <h3>Performance Chart</h3>
+              <div style="position: relative; height:200px; width:100%;">
+                <canvas id="performanceChart"></canvas>
+              </div>
+            </div>
+            <div class="stat-card">
+              <h3>Peer Comparison</h3>
+              <div id="peer-comparison-content">
+                <p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p>
+                <p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p>
+              </div>
+            </div>
+            <div class="ai-insights-card" id="ai-insights-card">
+              <div class="flex items-start gap-4">
+                <div class="ai-avatar">🤖</div>
+                <div class="ai-message flex-grow">
+                  <p id="ai-insights-content">Generating feedback...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="results-actions">
+            <button class="results-btn primary" id="review-all-btn">Review All</button>
+            <button class="results-btn danger" id="review-incorrect-btn">Review Incorrect</button>
+            <button class="results-btn warning" id="review-flagged-btn">Review Flagged</button>
+            <button class="results-btn secondary" id="back-to-topics-btn">Back to Papers</button>
+          </div>
         </div>
-
-        <!-- Results Screen -->
-        <div id="results-screen" class="screen"></div>
+      </div>
     </div>
-    
-    <!-- Custom Modal UI -->
-    <div id="custom-modal-backdrop" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 1000;">
-        <div id="custom-modal-dialog" style="background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 400px; width: 90%; text-align: center;">
-            <p id="modal-message" style="font-weight: 500; color: var(--header-text-color); margin-bottom: 1.5rem;"></p>
-            <div id="modal-buttons"></div>
-        </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="custom-modal-backdrop" class="modal">
+    <div class="modal-content">
+      <p id="modal-message">This is a custom modal message.</p>
+      <div id="modal-buttons" class="modal-buttons"></div>
     </div>
+  </div>
 
-    <!-- Audio elements -->
-    <audio id="correct-sound" src="https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/sounds/correct.mp3" preload="auto"></audio>
-    <audio id="wrong-sound" src="https://cdn.jsdelivr.net/gh/im2famous4u/RadMentor@main/sounds/wrong.mp3" preload="auto"></audio>
-    
-    <!-- This will correctly resolve to /dashboard/quiz/quiz-engine.js -->
-    <script type="module" src="quiz/quiz-engine.js"></script>
+  <!-- Sounds -->
+  <audio id="correct-sound" src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/assets/correct.mp3" preload="auto"></audio>
+  <audio id="wrong-sound" src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/assets/wrong.mp3" preload="auto"></audio>
 
-    <script type="module">
-        import { initQuizApp } from './quiz/quiz-engine.js';
+  <script type="module">
+    import { initQuizApp } from './quiz.js';
 
-        // 1. DEFINE THE DATA FOR THIS SPECIFIC QUIZ
-        const fellowshipQuizData = {
-            paper1: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "0" },
-            paper2: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1141721868" },
-            paper3: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1815658253" },
-            paper4: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1386284317" },
-            paper5: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "40352700" },
-            paper6: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "54400073" },
-            paper7: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1767827630" },
-            paper8: { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "280434470" }
-        };
-        const fellowshipPaperMetadata = [
-            { id: 'paper1', name: 'Paper 1'}, { id: 'paper2', name: 'Paper 2'},
-            { id: 'paper3', name: 'Paper 3'}, { id: 'paper4', name: 'Paper 4'},
-            { id: 'paper5', name: 'Paper 5'}, { id: 'paper6', name: 'Paper 6'},
-            { id: 'paper7', name: 'Paper 7'}, { id: 'paper8', name: 'Paper 8'},
-        ];
-        
-        const firebaseConfig = {
-            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw", authDomain: "radiology-mcqs.firebaseapp.com", projectId: "radiology-mcqs",
-            storageBucket: "radiology-mcqs.appspot.com", messagingSenderId: "862300415358", appId: "1:862300415358:web:097d5e413f388e30587f2f"
-        };
-        
-        // 2. CREATE THE CONFIGURATION OBJECT
-        const config = {
-            ALL_QUIZ_DATA: fellowshipQuizData,
-            PAPER_METADATA: fellowshipPaperMetadata,
-            FIREBASE_CONFIG: firebaseConfig,
-            GOOGLE_AI_API_KEY: 'YOUR_API_KEY_HERE'
-        };
+    // Fellowship: use the exact sheet IDs/GIDs you already shared
+    const ALL_QUIZ_DATA = {
+      "paper1": { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "0" },
+      "paper2": { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1141721868" },
+      "paper3": { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1815658253" },
+      "paper4": { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1386284317" },
+      "paper5": { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "40352700" },
+      "paper6": { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "54400073" },
+      "paper7": { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "1767827630" },
+      "paper8": { sheetId: "13bIVTjrFwqcP0Q7WitSvb3ksy7g9XWXrq4uLOQwzLmo", gid: "280434470" }
+    };
 
-        // 3. START THE APP
-        initQuizApp(config);
-    </script>
+    // Labels shown on the tiles (change names to year-based if you want)
+    const PAPER_METADATA = [
+      { id: "paper1", name: "Fellowship Paper 1", examType: "Fellowship exam" },
+      { id: "paper2", name: "Fellowship Paper 2", examType: "Fellowship exam" },
+      { id: "paper3", name: "Fellowship Paper 3", examType: "Fellowship exam" },
+      { id: "paper4", name: "Fellowship Paper 4", examType: "Fellowship exam" },
+      { id: "paper5", name: "Fellowship Paper 5", examType: "Fellowship exam" },
+      { id: "paper6", name: "Fellowship Paper 6", examType: "Fellowship exam" },
+      { id: "paper7", name: "Fellowship Paper 7", examType: "Fellowship exam" },
+      { id: "paper8", name: "Fellowship Paper 8", examType: "Fellowship exam" }
+    ];
+
+    // Same Firebase you already use
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
+      authDomain: "radiology-mcqs.firebaseapp.com",
+      projectId: "radiology-mcqs",
+      storageBucket: "radiology-mcqs.appspot.com",
+      messagingSenderId: "862300415358",
+      appId: "1:862300415358:web:097d5e413f388e30587f2f",
+      measurementId: "G-0V1SD1H95V"
+    };
+
+    const config = {
+      GOOGLE_AI_API_KEY: '',              // optional for AI insights
+      ALL_QUIZ_DATA,
+      PAPER_METADATA,
+      FIREBASE_CONFIG
+    };
+
+    // Boot
+    initQuizApp(config);
+    if (window.feather) feather.replace();
+  </script>
 </body>
 </html>
