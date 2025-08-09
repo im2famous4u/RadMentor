@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INI SS Exam - RadMentor</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <!-- Chart.js is needed for the results screen -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js"></script>
+</head>
+<body>
+
+<!-- This screen is for a brief authentication check. It will be hidden by quiz.js on success. -->
+<div id="authCheckScreen" class="screen active">
+    <div class="selection-container">
+        <div class="loader"></div>
+        <p class="mt-4 text-lg text-gray-600">Verifying access...</p>
+    </div>
+</div>
+
+<div class="main-container">
+
+    <!-- Screen for selecting a quiz paper (INI SS Papers) -->
+    <div id="topic-screen" class="screen">
+        <div class="selection-container">
+            <h2 class="text-3xl font-bold mb-4">INI SS Exam</h2>
+            <p class="text-lg text-gray-600">Choose a paper to start your practice or exam session.</p>
+            <div id="paper-card-grid" class="paper-button-grid">
+                <!-- Paper buttons for INI SS will be dynamically inserted here by the JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Main quiz screen - this will be controlled by quiz.js -->
+    <div id="quiz-screen" class="screen">
+        <div class="quiz-container">
+            <div class="quiz-header">
+                <h1 id="quiz-title">INI SS Paper</h1>
+                <div class="header-controls">
+                    <span class="mode-label text-gray-800">Quiz</span>
+                    <label class="switch">
+                        <input type="checkbox" id="mode-toggle-checkbox">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="mode-label text-gray-400">Exam</span>
+                    <span class="timer" id="timer">00:00</span>
+                    <button class="finish-btn-header" id="finish-quiz-btn">Finish</button>
+                    <button class="icon-btn" id="sound-toggle-btn"><i data-feather="volume-2"></i></button>
+                </div>
+            </div>
+            <div id="quiz-content" style="display: none;">
+                <div class="quiz-pagination-header" id="quiz-pagination-header"></div>
+                <div class="question-area" id="questions-display"></div>
+            </div>
+            <div id="loading-container" class="selection-container" style="display:none; height: 300px;">
+                <div class="loader"></div>
+                <p class="mt-4 text-lg text-gray-600" id="loading-message">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results screen - this will be controlled by quiz.js -->
+    <div id="results-screen" class="screen">
+        <div class="results-container">
+            <h2 class="text-3xl font-bold mb-8 text-center" id="results-heading">Test Results</h2>
+            <div class="results-grid">
+                <div class="stat-card">
+                    <h3>Score Summary</h3>
+                    <div class="flex flex-col items-center">
+                        <p class="text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 my-4" id="final-score-percent">0%</p>
+                        <div class="w-full text-left">
+                            <p class="text-lg font-medium">Correct: <span id="correct-count" class="font-bold">0</span></p>
+                            <p class="text-lg font-medium">Incorrect: <span id="incorrect-count" class="font-bold">0</span></p>
+                            <p class="text-lg font-medium">Unattempted: <span id="unattempted-count" class="font-bold">0</span></p>
+                            <p class="text-lg font-medium">Time Taken: <span id="time-taken" class="font-bold">00:00</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>Performance Chart</h3>
+                    <div style="position: relative; height:200px; width:100%;">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>Peer Comparison</h3>
+                    <div id="peer-comparison-content">
+                        <p><strong>Average Score:</strong> <span id="average-score">Calculating...</span></p>
+                        <p><strong>Your Rank:</strong> You scored higher than <span id="percentile-rank">Calculating...</span>% of users.</p>
+                    </div>
+                </div>
+                <div class="ai-insights-card" id="ai-insights-card">
+                    <div class="flex items-start gap-4">
+                        <div class="ai-avatar">🤖</div>
+                        <div class="ai-message flex-grow">
+                            <p id="ai-insights-content">Generating feedback...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="results-actions">
+                <button class="results-btn primary" id="review-all-btn">Review All</button>
+                <button class="results-btn danger" id="review-incorrect-btn">Review Incorrect</button>
+                <button class="results-btn warning" id="review-flagged-btn">Review Flagged</button>
+                <button class="results-btn secondary" id="back-to-topics-btn">Back to Papers</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Modal to replace alerts and confirms -->
+<div id="custom-modal-backdrop" class="modal">
+    <div class="modal-content">
+        <p id="modal-message">This is a custom modal message.</p>
+        <div id="modal-buttons" class="modal-buttons"></div>
+    </div>
+</div>
+
+<audio id="correct-sound" src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/assets/correct.mp3" preload="auto"></audio>
+<audio id="wrong-sound" src="https://raw.githubusercontent.com/im2famous4u/RadMentor/main/assets/wrong.mp3" preload="auto"></audio>
+
+<script type="module">
+    import { initQuizApp } from './quiz.js';
+
+    // INI SS specific configuration
+    const inissConfig = {
+        // Your Google AI API key goes here.
+        // It's crucial to keep this secure in a real application.
+        GOOGLE_AI_API_KEY: '',
+        
+        // This object maps a unique ID to a Google Sheet ID and GID
+        ALL_QUIZ_DATA: {
+            "ini-ss-paper1": { sheetId: "1Zd-UhR966r8FE5pJ3yqqPInQBrAzLSG4pTc_wytr4I0", gid: "0" },
+            "ini-ss-paper2": { sheetId: "1Zd-UhR966r8FE5pJ3yqqPInQBrAzLSG4pTc_wytr4I0", gid: "123269442" },
+            "ini-ss-paper3": { sheetId: "1Zd-UhR966r8FE5pJ3yqqPInQBrAzLSG4pTc_wytr4I0", gid: "1278979358" },
+            "ini-ss-paper4": { sheetId: "1Zd-UhR966r8FE5pJ3yqqPInQBrAzLSG4pTc_wytr4I0", gid: "470498245" },
+            "ini-ss-paper5": { sheetId: "1Zd-UhR966r8FE5pJ3yqqPInQBrAzLSG4pTc_wytr4I0", gid: "94227388" },
+            "ini-ss-paper6": { sheetId: "1Zd-UhR966r8FE5pJ3yqqPInQBrAzLSG4pTc_wytr4I0", gid: "855680808" },
+            "ini-ss-paper7": { sheetId: "1Zd-UhR966r8FE5pJ3yqqPInQBrAzLSG4pTc_wytr4I0", gid: "1771985316" },
+            "ini-ss-paper8": { sheetId: "1Zd-UhR966r8FE5pJ3yqqPInQBrAzLSG4pTc_wytr4I0", gid: "153180989" },
+            "ini-ss-paper9": { sheetId: "1Zd-UhR966r8FE5pJ3yqqPInQBrAzLSG4pTc_wytr4I0", gid: "1725673059" }
+        },
+        
+        // This array defines the buttons shown on the main screen
+        PAPER_METADATA: [
+            { id: "ini-ss-paper1", name: "Paper 1", examType: "INI SS" },
+            { id: "ini-ss-paper2", name: "Paper 2", examType: "INI SS" },
+            { id: "ini-ss-paper3", name: "Paper 3", examType: "INI SS" },
+            { id: "ini-ss-paper4", name: "Paper 4", examType: "INI SS" },
+            { id: "ini-ss-paper5", name: "Paper 5", examType: "INI SS" },
+            { id: "ini-ss-paper6", name: "Paper 6", examType: "INI SS" },
+            { id: "ini-ss-paper7", name: "Paper 7", examType: "INI SS" },
+            { id: "ini-ss-paper8", name: "Paper 8", examType: "INI SS" },
+            { id: "ini-ss-paper9", name: "Paper 9", examType: "INI SS" },
+        ],
+        
+        // Firebase configuration from your firebase.js
+        FIREBASE_CONFIG: {
+            apiKey: "AIzaSyD-OTIwv6P88eT2PCPJXiHgZEDgFV8ZcSw",
+            authDomain: "radiology-mcqs.firebaseapp.com",
+            projectId: "radiology-mcqs",
+            storageBucket: "radiology-mcqs.appspot.com",
+            messagingSenderId: "862300415358",
+            appId: "1:862300415358:web:097d5e413f388e30587f2f",
+            measurementId: "G-0V1SD1H95V"
+        }
+    };
+    
+    // Initialize the quiz app with the INI SS configuration
+    document.addEventListener('DOMContentLoaded', () => {
+        initQuizApp(inissConfig);
+    });
+</script>
+</body>
+</html>
